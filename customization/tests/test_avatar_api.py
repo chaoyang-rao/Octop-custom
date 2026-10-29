@@ -235,7 +235,7 @@ class AvatarApiTests(unittest.TestCase):
             "rose": "#DB779A", "amber": "#DCAA46", "coral": "#E5805D",
         }
         self.assertEqual(AVATAR_COLORS, expected)
-        source = (Path(__file__).resolve().parents[1] / "packages/octop/dashboard/assets/expert-avatars.js").read_text()
+        source = (Path(__file__).resolve().parents[1] / "packages/octop/dashboard/assets/expert-avatars.js").read_text(encoding="utf-8")
         frontend = dict(re.findall(r"id:\s*['\"]([a-z]+)['\"][^\n}]*?hex:\s*['\"](#[0-9A-Fa-f]{6})['\"]", source))
         self.assertEqual({key: value.upper() for key, value in frontend.items()}, expected)
 
@@ -275,7 +275,7 @@ class AvatarApiTests(unittest.TestCase):
         snapshot_root = self.root/"snapshots"
         snapshot = snapshot_root/"published1"
         snapshot.mkdir(parents=True)
-        (snapshot/"manifest.json").write_text(json.dumps(manifest))
+        (snapshot/"manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         published = NS(id="published1", name="Template", description="desc", icon_name=None, color=None)
         services = NS(paths=NS(published_experts_dir=snapshot_root))
         created = self.repo.get("expert")
@@ -300,7 +300,7 @@ class AvatarApiTests(unittest.TestCase):
         snapshot_root = self.root/"partial-snapshots"
         snapshot = snapshot_root/"published1"
         snapshot.mkdir(parents=True)
-        (snapshot/"manifest.json").write_text(json.dumps({"avatar": inherited}))
+        (snapshot/"manifest.json").write_text(json.dumps({"avatar": inherited}), encoding="utf-8")
         published = NS(id="published1", name="Template", description="desc", icon_name=None, color=None)
         services = NS(paths=NS(published_experts_dir=snapshot_root))
         created = self.repo.get("expert")

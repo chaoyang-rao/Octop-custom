@@ -32,8 +32,10 @@ class ProjectApiTests(unittest.TestCase):
         self.root = Path(self.tmp.name).resolve()
         self.project = self.root / "项目 A"
         self.project.mkdir()
+        # API project identities use canonical POSIX separators on every OS.
+        self.project_path = self.project.as_posix()
         self.marker = self.project / "business.txt"
-        self.marker.write_text("business data must survive grouping removal")
+        self.marker.write_text("business data must survive grouping removal", encoding="utf-8")
         self.db = SqlitePool(self.root / "control.sqlite3")
         run_migrations(self.db)
         with self.db.connect() as c:
@@ -103,7 +105,7 @@ class ProjectApiTests(unittest.TestCase):
 
     def test_empty_project_persists_and_new_thread_reuses_custom_name(self):
         result = self.client.post(self.base+"/projects", json={
-            "project_path": str(self.project), "project_name": "售后项目"})
+            "project_path": self.project_path, "project_name": "售后项目"})
         self.assertEqual(result.status_code, 201, result.text)
         self.assertEqual(result.json()["thread_count"], 0)
         # Close/reopen the actual pool to prove empty project grouping is durable.
@@ -112,11 +114,11 @@ class ProjectApiTests(unittest.TestCase):
         self.threads = ThreadRepo(self.db)
         self.messages = ThreadMessageRepo(self.db)
         self.registry.replace_repos(session_repo=SessionRepo(self.db), thread_repo=self.threads)
-        tid = self.create(path=str(self.project))
+        tid = self.create(path=self.project_path)
         row = self.threads.get(tid)
-        self.assertEqual((row.project_path, row.project_name), (str(self.project), "售后项目"))
+        self.assertEqual((row.project_path, row.project_name), (self.project_path, "售后项目"))
         listed = self.client.get(self.base+"/threads").json()
-        self.assertEqual(listed[0]["project_path"], str(self.project))
+        self.assertEqual(listed[0]["project_path"], self.project_path)
         self.assertEqual(self.client.get(self.base+"/projects").json()[0]["thread_count"], 1)
         legacy = self.create()
         self.assertIsNone(self.threads.get(legacy).project_path)
@@ -128,7 +130,7 @@ class ProjectApiTests(unittest.TestCase):
         allowed = self.root/"allowed"
         allowed.mkdir()
         self.policy[1] = str(allowed)
-        rejected_paths = [str(self.project)]
+        rejected_paths = [self.project_path]
         try:
             (allowed/"escape").symlink_to(self.project, target_is_directory=True)
         except OSError as error:
@@ -141,10 +143,10 @@ class ProjectApiTests(unittest.TestCase):
         for path in rejected_paths:
             result = self.client.post(self.base+"/projects", json={"project_path": path})
             self.assertEqual(result.status_code, 400, result.text)
-        self.assertEqual(self.client.post(self.base+"/projects", json={"project_path": str(allowed)}).status_code, 201)
+        self.assertEqual(self.client.post(self.base+"/projects", json={"project_path": allowed.as_posix()}).status_code, 201)
 
     def test_project_data_is_isolated_by_user_and_expert(self):
-        path = str(self.project)
+        path = self.project_path
         self.create(agent="shared", path=path)
         self.create(path=path)
         self.assertEqual(self.client.get("/api/agents/other/projects").json(), [])
@@ -159,7 +161,7 @@ class ProjectApiTests(unittest.TestCase):
 
     def test_cross_user_and_agent_thread_assignment_cannot_modify_rows(self):
         tid = self.create(agent="shared")
-        body = {"project_path": str(self.project)}
+        body = {"project_path": self.project_path}
         self.assertEqual(self.client.patch(self.base+f"/threads/{tid}/project", json=body).status_code, 404)
         self.user = NS(id=2, is_admin=False)
         result = self.client.patch(f"/api/agents/shared/threads/{tid}/project", json=body)
@@ -167,37 +169,37 @@ class ProjectApiTests(unittest.TestCase):
         self.assertIsNone(self.threads.get(tid).project_path)
 
     def test_busy_and_awaiting_threads_reject_reassignment_and_project_removal(self):
-        tid = self.create(path=str(self.project))
+        tid = self.create(path=self.project_path)
         target = self.root/"second"
         target.mkdir()
         for busy_set in (self.active, self.awaiting):
             busy_set.add(tid)
             moved = self.client.patch(self.base+f"/threads/{tid}/project",
-                                      json={"project_path": str(target)})
+                                      json={"project_path": target.as_posix()})
             removed = self.client.request("DELETE", self.base+"/projects",
-                                          json={"project_path": str(self.project)})
+                                          json={"project_path": self.project_path})
             self.assertEqual(moved.status_code, 409)
             self.assertEqual(removed.status_code, 409)
-            self.assertEqual(self.threads.get(tid).project_path, str(self.project))
+            self.assertEqual(self.threads.get(tid).project_path, self.project_path)
             busy_set.clear()
-        moved = self.client.patch(self.base+f"/threads/{tid}", json={"project_path": str(target)})
+        moved = self.client.patch(self.base+f"/threads/{tid}", json={"project_path": target.as_posix()})
         self.assertEqual(moved.status_code, 200, moved.text)
-        self.assertEqual(moved.json()["project_path"], str(target))
+        self.assertEqual(moved.json()["project_path"], target.as_posix())
 
     def test_group_removal_preserves_transcript_and_business_files(self):
-        tid = self.create(path=str(self.project))
+        tid = self.create(path=self.project_path)
         self.messages.append_if_ready(tid, [ThreadMessageInput("m1", "user", "{}", 1)])
-        result = self.client.request("DELETE", self.base+"/projects", json={"project_path": str(self.project)})
+        result = self.client.request("DELETE", self.base+"/projects", json={"project_path": self.project_path})
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.json()["unassigned_threads"], 1)
         self.assertTrue(self.marker.is_file())
-        self.assertEqual(self.marker.read_text(), "business data must survive grouping removal")
+        self.assertEqual(self.marker.read_text(encoding="utf-8"), "business data must survive grouping removal")
         self.assertIsNone(self.threads.get(tid).project_path)
         self.assertEqual(self.messages.head(tid), 1)
         self.assertEqual(self.client.get(self.base+"/projects").json(), [])
 
     def test_ungrouping_and_missing_directory_removal_are_metadata_only(self):
-        tid = self.create(path=str(self.project))
+        tid = self.create(path=self.project_path)
         moved = self.client.patch(self.base+f"/threads/{tid}/project", json={"project_path": None})
         self.assertEqual(moved.status_code, 200)
         self.assertIsNone(self.threads.get(tid).project_path)
@@ -206,7 +208,7 @@ class ProjectApiTests(unittest.TestCase):
         renamed = self.root/"renamed outside Octop"
         self.project.rename(renamed)
         removed = self.client.request("DELETE", self.base+"/projects",
-                                      json={"project_path": str(self.project)})
+                                      json={"project_path": self.project_path})
         self.assertEqual(removed.status_code, 200)
         self.assertTrue((renamed/"business.txt").is_file())
         self.assertIsNotNone(self.threads.get(tid))
@@ -217,28 +219,28 @@ class ProjectApiTests(unittest.TestCase):
         allowed.mkdir()
         self.policy[1] = str(allowed)
         denied = self.client.post(self.base+"/projects?as_user=1",
-                                  json={"project_path": str(self.project)})
+                                  json={"project_path": self.project_path})
         self.assertEqual(denied.status_code, 400)
         accepted = self.client.post(self.base+"/projects?as_user=1",
-                                    json={"project_path": str(allowed)})
+                                    json={"project_path": allowed.as_posix()})
         self.assertEqual(accepted.status_code, 201)
         self.assertEqual(self.registry.list_projects(agent_id="expert", user_id=2), [])
         self.user = NS(id=2, is_admin=False)
         self.assertEqual(self.client.get(self.base+"/projects?as_user=1").status_code, 403)
 
     def test_fork_and_slash_new_inherit_project(self):
-        tid = self.create(path=str(self.project))
+        tid = self.create(path=self.project_path)
         source = self.threads.get(tid)
         graph = NS(aget_state=AsyncMock(return_value=NS(values={"messages": [
             HumanMessage(content="question", id="u1"), AIMessage(content="answer", id="a1")]})),
             aupdate_state=AsyncMock())
         result = asyncio.run(fork_dashboard_thread(thread_registry=self.registry,
                             harness=NS(graph=graph), source=source, user_id=1, message_id="a1"))
-        self.assertEqual(self.threads.get(result["thread_id"]).project_path, str(self.project))
+        self.assertEqual(self.threads.get(result["thread_id"]).project_path, self.project_path)
         self.assertEqual(result["project_name"], self.project.name)
         self.assertEqual(graph.aupdate_state.await_count, 1)
         new_id = asyncio.run(self.registry.reset_by_session_key(result["session_key"]))
-        self.assertEqual(self.threads.get(new_id).project_path, str(self.project))
+        self.assertEqual(self.threads.get(new_id).project_path, self.project_path)
 
 
 if __name__ == "__main__":

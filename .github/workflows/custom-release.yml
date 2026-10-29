@@ -124,6 +124,7 @@ jobs:
           py = root / "runtime" / ("python.exe" if os.name == "nt" else "bin/python3")
           packages = root / "packages"
           child_env = dict(os.environ, PYTHONNOUSERSITE="1", PYTHONPATH="",
+                           PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
                            OCTOP_HOME=str(stage / "empty-user-data"), OCTOP_CUSTOM_BUILD="1")
           smoke = """
           import importlib.metadata, json, platform, site, sys
@@ -214,7 +215,7 @@ jobs:
             dist/native-smoke-${{ matrix.plat }}.json
             dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.json
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 1
 
   release:
     name: Publish all three platforms together
