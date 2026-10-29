@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { format } from '../../dashboard/node_modules/prettier/index.mjs';
 import { patchComposerModelShortcut } from './model-shortcut-patch.mjs';
 import { m as modelOptionLabel, e as modelOptionValue, c as modelShortLabel } from '../baselines/projects-v2/octop/dashboard/assets/modelOptions.BrFzajT7.projects-v2.js';
 
@@ -144,6 +145,10 @@ const plus = nodes(tree, node => node.type === Popover && node.props?.overlayCla
 plus.props.onOpenChange(true);
 assert.equal(picker(render()).props.open, false, 'Opening More tools dismisses the quick model popover');
 
-assert.equal(fs.readFileSync(new URL('../../dashboard/src/pages/Chat/components/ChatInputModelShortcut.css', import.meta.url), 'utf8'),
-  fs.readFileSync(new URL('../packages/octop/dashboard/assets/model-shortcut.css', import.meta.url), 'utf8'));
+const sourceCss = fs.readFileSync(new URL('../../dashboard/src/pages/Chat/components/ChatInputModelShortcut.css', import.meta.url), 'utf8');
+const frozenCss = fs.readFileSync(new URL('../packages/octop/dashboard/assets/model-shortcut.css', import.meta.url), 'utf8');
+const formatCss = css => format(css, { parser: 'css' });
+assert.equal(await formatCss(sourceCss), await formatCss(frozenCss), 'Source and frozen styles must remain identical after CSS formatting');
+assert.notEqual(await formatCss(sourceCss.replace(/gap:\s*3px;/, 'gap: 4px;')), await formatCss(frozenCss),
+  'A changed CSS declaration must still fail source/frozen parity');
 console.log('PASS existing model menu identity, friendly/current/default labels, popup lifecycle, exact selection/Auto callbacks, unavailable/disabled states, streaming-next-turn semantics, compact labels and no accidental send');
