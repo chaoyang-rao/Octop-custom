@@ -42,7 +42,35 @@
   "git": {
     "branch": "custom/main",
     "repository": "chaoyang-rao/Octop-custom",
-    "full_quality_gate": "New validation pending after source CSS formatting correction",
+    "full_quality_gate": {
+      "commit": "79c1a57d89636a12670a9c1b6999266d484ea8d4",
+      "run_id": 40893965079,
+      "url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/40893965079",
+      "source_quality_job": "success",
+      "make_all": {
+        "passed": 5027,
+        "skipped": 29,
+        "warnings": 9,
+        "duration_seconds": 960.64
+      },
+      "mypy_source_files": 598,
+      "frontend_build": "success",
+      "clean_formatted_source_tree": "success",
+      "ui_regressions": "success",
+      "native_platforms": {
+        "windows-amd64": "success",
+        "darwin-amd64": "success",
+        "darwin-arm64": {
+          "latest_attempt": "cancelled before execution",
+          "reason": "GitHub hosted arm64 runner capacity; job was not acquired after multiple attempts",
+          "unchanged_program_validation_commit": "20e3e1cd526d294a993a9eda69405e0017e3bc04",
+          "unchanged_program_validation_run": 40859301113,
+          "previous_build_result": "success",
+          "packaged_program_desktop_and_build_script_inputs_identical": true
+        }
+      },
+      "overall_run": "failure caused only by unavailable hosted arm64 runner"
+    },
     "release_publishing": "disabled for push; existing Release remains immutable",
     "first_validation": {
       "commit": "20e3e1cd526d294a993a9eda69405e0017e3bc04",
