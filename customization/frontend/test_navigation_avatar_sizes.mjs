@@ -36,7 +36,7 @@ const deps = {
   sortExpertsByPin: agents => agents, matchesChatNavScope: () => true,
   useExpertSessionCatalog: () => ({ byAgent: {}, patch() {}, loading: false }),
   onSessionEvent: () => () => {}, ChatNavScopeTabs: marker, Search: marker,
-  ChatNavScopeEmpty: marker, ChevronRight: marker,
+  ChatNavScopeEmpty: marker, ChevronRight: marker, ExpertWorkStatus: marker,
 };
 function component(name, next) {
   const start = main.indexOf(`function ${name}(`);
@@ -103,5 +103,6 @@ if (Number(release.release.split('-v')[1]) >= 5) expectedChanged.push(`index.G9_
 if (Number(release.release.split('-v')[1]) >= 10) expectedChanged.push(`expert-avatars.${release.release}.js`);
 if (Number(release.release.split('-v')[1]) >= 11) expectedChanged.push(`project-folders.${release.release}.js`, `project-folders.${release.release}.css`);
 if (Number(release.release.split('-v')[1]) >= 14) expectedChanged.push(`en.CaWe8dRV.${release.release}.js`, `zh.D-7HvP3m.${release.release}.js`);
+if (Number(release.release.split('-v')[1]) >= 15) expectedChanged.push(`EditAgentDrawer.w674TDCV.${release.release}.js`);
 assert.deepEqual(changed.sort(), expectedChanged.sort());
 console.log('PASS all three tabs retain 48px slots and images; compact header 56px; scoped module changes only');

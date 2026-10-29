@@ -499,6 +499,7 @@ class AgentManager:
         # one thread interleave LangGraph checkpoint writes.
         self._thread_execution_locks: dict[tuple[str, str], asyncio.Lock] = {}
         self._active_invocations: dict[str, int] = {}
+        self._active_invocation_threads: dict[str, dict[str, int]] = {}
         self._invocation_waiters: dict[str, int] = {}
         self._history_backfills: dict[str, asyncio.Event] = {}
         # Agents whose SQLite file should be rebuilt once they are idle.
@@ -1801,6 +1802,41 @@ class AgentManager:
         """Whether the agent is currently executing a user-visible invocation."""
         return self._active_invocations.get(agent_id, 0) > 0
 
+    def active_thread_ids(self, agent_id: str) -> frozenset[str]:
+        """Bound user-visible invocations; idle loaded agents have no entries."""
+        by_agent = getattr(self, "_active_invocation_threads", {})
+        return frozenset(tid for tid, count in by_agent.get(agent_id, {}).items() if count > 0)
+
+    async def acp_activity_snapshot(
+        self, agent_id: str, thread_ids: frozenset[str]
+    ) -> dict[str, frozenset[str]] | None:
+        """Read ACP tasks; None means an older existing service cannot report them."""
+        empty: dict[str, frozenset[str]] = {
+            "working_thread_ids": frozenset(),
+            "waiting_thread_ids": frozenset(),
+        }
+        if not thread_ids:
+            return empty
+        harness = self._octop_harness_or_none(agent_id)
+        workspace = getattr(harness, "_workspace_path", None)
+        if workspace is None:
+            return empty
+        try:
+            from octop_harness.acp.service import get_acp_service  # noqa: PLC0415
+        except ImportError:
+            return empty
+        service = get_acp_service(str(workspace))
+        if service is None:
+            return empty
+        snapshot = getattr(service, "activity_snapshot", None)
+        if not callable(snapshot):
+            return None
+        result = await snapshot(thread_ids=thread_ids)
+        return {
+            "working_thread_ids": frozenset(result.get("working_thread_ids", ())),
+            "waiting_thread_ids": frozenset(result.get("waiting_thread_ids", ())),
+        }
+
     def try_begin_history_backfill(self, agent_id: str) -> bool:
         """Reserve an idle agent for one history backfill without racing a new turn."""
         if (
@@ -1818,7 +1854,7 @@ class AgentManager:
         if event is not None:
             event.set()
 
-    async def _begin_invocation(self, agent_id: str) -> None:
+    async def _begin_invocation(self, agent_id: str, thread_id: str = "") -> None:
         self._invocation_waiters[agent_id] = self._invocation_waiters.get(agent_id, 0) + 1
         try:
             while True:
@@ -1833,8 +1869,26 @@ class AgentManager:
             else:
                 self._invocation_waiters.pop(agent_id, None)
         self._active_invocations[agent_id] = self._active_invocations.get(agent_id, 0) + 1
+        if thread_id:
+            # Older test doubles construct registries via __new__ without init.
+            by_agent = getattr(self, "_active_invocation_threads", None)
+            if by_agent is None:
+                self._active_invocation_threads = {}
+                by_agent = self._active_invocation_threads
+            threads = by_agent.setdefault(agent_id, {})
+            threads[thread_id] = threads.get(thread_id, 0) + 1
 
-    def _end_invocation(self, agent_id: str) -> None:
+    def _end_invocation(self, agent_id: str, thread_id: str = "") -> None:
+        if thread_id:
+            by_agent = getattr(self, "_active_invocation_threads", {})
+            threads = by_agent.get(agent_id, {})
+            remaining = threads.get(thread_id, 1) - 1
+            if remaining > 0:
+                threads[thread_id] = remaining
+            else:
+                threads.pop(thread_id, None)
+            if not threads:
+                by_agent.pop(agent_id, None)
         active = self._active_invocations.get(agent_id, 1) - 1
         if active > 0:
             self._active_invocations[agent_id] = active
@@ -1844,12 +1898,12 @@ class AgentManager:
                 self._ensure_reclaim_task()
 
     @asynccontextmanager
-    async def _track_invocation(self, agent_id: str) -> AsyncIterator[None]:
-        await self._begin_invocation(agent_id)
+    async def _track_invocation(self, agent_id: str, thread_id: str = "") -> AsyncIterator[None]:
+        await self._begin_invocation(agent_id, thread_id)
         try:
             yield
         finally:
-            self._end_invocation(agent_id)
+            self._end_invocation(agent_id, thread_id)
 
     async def stream(self, agent_id: str, request: dict[str, Any]) -> AsyncIterator[Any]:
         """Stream harness chunks (Langfuse tracing handled inside octop-harness)."""
@@ -1859,7 +1913,7 @@ class AgentManager:
         thread_id = str(request.get("thread_id") or "")
         async with (
             self._thread_execution_lock(agent_id, thread_id),
-            self._track_invocation(agent_id),
+            self._track_invocation(agent_id, thread_id_from_request(request) or ""),
         ):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
             req = self._prepare_stream_request(agent_id, request)
@@ -1875,7 +1929,7 @@ class AgentManager:
         """Non-streaming harness invocation (one-shot agent call)."""
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
-        async with self._track_invocation(agent_id):
+        async with self._track_invocation(agent_id, thread_id_from_request(request) or ""):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
             req = self._prepare_stream_request(agent_id, request)
             thread_id = str(req.get("thread_id") or thread_id_from_request(req) or "")
@@ -1900,7 +1954,7 @@ class AgentManager:
             raise self._unavailable_error(agent_id)
         async with (
             self._thread_execution_lock(agent_id, thread_id),
-            self._track_invocation(agent_id),
+            self._track_invocation(agent_id, thread_id),
         ):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
             with (

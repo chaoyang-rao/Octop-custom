@@ -1257,6 +1257,33 @@
     "path_outside_root": "The file path is outside this expert's storage root, so it cannot be read or written. Use a path under the storage root, or widen the storage root in expert settings (on Windows, set an explicit drive path such as D:/octop-data)."
   },
   "chat": {
+    "expertWorkDetail": {
+      "working": "Running conversations",
+      "waiting": "Conversations waiting for approval or a reply",
+      "idle": "No running or waiting conversations are visible to this account",
+      "stopped": "The expert is not enabled",
+      "failed": "The expert is not running normally; check its settings",
+      "starting": "The expert is starting",
+      "stopping": "The expert is stopping",
+      "online": "The expert is enabled; the backend has not supplied work status",
+      "remote_online": "The remote link is connected; work status has not been supplied",
+      "disconnected": "The remote link is disconnected; remote work status is unavailable",
+      "unknown": "Work status is not synchronized yet"
+    },
+    "expertWorkStatus": {
+      "working": "Working",
+      "waiting": "Waiting",
+      "idle": "Idle",
+      "stopped": "Not started",
+      "failed": "Error",
+      "starting": "Starting",
+      "stopping": "Stopping",
+      "online": "Online",
+      "remote_online": "Remote online",
+      "disconnected": "Disconnected",
+      "unknown": "Sync pending"
+    },
+    "expertWorkEnabled": "Enabled",
     "sharedExpert": {
       "banner": "Shared expert · provided by {{name}}",
       "flag": "Shared"

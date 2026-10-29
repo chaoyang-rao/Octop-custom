@@ -34,6 +34,7 @@ from octop.infra.agents.settings.runtime_limits import (
     AGENT_RUNTIME_CONFIG_KEYS,
     agent_runtime_values,
 )
+from octop.infra.agents.work_status import attach_expert_work_status
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.permissions import user_has_permission
 
@@ -222,6 +223,11 @@ async def list_agents(
     Default ``scope=mine`` returns agents owned by the authenticated user plus
     agents other users have explicitly shared.
     Holders of the ``users`` permission (and admins) may pass ``scope=all``.
+
+    ``work_status``, ``working_count`` and ``waiting_count`` summarize only
+    bound conversation threads visible to the current viewer. Counts are
+    deduplicated per thread; no conversation content or private thread ids
+    are exposed by these fields. Loaded (``running``) does not imply working.
     """
     if scope == "all" and not user_has_permission(user, "users"):
         raise OctopError(
@@ -250,7 +256,9 @@ async def list_agents(
             )
             for r in rows
         ]
-        return _attach_unread_counts(server, user.id, payloads)
+        return await attach_expert_work_status(
+            server, user.id, _attach_unread_counts(server, user.id, payloads)
+        )
 
     owned = registry.list_agents(user.id)
     shared = server.services.agent_repo.list_shared(exclude_user_id=user.id)
@@ -262,7 +270,7 @@ async def list_agents(
         owner = server.services.user_repo.get(row.user_id)
         if owner is not None:
             shared_owner_username_by_id[row.user_id] = owner.username
-    return _attach_unread_counts(
+    payloads = _attach_unread_counts(
         server,
         user.id,
         [
@@ -278,6 +286,7 @@ async def list_agents(
             for r in rows
         ],
     )
+    return await attach_expert_work_status(server, user.id, payloads)
 
 
 @router.post("", status_code=201, summary="Create agent")

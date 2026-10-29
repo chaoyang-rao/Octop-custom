@@ -1,0 +1,46 @@
+{
+  "release": "avatars-v15",
+  "scope": "Current user visible conversations only; counts contain no message content",
+  "states": {
+    "working": "Active bound invocation, WS turn, or live ACP prompt",
+    "waiting": "HITL or ACP permission pending; wins over ordinary active markers on the same thread",
+    "idle": "No observed active or waiting visible conversations",
+    "unknown": "Observation unavailable; never inferred idle"
+  },
+  "refresh": {
+    "visible_poll_seconds": 5,
+    "event_debounce_ms": 150,
+    "serialized_requests": true,
+    "legacy_chat_10_second_poll_removed": true
+  },
+  "checks": {
+    "customization_regressions": 72,
+    "canonical_hitl_memory_regressions": 56,
+    "i18n_regressions": 82,
+    "status_source_frozen_cases": 18,
+    "status_poll_priority_locale_checks": "passed",
+    "model_shortcut_source_dom_cases": 8,
+    "voice_event_lifecycle_cases": 34,
+    "project_folder_picker_dom_cases": 12,
+    "typescript_typecheck": "passed",
+    "active_asset_graph": 230,
+    "navigation_avatar_size_regression": "passed"
+  },
+  "runtime": {
+    "application_restarted": true,
+    "user_authorization": "已关闭，可重启",
+    "program_files_installed": 235,
+    "health_ok": true,
+    "visible_navigation_idle_verified": true,
+    "visible_expert_management_idle_verified": true,
+    "working_and_waiting_verified_by": "isolated tests; no live model request or user-data mutation",
+    "original_chat_restored": true,
+    "database_restore_performed": false
+  },
+  "git": {
+    "branch": "custom/main",
+    "repository": "chaoyang-rao/Octop-custom",
+    "full_quality_gate": "pending GitHub Actions",
+    "release_publishing": "disabled for push; existing Release remains immutable"
+  }
+}

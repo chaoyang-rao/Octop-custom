@@ -16,7 +16,7 @@ BASE = ROOT / 'baselines' / 'projects-v2' / 'octop' / 'dashboard'
 DASH = ROOT / 'packages' / 'octop' / 'dashboard'
 ASSETS = DASH / 'assets'
 SOURCE_RELEASE = 'projects-v2'
-RELEASE = 'avatars-v14'
+RELEASE = 'avatars-v15'
 MAIN = 'index.BsYGCvv_.projects-v2.js'
 EDIT = 'EditAgentDrawer.w674TDCV.projects-v2.js'
 CREATE = 'index.Bxr_iAco.projects-v2.js'
@@ -194,13 +194,19 @@ patch_chunk(COMPOSER, 'voice-input-patch.mjs', 'patchVoiceInputSource')
 for locale in ('en.CaWe8dRV.projects-v2.js', 'zh.D-7HvP3m.projects-v2.js'):
     patch_chunk(locale, 'voice-input-patch.mjs', 'patchVoiceLocaleSource')
 patch_chunk(COMPOSER, 'model-shortcut-patch.mjs', 'patchComposerModelShortcut')
+patch_chunk(MAIN, 'expert-status-patch.mjs', 'patchExpertStatusSource')
+patch_chunk(MAIN, 'status-refresh-patch.mjs', 'patchSessionStatusPriority')
+patch_chunk(EDIT, 'expert-status-patch.mjs', 'patchExpertManagementStatus')
+patch_chunk(COMPOSER, 'status-refresh-patch.mjs', 'patchChatStatusPollingSource')
+for locale in ('en.CaWe8dRV.projects-v2.js', 'zh.D-7HvP3m.projects-v2.js'):
+    patch_chunk(locale, 'status-refresh-patch.mjs', 'patchExpertStatusLocaleSource')
 extra_files = ('expert-avatars.js', 'expert-avatars.css', 'expert-avatar-integration.js', 'expert-avatar-integration.css',
-               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'project-folder-picker.js', 'model-shortcut.css')
+               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'project-folder-picker.js', 'model-shortcut.css', 'expert-work-status.js', 'expert-work-status.css')
 for name in extra_files:
     sources[name] = (ASSETS / name).read_text(encoding='utf-8')
 mapping = {}
 for name in sources:
-    if name in ('sidebar-scrollbars.css', 'toolbar-contrast.css', 'model-shortcut.css'):
+    if name in ('sidebar-scrollbars.css', 'toolbar-contrast.css', 'model-shortcut.css', 'expert-work-status.css'):
         mapping[name] = f'{Path(name).stem}.{hashlib.sha256(sources[name].encode()).hexdigest()[:10]}.css'
     else:
         mapping[name] = name.replace(f'.{SOURCE_RELEASE}.', f'.{RELEASE}.') if f'.{SOURCE_RELEASE}.' in name else f'{Path(name).stem}.{RELEASE}{Path(name).suffix}'
@@ -210,7 +216,7 @@ for name, content in sources.items():
     (ASSETS / mapping[name]).write_text(rewrite(content), encoding='utf-8', newline='\n')
 html = (BASE / 'index.html').read_text(encoding='utf-8')
 html = html.replace('</head>', '    <link rel="stylesheet" href="/assets/expert-avatars.css">\n    <link rel="stylesheet" href="/assets/expert-avatar-integration.css">\n  </head>')
-for name in (*account_patch['STYLESHEETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'model-shortcut.css'):
+for name in (*account_patch['STYLESHEETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'model-shortcut.css', 'expert-work-status.css'):
     html = html.replace('</head>', f'    <link rel="stylesheet" href="/assets/{name}">\n  </head>')
 (DASH / 'index.html').write_text(rewrite(html), encoding='utf-8', newline='\n')
 (DASH / 'sw.js').write_text(f'/* Expert avatars release {RELEASE}, shell {hashlib.sha256(rewrite(html).encode()).hexdigest()[:10]}. */\n' + rewrite((BASE / 'sw.js').read_text(encoding='utf-8')), encoding='utf-8', newline='\n')

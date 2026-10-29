@@ -46,6 +46,7 @@ import {
 } from "../utils/chatNavScope";
 import ChatNavScopeTabs, { ChatNavScopeEmpty } from "./ChatNavScopeTabs";
 import ExpertNameLabel from "./ExpertNameLabel";
+import ExpertWorkStatus from "./ExpertWorkStatus";
 import ExpertNavActions from "./ExpertNavActions";
 import {
   resolveSessionWorkStatus,
@@ -340,6 +341,7 @@ function ActiveAgentCard({
                 name={agent.name}
                 className={styles.agentCardName}
               />
+              <ExpertWorkStatus agent={agent} />
               <TeamChatBadge agent={agent} />
               <SharedExpertHint agent={agent} />
               <RemoteExpertHint agent={agent} />
@@ -484,6 +486,7 @@ function InactiveAgentRow({
                 name={agent.name}
                 className={styles.agentRowName}
               />
+              <ExpertWorkStatus agent={agent} />
               <TeamChatBadge agent={agent} />
               <SharedExpertHint agent={agent} />
               <RemoteExpertHint agent={agent} />

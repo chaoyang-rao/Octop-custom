@@ -11,13 +11,19 @@ describe("resolveSessionWorkStatus", () => {
     ).toBe("working");
   });
 
-  it("prefers working over waiting", () => {
+  it("shows a pending confirmation even while the outer turn remains active", () => {
     expect(
       resolveSessionWorkStatus(
         { id: "thr_1", turnActive: true, awaitingUser: true },
         new Set(),
       ),
-    ).toBe("working");
+    ).toBe("waiting");
+    expect(
+      resolveSessionWorkStatus(
+        { id: "thr_1", awaitingUser: true },
+        new Set(["thr_1"]),
+      ),
+    ).toBe("waiting");
   });
 
   it("marks a HITL pause as waiting", () => {

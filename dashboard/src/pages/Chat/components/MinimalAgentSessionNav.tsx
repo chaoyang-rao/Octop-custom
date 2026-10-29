@@ -48,6 +48,7 @@ import RemoteExpertHint from "./RemoteExpertHint";
 import SessionWorkStatusIcon from "./SessionWorkStatusIcon";
 import TeamChatBadge from "./TeamChatBadge";
 import ExpertNameLabel from "./ExpertNameLabel";
+import ExpertWorkStatus from "./ExpertWorkStatus";
 import ExpertNavActions from "./ExpertNavActions";
 import styles from "../index.module.less";
 
@@ -650,6 +651,7 @@ export default function MinimalAgentSessionNav({
                     name={agent.name}
                     className={styles.minimalAgentName}
                   />
+                  <ExpertWorkStatus agent={agent} />
                   <TeamChatBadge agent={agent} />
                   <SharedExpertHint agent={agent} />
                   <RemoteExpertHint agent={agent} />

@@ -5,7 +5,7 @@ export function resolveSessionWorkStatus(
   session: { id: string; turnActive?: boolean; awaitingUser?: boolean },
   liveWorkingIds: ReadonlySet<string>,
 ): SessionWorkStatus {
-  if (liveWorkingIds.has(session.id) || session.turnActive) return "working";
   if (session.awaitingUser) return "waiting";
+  if (liveWorkingIds.has(session.id) || session.turnActive) return "working";
   return "idle";
 }

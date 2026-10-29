@@ -6,7 +6,7 @@ import asyncio
 import atexit
 import contextlib
 import os
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Collection
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from typing import Any
@@ -132,6 +132,26 @@ class ACPService:
     async def get_session(self, thread_id: str, runner: str) -> _Conversation | None:
         async with self._lock:
             return self._sessions.get((thread_id, runner))
+
+    async def activity_snapshot(
+        self, *, thread_ids: Collection[str]
+    ) -> dict[str, frozenset[str]]:
+        """Task state for allowed threads; an open idle runner is not working."""
+        allowed = frozenset(thread_ids)
+        working: set[str] = set()
+        waiting: set[str] = set()
+        async with self._lock:
+            for (thread_id, _runner), conversation in self._sessions.items():
+                if thread_id not in allowed or conversation.process.returncode is not None:
+                    continue
+                prompt = conversation.prompt_task
+                if prompt is None or prompt.done():
+                    continue
+                if conversation.client.pending_permission is not None:
+                    waiting.add(thread_id)
+                else:
+                    working.add(thread_id)
+        return {"working_thread_ids": frozenset(working), "waiting_thread_ids": frozenset(waiting)}
 
     async def get_pending_permission(self, *, thread_id: str, runner: str) -> Any | None:
         conversation = await self.get_session(thread_id, runner)

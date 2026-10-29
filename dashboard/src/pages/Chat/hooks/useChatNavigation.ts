@@ -77,20 +77,6 @@ export function useChatNavigation({
   }, [resolvedAgentId, refreshAgents]);
 
   useEffect(() => {
-    const refreshBadges = () => void refreshAgents({ silent: true });
-    refreshBadges();
-    const intervalId = window.setInterval(refreshBadges, 10_000);
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") refreshBadges();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [refreshAgents]);
-
-  useEffect(() => {
     return chatStore.onStreamEvent((event) => {
       if (
         event.kind === "streamEnd" &&

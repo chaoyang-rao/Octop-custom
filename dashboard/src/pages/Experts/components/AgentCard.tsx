@@ -36,6 +36,7 @@ import {
   isAgentModelConfigError,
 } from "../../../utils/agentError";
 import styles from "../index.module.less";
+import ExpertWorkStatus from "../../Chat/components/ExpertWorkStatus";
 import RemoteExpertHint from "../../Chat/components/RemoteExpertHint";
 import { expertDeleteConfirm } from "../../../utils/remoteExpert";
 import { isSharedExpertViewer } from "../../../utils/sharedExpert";
@@ -87,7 +88,7 @@ export const AgentCard = memo(function AgentCard({
   onStateChange,
   onPollSettled,
 }: AgentCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { setActiveAgent, refresh: refreshAgents } = useAgent();
 
@@ -350,8 +351,15 @@ export const AgentCard = memo(function AgentCard({
                   className={meta.spin ? styles.stateDotSpin : styles.stateDot2}
                   style={!meta.spin ? { background: meta.color } : undefined}
                 />
-                {formatAgentState(localState, t)}
+                {localState === "running"
+                  ? t("chat.expertWorkEnabled", {
+                      defaultValue: i18n.language.toLowerCase().startsWith("zh")
+                        ? "已启用"
+                        : "Enabled",
+                    })
+                  : formatAgentState(localState, t)}
               </div>
+              <ExpertWorkStatus agent={{ ...agent, state: localState }} />
               {memorySlimming && (
                 <Tag color="processing">{t("experts.memorySlimming")}</Tag>
               )}

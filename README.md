@@ -23,6 +23,7 @@
 - 专家／团队／云端列表头像放大；几何头像去装饰外框；账号保留圆框，无图片默认姓名，可选内置头像或上传。
 - 单聊用户气泡使用专家头像颜色，深色白字、亮色深字；群聊保留原样。
 - 紧凑字体和输入框、工具图标尺寸、加深的工具图标颜色、与旁边按钮统一为 24px 的上下文圆环；侧栏滚动条自动隐藏。
+- 专家名称旁显示当前账号可见会话的“工作中／待确认／空闲”及数量；汇总普通回复、工具执行与 ACP 活动，5 秒自动同步，状态变化及时刷新。
 - 输入框常显模型快捷入口，复用现有会话模型覆盖菜单；浏览器语音错误细分、录音资源释放修复，Mac 语音用途声明与旧 App 修复工具已保存。
 - 之前的桌面登录修复、项目分组、账号头像修复与旧图片保护均包含在完整程序快照内。
 
@@ -48,7 +49,7 @@ python scripts/custom/build_portable.py --platform darwin-arm64 --output dist
 
 脚本对三个官方输入 ZIP 分别核验固定大小、SHA256、Python 真实架构，再合入定制源码；输出包含逐文件 SHA256 清单。固定来源和校验值见 `scripts/custom/upstream-lock.json`。
 
-原生打包使用 `.github/workflows/custom-release.yml`，在三种平台原生 runner 上完成 Python smoke、定制回归、Go 测试、Wails／NSIS 打包和校验；三个平台全部成功后才发布完整 Release。向 `custom/main` 推送会触发构建；后续发新版请手动运行工作流并增加发行 tag 的末尾修订号。原上游发布／Docker 工作流只在上游仓库运行。
+原生打包使用 `.github/workflows/custom-release.yml`，在三种平台原生 runner 上完成 Python smoke、定制回归、Go 测试、Wails／NSIS 打包和校验；三个平台全部成功后才发布完整 Release。向 `custom/main` 推送仅验证和构建，保留现有不可变 Release；后续发新版请手动运行工作流、勾选 `publish_release` 并增加发行 tag 的末尾修订号。原上游发布／Docker 工作流只在上游仓库运行。
 
 后续发行还需同步递增锁文件的 `custom_version`、工作流的 `CUSTOM_VERSION`、健康标记及对应测试；只增加 GitHub tag 不会改变包内版本，也不会触发桌面端替换同版本运行环境。合入新官方版本时须重新适配定制源码和程序基线，通过完整检查后再发行。
 

@@ -1257,6 +1257,33 @@
     "path_outside_root": "文件路径超出当前专家的存储根目录，无法读写。请改用存储根目录内的路径，或在专家设置中扩大存储根目录（Windows 上请显式指定盘符路径，例如 D:/octop-data）。"
   },
   "chat": {
+    "expertWorkDetail": {
+      "working": "正在运行的会话",
+      "waiting": "等待确认或回复的会话",
+      "idle": "当前账号没有正在运行或等待确认的会话",
+      "stopped": "专家尚未启用",
+      "failed": "专家未正常运行，请查看专家设置",
+      "starting": "专家正在启动",
+      "stopping": "专家正在停止",
+      "online": "专家已启用，后端尚未提供工作状态",
+      "remote_online": "云端连接正常，远端尚未提供工作状态",
+      "disconnected": "云端连接已断开，无法确认远端工作状态",
+      "unknown": "工作状态尚未同步，请稍候"
+    },
+    "expertWorkStatus": {
+      "working": "工作中",
+      "waiting": "待确认",
+      "idle": "空闲",
+      "stopped": "未启动",
+      "failed": "异常",
+      "starting": "启动中",
+      "stopping": "停止中",
+      "online": "在线",
+      "remote_online": "远端在线",
+      "disconnected": "连接断开",
+      "unknown": "状态待同步"
+    },
+    "expertWorkEnabled": "已启用",
     "sharedExpert": {
       "banner": "共享专家 · 由 {{name}} 提供",
       "flag": "共享"

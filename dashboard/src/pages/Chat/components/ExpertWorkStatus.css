@@ -1,0 +1,94 @@
+.octop-expert-work-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+.octop-expert-work-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #596274;
+  background: #f0f2f5;
+}
+.octop-expert-work-indicator {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+.octop-expert-work-badge[data-work-status="working"],
+.octop-expert-work-badge[data-work-status="starting"],
+.octop-expert-work-badge[data-work-status="stopping"] {
+  color: #2455bd;
+  background: #edf3ff;
+}
+.octop-expert-work-badge[data-work-status="working"]
+  .octop-expert-work-indicator,
+.octop-expert-work-badge[data-work-status="starting"]
+  .octop-expert-work-indicator,
+.octop-expert-work-badge[data-work-status="stopping"]
+  .octop-expert-work-indicator {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  background: none;
+  animation: octop-expert-work-spin 1s linear infinite;
+}
+.octop-expert-work-badge[data-work-status="waiting"] {
+  color: #8b5400;
+  background: #fff3d7;
+}
+.octop-expert-work-badge[data-work-status="idle"] {
+  color: #49675a;
+  background: #eef5f0;
+}
+.octop-expert-work-badge[data-work-status="failed"] {
+  color: #b23149;
+  background: #fdecef;
+}
+html[data-theme="dark"] .octop-expert-work-badge {
+  color: #c7ccd7;
+  background: #2f3340;
+}
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="working"],
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="starting"],
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="stopping"] {
+  color: #9fc1ff;
+  background: #263650;
+}
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="waiting"] {
+  color: #ffd28c;
+  background: #3d3020;
+}
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="idle"] {
+  color: #b0d4c1;
+  background: #25372f;
+}
+html[data-theme="dark"] .octop-expert-work-badge[data-work-status="failed"] {
+  color: #ffb1bc;
+  background: #482730;
+}
+@keyframes octop-expert-work-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .octop-expert-work-indicator {
+    animation: none !important;
+  }
+}

@@ -10,6 +10,11 @@ on:
         default: "v1.0.2-custom.20261029.1"
         required: true
         type: string
+      publish_release:
+        description: "Publish the complete package set to an immutable Release"
+        default: true
+        required: true
+        type: boolean
 
 permissions:
   contents: read
@@ -42,6 +47,8 @@ jobs:
       - run: npm ci --prefix dashboard
       - name: Verify the customized project picker and preserved UI behavior
         run: |
+          node customization/frontend/test_expert_status_patch.mjs
+          node customization/frontend/test_status_refresh_patch.mjs
           node customization/frontend/test_voice_input_patch.mjs
           node customization/frontend/test_model_shortcut_patch.mjs
           node customization/frontend/test_model_shortcut_source.mjs
@@ -232,7 +239,7 @@ jobs:
   release:
     name: Publish all three platforms together
     needs: [package, quality]
-    if: github.repository == 'chaoyang-rao/Octop-custom'
+    if: github.repository == 'chaoyang-rao/Octop-custom' && github.event_name == 'workflow_dispatch' && inputs.publish_release
     runs-on: ubuntu-latest
     permissions:
       contents: write

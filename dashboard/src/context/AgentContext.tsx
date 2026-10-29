@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from "react";
 import { setActiveAgentId } from "../api/request";
 import { agentApi as legacyAgentApi } from "../api/modules/agent";
+import { onSessionEvent, onStreamEvent } from "../pages/Chat/hooks/chatStore";
 import {
   retainDisconnectedBridgeAgents,
   toBridgeShadowAgentId,
@@ -44,6 +45,10 @@ export interface OctopAgent {
   system_prompt: string | null;
   template_name: string | null;
   state: "running" | "stopped" | "failed" | "starting" | "stopping" | string;
+  /** Account-visible activity; runtime `running` alone is only availability. */
+  work_status?: string;
+  working_count?: number;
+  waiting_count?: number;
   last_error: string | null;
   icon: string | null;
   icon_name: string | null;
@@ -158,6 +163,9 @@ export function agentsSnapshotEqual(
       return (
         a.agent_id === b.agent_id &&
         a.state === b.state &&
+        a.work_status === b.work_status &&
+        a.working_count === b.working_count &&
+        a.waiting_count === b.waiting_count &&
         a.unread_count === b.unread_count &&
         a.bootstrap_pending === b.bootstrap_pending &&
         a.name === b.name &&
@@ -179,6 +187,59 @@ export function agentsSnapshotEqual(
       );
     })
   );
+}
+
+/** Preserve navigation/composer data on errors, but do not keep stale busy badges. */
+export function invalidateExpertWorkFields(agents: OctopAgent[]): OctopAgent[] {
+  let changed = false;
+  const next = agents.map((agent) => {
+    if (
+      agent.work_status === "unknown" &&
+      agent.working_count === undefined &&
+      agent.waiting_count === undefined
+    )
+      return agent;
+    changed = true;
+    return {
+      ...agent,
+      work_status: "unknown",
+      working_count: undefined,
+      waiting_count: undefined,
+    };
+  });
+  return changed ? next : agents;
+}
+
+function bridgeWorkFields(agent: {
+  work_status?: unknown;
+  working_count?: unknown;
+  waiting_count?: unknown;
+}) {
+  if (
+    typeof agent.work_status !== "string" ||
+    ![
+      "working",
+      "waiting",
+      "idle",
+      "stopped",
+      "starting",
+      "stopping",
+      "failed",
+      "unknown",
+    ].includes(agent.work_status)
+  )
+    return {};
+  const validCount = (value: unknown): value is number =>
+    typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+  return {
+    work_status: agent.work_status,
+    ...(validCount(agent.working_count)
+      ? { working_count: agent.working_count }
+      : {}),
+    ...(validCount(agent.waiting_count)
+      ? { waiting_count: agent.waiting_count }
+      : {}),
+  };
 }
 
 /**
@@ -344,6 +405,9 @@ export function mapBridgeAgent(
     knowledge_base_ids?: unknown;
     mcp_servers?: unknown;
     config?: unknown;
+    work_status?: unknown;
+    working_count?: unknown;
+    waiting_count?: unknown;
   },
   conn: {
     connection_id: string;
@@ -375,6 +439,7 @@ export function mapBridgeAgent(
     system_prompt: null,
     template_name: null,
     state: "running",
+    ...bridgeWorkFields(agent),
     last_error: null,
     icon: null,
     icon_name: typeof agent.icon_name === "string" ? agent.icon_name : null,
@@ -458,6 +523,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load agents");
+        setAgents(invalidateExpertWorkFields);
         // On failure, leave whatever previous state was — don't blow away
         // a valid selection just because a fetch hiccuped.
       } finally {
@@ -476,12 +542,55 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  // Re-sync agent runtime state when the user returns to the tab (e.g. after
-  // stopping an expert on another page).
+  // One activity refresh loop for chat and non-chat navigation alike.
   useEffect(() => {
-    const onFocus = () => void refresh({ silent: true });
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    let disposed = false;
+    let pending = false;
+    let queued = false;
+    let debounce: number | undefined;
+    const refreshVisible = async () => {
+      if (disposed || document.visibilityState === "hidden") return;
+      if (pending) {
+        queued = true;
+        return;
+      }
+      pending = true;
+      try {
+        await refresh({ silent: true });
+      } finally {
+        pending = false;
+        if (queued && !disposed) {
+          queued = false;
+          schedule();
+        }
+      }
+    };
+    const schedule = () => {
+      if (disposed) return;
+      window.clearTimeout(debounce);
+      debounce = window.setTimeout(() => {
+        void refreshVisible();
+      }, 150);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") schedule();
+    };
+    const interval = window.setInterval(() => {
+      void refreshVisible();
+    }, 5000);
+    const stopStream = onStreamEvent(schedule);
+    const stopSession = onSessionEvent(schedule);
+    window.addEventListener("focus", schedule);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+      window.clearTimeout(debounce);
+      stopStream();
+      stopSession();
+      window.removeEventListener("focus", schedule);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [refresh]);
 
   const activeAgent = useMemo(
