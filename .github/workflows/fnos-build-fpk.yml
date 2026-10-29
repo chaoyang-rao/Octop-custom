@@ -39,6 +39,7 @@ concurrency:
 
 jobs:
   version:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.ver.outputs.version }}
@@ -75,6 +76,7 @@ jobs:
 
   # 复用 docker-publish 已推送的镜像，不在此重新 build/push。
   ensure-image:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     needs: version
     runs-on: ubuntu-latest
     steps:
@@ -110,6 +112,7 @@ jobs:
           exit 1
 
   fpk:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     needs: [ensure-image, version]
     runs-on: ubuntu-latest
     steps:
@@ -137,6 +140,7 @@ jobs:
           if-no-files-found: error
 
   native:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     # 失败时 workflow 变红；release 仍因 if: always() 会挂上已有的 Docker .fpk。
     needs: version
     runs-on: ubuntu-latest
@@ -264,6 +268,7 @@ jobs:
 
   # 在 ARM runner 上安装 aarch64 扩展（.so），fnpack 只有 linux-amd64，打包放到下一 job。
   native-arm64:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     needs: version
     runs-on: ubuntu-24.04-arm
     outputs:
@@ -380,7 +385,7 @@ jobs:
 
   native-arm64-pack:
     needs: [version, native-arm64]
-    if: needs.native-arm64.outputs.site_packages_ok == 'true'
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( needs.native-arm64.outputs.site_packages_ok == 'true' ) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -421,7 +426,7 @@ jobs:
 
   release:
     # native / native-arm64 失败时仍运行，把已经打好的 .fpk 挂到 Release。
-    if: always()
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( always() ) }}
     needs: [fpk, native, native-arm64-pack, version]
     runs-on: ubuntu-latest
     steps:
@@ -491,7 +496,7 @@ jobs:
     needs: [release, version]
     # release uses always() because native jobs can be skipped. Without always()
     # here, that skip cancels this reusable workflow after release succeeded.
-    if: ${{ always() && needs.release.result == 'success' }}
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( always() && needs.release.result == 'success' ) }}
     uses: ./.github/workflows/upload-release-cos.yml
     with:
       tag: ${{ needs.version.outputs.tag }}

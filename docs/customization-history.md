@@ -1,0 +1,84 @@
+# Octop 本地项目会话功能
+
+基于本机 Octop 1.0.2 的本地定制。保留原有桌面登录修复和专家配置。
+
+## 使用
+
+进入对话，展开专家，在「项目」旁点击「添加项目」，填写名称和已存在文件夹的绝对路径。点击项目右侧的 `+` 新建会话，该会话自动将项目目录传给 ACP。旧会话位于「未分组」，会话菜单可调整所属项目。
+
+项目可折叠、搜索。移除项目分组仅取消归类，聊天记录和磁盘文件保留。运行中或等待审批的会话不能调整项目。已启动的 ACP 会话遇到目录变更会明确提示关闭后重开，避免静默切换目录。
+
+项目目录与专家自己的 workspace 独立；目录绑定控制 ACP 的工作目录，并非操作系统级文件访问隔离。团队子会话不会自动继承父会话项目。
+
+## 代码与复现
+
+- `customization/packages/`：修改后的 Python 包与网页资源。
+- `customization/frontend/patch_project_sidebar.py`：由仓内 `customization/baselines/original/` 重建项目分组界面。
+- `customization/frontend/test_project_sidebar.mjs`：分组与交互检查。
+- `customization/tests/`：临时数据库、API、ACP 与模型上下文测试。
+- `customization/baselines/`：不含用户数据的程序基线和文件校验值；本机可选配置 `customization/baseline.json` 已从 Git 排除。
+- `customization/release-manifest.json`：实际安装文件和校验值，安装后生成。
+- `customization/verification-report.json`：最终安装与验收结果。
+
+已完成 26 项后端/ACP 测试及前端交互、模块引用检查。在桌面端实际完成添加项目、新建会话、移入/移出与刷新保留验证；真实 Codex ACP 的 `pwd` 返回绑定的 Octop 项目目录，并已关闭本次 ACP 会话。原有 87 条消息与更新前逐条比对一致。
+
+Python 检查：
+
+```sh
+PYTHONPATH="customization/packages:$HOME/.octop/portable/packages" \
+"$HOME/.octop/portable/runtime/bin/python3" -m unittest discover \
+  -s customization/tests -v
+```
+
+前端检查：
+
+```sh
+node customization/frontend/test_project_sidebar.mjs
+```
+
+## 安装与回退
+
+关闭 Octop 后执行 `python3 customization/manage_local_patch.py apply`，再打开 Octop。安装程序仅复制相对基线改变的文件，遇到运行目录有其他修改会停止，并在安装前备份数据库和相关文件。
+
+如需回退，关闭 Octop，执行 `python3 customization/manage_local_patch.py rollback`，再打开。回退只恢复程序文件，保留最新聊天及数据库；新增的可空字段和项目表兼容旧程序。数据库快照仅供人工灾难恢复，不会自动覆盖新聊天。
+
+这是本地定制，官方升级可能覆盖改动；升级后应重新核对兼容性，不能直接覆盖新版本。网页资源使用统一版本后缀，避免桌面端旧缓存混用不同模块。
+
+备份含本机私有数据，请勿公开上传 `backups/`。
+
+## 动态头像与单聊气泡（2026-10-28）
+
+在「专家 → 编辑/新建 → 头像」选择形状和颜色。提供软团、棱石、圆方、水滴、云朵、星星、三角七种形状，每种有独立神态和动作；颜色为曜石、青绿、晴蓝、鸢紫、莓粉、蜜橙、珊瑚，可自由组成 49 种头像。大圆眼的间距已进一步加宽。
+
+启用动态头像的专家，在单聊中会让用户发出的消息气泡采用相同基色，并按对比度自动选择文字颜色。群聊气泡、助手正文和附件原有样式保持原样。原上传头像文件保留，可在「图片头像」中恢复。
+
+动画遵循减少动态效果偏好，视图不可见时停止原生组件的帧更新。受控 SVG 资源放在 `octop/dashboard/expert-avatars/v1/`；可读几何/动作及颜色源码为 `customization/packages/octop/dashboard/assets/expert-avatars.js`。样稿和 49 种组合在 `designs/avatar-library-20261028/`。
+
+`avatars-v2` 按后续反馈放大了头像：设置面板预览为 80px，聊天中的几何头像放大约 20%，固定槽内限幅；各形状收紧留白，并验证全段动作不被裁剪。39 项后端/回归测试、前端接线检查与实际单聊显示已验证，详情见 `customization/avatar-verification-report.json`。
+
+`avatars-v3` 按最终指定位置，把「专家、团队、云端」入口列表的外层头像槽与内图统一为 48px；设置预览及聊天尺寸保持 v2 的结果。导航以外的 219 个模块逻辑未变，检查记录见 `customization/navigation-avatar-verification.json`。
+
+这套原创头像库、素材导出和接入经验已保存为本地 skill「动态表情头像」，仓内完整源位于 `skills/dynamic-expression-avatars/`，本机安装位置为 `~/.codex/skills/dynamic-expression-avatars/`。skill 不依赖本项目绝对路径；附 7×7 SVG 导出、独立预览、透明 WebP/GIF 编码脚本及 React/旧图片/单聊气泡接入说明。
+
+`avatars-v5` 按最新反馈撤销新增的常显 Dock 按钮，保留原折叠入口；账号仍用姓名/字母缩写，加回圆形边框，几何角色本身继续无装饰外框。整体 UI 基础字号 13px，聊天正文与输入文字 13px；桌面输入最小高度 78→39px，整块空态输入框约 80px，保留原 160px 多行自适应上限。工具栏图标按原尺寸减半，保留 24px 点击区。源 CSS/补丁检查及本机实际布局已核对，见 `customization/compact-ui-verification.json`。
+
+`avatars-v8` 恢复账号头像选择：上传图片优先，其次明确选中的内置头像，无图片且未选内置头像时回退姓名。账号设置第一项为「无图片（显示姓名）」，三种模式均保留圆形账号外框。选择与保存同步账号上下文；切换模式将旧上传图归档到私有历史目录，快速换图采用纳秒缓存版本。48 项后端回归及前端选择器检查通过，本机已验证姓名与内置头像切换，记录见 `customization/account-choice-verification.json`。
+
+`avatars-v9` 将左侧导航与会话侧栏滚动条设为默认隐藏，鼠标移入或键盘聚焦时显示，离开后隐藏。滚动容器的 overflow、尺寸和滚动位置逻辑保持，聊天正文与弹窗不改。四类滚动层的空闲/移入/键盘/移出及滚轮检查通过，见 `customization/sidebar-scrollbar-verification.json`。
+
+`avatars-v10` 按已选的「深色白字、亮色深字」调整：曜石、晴蓝、鸢紫为白字，其余四种亮色为深字。晴蓝微调为 `#486BCD`、鸢紫为 `#825DC5`，头像与气泡基色相同；七色正文对比度均至少 4.5:1。当前 SVG 输出 v2，并继续识别旧 v1 地址，旧图回传保护与已存形色 ID 不变；本地 skill 与预览已同步。
+
+对话框工具栏图标的默认颜色由极浅灰提升为主题的次级正文色：浅色 `#4b5563`，深色白色 60%，上下文占用数字同步加深。选中状态色、悬停反馈、禁用透明度和发送按钮保留，图标尺寸与点击区保持当前紧凑设置。独立内容哈希 CSS 避免旧缓存；浅深主题样式检查和本机刷新后的显示已核对，见 `customization/toolbar-contrast-verification.json`。
+
+上下文百分比圆环与旁边工具按钮的外圆统一为 24px，数字保留 9px、交互区域保留 24px。浅深主题与移动端尺寸检查见 `customization/context-ring-verification.json`。
+
+本次安装、回退命令改用 `python3 customization/manage_avatar_patch.py apply` 和 `python3 customization/manage_avatar_patch.py rollback`。此回退恢复到已包含项目会话功能的版本，保留当前数据库和聊天。程序基线保存在仓内 `customization/baselines/projects-v2/`。本机可选路径配置 `customization/avatar-baseline.json` 和安装清单 `customization/avatar-release-manifest.json` 不入 Git；缺少路径配置时使用仓内基线与当前用户 `~/.octop/portable/packages`。
+
+
+## Git 与跨机器复现
+
+`customization/packages/`、纯程序基线、补丁与测试、原创头像素材及 `skills/dynamic-expression-avatars/` 一起保存到 Git。原机 `backups/`、私有会话清单、部署备份及 Grok 参考图保留在本地并由 `.gitignore` 排除。
+
+前端重建从 `customization/baselines/original/` 和 `customization/baselines/projects-v2/` 读取输入，不再依赖原机备份绝对路径。运行 `customization/baselines/README.md` 中的命令即可重建。安装脚本允许原机本地 JSON 保留其既有路径配置；新克隆未带 JSON 时自动使用仓内基线。
+
+官方新版本不能直接套用旧程序文件；先在 Git 中合并上游更新、核对补丁和测试，再构建发行。安装与回退始终保留当前聊天数据库，不用历史快照覆盖新聊天。

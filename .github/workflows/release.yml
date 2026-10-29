@@ -28,7 +28,7 @@ jobs:
   build:
     name: Build distributions
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( startsWith(github.ref, 'refs/tags/v') ) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,6 +64,7 @@ jobs:
           path: dist/
 
   publish:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Publish to PyPI
     needs: build
     runs-on: ubuntu-latest
@@ -81,6 +82,7 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
   github-release:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Create GitHub Release
     needs: publish
     runs-on: ubuntu-latest
@@ -141,6 +143,7 @@ jobs:
   # local .git (bare runner → "fatal: not a git repository"). Dispatch failure
   # must fail this workflow so a missed sync is visible.
   sync-develop:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Trigger sync main into develop
     needs: github-release
     runs-on: ubuntu-latest
@@ -157,6 +160,7 @@ jobs:
   # FnOS FPK：复用本 Release 的 wheel + docker-publish 的 GHCR 镜像。
   # 与 sync-develop 并行。Dispatch 失败必须让本 workflow 变红（PyPI 已发布仍如此）。
   trigger-fnos:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Trigger FnOS FPK build
     needs: github-release
     runs-on: ubuntu-latest

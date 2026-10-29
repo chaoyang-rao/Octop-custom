@@ -1,0 +1,9 @@
+{
+  "variant_count": 49,
+  "shape_count": 7,
+  "color_count": 7,
+  "loop": "6 seconds",
+  "bounds": "all sampled body and eye geometry inside viewBox",
+  "bubble_contrast": "all >=4.5:1",
+  "group_scope": "frontend guard required; tested separately"
+}

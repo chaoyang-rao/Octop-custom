@@ -61,6 +61,7 @@ concurrency:
 
 jobs:
   upload:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Upload ${{ inputs.tag }}
     runs-on: ubuntu-latest
     timeout-minutes: 120

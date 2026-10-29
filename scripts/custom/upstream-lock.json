@@ -1,0 +1,27 @@
+{
+  "upstream_version": "1.0.2",
+  "custom_version": "1.0.2.post20261029",
+  "upstream_commit": "dd9dce470844c25d59effb50615bb3c667ea25cd",
+  "upstream_repository": "https://github.com/TencentCloud/Octop",
+  "license": "MIT",
+  "assets": {
+    "darwin-arm64": {
+      "name": "Octop-portable-darwin-arm64-1.0.2.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.2/Octop-portable-darwin-arm64-1.0.2.zip",
+      "sha256": "0a44a24ae71afad07a67cf5c0c092ddae2a432f53813097ea894d129d7be1fe0",
+      "size": 226404993
+    },
+    "darwin-amd64": {
+      "name": "Octop-portable-darwin-amd64-1.0.2.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.2/Octop-portable-darwin-amd64-1.0.2.zip",
+      "sha256": "d8016c275e5211c941a6813b7991d51b8fb9fdaa2322514251c60fd375fccc16",
+      "size": 235777981
+    },
+    "windows-amd64": {
+      "name": "Octop-portable-windows-amd64-1.0.2.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.2/Octop-portable-windows-amd64-1.0.2.zip",
+      "sha256": "796fd40e52bee8a398c1959d095359dcd920d0d5ae3b1879f103673754c3c840",
+      "size": 220158922
+    }
+  }
+}

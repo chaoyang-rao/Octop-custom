@@ -1,0 +1,121 @@
+{
+  "ok": true,
+  "intent": "Match adjacent tool button outer circle",
+  "visibleRingPx": {
+    "before": 14,
+    "after": 24
+  },
+  "adjacentToolOuterPx": 24,
+  "targetPx": 24,
+  "labelPx": 9,
+  "measurements": {
+    "light-1440": {
+      "tool": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13.3333px",
+        "color": "rgb(75, 85, 99)"
+      },
+      "target": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgb(0, 0, 0)"
+      },
+      "ring": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgb(0, 0, 0)"
+      },
+      "label": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "9px",
+        "color": "rgb(75, 85, 99)"
+      }
+    },
+    "dark-1440": {
+      "tool": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13.3333px",
+        "color": "rgba(255, 255, 255, 0.6)"
+      },
+      "target": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgba(255, 255, 255, 0.9)"
+      },
+      "ring": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgba(255, 255, 255, 0.9)"
+      },
+      "label": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "9px",
+        "color": "rgba(255, 255, 255, 0.6)"
+      }
+    },
+    "light-375": {
+      "tool": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13.3333px",
+        "color": "rgb(75, 85, 99)"
+      },
+      "target": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgb(0, 0, 0)"
+      },
+      "ring": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgb(0, 0, 0)"
+      },
+      "label": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "9px",
+        "color": "rgb(75, 85, 99)"
+      }
+    },
+    "dark-375": {
+      "tool": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13.3333px",
+        "color": "rgba(255, 255, 255, 0.6)"
+      },
+      "target": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgba(255, 255, 255, 0.9)"
+      },
+      "ring": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "13px",
+        "color": "rgba(255, 255, 255, 0.9)"
+      },
+      "label": {
+        "width": "24px",
+        "height": "24px",
+        "fontSize": "9px",
+        "color": "rgba(255, 255, 255, 0.6)"
+      }
+    }
+  },
+  "runtime_http_verified": true,
+  "native_visual_verified": true,
+  "installed_asset": "toolbar-contrast.f1a9189321.css",
+  "native_observation": "Existing chat reloaded; percentage circle visibly enlarged to align with neighboring circular toolbar buttons; value 2 retained; no test message sent."
+}

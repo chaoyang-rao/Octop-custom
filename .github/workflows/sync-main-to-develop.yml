@@ -24,6 +24,7 @@ permissions:
 
 jobs:
   sync:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Sync main into develop
     runs-on: ubuntu-latest
     steps:

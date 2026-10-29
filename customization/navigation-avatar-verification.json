@@ -1,0 +1,22 @@
+{
+  "frontend_release": "avatars-v3",
+  "status": "installed_and_verified",
+  "navigation_slots_px": 48,
+  "navigation_tabs": [
+    "专家",
+    "团队",
+    "云端"
+  ],
+  "scope": "shared navigation components and their slot CSS only",
+  "other_modules_unchanged": 219,
+  "native_expert_list": "verified",
+  "teams_and_cloud": "shared component render checks passed",
+  "settings_preview_px": 80,
+  "chat_size_scale": 1.2,
+  "earlier_settings_and_chat_changes": "preserved",
+  "installed_file_hashes_verified": 727,
+  "skill_display_name": "动态表情头像",
+  "skill_path": "/Users/Zhuanz1/.codex/skills/dynamic-expression-avatars",
+  "skill_validation": "passed",
+  "skill_forward_test": "standalone file preview, subset color switching, transparent 256px six-second WebP/GIF passed"
+}

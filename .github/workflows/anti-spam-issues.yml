@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   anti-spam:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     runs-on: ubuntu-latest
 
     steps:

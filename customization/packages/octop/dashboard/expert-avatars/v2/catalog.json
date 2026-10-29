@@ -1,0 +1,331 @@
+{
+  "version": 2,
+  "shapes": [
+    {
+      "id": "blob",
+      "name": "软团",
+      "mood": "安静",
+      "motion": "轻呼吸 · 双眨眼"
+    },
+    {
+      "id": "pebble",
+      "name": "棱石",
+      "mood": "好奇",
+      "motion": "左右张望 · 单眨轻跳"
+    },
+    {
+      "id": "squircle",
+      "name": "圆方",
+      "mood": "专注",
+      "motion": "眯眼思考 · 轻偏头"
+    },
+    {
+      "id": "droplet",
+      "name": "水滴",
+      "mood": "腼腆",
+      "motion": "探头 · 害羞眨眼"
+    },
+    {
+      "id": "cloud",
+      "name": "云朵",
+      "mood": "开心",
+      "motion": "轻轻漂浮 · 笑眼"
+    },
+    {
+      "id": "star",
+      "name": "星星",
+      "mood": "兴奋",
+      "motion": "蓄力跳起 · 摇摆"
+    },
+    {
+      "id": "triangle",
+      "name": "三角",
+      "mood": "沉稳",
+      "motion": "缓慢环顾 · 点头"
+    }
+  ],
+  "colors": [
+    {
+      "id": "ink",
+      "name": "曜石",
+      "hex": "#252830"
+    },
+    {
+      "id": "jade",
+      "name": "青绿",
+      "hex": "#19B7A2"
+    },
+    {
+      "id": "blue",
+      "name": "晴蓝",
+      "hex": "#486BCD"
+    },
+    {
+      "id": "violet",
+      "name": "鸢紫",
+      "hex": "#825DC5"
+    },
+    {
+      "id": "rose",
+      "name": "莓粉",
+      "hex": "#DB779A"
+    },
+    {
+      "id": "amber",
+      "name": "蜜橙",
+      "hex": "#DCAA46"
+    },
+    {
+      "id": "coral",
+      "name": "珊瑚",
+      "hex": "#E5805D"
+    }
+  ],
+  "variants": [
+    {
+      "shape": "blob",
+      "color": "ink",
+      "url": "/expert-avatars/v2/blob-ink.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "jade",
+      "url": "/expert-avatars/v2/blob-jade.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "blue",
+      "url": "/expert-avatars/v2/blob-blue.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "violet",
+      "url": "/expert-avatars/v2/blob-violet.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "rose",
+      "url": "/expert-avatars/v2/blob-rose.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "amber",
+      "url": "/expert-avatars/v2/blob-amber.svg"
+    },
+    {
+      "shape": "blob",
+      "color": "coral",
+      "url": "/expert-avatars/v2/blob-coral.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "ink",
+      "url": "/expert-avatars/v2/pebble-ink.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "jade",
+      "url": "/expert-avatars/v2/pebble-jade.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "blue",
+      "url": "/expert-avatars/v2/pebble-blue.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "violet",
+      "url": "/expert-avatars/v2/pebble-violet.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "rose",
+      "url": "/expert-avatars/v2/pebble-rose.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "amber",
+      "url": "/expert-avatars/v2/pebble-amber.svg"
+    },
+    {
+      "shape": "pebble",
+      "color": "coral",
+      "url": "/expert-avatars/v2/pebble-coral.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "ink",
+      "url": "/expert-avatars/v2/squircle-ink.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "jade",
+      "url": "/expert-avatars/v2/squircle-jade.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "blue",
+      "url": "/expert-avatars/v2/squircle-blue.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "violet",
+      "url": "/expert-avatars/v2/squircle-violet.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "rose",
+      "url": "/expert-avatars/v2/squircle-rose.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "amber",
+      "url": "/expert-avatars/v2/squircle-amber.svg"
+    },
+    {
+      "shape": "squircle",
+      "color": "coral",
+      "url": "/expert-avatars/v2/squircle-coral.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "ink",
+      "url": "/expert-avatars/v2/droplet-ink.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "jade",
+      "url": "/expert-avatars/v2/droplet-jade.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "blue",
+      "url": "/expert-avatars/v2/droplet-blue.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "violet",
+      "url": "/expert-avatars/v2/droplet-violet.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "rose",
+      "url": "/expert-avatars/v2/droplet-rose.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "amber",
+      "url": "/expert-avatars/v2/droplet-amber.svg"
+    },
+    {
+      "shape": "droplet",
+      "color": "coral",
+      "url": "/expert-avatars/v2/droplet-coral.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "ink",
+      "url": "/expert-avatars/v2/cloud-ink.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "jade",
+      "url": "/expert-avatars/v2/cloud-jade.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "blue",
+      "url": "/expert-avatars/v2/cloud-blue.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "violet",
+      "url": "/expert-avatars/v2/cloud-violet.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "rose",
+      "url": "/expert-avatars/v2/cloud-rose.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "amber",
+      "url": "/expert-avatars/v2/cloud-amber.svg"
+    },
+    {
+      "shape": "cloud",
+      "color": "coral",
+      "url": "/expert-avatars/v2/cloud-coral.svg"
+    },
+    {
+      "shape": "star",
+      "color": "ink",
+      "url": "/expert-avatars/v2/star-ink.svg"
+    },
+    {
+      "shape": "star",
+      "color": "jade",
+      "url": "/expert-avatars/v2/star-jade.svg"
+    },
+    {
+      "shape": "star",
+      "color": "blue",
+      "url": "/expert-avatars/v2/star-blue.svg"
+    },
+    {
+      "shape": "star",
+      "color": "violet",
+      "url": "/expert-avatars/v2/star-violet.svg"
+    },
+    {
+      "shape": "star",
+      "color": "rose",
+      "url": "/expert-avatars/v2/star-rose.svg"
+    },
+    {
+      "shape": "star",
+      "color": "amber",
+      "url": "/expert-avatars/v2/star-amber.svg"
+    },
+    {
+      "shape": "star",
+      "color": "coral",
+      "url": "/expert-avatars/v2/star-coral.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "ink",
+      "url": "/expert-avatars/v2/triangle-ink.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "jade",
+      "url": "/expert-avatars/v2/triangle-jade.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "blue",
+      "url": "/expert-avatars/v2/triangle-blue.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "violet",
+      "url": "/expert-avatars/v2/triangle-violet.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "rose",
+      "url": "/expert-avatars/v2/triangle-rose.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "amber",
+      "url": "/expert-avatars/v2/triangle-amber.svg"
+    },
+    {
+      "shape": "triangle",
+      "color": "coral",
+      "url": "/expert-avatars/v2/triangle-coral.svg"
+    }
+  ]
+}

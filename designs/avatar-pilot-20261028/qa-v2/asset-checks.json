@@ -1,0 +1,48 @@
+[
+  {
+    "name": "墨团",
+    "stem": "01-momo",
+    "size": [
+      512,
+      512
+    ],
+    "sampled_frames": 150,
+    "encoded_frames": {
+      "webp": 150,
+      "gif": 150
+    },
+    "fps": 25,
+    "duration_seconds": 6,
+    "transparent": true,
+    "loop_seam_body_px": 0.3286,
+    "formats": [
+      "webp",
+      "gif",
+      "svg",
+      "png"
+    ]
+  },
+  {
+    "name": "青石",
+    "stem": "02-jade",
+    "size": [
+      512,
+      512
+    ],
+    "sampled_frames": 150,
+    "encoded_frames": {
+      "webp": 149,
+      "gif": 149
+    },
+    "fps": 25,
+    "duration_seconds": 6,
+    "transparent": true,
+    "loop_seam_body_px": 0.427,
+    "formats": [
+      "webp",
+      "gif",
+      "svg",
+      "png"
+    ]
+  }
+]

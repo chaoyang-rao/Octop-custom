@@ -1,0 +1,4 @@
+interface:
+  display_name: "动态表情头像"
+  short_description: "生成并接入几何角色、表情动作和配色可组合的动态头像"
+  default_prompt: "使用 $dynamic-expression-avatars 制作或调整动态表情头像，并按指定位置接入界面。"

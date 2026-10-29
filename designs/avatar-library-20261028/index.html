@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Octop · 七种动态头像</title>
+  <style>
+    :root{font-family:-apple-system,"SF Pro Text","PingFang SC",sans-serif;color:#24282c;background:#f5f4ef;color-scheme:light;--line:#deded7;--quiet:#636963;--panel:transparent}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:36px 28px 28px}header{display:flex;justify-content:space-between;gap:24px;align-items:center}h1{font-size:24px;font-weight:500;letter-spacing:-.03em;margin:0}header p{margin:8px 0 0;font-size:13px;line-height:1.8;color:var(--quiet)}button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid #7479a5;outline-offset:4px}.theme{border:1px solid var(--line);background:transparent;color:inherit;border-radius:7px;padding:9px 12px;white-space:nowrap;font-size:12px}.palette{display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:25px 0 20px;border-bottom:1px solid var(--line)}.palette button{border:0;background:transparent;color:inherit;display:flex;align-items:center;gap:7px;padding:5px 0;font-size:12px}.swatch{width:21px;height:21px;border:1px solid #8884;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px}.palette button[aria-pressed=true] .swatch{outline:2px solid currentColor;outline-offset:3px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px 24px;margin-top:14px}.avatar{min-width:0}.avatar img{display:block;width:100%;height:auto;max-width:200px;margin:0 auto;aspect-ratio:1}h2{display:flex;align-items:baseline;gap:8px;font-size:15px;font-weight:500;margin:0}h2 small{font-size:11px;font-weight:400;color:var(--quiet)}.avatar p{font-size:12px;color:var(--quiet);line-height:1.7;margin:6px 0 0}.bubble-demo{border-top:1px solid var(--line);margin-top:25px;padding-top:20px;display:flex;gap:20px;align-items:center;justify-content:space-between}.bubble-demo p{font-size:12px;color:var(--quiet);line-height:1.7;margin:0}.bubble{max-width:330px;padding:13px 17px;border-radius:16px 16px 4px 16px;background:#252830;color:white;font-size:13px;line-height:1.6}footer{display:flex;justify-content:space-between;gap:20px;margin-top:25px;font-size:11px;color:var(--quiet);line-height:1.8}footer a{color:inherit}html[data-theme=dark]{color:#ecefe9;background:#1c201e;color-scheme:dark;--line:#3b423d;--quiet:#a9b1aa}@media(max-width:850px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 15px}.avatar img{max-width:180px}}@media(max-width:520px){main{padding:25px 20px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{align-items:flex-start}h1{font-size:21px}.palette{gap:10px 13px}.bubble-demo{flex-direction:column;align-items:flex-start}footer{flex-wrap:wrap}.avatar img{max-width:180px}}
+  </style>
+</head>
+<body>
+  <main>
+    <header><div><h1>七个小家伙，各有脾气。</h1><p>更宽的眼距，大圆眼。7 种形状和 7 种颜色自由搭配。</p></div><button class="theme" id="theme" type="button">深色背景</button></header>
+    <nav class="palette" aria-label="头像颜色" id="palette"></nav>
+    <section class="grid" id="grid" aria-label="七种头像形状"></section>
+    <section class="bubble-demo" aria-label="单聊气泡颜色预览"><p>单聊里，你发出的消息气泡<br>使用该专家的头像颜色。</p><div class="bubble" id="bubble">这条消息，会跟着它的颜色走。</div></section>
+    <footer><span>每个形状都有自己的神态和动作 · 群聊气泡保持原样</span><a href="../avatar-pilot-20261028/index-v1.html">查看最初样稿</a></footer>
+  </main>
+  <script type="module">
+    import {SHAPES,COLORS,bubbleStyle} from './expert-avatars.js';
+    const grid=document.querySelector('#grid'), palette=document.querySelector('#palette'), bubble=document.querySelector('#bubble');
+    let selected=null;
+    function update(color=null){
+      selected=color;
+      for(const [i,img] of [...grid.querySelectorAll('img')].entries())img.src=`assets/${SHAPES[i].id}-${color||COLORS[i].id}.svg`;
+      for(const button of palette.querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.dataset.color===(color||'')));
+      const style=bubbleStyle(color||'ink');bubble.style.backgroundColor=style.backgroundColor;bubble.style.color=style.color;
+    }
+    for(const [i,shape] of SHAPES.entries()){
+      const article=document.createElement('article');article.className='avatar';
+      const img=document.createElement('img');img.width=512;img.height=512;img.alt=`${shape.name}，${shape.mood}`;img.src=`assets/${shape.id}-${COLORS[i].id}.svg`;
+      const heading=document.createElement('h2');heading.textContent=shape.name;const mood=document.createElement('small');mood.textContent=shape.mood;heading.append(mood);
+      const description=document.createElement('p');description.textContent=shape.motion;
+      article.append(img,heading,description);grid.append(article);
+    }
+    const reset=document.createElement('button');reset.type='button';reset.textContent='默认配色';reset.dataset.color='';reset.addEventListener('click',()=>update(null));palette.append(reset);
+    for(const color of COLORS){
+      const button=document.createElement('button');button.type='button';button.dataset.color=color.id;button.setAttribute('aria-label',color.name);button.setAttribute('aria-pressed','false');
+      const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color.hex;button.append(swatch,document.createTextNode(color.name));button.addEventListener('click',()=>update(color.id));palette.append(button);
+    }
+    document.querySelector('#theme').addEventListener('click',event=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';event.currentTarget.textContent=dark?'浅色背景':'深色背景';});
+    update(null);
+  </script>
+</body>
+</html>

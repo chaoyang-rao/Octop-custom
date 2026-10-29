@@ -116,3 +116,19 @@ scripts/lh_image_install_octop_tencentos.sh
 .worktrees/
 # Local conda environment
 .conda-octop/
+
+# Local custom edition: retain program source, never private runtime snapshots.
+/backups/
+/dist/
+/.cache/
+/private/
+/.private/
+*.sqlite3
+*.sqlite3-*
+/customization/baseline.json
+/customization/avatar-baseline.json
+/customization/pre-update-counts.json
+/customization/*-backup.json
+/customization/release-manifest.json
+/customization/avatar-release-manifest.json
+/designs/avatar-pilot-20261028/reference/

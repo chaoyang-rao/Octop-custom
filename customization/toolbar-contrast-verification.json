@@ -1,0 +1,388 @@
+{
+  "ok": true,
+  "scope": "Composer toolbar only",
+  "measurements": {
+    "light": {
+      "before": {
+        "style": {
+          "normal": {
+            "color": "rgb(209, 213, 219)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "new": {
+            "color": "rgb(209, 213, 219)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "disabled": {
+            "color": "rgb(209, 213, 219)",
+            "opacity": "0.35",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "send": {
+            "color": "rgb(255, 255, 255)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "context": {
+            "color": "rgb(156, 163, 175)",
+            "opacity": "1",
+            "width": "1440px",
+            "height": "900px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "state0": {
+            "color": "rgb(37, 99, 235)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(37, 99, 235, 0.12)"
+          },
+          "state1": {
+            "color": "rgb(124, 58, 237)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(124, 58, 237, 0.12)"
+          },
+          "state2": {
+            "color": "rgb(232, 93, 117)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(232, 93, 117, 0.06)"
+          },
+          "state3": {
+            "color": "rgb(220, 38, 38)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(220, 38, 38, 0.12)"
+          },
+          "state4": {
+            "color": "rgb(180, 83, 9)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(245, 158, 11, 0.14)"
+          },
+          "state5": {
+            "color": "rgb(15, 118, 110)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(13, 148, 136, 0.14)"
+          },
+          "outside": {
+            "color": "rgb(209, 213, 219)",
+            "opacity": "1",
+            "width": "36px",
+            "height": "36px",
+            "background": "rgb(247, 248, 250)"
+          }
+        },
+        "hover": "rgb(232, 93, 117)",
+        "focus": "solid"
+      },
+      "after": {
+        "style": {
+          "normal": {
+            "color": "rgb(75, 85, 99)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "new": {
+            "color": "rgb(75, 85, 99)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "disabled": {
+            "color": "rgb(75, 85, 99)",
+            "opacity": "0.35",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(247, 248, 250)"
+          },
+          "send": {
+            "color": "rgb(255, 255, 255)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "context": {
+            "color": "rgb(75, 85, 99)",
+            "opacity": "1",
+            "width": "1440px",
+            "height": "900px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "state0": {
+            "color": "rgb(37, 99, 235)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(37, 99, 235, 0.12)"
+          },
+          "state1": {
+            "color": "rgb(124, 58, 237)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(124, 58, 237, 0.12)"
+          },
+          "state2": {
+            "color": "rgb(232, 93, 117)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(232, 93, 117, 0.06)"
+          },
+          "state3": {
+            "color": "rgb(220, 38, 38)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(220, 38, 38, 0.12)"
+          },
+          "state4": {
+            "color": "rgb(180, 83, 9)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(245, 158, 11, 0.14)"
+          },
+          "state5": {
+            "color": "rgb(15, 118, 110)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(13, 148, 136, 0.14)"
+          },
+          "outside": {
+            "color": "rgb(209, 213, 219)",
+            "opacity": "1",
+            "width": "36px",
+            "height": "36px",
+            "background": "rgb(247, 248, 250)"
+          }
+        },
+        "hover": "rgb(232, 93, 117)",
+        "focus": "solid"
+      }
+    },
+    "dark": {
+      "before": {
+        "style": {
+          "normal": {
+            "color": "rgba(255, 255, 255, 0.2)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "new": {
+            "color": "rgba(255, 255, 255, 0.2)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "disabled": {
+            "color": "rgba(255, 255, 255, 0.2)",
+            "opacity": "0.35",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "send": {
+            "color": "rgb(255, 255, 255)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "context": {
+            "color": "rgba(255, 255, 255, 0.35)",
+            "opacity": "1",
+            "width": "1440px",
+            "height": "900px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "state0": {
+            "color": "rgb(37, 99, 235)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(37, 99, 235, 0.12)"
+          },
+          "state1": {
+            "color": "rgb(124, 58, 237)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(124, 58, 237, 0.12)"
+          },
+          "state2": {
+            "color": "rgb(240, 139, 154)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(232, 93, 117, 0.12)"
+          },
+          "state3": {
+            "color": "rgb(220, 38, 38)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(220, 38, 38, 0.12)"
+          },
+          "state4": {
+            "color": "rgb(180, 83, 9)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(245, 158, 11, 0.14)"
+          },
+          "state5": {
+            "color": "rgb(15, 118, 110)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(13, 148, 136, 0.14)"
+          },
+          "outside": {
+            "color": "rgba(255, 255, 255, 0.2)",
+            "opacity": "1",
+            "width": "36px",
+            "height": "36px",
+            "background": "rgb(26, 26, 26)"
+          }
+        },
+        "hover": "rgb(240, 139, 154)",
+        "focus": "solid"
+      },
+      "after": {
+        "style": {
+          "normal": {
+            "color": "rgba(255, 255, 255, 0.6)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "new": {
+            "color": "rgba(255, 255, 255, 0.6)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "disabled": {
+            "color": "rgba(255, 255, 255, 0.6)",
+            "opacity": "0.35",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgb(26, 26, 26)"
+          },
+          "send": {
+            "color": "rgb(255, 255, 255)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "context": {
+            "color": "rgba(255, 255, 255, 0.6)",
+            "opacity": "1",
+            "width": "1440px",
+            "height": "900px",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          "state0": {
+            "color": "rgb(37, 99, 235)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(37, 99, 235, 0.12)"
+          },
+          "state1": {
+            "color": "rgb(124, 58, 237)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(124, 58, 237, 0.12)"
+          },
+          "state2": {
+            "color": "rgb(240, 139, 154)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(232, 93, 117, 0.12)"
+          },
+          "state3": {
+            "color": "rgb(220, 38, 38)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(220, 38, 38, 0.12)"
+          },
+          "state4": {
+            "color": "rgb(180, 83, 9)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(245, 158, 11, 0.14)"
+          },
+          "state5": {
+            "color": "rgb(15, 118, 110)",
+            "opacity": "1",
+            "width": "24px",
+            "height": "24px",
+            "background": "rgba(13, 148, 136, 0.14)"
+          },
+          "outside": {
+            "color": "rgba(255, 255, 255, 0.2)",
+            "opacity": "1",
+            "width": "36px",
+            "height": "36px",
+            "background": "rgb(26, 26, 26)"
+          }
+        },
+        "hover": "rgb(240, 139, 154)",
+        "focus": "solid"
+      }
+    }
+  },
+  "contrastOnSecondarySurface": {
+    "light": 7.111930986646446,
+    "dark": 6.932589742375087
+  },
+  "checks": [
+    "light/dark semantic color",
+    "hover/focus retained",
+    "six active state colors retained",
+    "disabled opacity retained",
+    "send and outside toolbar unchanged",
+    "24px targets unchanged"
+  ],
+  "runtime_http_verified": true,
+  "native_visual_verified": true,
+  "native_observation": "Reloaded existing Octop chat; composer tools and context count visibly darker; no test message sent.",
+  "installed_asset": "toolbar-contrast.abe36db65b.css",
+  "deployment_backup": "/Users/Zhuanz1/Documents/Octop项目/backups/deployment-20261029-090822-494549",
+  "installed_hashes_verified": 2358
+}

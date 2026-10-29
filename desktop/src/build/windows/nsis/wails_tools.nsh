@@ -8,13 +8,13 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "Octop"
+    !define INFO_PROJECTNAME "OctopCustom"
 !endif
 !ifndef INFO_COMPANYNAME
     !define INFO_COMPANYNAME "Octop"
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "Octop"
+    !define INFO_PRODUCTNAME "Octop Custom"
 !endif
 !ifndef INFO_PRODUCTVERSION
     !define INFO_PRODUCTVERSION "0.9.31"

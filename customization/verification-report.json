@@ -1,0 +1,29 @@
+{
+  "base_version": "1.0.2",
+  "frontend_release": "projects-v2",
+  "status": "installed_and_verified",
+  "python_tests_passed": 26,
+  "frontend_interaction_check": "passed",
+  "real_database_copy_migration": "passed_twice_integrity_and_foreign_keys",
+  "original_messages_preserved_exactly": 87,
+  "installed_file_hashes_verified": 452,
+  "native_ui_checks": [
+    "existing_login_preserved",
+    "add_project",
+    "create_project_chat",
+    "move_out_and_back",
+    "reload_persistence",
+    "folder_icon_size"
+  ],
+  "acp_live_check": {
+    "project_path": "/Users/Zhuanz1/Documents/Octop项目",
+    "observed_pwd": "/Users/Zhuanz1/Documents/Octop项目",
+    "session_closed": true,
+    "test_thread_id": "thr_01M5XVSB77X3D1X1MTADK57S41"
+  },
+  "limitations": [
+    "Local customization may be overwritten by a vendor upgrade.",
+    "Project cwd binding is not an OS filesystem sandbox.",
+    "Team child threads do not inherit a parent project automatically."
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "release": "avatars-v8",
+  "status": "installed",
+  "account_choice_order": [
+    "uploaded image",
+    "explicit built-in avatar",
+    "name fallback"
+  ],
+  "first_user_option": "无图片（显示姓名）",
+  "default": "NULL icon and no active image shows name",
+  "selection_api": "existing PATCH /api/auth/me avatar_icon:null",
+  "upload_history": "private per-user archive; no schema migration",
+  "cache_version": "st_mtime_ns",
+  "backend_tests_passed": 48,
+  "user_avatar_api_tests": 9,
+  "frontend_tests": [
+    "renderer priority and React component boundary",
+    "name-first user picker and unchanged role picker",
+    "saved choice and context synchronization",
+    "rollback on failure",
+    "uploaded/built-in/name circular account frames",
+    "previous avatar/color/composer/nav scope preserved"
+  ],
+  "native_checks": [
+    "No-image selection saves and shows name",
+    "Doctor preset selection saves and shows portrait",
+    "original Doctor choice restored after verification"
+  ],
+  "latest_ui_reload_check": "timed out; native mode checks completed before final cosmetic copy/frame update",
+  "original_messages_preserved_exactly": 143,
+  "installed_hashes_verified": 1856
+}

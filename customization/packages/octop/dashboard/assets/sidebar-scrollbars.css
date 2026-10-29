@@ -1,0 +1,26 @@
+/* Only the actual Dock / conversation-list scroll layers. Keep their existing
+   overflow, dimensions and scroll positions; fade the thumb, not the content. */
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk){
+  scrollbar-width:thin;
+  scrollbar-color:transparent transparent;
+}
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk)::-webkit-scrollbar{
+  width:6px;
+  height:6px;
+}
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk)::-webkit-scrollbar-track,
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk)::-webkit-scrollbar-corner{
+  background:transparent;
+}
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk)::-webkit-scrollbar-thumb{
+  background:transparent;
+  border-radius:6px;
+}
+/* Mouse focus alone should not leave a thumb stuck on after the pointer leaves.
+   Keyboard focus, including focus on a child link, keeps the scrollbar usable. */
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk):is(:hover,:focus-visible,:has(:focus-visible)){
+  scrollbar-color:var(--fn-text-tertiary,rgba(110,116,130,.55)) transparent;
+}
+:is([data-octop-sidebar-scroll="dock"],.index-module__sessionItems__q1qww,.index-module__minimalAgentNav__Oksnq,.Sidebar-module__minimalSettingsPane__3uWDk):is(:hover,:focus-visible,:has(:focus-visible))::-webkit-scrollbar-thumb{
+  background:var(--fn-text-tertiary,rgba(110,116,130,.55));
+}

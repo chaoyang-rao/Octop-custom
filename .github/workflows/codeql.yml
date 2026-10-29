@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   analyze:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Analyze
     runs-on: ubuntu-latest
     steps:

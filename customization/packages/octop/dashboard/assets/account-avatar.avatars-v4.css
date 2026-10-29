@@ -1,0 +1,18 @@
+/* Remove only decoration surrounding a generated geometric avatar.  Rows with
+   a label or other controls are excluded, as are uploaded image avatars. */
+[data-octop-geometric-avatar]{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  overflow:visible!important;
+}
+:where(span,div,button):has(>svg[data-octop-geometric-avatar]:only-child){
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  overflow:visible!important;
+}
+/* Keep account text at the existing account/message avatar dimensions. */
+[data-account-initials]{font-variant-caps:normal;text-transform:none}

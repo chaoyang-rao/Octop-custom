@@ -1,3 +1,66 @@
+# Octop Custom 定制版
+
+这是 `chaoyang-rao/Octop-custom` 私有定制仓库，保留官方 **v1.0.2** 提交与此前全部已确认的本地改动。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。定制程序版本为 `1.0.2.post20261029`。
+
+## 下载与安装
+
+在本仓库 [Releases](https://github.com/chaoyang-rao/Octop-custom/releases) 下载：
+
+| 平台 | 原生安装包 | 免安装完整运行包 |
+| --- | --- | --- |
+| Windows x64 | `OctopCustom-desktop-windows-amd64-*.exe` | `Octop-portable-windows-amd64-*.zip` |
+| Mac Intel | `OctopCustom-desktop-darwin-amd64-*.dmg` | `Octop-portable-darwin-amd64-*.zip` |
+| Mac M 系列 | `OctopCustom-desktop-darwin-arm64-*.dmg` | `Octop-portable-darwin-arm64-*.zip` |
+
+原生应用名为 **Octop Custom**，与官方客户端分开安装。Mac 使用 ad hoc 签名，尚未作 Developer ID 公证；Windows 未作 Authenticode 签名。每个版本附带 SHA256 校验文件和各平台验证记录。
+
+首次打开定制原生应用前，请退出官方 Octop。定制版继续使用原有 `~/.octop` 的账号、聊天和专家配置；程序单独保存在 `~/.octop/custom-runtime/portable`，不会与官方 `~/.octop/portable` 相互覆盖。便携 ZIP 完整解压后运行 `start.sh` / `start.bat`，默认数据在解压目录的 `data/`；如需读取原数据，显式传入 `--home` 指向原数据目录。勿同时启动使用同一数据目录的两个实例。
+
+## 保存的定制
+
+- 专家按项目文件夹归类会话，ACP 使用绑定的项目目录，运行中会话禁止静默切换目录。
+- 7 种几何角色 × 7 种颜色的动态表情头像、大圆眼、宽眼距、独立神态与动作；完整「动态表情头像」skill 位于 `skills/dynamic-expression-avatars/`。
+- 专家／团队／云端列表头像放大；几何头像去装饰外框；账号保留圆框，无图片默认姓名，可选内置头像或上传。
+- 单聊用户气泡使用专家头像颜色，深色白字、亮色深字；群聊保留原样。
+- 紧凑字体和输入框、工具图标尺寸、加深的工具图标颜色、与旁边按钮统一为 24px 的上下文圆环；侧栏滚动条自动隐藏。
+- 之前的桌面登录修复、项目分组、账号头像修复与旧图片保护均包含在完整程序快照内。
+
+历史说明见 [定制记录](docs/customization-history.md)，升级和恢复步骤见 [升级保护](docs/upgrade-custom.md)。
+
+## Git 与官方升级
+
+`custom/main` 是定制分支；`upstream` 指向 [TencentCloud/Octop](https://github.com/TencentCloud/Octop)，起点固定为 `v1.0.2` / `dd9dce470844c25d59effb50615bb3c667ea25cd`。`customization/packages/` 保存实际发布的完整三包源码和版本化界面资源，`customization/baselines/` 保存纯程序基线；两者都受 Git 管理，可以在新机器上重建。官方 TypeScript 源码也保留在 `dashboard/`；当前定制界面由已存基线和 `customization/frontend/` 脚本重建，直接运行官方前端构建不会自动带入这些定制。
+
+定制运行包已阻止官方就地更新，防止直接替换定制文件。跟进官方新版本时先在新分支合并、检查 API／数据库／前端兼容性，再重新构建定制发行包；恢复工具拒绝把 1.0.2 的旧补丁盲盖到新基础版本。
+
+Git 与安装包均不包含本机聊天数据库、账号／模型配置、工作区、密钥和备份。`backups/` 仅保留在本机，未上传；源码中的官方示例配置和许可证照常保留。
+
+## 构建与验证
+
+Python 3.12+，便携包组装仅需标准库：
+
+```sh
+python scripts/custom/build_portable.py --platform windows-amd64 --output dist
+python scripts/custom/build_portable.py --platform darwin-amd64 --output dist
+python scripts/custom/build_portable.py --platform darwin-arm64 --output dist
+```
+
+脚本对三个官方输入 ZIP 分别核验固定大小、SHA256、Python 真实架构，再合入定制源码；输出包含逐文件 SHA256 清单。固定来源和校验值见 `scripts/custom/upstream-lock.json`。
+
+原生打包使用 `.github/workflows/custom-release.yml`，在三种平台原生 runner 上完成 Python smoke、定制回归、Go 测试、Wails／NSIS 打包和校验；三个平台全部成功后才发布完整 Release。向 `custom/main` 推送会触发构建；后续发新版请手动运行工作流并增加发行 tag 的末尾修订号。原上游发布／Docker 工作流只在上游仓库运行。
+
+前端重建：
+
+```sh
+python customization/frontend/patch_project_sidebar.py
+node customization/avatar-library/build_assets.mjs
+python customization/frontend/patch_expert_avatars.py
+```
+
+---
+
+以下保留官方 v1.0.2 的原始说明，官方在线更新入口不适用于上面的定制发行包。
+
 <p align="center">
   <img src="docs/assets/readme-banner.png" alt="Octop Banner" width="600" />
 </p>

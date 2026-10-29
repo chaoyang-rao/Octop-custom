@@ -1,0 +1,45 @@
+{
+  "release": "avatars-v10",
+  "status": "installed_and_native_blue_bubble_verified",
+  "chosen_rule": "deep-color white text; bright-color dark text",
+  "white_text": [
+    "ink",
+    "blue",
+    "violet"
+  ],
+  "dark_text": [
+    "jade",
+    "rose",
+    "amber",
+    "coral"
+  ],
+  "palette_changes": {
+    "blue": "#486BCD",
+    "violet": "#825DC5"
+  },
+  "other_five_colors": "unchanged",
+  "contrast": {
+    "ink": 14.7383,
+    "jade": 7.55,
+    "blue": 4.9294,
+    "violet": 4.8598,
+    "rose": 6.4459,
+    "amber": 8.9492,
+    "coral": 6.8625
+  },
+  "avatar_and_bubble": "identical base hex",
+  "resource_version": "v2; legacy v1 preserved and recognized",
+  "backend_tests_passed": 50,
+  "frontend_checks": [
+    "palette polarity and contrast",
+    "49 avatar/bubble base comparisons",
+    "v1/v2 parsing",
+    "generic skill URL roundtrip",
+    "old upload projection protection",
+    "group bubble guard",
+    "account settings and 48px navigation scope"
+  ],
+  "native_check": "existing blue user message displays white text; no new message sent",
+  "skill_and_preview": "synchronized",
+  "installed_hashes_verified": 2356
+}

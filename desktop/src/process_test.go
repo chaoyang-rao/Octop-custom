@@ -172,6 +172,24 @@ func TestOctopAlreadyRunningRejectsOtherServers(t *testing.T) {
 	}
 }
 
+func TestCustomDashboardRejectsOfficialRuntime(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"ok":true,"users_loaded":1,"agents_running":0}`))
+	}))
+	defer srv.Close()
+	if !octopAlreadyRunning(srv.URL) {
+		t.Fatal("expected official Octop to be detected for the shared-data warning")
+	}
+	if customOctopAlreadyRunning(srv.URL) {
+		t.Fatal("the custom shell must not silently attach to the official runtime")
+	}
+	t.Setenv("OCTOP_HOME", t.TempDir())
+	port := srv.Listener.Addr().(*net.TCPAddr).Port
+	if got := findRunningDashboard("127.0.0.1", port); got != "" {
+		t.Fatalf("attached to official dashboard %q", got)
+	}
+}
+
 func TestFindRunningDashboardUsesRememberedPort(t *testing.T) {
 	t.Setenv("OCTOP_HOME", t.TempDir())
 	srv := httptest.NewServer(octopHealthHandler())
@@ -227,7 +245,7 @@ func octopHealthHandler() http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"ok":true,"users_loaded":1,"agents_running":0}`))
+		_, _ = w.Write([]byte(`{"ok":true,"users_loaded":1,"agents_running":0,"custom_release":"1.0.2.post20261029"}`))
 	})
 }
 

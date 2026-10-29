@@ -1,0 +1,12 @@
+{
+  "skill": "动态表情头像",
+  "path": "/Users/Zhuanz1/.codex/skills/dynamic-expression-avatars",
+  "full_catalog_variants": 49,
+  "forward_request": "cloud,star × jade,coral",
+  "subset_variants": 4,
+  "direct_file_preview": "passed",
+  "palette_switches": "passed",
+  "labels_and_scope": "passed",
+  "webp_gif": "256px; 6s; infinite loop; transparent",
+  "evidence_directory": "/var/folders/77/ln02f5jj24s7myrfgp_qk1m40000gp/T/dynamic-avatar-skill-final-wgez80og"
+}

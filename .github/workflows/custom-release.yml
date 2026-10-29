@@ -1,0 +1,292 @@
+name: Octop Custom three-platform release
+
+on:
+  push:
+    branches: [custom/main]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "New immutable release tag; increase the final revision for later releases"
+        default: "v1.0.2-custom.20261029.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: octop-custom-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CUSTOM_VERSION: "1.0.2.post20261029"
+  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261029.1' }}
+
+jobs:
+  quality:
+    name: Full upstream source quality gate
+    if: github.repository == 'chaoyang-rao/Octop-custom'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: npm ci --prefix dashboard
+      - run: make all PYTEST_JOBS=2
+      - run: npm run build --prefix dashboard
+      - name: Require a clean formatted source tree
+        run: git diff --exit-code -- src tests dashboard
+
+  package:
+    name: Build and verify ${{ matrix.plat }}
+    if: github.repository == 'chaoyang-rao/Octop-custom'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - plat: darwin-arm64
+            arch: arm64
+            os: macos-14
+            ext: dmg
+          - plat: darwin-amd64
+            arch: amd64
+            os: macos-15-intel
+            ext: dmg
+          - plat: windows-amd64
+            arch: amd64
+            os: windows-latest
+            ext: exe
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache verified official portable archives
+        continue-on-error: true
+        uses: actions/cache@v5
+        with:
+          path: .cache/custom-release
+          key: octop-upstream-1.0.2-${{ matrix.plat }}
+
+      - name: Assemble the complete customized portable runtime
+        run: python scripts/custom/build_portable.py --platform "${{ matrix.plat }}" --output dist
+
+      - name: Native Python smoke and customization regressions
+        env:
+          CUSTOM_PLATFORM: ${{ matrix.plat }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import stat
+          import subprocess
+          import sys
+          import zipfile
+
+          plat = os.environ["CUSTOM_PLATFORM"]
+          version = os.environ["CUSTOM_VERSION"]
+          archive = Path("dist") / f"Octop-portable-{plat}-{version}.zip"
+          stage = Path(os.environ["RUNNER_TEMP"]) / "octop-custom-smoke"
+          stage.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(archive) as zf:
+              for item in zf.infolist():
+                  destination = stage / item.filename
+                  mode = item.external_attr >> 16
+                  if item.is_dir():
+                      destination.mkdir(parents=True, exist_ok=True)
+                      continue
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  if stat.S_ISLNK(mode):
+                      destination.symlink_to(zf.read(item).decode())
+                  else:
+                      with zf.open(item) as source, destination.open("wb") as target:
+                          shutil.copyfileobj(source, target)
+                      if os.name != "nt":
+                          destination.chmod(stat.S_IMODE(mode) or 0o644)
+          root = stage / f"Octop-{plat}"
+          py = root / "runtime" / ("python.exe" if os.name == "nt" else "bin/python3")
+          packages = root / "packages"
+          child_env = dict(os.environ, PYTHONNOUSERSITE="1", PYTHONPATH="",
+                           OCTOP_HOME=str(stage / "empty-user-data"), OCTOP_CUSTOM_BUILD="1")
+          smoke = """
+          import importlib.metadata, json, platform, site, sys
+          site.addsitedir(sys.argv[1])
+          sys.path.insert(0, sys.argv[1])
+          import octop, octop_harness, octop_gateway, fastapi
+          assert sys.version_info[:2] == (3, 12), sys.version
+          expected = {'darwin-arm64': {'arm64'}, 'darwin-amd64': {'x86_64'}, 'windows-amd64': {'amd64', 'x86_64'}}
+          assert platform.machine().lower() in expected[sys.argv[2]], platform.machine()
+          print(json.dumps({'platform': sys.argv[2], 'python': platform.python_version(), 'machine': platform.machine(),
+                            'versions': {name: importlib.metadata.version(name) for name in ['octop','octop-harness','octop-gateway']}}))
+          """
+          result = subprocess.run([str(py), "-c", smoke, str(packages), plat], env=child_env,
+                                  text=True, capture_output=True)
+          print(result.stdout)
+          print(result.stderr, file=sys.stderr)
+          result.check_returncode()
+          report = json.loads(result.stdout)
+          suite = "import runpy,site,sys;p=sys.argv.pop(1);site.addsitedir(p);sys.path.insert(0,p);runpy.run_module('unittest',run_name='__main__')"
+          subprocess.run([str(py), "-c", suite, str(packages), "discover", "-s",
+                          str(Path("customization/tests").resolve()), "-v"], env=child_env, check=True)
+          subprocess.run([str(py), "-c", suite, str(packages), "discover", "-s",
+                          str(Path("scripts/custom").resolve()), "-p", "test_*.py", "-v"], env=child_env, check=True)
+          report["customization_tests"] = "passed"
+          report["release_tooling_tests"] = "passed"
+          Path(f"dist/native-smoke-{plat}.json").write_text(json.dumps(report, indent=2) + "\n")
+          PY
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: desktop/src/go.sum
+
+      - name: Verify desktop runtime isolation and shell regressions
+        working-directory: desktop/src
+        run: go test ./...
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.13
+
+      - name: Install NSIS for the Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $nsisDir = "${env:ProgramFiles(x86)}\NSIS"
+          if (-not (Test-Path (Join-Path $nsisDir "makensis.exe"))) {
+            choco install nsis --version=3.11 --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "NSIS installation failed" }
+          }
+          if (-not (Test-Path (Join-Path $nsisDir "makensis.exe"))) { throw "makensis.exe missing" }
+          Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
+
+      - name: Package the custom desktop client with the customized runtime
+        working-directory: desktop/src
+        run: >-
+          wails3 task package
+          ARCH=${{ matrix.arch }}
+          VERSION=${{ env.CUSTOM_VERSION }}
+          PORTABLE_ZIP=../../dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.zip
+
+      - name: Verify the completed native package
+        env:
+          CUSTOM_PLATFORM: ${{ matrix.plat }}
+          PACKAGE_EXTENSION: ${{ matrix.ext }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import shutil
+          import subprocess
+          name = f"OctopCustom-desktop-{os.environ['CUSTOM_PLATFORM']}-{os.environ['CUSTOM_VERSION']}.{os.environ['PACKAGE_EXTENSION']}"
+          package = Path("desktop/src/bin") / name
+          assert package.is_file() and package.stat().st_size > 100_000_000, package
+          if os.environ["PACKAGE_EXTENSION"] == "dmg":
+              subprocess.run(["hdiutil", "verify", str(package)], check=True)
+              subprocess.run(["codesign", "--verify", "--deep", "--strict", "desktop/src/bin/OctopCustom.app"], check=True)
+          else:
+              assert package.read_bytes()[:2] == b"MZ", "Windows installer is not a PE file"
+          shutil.copy2(package, Path("dist") / name)
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: custom-package-${{ matrix.plat }}
+          path: |
+            dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.zip
+            dist/OctopCustom-desktop-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.${{ matrix.ext }}
+            dist/native-smoke-${{ matrix.plat }}.json
+            dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish all three platforms together
+    needs: [package, quality]
+    if: github.repository == 'chaoyang-rao/Octop-custom'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: custom-package-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Require the full six-package set and write checksums
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          import re
+          assert re.fullmatch(r"v1\.0\.2-custom\.\d{8}\.\d+", os.environ["RELEASE_TAG"]), "Invalid custom release tag"
+          version = os.environ["CUSTOM_VERSION"]
+          root = Path("release-assets")
+          for plat in ["darwin-arm64", "darwin-amd64", "windows-amd64"]:
+              extension = "exe" if plat.startswith("windows") else "dmg"
+              for name in [f"Octop-portable-{plat}-{version}.zip", f"OctopCustom-desktop-{plat}-{version}.{extension}"]:
+                  path = root / name
+                  assert path.is_file() and path.stat().st_size > 100_000_000, f"Incomplete release: {name}"
+          lines = [f"{hashlib.file_digest(p.open('rb'), 'sha256').hexdigest()}  {p.name}" for p in sorted(root.iterdir()) if p.is_file()]
+          (root / "SHA256SUMS.txt").write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Upload to a draft, then publish the complete immutable release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --json targetCommitish,isDraft > release-state.json 2>/dev/null; then
+            target=$(python3 -c 'import json; print(json.load(open("release-state.json"))["targetCommitish"])')
+            if [[ "$target" != "$GITHUB_SHA" ]]; then
+              echo "::error::This immutable release tag belongs to another commit. Use workflow_dispatch with a new revision tag."
+              exit 1
+            fi
+            if [[ "$(python3 -c 'import json; print(json.load(open("release-state.json"))["isDraft"])')" == "False" ]]; then
+              echo "This commit is already published; keep its complete assets unchanged."
+              exit 0
+            fi
+          else
+            cat > release-notes.md <<'EOF'
+          Octop Custom，基于官方 1.0.2，包含项目会话归类、ACP 项目目录绑定、动态表情头像、账号头像修复和全部已确认的界面调整。
+
+          Windows 使用 exe；Intel Mac 使用 darwin-amd64.dmg；M 芯片 Mac 使用 darwin-arm64.dmg。另附三个免安装 portable ZIP。SHA256SUMS.txt 可校验文件完整性。
+
+          定制运行环境保存在 ~/.octop/custom-runtime/portable，独立于官方运行环境；账号和聊天继续使用 ~/.octop。首次使用前退出官方 Octop，避免同时运行两个实例。定制版禁止官方就地更新，以仓库内定制发行包升级。Mac 包采用 ad hoc 签名，未作 Developer ID 公证；Windows 包未作 Authenticode 签名。
+          EOF
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --title "Octop Custom $RELEASE_TAG" --notes-file release-notes.md
+          fi
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          gh release view "$RELEASE_TAG" --json assets > uploaded-assets.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          actual = {a["name"]: a["size"] for a in json.loads(Path("uploaded-assets.json").read_text())["assets"]}
+          expected = {p.name: p.stat().st_size for p in Path("release-assets").iterdir() if p.is_file()}
+          assert actual == expected, "Uploaded release is incomplete; leave it in draft"
+          PY
+          gh release edit "$RELEASE_TAG" --draft=false --latest

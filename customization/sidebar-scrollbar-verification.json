@@ -1,0 +1,24 @@
+{
+  "release": "avatars-v9",
+  "status": "installed_and_native_idle_view_checked",
+  "scope": [
+    "global navigation desktop/mobile scroll layers",
+    "classic expert/team/cloud conversation list",
+    "minimal conversation list",
+    "minimal settings navigation"
+  ],
+  "behavior": "transparent thumb at rest; visible on hover or keyboard-visible focus; hidden again after leaving",
+  "native_idle_check": "passed",
+  "headless_checks": [
+    "four selectors hidden at rest",
+    "hover visible",
+    "keyboard and child focus visible",
+    "wheel scrolling still works",
+    "leave hides",
+    "message pane scrollbar unaffected"
+  ],
+  "css_asset": "sidebar-scrollbars.06de384524.css",
+  "dock_marker_count": 2,
+  "overflow_and_dimensions": "preserved",
+  "installed_hashes_verified": 2082
+}

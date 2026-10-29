@@ -71,6 +71,7 @@ func startOctop(root string, port int) (*exec.Cmd, error) {
 	mustEnv(cmd, map[string]string{
 		"OCTOP_HOME":           octopHome(),
 		"OCTOP_GREEN_PACKAGES": filepath.Join(root, "packages"),
+		"OCTOP_CUSTOM_BUILD":   "1",
 		"OCTOP_PORT":           strconv.Itoa(port),
 		"PYTHONNOUSERSITE":     "1",
 		"PYTHONPATH":           "",
@@ -98,7 +99,7 @@ func stopOctop(cmd *exec.Cmd) {
 	killProcessTree(cmd)
 }
 
-const desktopPortFileName = "desktop-port"
+const desktopPortFileName = "custom-desktop-port"
 
 func desktopPortPath() string {
 	return filepath.Join(octopHome(), desktopPortFileName)
@@ -128,11 +129,11 @@ func clearDesktopPort() {
 }
 
 // findRunningDashboard returns a live Octop URL. The saved port wins. When that
-// port is not Octop, the port this shell last bound (desktop-port) is checked
-// so a second launch attaches instead of starting another server.
+// port is not the custom runtime, this shell's custom-desktop-port is checked
+// so a second launch attaches without reusing an official Octop server.
 func findRunningDashboard(host string, preferred int) string {
 	preferredURL := dashboardURL(host, preferred)
-	if octopAlreadyRunning(preferredURL) {
+	if customOctopAlreadyRunning(preferredURL) {
 		return preferredURL
 	}
 	port, ok := readDesktopPort()
@@ -140,7 +141,7 @@ func findRunningDashboard(host string, preferred int) string {
 		return ""
 	}
 	remembered := dashboardURL(host, port)
-	if octopAlreadyRunning(remembered) {
+	if customOctopAlreadyRunning(remembered) {
 		return remembered
 	}
 	return ""
@@ -226,29 +227,41 @@ func listenProbe(host string, port int) (bool, error) {
 }
 
 func octopAlreadyRunning(base string) bool {
+	running, _ := dashboardHealth(base)
+	return running
+}
+
+func customOctopAlreadyRunning(base string) bool {
+	_, custom := dashboardHealth(base)
+	return custom
+}
+
+func dashboardHealth(base string) (bool, bool) {
 	client := &http.Client{Timeout: 800 * time.Millisecond}
 	url := strings.TrimRight(base, "/") + "/api/health"
 	resp, err := client.Get(url)
 	if err != nil {
-		return false
+		return false, false
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return false
+		return false, false
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return false
+		return false, false
 	}
 	var payload struct {
 		OK            bool            `json:"ok"`
 		UsersLoaded   json.RawMessage `json:"users_loaded"`
 		AgentsRunning json.RawMessage `json:"agents_running"`
+		CustomRelease string          `json:"custom_release"`
 	}
 	if json.Unmarshal(body, &payload) != nil {
-		return false
+		return false, false
 	}
-	return payload.OK && len(payload.UsersLoaded) > 0 && len(payload.AgentsRunning) > 0
+	running := payload.OK && len(payload.UsersLoaded) > 0 && len(payload.AgentsRunning) > 0
+	return running, running && payload.CustomRelease != ""
 }
 
 func probeHost(host string) string {

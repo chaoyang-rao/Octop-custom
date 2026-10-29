@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>墨团与青石 · 动态头像样稿</title>
+    <!-- Two original avatar studies. Local final/ assets only; no Grok artwork is embedded. -->
+    <style>
+      :root {
+        --paper: #f4f2ec;
+        --ink: #232624;
+        --quiet: #72756e;
+        --line: #d9dcd4;
+        --hover: #e9e9e2;
+        --focus: #1d7065;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Noto Sans SC", sans-serif;
+        color-scheme: light;
+      }
+      html[data-theme="dark"] {
+        --paper: #191d1c;
+        --ink: #e7ebe5;
+        --quiet: #a4ada5;
+        --line: #39423c;
+        --hover: #292f2b;
+        --focus: #8dc5b8;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink); -webkit-font-smoothing: antialiased; }
+      button, a { -webkit-tap-highlight-color: transparent; }
+      button { font: inherit; }
+      button, a { touch-action: manipulation; }
+      button:focus-visible, a:focus-visible { outline: 2px solid var(--focus); outline-offset: 5px; }
+      .page { width: min(1040px, 100%); padding: 54px 48px 40px; margin: 0 auto; }
+      .page-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      h1 { margin: 0; font-size: clamp(20px, 2.4vw, 28px); line-height: 1.45; letter-spacing: -.04em; font-weight: 500; }
+      .controls { display: flex; align-items: center; gap: 8px; flex: none; }
+      .control { display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--ink); font-size: 12px; line-height: 1.2; cursor: pointer; }
+      .control:hover { background: var(--hover); }
+      .control svg { width: 14px; height: 14px; flex: none; }
+      .pause-icon, .play-icon, .moon-icon, .sun-icon { display: none; }
+      .control[data-playing="true"] .pause-icon, .control[data-playing="false"] .play-icon { display: block; }
+      html[data-theme="light"] .moon-icon, html[data-theme="dark"] .sun-icon { display: block; }
+      .studies { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 68px; margin-top: 24px; }
+      .study { min-width: 0; }
+      .portrait { display: grid; place-items: center; width: 100%; min-height: 360px; aspect-ratio: 1 / 1; }
+      .portrait img { display: block; width: min(100%, 340px); height: auto; aspect-ratio: 1 / 1; object-fit: contain; }
+      .study-title { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 18px; line-height: 1.5; font-weight: 500; letter-spacing: -.02em; }
+      .number { color: var(--quiet); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+      .description { margin: 7px 0 0; color: var(--quiet); font-size: 13px; line-height: 1.8; }
+      .study-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+      .samples { display: flex; align-items: flex-end; gap: 19px; }
+      .sample { display: flex; flex-direction: column; align-items: center; gap: 9px; margin: 0; }
+      .sample img { display: block; object-fit: contain; }
+      .sample figcaption { color: var(--quiet); font-size: 10px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+      .downloads { display: flex; align-items: center; gap: 15px; padding-bottom: 1px; }
+      .downloads a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); padding: 5px 0; font-size: 11px; line-height: 1.4; }
+      .downloads a:hover { border-color: var(--ink); }
+      .page-note { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 48px 0 0; color: var(--quiet); font-size: 11px; line-height: 1.7; }
+      @media (min-width: 1400px) { .page { padding-top: 72px; } .studies { margin-top: 44px; } }
+      @media (max-width: 760px) {
+        .page { padding: 30px 24px 28px; }
+        .page-header { align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+        .controls { gap: 8px; }
+        .control { min-height: 40px; }
+        .studies { gap: 28px; margin-top: 18px; }
+        .portrait { min-height: 220px; }
+        .portrait img { width: 100%; }
+        .study-footer { align-items: flex-start; flex-direction: column; gap: 19px; margin-top: 23px; }
+        .downloads { gap: 13px; }
+        .page-note { margin-top: 35px; }
+      }
+      @media (max-width: 500px) {
+        .page { padding: 26px 24px 30px; }
+        .page-header { flex-direction: column; gap: 16px; }
+        .studies { grid-template-columns: minmax(0, 1fr); gap: 26px; margin-top: 14px; }
+        .portrait { min-height: 260px; aspect-ratio: 1.13 / 1; }
+        .portrait img { width: min(100%, 285px); }
+        .study-footer { flex-direction: row; align-items: flex-end; margin-top: 20px; }
+        .page-note { flex-wrap: wrap; gap: 2px 18px; margin-top: 34px; }
+      }
+      @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+    </style>
+  </head>
+  <body>
+    <main class="page" data-screen-label="两个动态头像样稿">
+      <header class="page-header">
+        <h1>两个小家伙，先认识一下。</h1>
+        <div class="controls" aria-label="预览设置">
+          <button class="control" id="motion-toggle" type="button" data-playing="false" aria-pressed="false" aria-label="播放动画">
+            <svg class="pause-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="4" y="3" width="2.5" height="10" rx=".5"></rect><rect x="9.5" y="3" width="2.5" height="10" rx=".5"></rect></svg>
+            <svg class="play-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 2.8a.6.6 0 0 1 .9-.5l7.1 5.2a.6.6 0 0 1 0 1L5.9 13.7a.6.6 0 0 1-.9-.5Z"></path></svg>
+            <span id="motion-label">播放动画</span>
+          </button>
+          <button class="control" id="theme-toggle" type="button" aria-pressed="false" aria-label="切换深色背景">
+            <svg class="moon-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 9.1A5.8 5.8 0 0 1 6.9 2.6a5.8 5.8 0 1 0 6.5 6.5Z"></path></svg>
+            <svg class="sun-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><path d="M8 1v1M8 14v1M1 8h1M14 8h1M3.05 3.05l.7.7M12.25 12.25l.7.7M3.05 12.95l.7-.7M12.25 3.75l.7-.7"></path></svg>
+            <span id="theme-label">深色背景</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="studies" aria-label="两个原创头像">
+        <article class="study" aria-labelledby="momo-title">
+          <div class="portrait">
+            <img src="final/01-momo.png" data-avatar="01-momo" alt="墨团，黑色圆润的小家伙" width="512" height="512" decoding="async">
+          </div>
+          <h2 class="study-title" id="momo-title"><span class="number">01</span><span>墨团</span></h2>
+          <p class="description" id="momo-description">轻呼吸 · 双眨眼 · 偷偷看向你</p>
+          <div class="study-footer">
+            <div class="samples" aria-label="墨团实际小尺寸示例">
+              <figure class="sample"><img src="final/01-momo.png" data-avatar="01-momo" alt="" aria-hidden="true" width="48" height="48"><figcaption>48 px</figcaption></figure>
+              <figure class="sample"><img src="final/01-momo.png" data-avatar="01-momo" alt="" aria-hidden="true" width="32" height="32"><figcaption>32 px</figcaption></figure>
+            </div>
+            <div class="downloads" aria-label="下载墨团">
+              <a href="final/01-momo.webp" download="01-墨团.webp" aria-label="下载墨团 WebP 动画">WebP ↓</a>
+              <a href="final/01-momo.gif" download="01-墨团.gif" aria-label="下载墨团 GIF 动画">GIF ↓</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="study" aria-labelledby="jade-title">
+          <div class="portrait">
+            <img src="final/02-jade.png" data-avatar="02-jade" alt="青石，青绿色圆角棱面的小家伙" width="512" height="512" decoding="async">
+          </div>
+          <h2 class="study-title" id="jade-title"><span class="number">02</span><span>青石</span></h2>
+          <p class="description" id="jade-description">轻弹跳 · 单眨眼 · 好奇张望</p>
+          <div class="study-footer">
+            <div class="samples" aria-label="青石实际小尺寸示例">
+              <figure class="sample"><img src="final/02-jade.png" data-avatar="02-jade" alt="" aria-hidden="true" width="48" height="48"><figcaption>48 px</figcaption></figure>
+              <figure class="sample"><img src="final/02-jade.png" data-avatar="02-jade" alt="" aria-hidden="true" width="32" height="32"><figcaption>32 px</figcaption></figure>
+            </div>
+            <div class="downloads" aria-label="下载青石">
+              <a href="final/02-jade.webp" download="02-青石.webp" aria-label="下载青石 WebP 动画">WebP ↓</a>
+              <a href="final/02-jade.gif" download="02-青石.gif" aria-label="下载青石 GIF 动画">GIF ↓</a>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer class="page-note">
+        <span>原创动态头像 · 两款样稿</span>
+        <span id="playback-status" role="status" aria-live="polite">已暂停</span>
+      </footer>
+    </main>
+
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const motionButton = document.getElementById("motion-toggle");
+        const motionLabel = document.getElementById("motion-label");
+        const themeButton = document.getElementById("theme-toggle");
+        const themeLabel = document.getElementById("theme-label");
+        const status = document.getElementById("playback-status");
+        const avatars = document.querySelectorAll("img[data-avatar]");
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        let playing = false;
+        let userChoseMotion = false;
+
+        function setPlaying(value) {
+          playing = value;
+          const extension = playing ? "webp" : "png";
+          avatars.forEach(image => {
+            const source = `final/${image.dataset.avatar}.${extension}`;
+            if (image.getAttribute("src") !== source) image.src = source;
+          });
+          motionButton.dataset.playing = String(playing);
+          motionButton.setAttribute("aria-pressed", String(playing));
+          const label = playing ? "暂停动画" : "播放动画";
+          motionButton.setAttribute("aria-label", label);
+          motionLabel.textContent = label;
+          status.textContent = playing ? "6 秒循环" : "已暂停";
+        }
+
+        motionButton.addEventListener("click", () => {
+          userChoseMotion = true;
+          setPlaying(!playing);
+        });
+        themeButton.addEventListener("click", () => {
+          const dark = root.dataset.theme !== "dark";
+          root.dataset.theme = dark ? "dark" : "light";
+          themeButton.setAttribute("aria-pressed", String(dark));
+          themeButton.setAttribute("aria-label", dark ? "切换浅色背景" : "切换深色背景");
+          themeLabel.textContent = dark ? "浅色背景" : "深色背景";
+        });
+        reducedMotion.addEventListener("change", event => {
+          if (!userChoseMotion || event.matches) setPlaying(!event.matches);
+        });
+        setPlaying(!reducedMotion.matches);
+      })();
+    </script>
+  </body>
+</html>

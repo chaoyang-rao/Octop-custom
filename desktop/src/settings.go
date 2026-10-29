@@ -15,7 +15,7 @@ const (
 	LocaleEN Locale = "en"
 )
 
-// Settings is persisted at ~/.octop/desktop-settings.json
+// Settings holds custom shell preferences separately from the official client.
 type Settings struct {
 	Locale         Locale `json:"locale"`
 	Autostart      bool   `json:"autostart"`
@@ -46,11 +46,11 @@ func octopHome() string {
 }
 
 func portableDir() string {
-	return filepath.Join(octopHome(), "portable")
+	return filepath.Join(octopHome(), "custom-runtime", "portable")
 }
 
 func settingsPath() string {
-	return filepath.Join(octopHome(), "desktop-settings.json")
+	return filepath.Join(octopHome(), "custom-desktop-settings.json")
 }
 
 type settingsStore struct {

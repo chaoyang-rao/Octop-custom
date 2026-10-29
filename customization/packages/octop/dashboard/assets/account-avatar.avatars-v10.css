@@ -1,0 +1,38 @@
+/* Remove only decoration surrounding a generated geometric avatar.  Rows with
+   a label or other controls are excluded, as are uploaded image avatars. */
+[data-octop-geometric-avatar]{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  overflow:visible!important;
+}
+:where(span,div,button):has(>svg[data-octop-geometric-avatar]:only-child){
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  overflow:visible!important;
+}
+/* Account labels have their own circular frame. The geometric character
+   decorations above remain absent. Both dimensions use one size token. */
+.octop-account-profile-avatar{
+  box-sizing:border-box;
+  border:1px solid var(--fn-border-primary,rgba(128,128,128,.26));
+  border-radius:50%!important;
+  overflow:hidden;
+  box-shadow:none;
+}
+[data-account-initials]{
+  --account-avatar-size:32px;
+  width:var(--account-avatar-size)!important;
+  height:var(--account-avatar-size)!important;
+  aspect-ratio:1 / 1;
+  box-sizing:border-box;
+  border-radius:50%!important;
+  font-variant-caps:normal;
+  text-transform:none;
+}
+.index-module__msgUserAvatar__acYC1[data-account-initials]{
+  --account-avatar-size:min(36px,var(--chat-msg-avatar-slot,36px));
+}

@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     # Post-release main → develop sync PRs carry main's already-tested tree and
     # are auto-merged by the bot before checks finish. See sync-main-to-develop.
-    if: ${{ !startsWith(github.head_ref, 'chore/sync-develop-after-') }}
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( !startsWith(github.head_ref, 'chore/sync-develop-after-') ) }}
     strategy:
       fail-fast: false
       matrix:
@@ -44,7 +44,7 @@ jobs:
   test-windows:
     name: Windows / Python 3.12
     runs-on: windows-latest
-    if: ${{ !startsWith(github.head_ref, 'chore/sync-develop-after-') }}
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( !startsWith(github.head_ref, 'chore/sync-develop-after-') ) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -69,9 +69,7 @@ jobs:
     name: "Live tests (real credentials)"
     runs-on: ubuntu-latest
     # Only the main repo may access secrets; fork PRs get none and must skip.
-    if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      !startsWith(github.head_ref, 'chore/sync-develop-after-')
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.head_ref, 'chore/sync-develop-after-') ) }}
     steps:
       - uses: actions/checkout@v4
 

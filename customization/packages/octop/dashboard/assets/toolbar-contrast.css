@@ -1,0 +1,18 @@
+/* Composer tools inherit semantic colors in both light and dark themes. */
+.index-module__actionsRow__-BkcX .index-module__secondaryBtn__RjZzE,
+.index-module__actionsRow__-BkcX .index-module__newChatBtn__LyNla,
+.index-module__actionsRow__-BkcX .index-module__contextRingLabel__tpB1V {
+  color: var(--fn-text-secondary);
+}
+
+/* Preserve brand hover feedback and the existing selected/disabled states. */
+.index-module__actionsRow__-BkcX .index-module__secondaryBtn__RjZzE:hover:not(:disabled),
+.index-module__actionsRow__-BkcX .index-module__newChatBtn__LyNla:hover:not(:disabled) {
+  color: var(--fn-text-brand);
+}
+
+/* Match the adjacent tool buttons' 24px outer circle and interaction target. */
+.index-module__actionsRow__-BkcX .index-module__contextRingSvg__1kIs2 {
+  width: 24px;
+  height: 24px;
+}

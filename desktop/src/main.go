@@ -198,6 +198,14 @@ func (a *App) boot() {
 		a.showDashboard(existing)
 		return
 	}
+	if octopAlreadyRunning(dashboardURL(host, preferred)) {
+		if locale == LocaleZH {
+			a.setStatus("官方 Octop 正在使用当前账户数据。请先退出官方客户端，再启动 Octop Custom。")
+		} else {
+			a.setStatus("Official Octop is using this account data. Quit it before starting Octop Custom.")
+		}
+		return
+	}
 	port, err := chooseFreePort(host, preferred)
 	if err != nil {
 		var busy noFreePortError
@@ -336,8 +344,8 @@ func main() {
 	}
 
 	app := application.New(application.Options{
-		Name:        "Octop",
-		Description: "Octop desktop",
+		Name:        "Octop Custom",
+		Description: "Octop custom desktop",
 		Services: []application.Service{
 			application.NewService(api),
 		},
@@ -362,7 +370,7 @@ func main() {
 	})
 
 	win := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:                "Octop",
+		Title:                "Octop Custom",
 		Width:                1200,
 		Height:               800,
 		URL:                  "/",
@@ -386,7 +394,7 @@ func main() {
 	win.OnWindowEvent(events.Windows.WebViewNavigationCompleted, installDragOverlay)
 	win.OnWindowEvent(events.Linux.WindowLoadFinished, installDragOverlay)
 	settingsWin := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "Octop 设置",
+		Title:            "Octop Custom 设置",
 		Width:            settingsWindowWidth,
 		Height:           settingsWindowOuterHeight(),
 		URL:              "/?settings=1",

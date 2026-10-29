@@ -1,0 +1,41 @@
+{
+  "status": "installed_and_native_ui_verified",
+  "release": "avatars-v5",
+  "visible_dock_toggle": "withdrawn; existing edge and keyboard behavior retained",
+  "account_avatar": "name/initials with 1px theme-aware circular frame",
+  "geometric_avatar": "decorative frame removed, character contour retained",
+  "font_px": {
+    "desktop_ui_base": 13,
+    "chat_user": 13,
+    "chat_assistant_markdown": 13,
+    "composer": 13
+  },
+  "composer_minimum_px": {
+    "desktop": 39,
+    "mobile": 24
+  },
+  "composer_max_autosize_px": 160,
+  "empty_frame_height_px": {
+    "calculated_desktop": 80,
+    "native_visual_check": "approximately half previous empty frame"
+  },
+  "toolbar_icons": "50% SVG sizes within composer actions only; context label retained",
+  "click_target_px": 24,
+  "preserved": [
+    "49 avatar combinations",
+    "48px expert/team/cloud navigation",
+    "solo bubble color and team scope",
+    "project sessions",
+    "ACP",
+    "stored account and expert profiles"
+  ],
+  "frontend_checks": [
+    "source CSS and pure composer patch fixture",
+    "account initials and circular frame",
+    "avatar integration and group scope",
+    "48px navigation and scoped graph diff",
+    "all active release JavaScript syntax"
+  ],
+  "original_messages_preserved_exactly": 143,
+  "installed_hashes_verified": 1181
+}

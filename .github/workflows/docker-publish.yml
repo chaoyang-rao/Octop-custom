@@ -43,9 +43,7 @@ jobs:
     name: Resolve version
     runs-on: ubuntu-latest
     # 拒绝在非 v* ref 上误跑（例如 UI 里对 main 点 Run workflow 且未填 tag）
-    if: >-
-      startsWith(github.ref, 'refs/tags/v')
-      || (github.event_name == 'workflow_dispatch' && startsWith(inputs.tag, 'v'))
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && startsWith(inputs.tag, 'v')) ) }}
     outputs:
       version: ${{ steps.ver.outputs.version }}
       tag: ${{ steps.ver.outputs.tag }}
@@ -79,6 +77,7 @@ jobs:
           echo "ghcr=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
   build:
+    if: ${{ github.repository == 'TencentCloud/Octop' }}
     name: Build ${{ matrix.arch }}
     needs: prepare
     runs-on: ${{ matrix.runner }}
@@ -145,7 +144,7 @@ jobs:
     name: Multi-arch manifest
     needs: [prepare, build]
     # ARM runner 偶发失败时仍发布已有架构，避免卡住 :{version} 与 Docker FPK。
-    if: always() && needs.prepare.result == 'success' && !cancelled()
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( always() && needs.prepare.result == 'success' && !cancelled() ) }}
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}

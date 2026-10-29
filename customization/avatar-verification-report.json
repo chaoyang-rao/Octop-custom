@@ -1,0 +1,33 @@
+{
+  "status": "installed_and_verified",
+  "frontend_release": "avatars-v2",
+  "python_tests_passed": 39,
+  "frontend_checks": [
+    "avatar_settings",
+    "component_mode_switching",
+    "solo_user_bubbles_only",
+    "team_bubbles_unchanged",
+    "selection_contrast",
+    "versioned_module_graph",
+    "previous_project_sidebar_preserved",
+    "enlarged_sizes_and_fixed_slot_limits"
+  ],
+  "shape_count": 7,
+  "color_count": 7,
+  "combinations": 49,
+  "picker_preview_px": 80,
+  "chat_size_scale": 1.2,
+  "viewBox_bounds": "all sampled motion and eye points remain visible",
+  "original_messages_preserved_exactly": 143,
+  "native_ui_checks": [
+    "7 shapes and 7 colors displayed",
+    "current user choice survives reload",
+    "larger avatar in chat",
+    "user bubble matches avatar ink color with white text"
+  ],
+  "current_codex_avatar": {
+    "shape": "squircle",
+    "color": "ink"
+  },
+  "installed_hashes_verified": 506
+}

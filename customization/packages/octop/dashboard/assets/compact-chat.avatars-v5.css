@@ -1,0 +1,124 @@
+/* Octop compact chat. Loaded after the versioned dashboard styles. */
+html,
+body {
+  font-size: 13px;
+}
+
+/* Keep existing small metadata and avatar dimensions; reduce prominent UI text. */
+.index-module__sessionTitle__Kgt59,
+.index-module__mobileTitle__PUDhA {
+  font-size: 14px;
+}
+
+.index-module__dockTabLabel__FlYyY,
+.index-module__chatTitleText__HPcvO,
+.index-module__chatTitleInput__plAAX,
+.index-module__agentCardName__4ymOB {
+  font-size: 13px;
+}
+
+/* Extra chat-page specificity also wins over the lazily loaded Markdown CSS. */
+.index-module__chatPage__lB-np .index-module__userText__70Ung,
+.index-module__chatPage__lB-np .index-module__assistantText__t-CQA,
+.index-module__chatPage__lB-np .index-module__markdownBody__-OevX {
+  font-size: 13px;
+}
+
+.index-module__chatPage__lB-np .index-module__assistantText__t-CQA code,
+.index-module__chatPage__lB-np .index-module__codeBlock__yLdIT {
+  font-size: 12.5px;
+}
+
+/* No fixed wrapper height: previews, attachments and queued messages can grow. */
+.index-module__chatPage__lB-np .index-module__inputWrapper__QeKz7 {
+  padding: 5px 10px 5px 12px;
+}
+
+/* This class must work outside chatPage too: autosize measures a body clone. */
+.index-module__textarea__lUFuW {
+  box-sizing: border-box;
+  min-height: 39px;
+  max-height: 160px;
+  padding: 1px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.index-module__chatPage__lB-np .index-module__actionsRow__-BkcX {
+  margin-top: 2px;
+  padding-top: 2px;
+}
+
+.index-module__chatPage__lB-np .index-module__secondaryActions__lMtdc {
+  padding-top: 0;
+  gap: 4px;
+}
+
+/* Retain a 24px target while reducing only the toolbar's visible glyphs. */
+.index-module__actionsRow__-BkcX .index-module__secondaryBtn__RjZzE,
+.index-module__actionsRow__-BkcX .index-module__newChatBtn__LyNla,
+.index-module__actionsRow__-BkcX .index-module__sendBtn__jFtPt,
+.index-module__actionsRow__-BkcX .index-module__contextRingBtn__eDNV- {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.index-module__actionsRow__-BkcX .index-module__sendBtn__jFtPt {
+  border-radius: 8px;
+}
+
+/* Attribute sizing preserves spinner transforms and exact 50% icon scaling. */
+.index-module__actionsRow__-BkcX button > svg[width="12"][height="12"] {
+  width: 6px;
+  height: 6px;
+}
+
+.index-module__actionsRow__-BkcX button > svg[width="14"][height="14"] {
+  width: 7px;
+  height: 7px;
+}
+
+.index-module__actionsRow__-BkcX button > svg[width="15"][height="15"] {
+  width: 7.5px;
+  height: 7.5px;
+}
+
+.index-module__actionsRow__-BkcX button > svg[width="16"][height="16"] {
+  width: 8px;
+  height: 8px;
+}
+
+.index-module__actionsRow__-BkcX button > svg[width="18"][height="18"] {
+  width: 9px;
+  height: 9px;
+}
+
+.index-module__actionsRow__-BkcX .index-module__contextRingSvg__1kIs2 {
+  width: 16px;
+  height: 16px;
+}
+
+.index-module__actionsRow__-BkcX .index-module__contextRingLabel__tpB1V {
+  font-size: 9px;
+}
+
+@media (max-width: 767px) {
+  .index-module__chatPage__lB-np .index-module__inputWrapper__QeKz7 {
+    padding: 5px 10px 5px 12px;
+  }
+
+  .index-module__textarea__lUFuW {
+    min-height: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .index-module__textarea__lUFuW {
+    transition: none;
+  }
+}

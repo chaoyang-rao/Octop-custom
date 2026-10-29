@@ -12,12 +12,7 @@ permissions:
 jobs:
   tag:
     name: Tag merged release PR
-    if: >-
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.base.ref == 'main' &&
-      (startsWith(github.event.pull_request.head.ref, 'release/') ||
-      startsWith(github.event.pull_request.head.ref, 'hotfix/')) &&
-      github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.repository == 'TencentCloud/Octop' && ( github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')) && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout merged main tip
