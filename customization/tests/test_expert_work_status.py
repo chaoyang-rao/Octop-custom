@@ -313,6 +313,71 @@ class InvocationTrackingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(seen, [frozenset({"web"}), frozenset({"im"}), frozenset({"cron"})])
         self.assertEqual(manager.active_thread_ids("a"), frozenset())
 
+    async def test_busy_acp_handshake_is_bounded_without_cancelling_work(self):
+        manager = self.manager()
+        manager._harness_manager = NS(get_agent=lambda aid: NS(agent=NS(_workspace_path=aid)))
+        snapshot_started = asyncio.Event()
+
+        class ObservedService(ACPService):
+            async def activity_snapshot(self, *, thread_ids):
+                snapshot_started.set()
+                return await super().activity_snapshot(thread_ids=thread_ids)
+
+        blocked = ObservedService(config=ACPConfig())
+        ready = ACPService(config=ACPConfig())
+        held, release = asyncio.Event(), asyncio.Event()
+
+        async def handshake():
+            async with blocked._lock:
+                held.set()
+                await release.wait()
+
+        startup = asyncio.create_task(handshake())
+        await held.wait()
+        server = NS(
+            services=NS(thread_repo=NS(list_for_user=lambda uid: [("a", "web"), ("b", "cron")])),
+            app_runtime=NS(
+                agent_registry=manager,
+                gateway=NS(
+                    ws_hub=NS(is_turn_active=lambda tid: False),
+                    processor=NS(hitl_coordinator=NS(store=HitlPendingStore())),
+                ),
+            ),
+        )
+        try:
+            with patch(
+                "octop_harness.acp.service.get_acp_service",
+                side_effect=lambda key: {"a": blocked, "b": ready}[key],
+            ):
+                async with (
+                    manager._track_invocation("a", "web"),
+                    manager._track_invocation("b", "cron"),
+                ):
+                    rows = await asyncio.wait_for(
+                        attach_expert_work_status(
+                            server,
+                            1,
+                            [
+                                {"agent_id": "a", "state": "running"},
+                                {"agent_id": "b", "state": "running"},
+                            ],
+                        ),
+                        timeout=2,
+                    )
+                    self.assertTrue(snapshot_started.is_set())
+                    self.assertEqual(rows[0]["work_status"], "unknown")
+                    self.assertEqual(
+                        (rows[1]["work_status"], rows[1]["working_count"]), ("working", 1)
+                    )
+                    self.assertFalse(
+                        startup.done(), "the read-only timeout must not cancel the actual handshake"
+                    )
+                    self.assertTrue(manager.is_agent_active("a"))
+        finally:
+            release.set()
+            await startup
+        self.assertFalse(manager.is_agent_active("a"))
+
     async def test_acp_snapshot_does_not_initialize_an_unused_service(self):
         manager = self.manager()
         manager._harness_manager = NS(

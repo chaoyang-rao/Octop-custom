@@ -29167,7 +29167,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "c4470b9e8085577c3698ba7a4ba0a7c5a196910bb39284ab5e5c07cc54d2e340",
+      "sha256": "1e4dc37192f23c29fe8e543d5c4a07206773a5d5d2e21a424708eabd1c2c1c15",
       "upstream_program_sha256": "445669cd8286acd7533a18a0fc66e558d3b7bb65d7fe0cabe8a7cfa5ec52f8e0",
       "changed_from_saved_original": true
     },

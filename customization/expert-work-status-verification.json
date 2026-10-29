@@ -14,7 +14,7 @@
     "legacy_chat_10_second_poll_removed": true
   },
   "checks": {
-    "customization_regressions": 72,
+    "customization_regressions": 73,
     "canonical_hitl_memory_regressions": 56,
     "i18n_regressions": 82,
     "status_source_frozen_cases": 18,
@@ -24,7 +24,8 @@
     "project_folder_picker_dom_cases": 12,
     "typescript_typecheck": "passed",
     "active_asset_graph": 230,
-    "navigation_avatar_size_regression": "passed"
+    "navigation_avatar_size_regression": "passed",
+    "acp_lock_contention": "Read-only snapshot deadline 0.2s; does not cancel real handshake; other expert remains observable"
   },
   "runtime": {
     "application_restarted": true,
@@ -35,7 +36,8 @@
     "visible_expert_management_idle_verified": true,
     "working_and_waiting_verified_by": "isolated tests; no live model request or user-data mutation",
     "original_chat_restored": true,
-    "database_restore_performed": false
+    "database_restore_performed": false,
+    "acp_timeout_protection": "Installed to disk after initial restart; loads on next normal app start. User resumed app use, so no second restart was performed."
   },
   "git": {
     "branch": "custom/main",

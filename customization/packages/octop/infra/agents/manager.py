@@ -1831,7 +1831,12 @@ class AgentManager:
         snapshot = getattr(service, "activity_snapshot", None)
         if not callable(snapshot):
             return None
-        result = await snapshot(thread_ids=thread_ids)
+        try:
+            # Runner startup holds the service lock across its handshake.
+            # Status polling must not wait for that external operation.
+            result = await asyncio.wait_for(snapshot(thread_ids=thread_ids), timeout=0.2)
+        except TimeoutError:
+            return None
         return {
             "working_thread_ids": frozenset(result.get("working_thread_ids", ())),
             "waiting_thread_ids": frozenset(result.get("waiting_thread_ids", ())),
