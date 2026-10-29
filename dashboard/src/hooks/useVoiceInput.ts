@@ -135,6 +135,41 @@ function pickRecorderMimeType(): string {
   return "";
 }
 
+/** Translate only known browser errors; never display a raw exception. */
+export function browserSttErrorKey(error: unknown): string {
+  const text = error instanceof Error ? error.message : "";
+  const name =
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    typeof error.name === "string"
+      ? error.name
+      : "";
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    return "voice.sttPermissionDenied";
+  }
+  switch (text) {
+    case "browser STT failed: not-allowed":
+      return "voice.sttPermissionDenied";
+    case "browser STT failed: service-not-allowed":
+      return "voice.sttServiceNotAllowed";
+    case "browser STT failed: audio-capture":
+      return "voice.sttAudioCaptureFailed";
+    case "browser STT failed: language-not-supported":
+      return "voice.sttLanguageUnsupported";
+    case "browser STT timed out":
+      return "voice.sttTimedOut";
+    case "browser STT network":
+      return "voice.sttNetworkFailed";
+    default:
+      return "voice.sttFailed";
+  }
+}
+
+function stopMediaStream(stream: MediaStream | null): void {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
 /**
  * Native Web Speech API transcription.
  *
@@ -227,9 +262,7 @@ async function transcribeWithBrowser(language: string): Promise<string> {
     try {
       rec.start();
     } catch (err) {
-      settle(() =>
-        reject(err instanceof Error ? err : new Error("browser STT failed")),
-      );
+      settle(() => reject(err));
     }
   });
 }
@@ -392,7 +425,7 @@ export function useVoiceInput(options: VoiceInputOptions) {
       return;
     }
     await new Promise<void>((resolve) => {
-      recorder.onstop = () => resolve();
+      recorder.addEventListener("stop", () => resolve(), { once: true });
       recorder.stop();
     });
     mediaRecorderRef.current = null;
@@ -457,12 +490,7 @@ export function useVoiceInput(options: VoiceInputOptions) {
         if (text) optionsRef.current.onText(text);
         else antMessage.info(t("voice.sttEmpty"));
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "";
-        if (msg.includes("network")) {
-          antMessage.error(t("voice.sttNetworkFailed"));
-        } else {
-          antMessage.error(t("voice.sttFailed"));
-        }
+        antMessage.error(t(browserSttErrorKey(err)));
       } finally {
         setTranscribing(false);
       }
@@ -475,8 +503,9 @@ export function useVoiceInput(options: VoiceInputOptions) {
       return;
     }
 
+    let stream: MediaStream | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = pickRecorderMimeType();
       const recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
@@ -486,12 +515,16 @@ export function useVoiceInput(options: VoiceInputOptions) {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
+        stopMediaStream(stream);
       };
       mediaRecorderRef.current = recorder;
       recorder.start();
       setRecording(true);
     } catch {
+      stopMediaStream(stream);
+      mediaRecorderRef.current = null;
+      chunksRef.current = [];
+      setRecording(false);
       antMessage.error(t("voice.micDenied"));
     }
   }, [t, language, startRealtime, stopRealtime]);

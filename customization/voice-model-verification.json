@@ -1,0 +1,28 @@
+{
+  "release": "avatars-v14",
+  "model_shortcut": {
+    "frozen_behavior_checks": "passed",
+    "real_source_dom_checks": 8,
+    "scope": "next message composer model override; existing model menu and callback preserved",
+    "global_model_config_changed": false,
+    "user_model_changed_during_tests": false,
+    "native_menu_open_verified": true
+  },
+  "voice": {
+    "browser_event_and_recorder_lifecycle_checks": 34,
+    "mac_build_purpose_strings": "present in production and development source plists",
+    "installed_native_app_patch_applied": true,
+    "speech_recognition_live_verified": false,
+    "recognition_provider_switched": false,
+    "microphone_started_by_agent": false,
+    "pending_action": "Await user speech test; native purpose strings applied and signed app reopened.",
+    "native_signature_verified": true,
+    "system_permissions_granted_by_agent": false
+  },
+  "typescript_typecheck": "passed",
+  "desktop_metadata_tests": 11,
+  "dashboard_files_installed": true,
+  "current_window_refreshed": true,
+  "application_restarted": true,
+  "draft_preservation": "User reported restart; verified empty composer and no active task before native-bundle repair."
+}

@@ -42,6 +42,9 @@ jobs:
       - run: npm ci --prefix dashboard
       - name: Verify the customized project picker and preserved UI behavior
         run: |
+          node customization/frontend/test_voice_input_patch.mjs
+          node customization/frontend/test_model_shortcut_patch.mjs
+          node customization/frontend/test_model_shortcut_source.mjs
           node customization/frontend/test_project_folder_picker.mjs
           node customization/frontend/test_project_sidebar.mjs
           node customization/frontend/test_expert_avatar_integration.mjs

@@ -1,0 +1,11 @@
+/* Keep this source stylesheet in sync with the frozen dashboard asset. */
+.octop-model-shortcut{display:inline-flex;align-items:center;gap:3px;order:2;flex:0 1 auto;min-width:28px;max-width:180px;height:24px;min-height:24px;margin-left:4px;padding:0 5px;border:1px solid var(--fn-border-secondary,rgba(120,125,145,.2));border-radius:999px;background:var(--fn-bg-secondary,#f7f8fa);color:var(--fn-text-secondary,#4b5563);font:inherit;font-size:12px;line-height:1;cursor:pointer;vertical-align:middle}
+.octop-model-shortcut>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.octop-model-shortcut>svg{flex:none;width:8px;height:8px}
+.octop-model-shortcut>.octop-model-shortcut-chevron{width:6px;height:6px;transform:rotate(90deg)}
+.octop-model-shortcut[data-compact=true]{max-width:96px}
+.octop-model-shortcut:hover{background:var(--fn-color-brand-bg,rgba(91,108,220,.08));color:var(--fn-text-brand,var(--fn-text-primary,#303542))}
+.octop-model-shortcut:focus-visible{outline:2px solid var(--fn-color-brand,#5277dd);outline-offset:2px}
+.octop-model-shortcut:disabled{opacity:.45;cursor:not-allowed}
+.octop-model-shortcut-popover{max-width:calc(100vw - 24px)}
+@media(max-width:767px){.octop-model-shortcut[data-compact=true]{max-width:clamp(28px,calc(100vw - 272px),96px)}.octop-model-shortcut-popover [role=dialog]{max-width:calc(100vw - 36px)}}

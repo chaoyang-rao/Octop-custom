@@ -22,6 +22,10 @@
         <string>12.0.0</string>
         <key>NSHighResolutionCapable</key>
         <string>true</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>用于您主动开启的语音输入，将说话内容转换为聊天文字。</string>
+        <key>NSSpeechRecognitionUsageDescription</key>
+        <string>用于通过系统语音识别服务将您主动输入的语音转换为文字。</string>
         <key>NSHumanReadableCopyright</key>
         <string>Copyright © 2026</string>
         <key>NSAppTransportSecurity</key>

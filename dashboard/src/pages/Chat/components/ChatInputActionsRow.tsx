@@ -39,6 +39,7 @@ import type { AgentSubagentSummary } from "../../../api/modules/subagents";
 import {
   modelOptionLabel,
   modelOptionValue,
+  modelShortLabel,
 } from "../../../utils/modelOptions";
 import { customProviderLogo, getProviderLogo } from "../../../assets/providers";
 import ContextWindowRing from "./ContextWindowRing";
@@ -65,6 +66,7 @@ import {
   mentionedSubagentSlugs,
 } from "../utils/expertMention";
 import styles from "../index.module.less";
+import "./ChatInputModelShortcut.css";
 
 /** Picker opened from the composer plus menu. */
 type CompactPickerKey =
@@ -216,6 +218,7 @@ export default function ChatInputActionsRow({
   contextMaxTokens = 128_000,
   availableModels,
   selectedModel,
+  defaultModel,
   onModelChange,
   reasoningMode = "auto",
   reasoningEffort = null,
@@ -266,6 +269,7 @@ export default function ChatInputActionsRow({
   const [reasoningModelRef, setReasoningModelRef] = useState<string | null>(
     null,
   );
+  const [modelShortcutOpen, setModelShortcutOpen] = useState(false);
 
   // Press-and-hold dictation: start on pointerdown, finish on release or when
   // the pointer slides off the button (also covers touch cancel).
@@ -340,6 +344,9 @@ export default function ChatInputActionsRow({
   const showModelPicker = Boolean(
     availableModels && availableModels.length > 0 && onModelChange,
   );
+  useEffect(() => {
+    if (disabled || !showModelPicker) setModelShortcutOpen(false);
+  }, [disabled, showModelPicker]);
   const allowWriteTools = conversationMode === "craft";
   const showConnectorPicker = Boolean(
     allowWriteTools && availableConnectors && onConnectorsChange,
@@ -401,6 +408,7 @@ export default function ChatInputActionsRow({
   };
 
   const closePlusMenu = () => {
+    setModelShortcutOpen(false);
     setOverflowPopoverOpen(false);
     closeCompactPicker();
   };
@@ -451,6 +459,20 @@ export default function ChatInputActionsRow({
         },
       )
     : t("chat.modelAuto", "Auto");
+
+  const shortcutModelRef = selectedModel || defaultModel;
+  const shortcutModel = availableModels?.find(
+    (model) => modelOptionValue(model) === shortcutModelRef,
+  );
+  const modelShortcutLabel =
+    shortcutModel?.name ||
+    modelShortLabel(shortcutModel?.model || shortcutModelRef || "") ||
+    t("chat.modelAuto", "Auto");
+  const modelShortcutTitle = shortcutModelRef
+    ? `${selectedModel ? "" : `${t("chat.modelAuto", "Auto")} · `}${
+        shortcutModel ? modelOptionLabel(shortcutModel) : shortcutModelRef
+      }`
+    : selectedModelTriggerLabel;
 
   const modelQueryNormalized = modelQuery.trim().toLowerCase();
   const filteredModels = (availableModels ?? []).filter((model) => {
@@ -1014,6 +1036,7 @@ export default function ChatInputActionsRow({
               </div>
             }
             onOpenChange={(open) => {
+              if (open) setModelShortcutOpen(false);
               setOverflowPopoverOpen(open);
               if (!open) closeCompactPicker();
             }}
@@ -1116,6 +1139,53 @@ export default function ChatInputActionsRow({
       }`}
     >
       <div className={styles.secondaryActions}>{renderSecondaryActions()}</div>
+      {showModelPicker && (
+        <Popover
+          trigger="click"
+          placement="topLeft"
+          arrow={false}
+          destroyOnHidden
+          open={modelShortcutOpen}
+          overlayClassName={`${styles.modelPopover} octop-model-shortcut-popover`}
+          content={
+            <div role="dialog" aria-label={t("chat.selectModel", "Model")}>
+              {modelMenu}
+            </div>
+          }
+          onOpenChange={(open) => {
+            if (disabled) return;
+            setModelShortcutOpen(open);
+            if (open) {
+              setOverflowPopoverOpen(false);
+              closeCompactPicker();
+            }
+          }}
+        >
+          <Tooltip title={modelShortcutTitle} mouseEnterDelay={0.4}>
+            <button
+              type="button"
+              className="octop-model-shortcut"
+              data-testid="composer-model-shortcut"
+              data-compact={useCompactControls}
+              disabled={disabled}
+              aria-haspopup="dialog"
+              aria-expanded={modelShortcutOpen}
+              aria-label={`${t(
+                "chat.selectModel",
+                "Model",
+              )}: ${modelShortcutTitle}`}
+            >
+              <Cpu size={16} aria-hidden />
+              <span>{modelShortcutLabel}</span>
+              <ChevronRight
+                size={12}
+                className="octop-model-shortcut-chevron"
+                aria-hidden
+              />
+            </button>
+          </Tooltip>
+        </Popover>
+      )}
       {conversationMode !== "craft" ? (
         <p className={styles.modeHint} data-testid="conversation-mode-hint">
           <ModeIcon size={14} aria-hidden />
