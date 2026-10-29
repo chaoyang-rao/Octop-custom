@@ -144,6 +144,26 @@ func TestListenProbeSeesOpenListener(t *testing.T) {
 	}
 }
 
+func TestAddressInUseRecognizesWrappedNetworkErrors(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+	duplicate, err := net.Listen("tcp", listener.Addr().String())
+	if err == nil {
+		duplicate.Close()
+		t.Fatal("expected the second listener to report an occupied address")
+	}
+	wrapped := &net.OpError{Op: "listen", Net: "tcp", Err: fmt.Errorf("probe: %w", err)}
+	if !isAddrInUse(wrapped) {
+		t.Fatalf("wrapped occupied-address error was not recognized: %v", wrapped)
+	}
+	if isAddrInUse(nil) || isAddrInUse(&net.OpError{Op: "listen", Net: "tcp", Err: errors.New("address already in use")}) {
+		t.Fatal("only a real occupied-address error may be classified as a busy port")
+	}
+}
+
 func TestOctopAlreadyRunningRecognizesHealth(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/health" {

@@ -2,10 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -116,6 +119,24 @@ func TestDropServerServesOnlyPublishedFiles(t *testing.T) {
 	missing.Body.Close()
 	if missing.StatusCode != http.StatusNotFound {
 		t.Fatalf("missing index status %d", missing.StatusCode)
+	}
+}
+
+func TestDropServerCloseBeforeServeStarts(t *testing.T) {
+	previous := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(previous)
+	for attempt := 0; attempt < 100; attempt++ {
+		server := &dropServer{}
+		if err := server.ensure(); err != nil {
+			t.Fatal(err)
+		}
+		listener := server.listener
+		server.close()
+		if err := listener.Close(); !errors.Is(err, net.ErrClosed) {
+			t.Fatalf("close must release the listener before Serve starts: %v", err)
+		}
+		// Let the deferred Serve goroutine run after close cleared shared fields.
+		runtime.Gosched()
 	}
 }
 
