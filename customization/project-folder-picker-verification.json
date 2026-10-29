@@ -1,0 +1,22 @@
+{
+  "release": "avatars-v13",
+  "react_behavior_checks": 12,
+  "read_only_endpoints": [
+    "GET /filesystem/defaults",
+    "GET /filesystem/dirs"
+  ],
+  "native_verified": [
+    "chooser opens",
+    "existing directory navigation",
+    "canonical path filled",
+    "custom project name preserved",
+    "Escape closes only chooser and preserves form",
+    "cancel add form without creating a project"
+  ],
+  "backend_changed": false,
+  "chat_messages_sent": 0,
+  "live_active_assets_verified": 227,
+  "manual_entry_retained": true,
+  "native_centered_layout_verified": true,
+  "distribution": "Local dashboard and Git source updated; immutable prior release artifacts unchanged."
+}

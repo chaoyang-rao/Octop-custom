@@ -82,3 +82,10 @@ node customization/frontend/test_project_sidebar.mjs
 前端重建从 `customization/baselines/original/` 和 `customization/baselines/projects-v2/` 读取输入，不再依赖原机备份绝对路径。运行 `customization/baselines/README.md` 中的命令即可重建。安装脚本允许原机本地 JSON 保留其既有路径配置；新克隆未带 JSON 时自动使用仓内基线。
 
 官方新版本不能直接套用旧程序文件；先在 Git 中合并上游更新、核对补丁和测试，再构建发行。安装与回退始终保留当前聊天数据库，不用历史快照覆盖新聊天。
+
+
+## 添加项目的文件夹选择
+
+`avatars-v13` 为添加项目加入只读文件夹选择弹窗：浏览当前 Octop 所在电脑的目录，支持 Windows 盘符、上一级和直接定位路径。确认后只回填路径，保留已填写的项目名称；取消或 Esc 返回原表单，只有点击“添加项目”才保存。手动输入保留。目录浏览复用原有认证及用户工作区路径限制，不创建或移动文件。两个前端重建脚本使用 UTF-8 和固定 LF 输出，并显式接入当前项目 helper，避免头像重建覆盖此功能。
+
+本机界面与 Git 源码已更新；此前的 `v1.0.2-custom.20261029.1` 是独立、不可变的安装包快照。新增功能随下一次打包发行带入。

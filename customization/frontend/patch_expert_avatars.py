@@ -16,7 +16,7 @@ BASE = ROOT / 'baselines' / 'projects-v2' / 'octop' / 'dashboard'
 DASH = ROOT / 'packages' / 'octop' / 'dashboard'
 ASSETS = DASH / 'assets'
 SOURCE_RELEASE = 'projects-v2'
-RELEASE = 'avatars-v10'
+RELEASE = 'avatars-v13'
 MAIN = 'index.BsYGCvv_.projects-v2.js'
 EDIT = 'EditAgentDrawer.w674TDCV.projects-v2.js'
 CREATE = 'index.Bxr_iAco.projects-v2.js'
@@ -161,10 +161,12 @@ def patch_messages(s):
 
 
 patchers = {MAIN: patch_main, EDIT: patch_edit, CREATE: patch_create, MESSAGES: patch_messages, NAV_CSS: patch_navigation_avatar_css}
-sources = {p.name: p.read_text() for p in (BASE / 'assets').glob(f'*.{SOURCE_RELEASE}.*')
+sources = {p.name: p.read_text(encoding='utf-8') for p in (BASE / 'assets').glob(f'*.{SOURCE_RELEASE}.*')
     if p.suffix in ('.js', '.css')}
 if len(sources) != 217:
     raise RuntimeError(f'Unexpected active baseline graph size: {len(sources)}')
+sources['project-folders.projects-v2.js'] = (ASSETS / 'project-folders.js').read_text(encoding='utf-8')
+sources['project-folders.projects-v2.css'] = (ASSETS / 'project-folders.css').read_text(encoding='utf-8') + '\n' + (ASSETS / 'project-folder-picker.css').read_text(encoding='utf-8')
 for name, patcher in patchers.items():
     sources[name] = patcher(sources[name])
 account_patch = runpy.run_path(str(ROOT / 'frontend' / 'avatar_account_patch.py'))
@@ -177,11 +179,11 @@ sources[COMPOSER] = subprocess.run([
     'node', '--input-type=module', '-e',
     'import fs from "node:fs";import{pathToFileURL}from"node:url";const{patchCompactChatSource}=await import(pathToFileURL(process.argv[1]));process.stdout.write(patchCompactChatSource(fs.readFileSync(0,"utf8")));',
     str(compact_helper),
-], input=sources[COMPOSER], capture_output=True, text=True, check=True).stdout
+], input=sources[COMPOSER], capture_output=True, text=True, encoding='utf-8', check=True).stdout
 extra_files = ('expert-avatars.js', 'expert-avatars.css', 'expert-avatar-integration.js', 'expert-avatar-integration.css',
-               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css')
+               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'project-folder-picker.js')
 for name in extra_files:
-    sources[name] = (ASSETS / name).read_text()
+    sources[name] = (ASSETS / name).read_text(encoding='utf-8')
 mapping = {}
 for name in sources:
     if name in ('sidebar-scrollbars.css', 'toolbar-contrast.css'):
@@ -191,17 +193,17 @@ for name in sources:
 pattern = re.compile('|'.join(re.escape(name) for name in sorted(mapping, key=len, reverse=True)))
 rewrite = lambda text: pattern.sub(lambda match: mapping[match.group()], text)
 for name, content in sources.items():
-    (ASSETS / mapping[name]).write_text(rewrite(content))
-html = (BASE / 'index.html').read_text()
+    (ASSETS / mapping[name]).write_text(rewrite(content), encoding='utf-8', newline='\n')
+html = (BASE / 'index.html').read_text(encoding='utf-8')
 html = html.replace('</head>', '    <link rel="stylesheet" href="/assets/expert-avatars.css">\n    <link rel="stylesheet" href="/assets/expert-avatar-integration.css">\n  </head>')
 for name in (*account_patch['STYLESHEETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css'):
     html = html.replace('</head>', f'    <link rel="stylesheet" href="/assets/{name}">\n  </head>')
-(DASH / 'index.html').write_text(rewrite(html))
-(DASH / 'sw.js').write_text(f'/* Expert avatars release {RELEASE}, shell {hashlib.sha256(rewrite(html).encode()).hexdigest()[:10]}. */\n' + rewrite((BASE / 'sw.js').read_text()))
+(DASH / 'index.html').write_text(rewrite(html), encoding='utf-8', newline='\n')
+(DASH / 'sw.js').write_text(f'/* Expert avatars release {RELEASE}, shell {hashlib.sha256(rewrite(html).encode()).hexdigest()[:10]}. */\n' + rewrite((BASE / 'sw.js').read_text(encoding='utf-8')), encoding='utf-8', newline='\n')
 (ROOT / 'frontend' / 'avatar-asset-release.json').write_text(json.dumps({
     'release': RELEASE, 'main': mapping[MAIN], 'assets': list(mapping.values()),
     'additional_assets': [mapping[name] for name in extra_files],
     'baseline': BASE.relative_to(ROOT.parent).as_posix(), 'patched_modules': [mapping[name] for name in patchers],
     'baseline_main_sha256': hashlib.sha256((BASE / 'assets' / MAIN).read_bytes()).hexdigest(),
-}, indent=2))
+}, indent=2), encoding='utf-8', newline='\n')
 print(f'Prepared {len(mapping)} versioned assets, entry {mapping[MAIN]}')

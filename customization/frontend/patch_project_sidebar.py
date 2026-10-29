@@ -14,7 +14,7 @@ BASE = ROOT / 'baselines' / 'original' / 'octop' / 'dashboard'
 DASH = ROOT / 'packages' / 'octop' / 'dashboard'
 ASSETS = DASH / 'assets'
 MAIN = 'index.BsYGCvv_.js'
-RELEASE = 'projects-v2'
+RELEASE = 'projects-v3'
 
 
 def replace_once(text, old, new):
@@ -24,7 +24,7 @@ def replace_once(text, old, new):
     return text.replace(old, new, 1)
 
 
-s = (BASE / 'assets' / MAIN).read_text()
+s = (BASE / 'assets' / MAIN).read_text(encoding='utf-8')
 s = 'import {createProjectFolders} from "./project-folders.js";\n' + s
 s = replace_once(s, 'threadId:row2.thread_id,updatedAt:',
     'threadId:row2.thread_id,projectPath:row2.project_path??null,projectName:row2.project_name??null,updatedAt:')
@@ -59,24 +59,25 @@ s = s[:a] + block + s[b:]
 for old in ('sessionsFor(agent.agent_id).map(session=>session.name)', 'own.map(session=>session.name)'):
     s = replace_once(s, old, old.replace('session.name)', '`${session.name} ${session.projectName||""} ${session.projectPath||""}`)'))
 
-sources = {p.name: p.read_text() for p in (BASE / 'assets').iterdir()
+sources = {p.name: p.read_text(encoding='utf-8') for p in (BASE / 'assets').iterdir()
     if p.suffix in ('.js', '.css')}
 sources[MAIN] = s
-for name in ('project-folders.js', 'project-folders.css'):
-    sources[name] = (ASSETS / name).read_text()
+for name in ('project-folders.js', 'project-folders.css', 'project-folder-picker.js'):
+    sources[name] = (ASSETS / name).read_text(encoding='utf-8')
+sources['project-folders.css'] += '\n' + (ASSETS / 'project-folder-picker.css').read_text(encoding='utf-8')
 mapping = {name: f'{Path(name).stem}.{RELEASE}{Path(name).suffix}' for name in sources}
 pattern = re.compile('|'.join(re.escape(name) for name in sorted(mapping, key=len, reverse=True)))
 rewrite = lambda text: pattern.sub(lambda match: mapping[match.group()], text)
 for name, content in sources.items():
-    (ASSETS / mapping[name]).write_text(rewrite(content))
+    (ASSETS / mapping[name]).write_text(rewrite(content), encoding='utf-8', newline='\n')
 
-html = (BASE / 'index.html').read_text()
+html = (BASE / 'index.html').read_text(encoding='utf-8')
 html = html.replace('</head>', '    <link rel="stylesheet" href="/assets/project-folders.css">\n  </head>')
-(DASH / 'index.html').write_text(rewrite(html))
-sw = rewrite((BASE / 'sw.js').read_text())
-(DASH / 'sw.js').write_text(f'/* Project folders release {RELEASE}. */\n' + sw)
+(DASH / 'index.html').write_text(rewrite(html), encoding='utf-8', newline='\n')
+sw = rewrite((BASE / 'sw.js').read_text(encoding='utf-8'))
+(DASH / 'sw.js').write_text(f'/* Project folders release {RELEASE}. */\n' + sw, encoding='utf-8', newline='\n')
 (ROOT / 'frontend' / 'asset-release.json').write_text(json.dumps({
     'release': RELEASE, 'main': mapping[MAIN], 'assets': list(mapping.values()),
     'baseline_main_sha256': hashlib.sha256((BASE / 'assets' / MAIN).read_bytes()).hexdigest(),
-}, indent=2))
+}, indent=2), encoding='utf-8', newline='\n')
 print(f'Prepared {len(mapping)} versioned assets, entry {mapping[MAIN]}')

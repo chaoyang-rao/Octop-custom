@@ -40,6 +40,15 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: npm ci --prefix dashboard
+      - name: Verify the customized project picker and preserved UI behavior
+        run: |
+          node customization/frontend/test_project_folder_picker.mjs
+          node customization/frontend/test_project_sidebar.mjs
+          node customization/frontend/test_expert_avatar_integration.mjs
+          node customization/frontend/test_navigation_avatar_sizes.mjs
+          node customization/frontend/test_account_avatar.mjs
+          node customization/frontend/test_account_avatar_settings.mjs
+          node customization/frontend/test_bubble_palette.mjs
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
       - name: Require a clean formatted source tree

@@ -101,5 +101,6 @@ const expectedChanged = release.release === 'avatars-v3'
   : [`index.BsYGCvv_.${release.release}.js`, `index.Bexwf9h5.${release.release}.js`];
 if (Number(release.release.split('-v')[1]) >= 5) expectedChanged.push(`index.G9_xhF8C.${release.release}.js`);
 if (Number(release.release.split('-v')[1]) >= 10) expectedChanged.push(`expert-avatars.${release.release}.js`);
+if (Number(release.release.split('-v')[1]) >= 11) expectedChanged.push(`project-folders.${release.release}.js`, `project-folders.${release.release}.css`);
 assert.deepEqual(changed.sort(), expectedChanged.sort());
 console.log('PASS all three tabs retain 48px slots and images; compact header 56px; scoped module changes only');

@@ -104,6 +104,34 @@ tree = render({ searchQuery: '项目 A' });
 assert.equal(all(tree, node => node.type === Row).length, 1);
 assert.equal(all(tree, node => node.type === Row)[0].props.session.id, 'one');
 
+// Picking a folder changes only the pending add form, never creates a project.
+const pickerNode = node => typeof node.type === 'function' && typeof node.props?.initialPath === 'string' && typeof node.props?.onClose === 'function';
+reset({ 5: { kind: 'add' }, 6: '/tmp/手动路径', 7: '自己填写的名称' });
+tree = render();
+assert.equal(button(tree, '选择文件夹').props.type, 'button');
+button(tree, '选择文件夹').props.onClick();
+tree = render();
+let picker = all(tree, pickerNode)[0];
+assert.equal(picker.props.initialPath, '/tmp/手动路径');
+picker.props.onClose();
+assert.equal(state[6], '/tmp/手动路径');
+assert.equal(state[7], '自己填写的名称');
+tree = render();
+assert.equal(all(tree, pickerNode).length, 0);
+button(tree, '选择文件夹').props.onClick();
+tree = render();
+picker = all(tree, pickerNode)[0];
+picker.props.onSelect('/tmp/已选文件夹');
+assert.equal(state[6], '/tmp/已选文件夹');
+assert.equal(state[7], '自己填写的名称');
+assert.equal(calls.filter(call => call.method === 'POST').length, 0);
+tree = render();
+all(tree, node => node.type === 'form')[0].props.onSubmit({ preventDefault() {} });
+await tick();
+const add = calls.find(call => call.method === 'POST' && call.url.endsWith('/projects'));
+assert.equal(JSON.parse(add.body).project_path, '/tmp/已选文件夹');
+assert.equal(JSON.parse(add.body).project_name, '自己填写的名称');
+
 // Every rewritten static module edge must exist, and no new module may import
 // the old app state module after the versioned main entry has loaded.
 const root = path.dirname(fileURLToPath(import.meta.url));

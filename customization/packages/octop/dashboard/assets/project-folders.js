@@ -2,6 +2,8 @@
  * This module uses the app's React instance, authenticated request client,
  * navigation callbacks and conversation rows. It never reads project files.
  */
+import { createProjectFolderPicker } from './project-folder-picker.js';
+
 export function createProjectFolders({ React, request, toSession, sortSessions,
   Row, CompactRow, resolveStatus, emitSessionEvent, onSessionEvent, Dropdown,
   Plus, More, Chevron }) {
@@ -40,6 +42,8 @@ export function createProjectFolders({ React, request, toSession, sortSessions,
       children));
   }
 
+  const ProjectFolderPicker = createProjectFolderPicker({ React, request, Dialog, readableError });
+
   return function ProjectSessionList({ agent, sessions, activeId, searchQuery = '',
     onSelect, onDelete, onRename, onPin, onFork, activeForkDisabled,
     activeForkDisabledHint, liveWorkingIds, compact = false }) {
@@ -57,6 +61,7 @@ export function createProjectFolders({ React, request, toSession, sortSessions,
     const [collapsed, setCollapsed] = React.useState(() => {
       try { return new Set(JSON.parse(localStorage.getItem(folderKey(agentId)) || '[]')); } catch { return new Set(); }
     });
+    const [folderPickerOpen, setFolderPickerOpen] = React.useState(false);
     const activeProjectPath = rows.find(row => row.id === activeId)?.projectPath;
     React.useEffect(() => {
       if (!activeProjectPath) return;
@@ -102,7 +107,7 @@ export function createProjectFolders({ React, request, toSession, sortSessions,
       try { await task(); } catch (e) { setError(readableError(e)); }
       finally { if (mounted.current) setBusy(false); }
     };
-    const openAdd = () => { setError(''); setPath(''); setName(''); setDialog({ kind: 'add' }); };
+    const openAdd = () => { setError(''); setPath(''); setName(''); setFolderPickerOpen(false); setDialog({ kind: 'add' }); };
     const create = projectPath => act(async () => {
       const created = await request(`${apiPath(agentId)}/threads`, { method: 'POST', body: JSON.stringify({ project_path: projectPath || null }) });
       await refresh(); notify(); onSelect(created.thread_id, agentId);
@@ -187,12 +192,20 @@ export function createProjectFolders({ React, request, toSession, sortSessions,
         h('div', { className: 'octop-project-header' }, h('span', { className: 'octop-project-ungrouped-label' }, '未分组', h('span', { className: 'octop-project-count' }, ungrouped.length)),
           h('button', { type: 'button', className: 'octop-project-icon-button', title: '新建未分组对话', 'aria-label': '新建未分组对话', disabled: busy, onClick: () => create(null) }, icon(Plus))),
         loose.length ? loose.map(renderRow) : h('p', { className: 'octop-project-empty' }, '暂无未分组会话')) : null,
-      dialog?.kind === 'add' ? h(Dialog, { title: '添加项目文件夹', busy, onClose: () => { setDialog(null); setError(''); } },
+      dialog?.kind === 'add' ? h(Dialog, { title: '添加项目文件夹', busy: busy || folderPickerOpen, onClose: () => { setDialog(null); setError(''); } },
         h('form', { onSubmit: saveProject },
           h('p', { className: 'octop-project-help' }, '将本机项目目录加入此专家。项目中的新会话会自动使用这个目录进行 ACP 协作。'),
           h('label', null, '项目名称', h('input', { value: name, onChange: e => setName(e.target.value), placeholder: '留空则使用文件夹名称', autoFocus: true, maxLength: 100 })),
-          h('label', null, '本机文件夹路径', h('input', { value: path, onChange: e => setPath(e.target.value), placeholder: '/Users/你的用户名/Documents/项目名称', required: true, spellCheck: false, autoComplete: 'off' })),
-          h('p', { className: 'octop-project-help' }, '请填写已存在文件夹的绝对路径。添加项目不会移动文件。'), errorNode, actions(true, '添加项目'))) : null,
+          h('label', { htmlFor: `octop-project-path-${agentId}` }, '本机文件夹路径'),
+          h('div', { className: 'octop-project-path-field' },
+            h('input', { id: `octop-project-path-${agentId}`, value: path, onChange: e => setPath(e.target.value), placeholder: '选择或输入文件夹的绝对路径', required: true, spellCheck: false, autoComplete: 'off' }),
+            h('button', { type: 'button', className: 'octop-project-browse-button', 'aria-label': '选择文件夹', disabled: busy, onClick: () => setFolderPickerOpen(true) }, icon(Folder), '选择文件夹')),
+          h('p', { className: 'octop-project-help' }, '选择已存在的文件夹，或填写绝对路径。添加项目不会移动文件。'), errorNode, actions(true, '添加项目'))) : null,
+      dialog?.kind === 'add' && folderPickerOpen ? h(ProjectFolderPicker, {
+        initialPath: path || activeProjectPath || projects[0]?.project_path || '',
+        onClose: () => setFolderPickerOpen(false),
+        onSelect: value => { setPath(value); setError(''); setFolderPickerOpen(false); },
+      }) : null,
       dialog?.kind === 'move' ? h(Dialog, { title: '更改会话所属项目', busy, onClose: () => { setDialog(null); setError(''); } },
         h('form', { onSubmit: move },
           h('p', { className: 'octop-project-help' }, dialog.session.name),
