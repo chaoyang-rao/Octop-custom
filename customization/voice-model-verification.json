@@ -12,12 +12,13 @@
     "browser_event_and_recorder_lifecycle_checks": 34,
     "mac_build_purpose_strings": "present in production and development source plists",
     "installed_native_app_patch_applied": true,
-    "speech_recognition_live_verified": false,
+    "speech_recognition_live_verified": true,
     "recognition_provider_switched": false,
     "microphone_started_by_agent": false,
-    "pending_action": "Await user speech test; native purpose strings applied and signed app reopened.",
+    "pending_action": null,
     "native_signature_verified": true,
-    "system_permissions_granted_by_agent": false
+    "system_permissions_granted_by_agent": false,
+    "verification_source": "User confirmed normal recognition after native purpose-string repair and app relaunch."
   },
   "typescript_typecheck": "passed",
   "desktop_metadata_tests": 11,
