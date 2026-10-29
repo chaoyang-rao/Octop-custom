@@ -49,6 +49,10 @@ python scripts/custom/build_portable.py --platform darwin-arm64 --output dist
 
 原生打包使用 `.github/workflows/custom-release.yml`，在三种平台原生 runner 上完成 Python smoke、定制回归、Go 测试、Wails／NSIS 打包和校验；三个平台全部成功后才发布完整 Release。向 `custom/main` 推送会触发构建；后续发新版请手动运行工作流并增加发行 tag 的末尾修订号。原上游发布／Docker 工作流只在上游仓库运行。
 
+后续发行还需同步递增锁文件的 `custom_version`、工作流的 `CUSTOM_VERSION`、健康标记及对应测试；只增加 GitHub tag 不会改变包内版本，也不会触发桌面端替换同版本运行环境。合入新官方版本时须重新适配定制源码和程序基线，通过完整检查后再发行。
+
+本次发行的实际构建、校验与源码对应记录见 [发行验证](docs/release-verification-20261029.json)。恢复工具使用当前仓库默认分支，兼容发行 ZIP 与本机旧安装清单两种路径格式。
+
 前端重建：
 
 ```sh

@@ -1,0 +1,106 @@
+{
+  "release_url": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/v1.0.2-custom.20261029.1",
+  "release_tag": "v1.0.2-custom.20261029.1",
+  "application_commit": "3c5f7c27b6cb8957fe3f1ed321a4a9bfeab922c1",
+  "workflow_url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/40822374847",
+  "workflow_conclusion": "success",
+  "published_at_utc": "2026-10-29T05:32:01Z",
+  "source_program_files_verified": 5470,
+  "canonical_quality_tests": {
+    "passed": 5027,
+    "skipped": 29
+  },
+  "native_customization_tests_per_platform": 50,
+  "native_release_tooling_tests_per_platform": 25,
+  "maintenance_tooling_tests": 27,
+  "assets": [
+    {
+      "name": "native-smoke-darwin-amd64.json",
+      "size": 253,
+      "sha256": "9454bc12f198c86235d5b8de1cbd2e718ea4f1fd57f56555fad0fc5cf024a7ec",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/native-smoke-darwin-amd64.json"
+    },
+    {
+      "name": "native-smoke-darwin-arm64.json",
+      "size": 252,
+      "sha256": "39f8dc3bf93c3d053a287e8797d43be7da491f8ff6a2bae235535bec151aa77e",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/native-smoke-darwin-arm64.json"
+    },
+    {
+      "name": "native-smoke-windows-amd64.json",
+      "size": 265,
+      "sha256": "114ee180fb95f343557edcb37d6bd993f9dfbe617b8fdf98aa68c565dae2a5da",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/native-smoke-windows-amd64.json"
+    },
+    {
+      "name": "Octop-portable-darwin-amd64-1.0.2.post20261029.json",
+      "size": 715,
+      "sha256": "1e1d6a2d668ee768899296875315a141ae01916416a6d684aa4704aaab2eba0c",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-darwin-amd64-1.0.2.post20261029.json"
+    },
+    {
+      "name": "Octop-portable-darwin-amd64-1.0.2.post20261029.zip",
+      "size": 293757716,
+      "sha256": "0b79143f1f6add7e0bcc2beb3fe33bec71123df7d5090c5b2b9029add4390337",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-darwin-amd64-1.0.2.post20261029.zip"
+    },
+    {
+      "name": "Octop-portable-darwin-arm64-1.0.2.post20261029.json",
+      "size": 715,
+      "sha256": "c56c01c64b599907a8443276827b8c8575db3c3bc926a2d24e679faab49ef73b",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-darwin-arm64-1.0.2.post20261029.json"
+    },
+    {
+      "name": "Octop-portable-darwin-arm64-1.0.2.post20261029.zip",
+      "size": 284403555,
+      "sha256": "ab40c510bcb2041e6eb36966285ea48f7c9675372c71ad8e3749a707f40a3fef",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-darwin-arm64-1.0.2.post20261029.zip"
+    },
+    {
+      "name": "Octop-portable-windows-amd64-1.0.2.post20261029.json",
+      "size": 718,
+      "sha256": "6bc0e605eae9d68c33b1036e113079eb65db3aa78dc37814fa0be551d3eb47a1",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-windows-amd64-1.0.2.post20261029.json"
+    },
+    {
+      "name": "Octop-portable-windows-amd64-1.0.2.post20261029.zip",
+      "size": 278522253,
+      "sha256": "019855cf561ad6a285c799cac077e45aea77e180a1fbf3c84fdb1c76125de40e",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/Octop-portable-windows-amd64-1.0.2.post20261029.zip"
+    },
+    {
+      "name": "OctopCustom-desktop-darwin-amd64-1.0.2.post20261029.dmg",
+      "size": 308684699,
+      "sha256": "fdc2e41c07e5f4844543fdeafaff5996b66300c1a65f15102c76f7fb23a39be5",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/OctopCustom-desktop-darwin-amd64-1.0.2.post20261029.dmg"
+    },
+    {
+      "name": "OctopCustom-desktop-darwin-arm64-1.0.2.post20261029.dmg",
+      "size": 298551072,
+      "sha256": "be62ad5ac7ce0f70be31e46203b92aab36a747237906e7b0a72f2071dcd82deb",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/OctopCustom-desktop-darwin-arm64-1.0.2.post20261029.dmg"
+    },
+    {
+      "name": "OctopCustom-desktop-windows-amd64-1.0.2.post20261029.exe",
+      "size": 233818793,
+      "sha256": "0593ac1af05a4e9cc825b546ec715f9d9a15af0896eea23c88ecfca06e21aed0",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/OctopCustom-desktop-windows-amd64-1.0.2.post20261029.exe"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 1366,
+      "sha256": "54ece6644a9aeba315e2269cd81ed5e9eb01f70768fe32ea11841217f82298e6",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/v1.0.2-custom.20261029.1/SHA256SUMS.txt"
+    }
+  ],
+  "mac_arm_native_inspection": {
+    "native_dmg_verified": true,
+    "bundle_id": "com.chaoyangrao.octopcustom",
+    "version": "1.0.2.post20261029",
+    "native_arch": "arm64",
+    "embedded_custom_zip_matches_portable": true,
+    "git_commit": "3c5f7c27b6cb8957fe3f1ed321a4a9bfeab922c1",
+    "overlay_files": 5470
+  },
+  "scope_note": "Restoration-tool manifest compatibility was refined after the application build; no application or frozen program file changed. Private user data and credentials are excluded."
+}

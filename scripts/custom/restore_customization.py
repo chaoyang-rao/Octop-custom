@@ -85,7 +85,12 @@ def previous_hashes(packages: Path) -> dict:
         manifest = json.loads(release.read_text(encoding="utf-8"))
     if manifest.get("upstream_version") != BASE_VERSION:
         raise ValueError("Previous installation manifest has a different upstream version")
-    return manifest.get("package_file_sha256", {})
+    # Portable ZIP manifests include the packages/ prefix; local restore
+    # manifests store paths relative to that directory.
+    return {
+        name.removeprefix("packages/"): sha
+        for name, sha in manifest.get("package_file_sha256", {}).items()
+    }
 
 
 def plan(packages: Path, repo: Path) -> list[dict]:
@@ -119,7 +124,7 @@ def plan(packages: Path, repo: Path) -> list[dict]:
             target = program_path(packages, name)
             actual = digest(target)
             allowed = {None, current} if original is None else {original, current}
-            if original is not None and known.get(name) is not None:
+            if known.get(name) is not None:
                 allowed.add(known[name])
             if actual not in allowed:
                 raise ValueError(

@@ -117,11 +117,16 @@ class RestoreCustomizationTests(unittest.TestCase):
 
     def test_verified_portable_manifest_is_accepted_and_existing_marker_is_preserved(self):
         self.before.write_bytes(b"previous portable customization")
+        added = self.packages / "octop_harness" / "new.py"
+        added.write_bytes(b"previous portable project feature")
         manifest = recovery.json_bytes(
             {
                 "upstream_version": "1.0.2",
                 "package_file_sha256": {
-                    "octop/program.py": hashlib.sha256(self.before.read_bytes()).hexdigest()
+                    "packages/octop/program.py": hashlib.sha256(
+                        self.before.read_bytes()
+                    ).hexdigest(),
+                    "packages/octop_harness/new.py": hashlib.sha256(added.read_bytes()).hexdigest(),
                 },
             }
         )
@@ -136,10 +141,54 @@ class RestoreCustomizationTests(unittest.TestCase):
         (self.packages / recovery.MARKER).write_bytes(marker)
         result = self.restore(True)
         self.assertEqual(self.before.read_bytes(), b"reviewed customization")
+        self.assertEqual(added.read_bytes(), b"new project feature")
         self.assertEqual((self.packages / recovery.MARKER).read_bytes(), marker)
         recovery.rollback(self.packages, Path(result["backup"]), apply=True)
         self.assertEqual(self.before.read_bytes(), b"previous portable customization")
+        self.assertEqual(added.read_bytes(), b"previous portable project feature")
         self.assertEqual((self.packages / recovery.MARKER).read_bytes(), marker)
+
+    def test_local_restore_manifest_accepts_previously_added_custom_file(self):
+        added = self.packages / "octop_harness" / "new.py"
+        added.write_bytes(b"previous local project feature")
+        state = self.packages.parent / recovery.INSTALL_MANIFEST
+        previous = recovery.json_bytes(
+            {
+                "upstream_version": "1.0.2",
+                "package_file_sha256": {
+                    "octop_harness/new.py": hashlib.sha256(added.read_bytes()).hexdigest()
+                },
+            }
+        )
+        state.write_bytes(previous)
+        result = self.restore(True)
+        self.assertEqual(added.read_bytes(), b"new project feature")
+        recovery.rollback(self.packages, Path(result["backup"]), apply=True)
+        self.assertEqual(added.read_bytes(), b"previous local project feature")
+        self.assertEqual(state.read_bytes(), previous)
+
+    def test_verified_portable_manifest_does_not_allow_unknown_added_file_drift(self):
+        added = self.packages / "octop_harness" / "new.py"
+        manifest = recovery.json_bytes(
+            {
+                "upstream_version": "1.0.2",
+                "package_file_sha256": {
+                    "packages/octop_harness/new.py": hashlib.sha256(
+                        b"previous reviewed feature"
+                    ).hexdigest()
+                },
+            }
+        )
+        (self.packages.parent / "custom-release-manifest.json").write_bytes(manifest)
+        (self.packages / recovery.MARKER).write_bytes(
+            recovery.json_bytes({"manifest_sha256": hashlib.sha256(manifest).hexdigest()})
+        )
+        added.write_bytes(b"unreviewed independent edit")
+        with self.assertRaisesRegex(ValueError, "Independent"):
+            self.restore(True)
+        self.assertEqual(added.read_bytes(), b"unreviewed independent edit")
+        self.assertEqual(self.before.read_bytes(), b"original program")
+        self.assertFalse((self.packages.parent / "customization-backups").exists())
 
     def test_sqlite_backup_includes_wal_and_rollback_never_reverts_new_chats(self):
         self.database.parent.mkdir(parents=True)
