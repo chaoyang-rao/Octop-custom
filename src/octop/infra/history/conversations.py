@@ -303,7 +303,7 @@ def build_conversation_tools(
             if user_id is None:
                 raise PermissionError("missing current user")
             actor_id = str(cfg.get("agent_id") or (scope.primary_id if scope else ""))
-            history.require_visible_agent(user_id, actor_id)
+            await asyncio.to_thread(history.require_visible_agent, user_id, actor_id)
             limit = min(50, max(1, limit))
             if action == "read" and page_reader is not None and before_seq is None:
                 result = await history.aread(

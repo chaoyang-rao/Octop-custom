@@ -138,7 +138,9 @@ async def patch_team(
     assert server.app_runtime is not None
     roster_changed = False
     if body.member_ids is not None:
-        next_ids = teams.validate_member_ids(user, body.member_ids, primary_user_id=current.user_id)
+        next_ids = await asyncio.to_thread(
+            teams.validate_member_ids, user, body.member_ids, primary_user_id=current.user_id
+        )
         teams.assert_roster_writable(team_id, next_ids)
         teams.replace_members(team_id, next_ids)
         roster_changed = True

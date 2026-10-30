@@ -25,7 +25,11 @@
     "typescript": "passed",
     "ruff": "passed",
     "frozen_asset_graph": 233,
-    "javascript_syntax": 183
+    "javascript_syntax": 183,
+    "final_manager_archive_pytest_passed": 177,
+    "final_manager_archive_pytest_skipped": 1,
+    "nonblocking_lookup_regression_pytest": 86,
+    "eslint": "Three pre-existing errors in Agent/Channels/constants.test.ts, chatStore.ts Boolean(team_wrapup), Settings/Models/ModelListEditor.tsx; no new ESLint errors."
   },
   "local_runtime": {
     "installed": false,

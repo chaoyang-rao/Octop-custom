@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -172,7 +173,7 @@ async def get_tool_settings(
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
     resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
-    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    target_id = await asyncio.to_thread(resolver, agent_id) if callable(resolver) else agent_id
     if target_id != agent_id:
         agent_id = target_id
         row = server.app_runtime.agent_registry.get_row(agent_id)
@@ -235,7 +236,7 @@ async def put_tool_settings(
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
     resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
-    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    target_id = await asyncio.to_thread(resolver, agent_id) if callable(resolver) else agent_id
     if target_id != agent_id:
         agent_id = target_id
         row = server.app_runtime.agent_registry.get_row(agent_id)
@@ -279,7 +280,7 @@ async def patch_tool_setting(
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
     resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
-    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    target_id = await asyncio.to_thread(resolver, agent_id) if callable(resolver) else agent_id
     if target_id != agent_id:
         agent_id = target_id
         row = server.app_runtime.agent_registry.get_row(agent_id)

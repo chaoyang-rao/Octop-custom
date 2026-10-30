@@ -2455,7 +2455,7 @@ class AgentManager:
 
         Returns server names that still have no loaded tools after reload/retry.
         """
-        agent_id = self.principal_agent_id(agent_id)
+        agent_id = await asyncio.to_thread(self.principal_agent_id, agent_id)
         if not names:
             return []
         from octop.infra.agents.teams import is_team_agent

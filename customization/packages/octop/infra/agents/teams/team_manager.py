@@ -981,7 +981,7 @@ class TeamManager:
         if getter is None:
             return []
         try:
-            actual = self._primary_speaker_id(agent_id)
+            actual = await asyncio.to_thread(self._primary_speaker_id, agent_id)
             harness = getter(actual)
             hist = getattr(harness, "aget_history", None)
             if hist is None:

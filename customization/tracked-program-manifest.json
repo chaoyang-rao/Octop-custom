@@ -193,7 +193,7 @@
     },
     {
       "path": "octop/api/routers/agent_tools.py",
-      "sha256": "c2de4cb7133e3ac1b8436ed361b69170170714e2cf2256bca7ec0ef294d79326",
+      "sha256": "d4cdf0f88fbe2f926286836c07212c37e89ec2a7a2c30cee64e727256f22bf12",
       "upstream_program_sha256": "d8ee50b83199eb7ad243e737582705d28ee160c0b9cd2b0856aa3f5f702b0818",
       "changed_from_saved_original": true
     },
@@ -607,7 +607,7 @@
     },
     {
       "path": "octop/api/routers/teams.py",
-      "sha256": "601a65a77cd6e862639e20aa5f5cdb74102b11e8d23d69dd7cdcb24d10671d78",
+      "sha256": "e64f7fc1c22a39f85bf7f5ceaaecc358b9471bed25e3928565f9f8752c899dd4",
       "upstream_program_sha256": "406cc0f343a77f56e904207fb8f694e55f7a75cdf2c8b0572c65dcfda3af8c54",
       "changed_from_saved_original": true
     },
@@ -31939,7 +31939,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "75c1f4cc835b3b53f450293cebafa30e0dab35200351ac2ff3046313a66e15f2",
+      "sha256": "bfdcfc6871fd08d1dfe28478bc86a93f2188819b9e9813accbb52ef0ba92a396",
       "upstream_program_sha256": "445669cd8286acd7533a18a0fc66e558d3b7bb65d7fe0cabe8a7cfa5ec52f8e0",
       "changed_from_saved_original": true
     },
@@ -36097,7 +36097,7 @@
     },
     {
       "path": "octop/infra/agents/teams/team_manager.py",
-      "sha256": "ebb2344a6d32de8ae3426a71f0aa455c414202a7c604e113af7ac2369a97d9e4",
+      "sha256": "464d6e53c1434cfa514efdc7aededb48af4e5630b8d0bc80e68ecb98b789da34",
       "upstream_program_sha256": "c25dbe1dffe6fc921354c2e01fb1a6123ffac80c69c89ee68d0c383ec7561854",
       "changed_from_saved_original": true
     },
@@ -37783,7 +37783,7 @@
     },
     {
       "path": "octop/infra/history/conversations.py",
-      "sha256": "f0ee707f69a573cda64b99834dfddef6296f9c5320e68c2a974c3813a8557afd",
+      "sha256": "f82388acfa00fc2f0e49f5d317b7aafb90d3e5af1099ddfa0aa22275a1bc72b4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
