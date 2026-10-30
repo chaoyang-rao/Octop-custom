@@ -135,3 +135,29 @@ async def test_copy_and_cli_reuse_have_readable_typed_api_docs(env_with_agent):
     assert reused["responses"]["200"]["content"]["application/json"]["schema"]["$ref"].endswith(
         "CliReuseResult"
     )
+
+
+async def test_copy_of_private_jail_survives_source_deletion(env_with_agent):
+    from pathlib import Path
+
+    client, srv, auth, source_id = env_with_agent
+    registry = srv.app_runtime.agent_registry
+    source_ws = registry.workspace_for_agent(source_id)
+    await source_ws.aupload_many([("SOUL.md", b"Independent jail role")])
+    cfg = registry.get_config(source_id)
+    original_root = registry.paths.agent_workspace(source_id)
+    cfg["backend"] = {"type": "filesystem", "root_dir": str(original_root)}
+    srv.services.agent_repo.update_config(source_id, config_json=json.dumps(cfg))
+    copied = await client.post(f"/api/agents/{source_id}/copy", headers=auth, json={})
+    assert copied.status_code == 201, copied.text
+    target_id = copied.json()["agent_id"]
+    copied_cfg = registry.get_config(target_id)
+    new_root = Path(copied_cfg["backend"]["root_dir"])
+    assert new_root == registry.paths.agent_workspace(target_id)
+    assert not new_root.is_relative_to(original_root)
+    target_ws = registry.workspace_for_agent(target_id)
+    assert await target_ws.adownload_bytes("SOUL.md") == b"Independent jail role"
+    removed = await client.delete(f"/api/agents/{source_id}", headers=auth)
+    assert removed.status_code == 204, removed.text
+    assert await target_ws.adownload_bytes("SOUL.md") == b"Independent jail role"
+    assert registry.get_row(target_id) is not None

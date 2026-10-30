@@ -3,6 +3,10 @@ import copy
 import json
 from types import SimpleNamespace as NS
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from octop.infra.utils.paths import PathLayout
+from octop.infra.agents.workspace.dir import relocate_copied_agent_backend
 from octop.infra.agents.manager import AgentManager
 from octop.infra.errors import OctopError, ErrorCode
 
@@ -37,6 +41,16 @@ class Registry:
 
 
 class ExpertCopyTests(unittest.IsolatedAsyncioTestCase):
+    async def test_copied_private_jail_is_independent_but_business_root_is_retained(self):
+        with TemporaryDirectory() as tmp:
+            paths=PathLayout(Path(tmp)/"home")
+            source={"backend":{"type":"filesystem","root_dir":str(paths.agent_workspace("source"))}}
+            result=relocate_copied_agent_backend(source, paths=paths, source_id="source", target_id="target")
+            self.assertEqual(Path(result["backend"]["root_dir"]), paths.agent_workspace("target").resolve())
+            self.assertEqual(Path(source["backend"]["root_dir"]), paths.agent_workspace("source"))
+            business={"backend":{"type":"filesystem","root_dir":str(Path(tmp)/"business")}}
+            self.assertEqual(relocate_copied_agent_backend(business,paths=paths,source_id="source",target_id="target"),business)
+
     async def test_copy_uses_new_identity_and_seedable_workspace_only(self):
         r=Registry();before=copy.deepcopy(r.configs)
         row=await AgentManager.copy_expert(r,'source',user_id=1)

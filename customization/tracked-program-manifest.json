@@ -3,7 +3,7 @@
   "upstream_tag": "v1.0.2",
   "upstream_commit": "dd9dce470844c25d59effb50615bb3c667ea25cd",
   "program_files": 7297,
-  "changed_program_files": 4650,
+  "changed_program_files": 4651,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -31063,7 +31063,7 @@
     },
     {
       "path": "octop/infra/agents/experts/copy.py",
-      "sha256": "6f9dd7dcd5e4e985139abd9b241c0460c9fec1f2feeca6cae602cb7301196937",
+      "sha256": "8fb017b34eeb1f74235e809ee9bb73009101bcf56b10d5d7803b8c74e7aa9a38",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -38929,9 +38929,9 @@
     },
     {
       "path": "octop/infra/agents/workspace/dir.py",
-      "sha256": "3b3da42919cca589ad78426977a9d8058dc8edae577c0cfd40c6f4fc499094b7",
+      "sha256": "67739f7fff84155954228f911639aa6b3b3a865f81036df97f33b3520d654240",
       "upstream_program_sha256": "3b3da42919cca589ad78426977a9d8058dc8edae577c0cfd40c6f4fc499094b7",
-      "changed_from_saved_original": false
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/workspace/execute_env.py",

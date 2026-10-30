@@ -528,3 +528,35 @@ __all__ = [
     "workspace_dir_from_config",
     "workspace_dir_from_config_json",
 ]
+
+
+def relocate_copied_agent_backend(
+    config: dict[str, Any], *, paths: PathLayout, source_id: str, target_id: str
+) -> dict[str, Any]:
+    """Give a copied expert its own jail when the source jail is agent-owned.
+
+    Business/project roots remain shared access settings. Only roots inside
+    the source's managed agent directory move to the target's managed tree.
+    No workspace contents are read or written here.
+    """
+    import copy
+
+    out = copy.deepcopy(config)
+    source = paths.agent_workspace(source_id).resolve()
+    target = paths.agent_workspace(target_id).resolve()
+
+    def relocate(node: Any) -> None:
+        if isinstance(node, dict):
+            value = node.get("root_dir")
+            if isinstance(value, str) and Path(value).expanduser().is_absolute():
+                root = Path(value).expanduser().resolve()
+                if root.is_relative_to(source):
+                    node["root_dir"] = str(target / root.relative_to(source))
+            for child in node.values():
+                relocate(child)
+        elif isinstance(node, list):
+            for child in node:
+                relocate(child)
+
+    relocate(out.get("backend"))
+    return out

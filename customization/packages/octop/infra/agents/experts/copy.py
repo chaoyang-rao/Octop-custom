@@ -15,7 +15,9 @@ from octop.infra.agents.experts.publish import (
     _workspace_file_paths,
 )
 from octop.infra.agents.settings.profile import id_list_from_row, strip_profile_config
+from octop.infra.agents.workspace.dir import relocate_copied_agent_backend
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.utils.ulid import new_short_id
 
 
 def owned_expert(registry: Any, agent_id: str, user_id: int) -> Any:
@@ -39,6 +41,15 @@ async def copy_expert(
     cfg = strip_profile_config(cfg)
     for key in ("workspace_dir", "system_files_path", "avatar"):
         cfg.pop(key, None)
+    target_id = new_short_id()
+    if cfg.get("backend") is not None:
+        cfg = await asyncio.to_thread(
+            relocate_copied_agent_backend,
+            cfg,
+            paths=registry.paths,
+            source_id=source_id,
+            target_id=target_id,
+        )
     # Runners and credentials are account settings, not new per-expert copies.
     if isinstance(cfg.get("acp"), dict):
         cfg["acp"].pop("runners", None)
@@ -87,6 +98,7 @@ async def copy_expert(
         )
 
     spec = AgentCreateSpec(
+        agent_id=target_id,
         name=name,
         user_id=user_id,
         description=source.description,

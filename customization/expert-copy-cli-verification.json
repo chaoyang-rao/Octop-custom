@@ -8,10 +8,10 @@
     "card_and_table_menus": true
   },
   "checks": {
-    "source_api_integration": 6,
+    "source_api_integration": 7,
     "source_related_regression_passed": 231,
     "source_related_regression_skipped": 1,
-    "native_customization_unittests": 88,
+    "native_customization_unittests": 89,
     "mypy_files": 606,
     "typescript": "passed",
     "frontend_production_build": "passed",
@@ -21,18 +21,26 @@
     "prettier": "passed",
     "active_assets": 234,
     "javascript_syntax": 184,
-    "visible_locale_keys": "All dialog labels validated against the actual Chinese locale, including the apply action"
+    "visible_locale_keys": "All dialog labels validated against the actual Chinese locale, including the apply action",
+    "source_private_jail_survives_source_deletion": "passed"
   },
   "local_runtime": {
     "installed": true,
     "backend_and_initial_dashboard": "avatars-v18",
-    "frontend_label_fix": "avatars-v19 prepared",
+    "frontend_label_fix": "avatars-v19 installed and visually verified",
     "backup": "backups/deployment-20261030-194529-634858",
     "restarted": true,
     "health_ok": true,
     "copy_dialog_open_cancel_verified": true,
     "cli_dialog_open_cancel_verified": true,
-    "test_copy_or_config_mutation_sent": false
+    "test_copy_or_config_mutation_sent": false,
+    "frontend_backup": "backups/deployment-20261030-195232-502623",
+    "managed_hashes_verified": 4203,
+    "cli_apply_label_verified": "应用到所选专家",
+    "visible_target_experts": 10,
+    "existing_experts_unchanged": 11,
+    "frontend_refresh_only_for_label": true,
+    "private_jail_fix": "prepared; no existing dependent copies found"
   },
   "git": {
     "branch": "custom/main",
