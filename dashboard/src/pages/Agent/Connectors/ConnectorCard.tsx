@@ -17,7 +17,8 @@ export const ConnectorCard = memo(function ConnectorCard({
 }: ConnectorCardProps) {
   const { t } = useTranslation();
   const accent = connectorAccent(entry);
-  const disabled = entry.phase !== "available";
+  const unsupportedHost = entry.available_on_host === false;
+  const disabled = entry.phase !== "available" || unsupportedHost;
 
   return (
     <div
@@ -27,6 +28,7 @@ export const ConnectorCard = memo(function ConnectorCard({
       style={{ "--connector-accent": accent } as React.CSSProperties}
       onClick={() => !disabled && onConfigure(entry, null)}
       role="button"
+      aria-disabled={disabled}
       tabIndex={disabled ? -1 : 0}
       onKeyDown={(e) =>
         e.key === "Enter" && !disabled && onConfigure(entry, null)
@@ -56,7 +58,13 @@ export const ConnectorCard = memo(function ConnectorCard({
         <div className={styles.typeCardDesc}>{entry.description}</div>
       </div>
 
-      {!disabled ? (
+      {unsupportedHost ? (
+        <div className={styles.typeCardFooter}>
+          <div className={styles.typeCardHint}>
+            {t("connectors.unsupportedHost")}
+          </div>
+        </div>
+      ) : !disabled ? (
         <div className={styles.typeCardFooter}>
           <div className={styles.typeCardHint}>
             {t("connectors.clickToConnect", "点击连接")}

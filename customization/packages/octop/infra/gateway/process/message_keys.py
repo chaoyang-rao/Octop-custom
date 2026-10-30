@@ -163,6 +163,8 @@ _PERSISTED_META_KEYS = (
     "ws_connection_id",
     "session_id",
     "task_id",
+    "thread_ts",
+    "team_id",
 )
 
 

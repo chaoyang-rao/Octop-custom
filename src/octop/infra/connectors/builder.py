@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import re
 import secrets
+import sys
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlsplit, urlunsplit
 
@@ -100,11 +102,75 @@ def build_http_mcp_spec(
     creds: dict[str, Any],
     config: OctopConfig,
 ) -> dict[str, Any]:
+    if entry.supported_platforms is not None and sys.platform not in entry.supported_platforms:
+        from octop.i18n import tr
+        from octop.infra.utils.locale import DEFAULT_LOCALE
+
+        raise ValueError(
+            tr(
+                "connectors.unsupported_host_platform",
+                DEFAULT_LOCALE,
+                name=entry.name.resolve(DEFAULT_LOCALE),
+            )
+        )
+    if entry.mcp_config is not None:
+        return _build_catalog_spec(entry, creds)
     if entry.mcp_mode == "remote":
         return _build_remote_spec(entry, creds)
     if entry.mcp_mode == "stdio":
         return _build_stdio_spec(entry, creds)
     return _build_gateway_spec(entry, instance_id, creds, config)
+
+
+def _catalog_value(template: str, creds: dict[str, Any]) -> str | None:
+    keys = re.findall(r"\{([a-z][a-z0-9_]*)\}", template)
+    if any(not str(creds.get(key) or "").strip() for key in keys):
+        return None
+    value = template
+    for key in keys:
+        value = value.replace("{" + key + "}", str(creds[key]).strip())
+    if "\r" in value or "\n" in value:
+        raise ValueError("multiline connection values are not allowed")
+    return value
+
+
+def _build_catalog_spec(entry: ConnectorCatalogEntry, creds: dict[str, Any]) -> dict[str, Any]:
+    cfg = entry.mcp_config or {}
+    if cfg.get("url"):
+        url = _catalog_value(str(cfg["url"]), creds)
+        if not url:
+            raise ValueError("MCP URL is required")
+        headers = _mcp_http_headers()
+        for key, template in cfg.get("headers", {}).items():
+            value = _catalog_value(template, creds)
+            if value is not None:
+                headers[key] = value
+        if is_mcp_oauth_remote(entry):
+            token = str(creds.get("access_token") or creds.get("token") or "").strip()
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+        spec: dict[str, Any] = {
+            "transport": "http",
+            "url": validate_mcp_http_url(url),
+            "headers": headers,
+        }
+    else:
+        env = {}
+        for key, template in cfg.get("env", {}).items():
+            value = _catalog_value(template, creds)
+            if value is not None:
+                env[key] = value
+        spec = {
+            "transport": "stdio",
+            "command": str(Path(str(cfg["command"])).expanduser())
+            if str(cfg["command"]).startswith("~")
+            else cfg["command"],
+            "args": list(cfg.get("args", [])),
+            "env": env,
+        }
+    if entry.allowed_tools is not None:
+        spec["allowed_tools"] = list(entry.allowed_tools)
+    return spec
 
 
 def _build_stdio_spec(entry: ConnectorCatalogEntry, creds: dict[str, Any]) -> dict[str, Any]:
@@ -473,6 +539,19 @@ def validate_create_credentials(
         }
 
     if entry.auth_kind == "custom_fields":
+        if entry.mcp_config is not None:
+            out = {}
+            for field in entry.credential_fields:
+                value = str(credentials.get(field.key) or "").strip()
+                if field.required and not value:
+                    raise ValueError(f"{field.key} is required")
+                if value:
+                    out[field.key] = value
+            # Validate the endpoint/host constraints before encrypted persistence.
+            build_http_mcp_spec(
+                entry=entry, instance_id="validation", creds=out, config=OctopConfig()
+            )
+            return out
         if entry.kind == "agently-cli":
             # A caller must never select another instance's CLI credential directory.
             return {"internal_token": new_internal_token(), "cli_config_key": new_ulid()}

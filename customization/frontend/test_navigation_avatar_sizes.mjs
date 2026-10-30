@@ -107,5 +107,6 @@ if (Number(release.release.split('-v')[1]) >= 11) expectedChanged.push(`project-
 if (Number(release.release.split('-v')[1]) >= 14) expectedChanged.push(`en.CaWe8dRV.${release.release}.js`, `zh.D-7HvP3m.${release.release}.js`);
 if (Number(release.release.split('-v')[1]) >= 15) expectedChanged.push(`EditAgentDrawer.w674TDCV.${release.release}.js`);
 if (Number(release.release.split('-v')[1]) >= 16) expectedChanged.push(`index.Bxr_iAco.${release.release}.js`, `expert-avatar-integration.${release.release}.js`);
+if (Number(release.release.split("-v")[1]) >= 20) expectedChanged.push(`AgentPluginsPanel.BJlhPlDN.${release.release}.js`, `index.C1lMbskB.${release.release}.js`);
 assert.deepEqual(changed.sort(), expectedChanged.sort());
 console.log('PASS all three tabs retain 48px slots and images; compact header 56px; scoped module changes only');

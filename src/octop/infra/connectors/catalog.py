@@ -91,6 +91,9 @@ class ConnectorCatalogEntry:
     mcp_user_agent: str | None = None
     credential_fields: tuple[ConnectorCredentialField, ...] = ()
     remote_transport: RemoteTransport = "raw_http"
+    # Trusted bundled protocol settings, never executable Python or user templates.
+    mcp_config: dict[str, Any] | None = None
+    supported_platforms: tuple[str, ...] | None = None
 
 
 def is_inprocess_gateway(entry: ConnectorCatalogEntry) -> bool:
@@ -194,6 +197,35 @@ def _parse_credential_field(raw: object, kind: str, index: int) -> ConnectorCred
     )
 
 
+def _mcp_config(raw: object, kind: str) -> dict[str, Any] | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"{kind}.mcp_config must be an object")
+    allowed = {"url", "command", "args", "headers", "env"}
+    if set(raw) - allowed or bool(raw.get("url")) == bool(raw.get("command")):
+        raise ValueError(f"{kind}.mcp_config needs exactly one URL or command")
+    for name in ("url", "command"):
+        if name in raw:
+            _require_str(raw[name], f"{kind}.{name}")
+    if "command" in raw and "{" in raw["command"]:
+        raise ValueError(f"{kind}.command must be literal")
+    for name in ("headers", "env"):
+        value = raw.get(name, {})
+        if not isinstance(value, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in value.items()
+        ):
+            raise ValueError(f"{kind}.{name} must contain string pairs")
+    args = raw.get("args", [])
+    if not isinstance(args, list) or not all(
+        isinstance(arg, str) and "{" not in arg for arg in args
+    ):
+        raise ValueError(
+            f"{kind}.args must be literal strings; credentials belong in headers or env"
+        )
+    return raw
+
+
 def _parse_entry(raw: object) -> ConnectorCatalogEntry:
     if not isinstance(raw, dict):
         raise ValueError("catalog connector entry must be an object")
@@ -225,6 +257,10 @@ def _parse_entry(raw: object) -> ConnectorCatalogEntry:
         mcp_user_agent=_optional_str(raw.get("mcp_user_agent"), f"{kind}.mcp_user_agent"),
         credential_fields=tuple(
             _parse_credential_field(item, kind, index) for index, item in enumerate(fields_raw)
+        ),
+        mcp_config=_mcp_config(raw.get("mcp_config"), kind),
+        supported_platforms=_optional_str_tuple(
+            raw.get("supported_platforms"), f"{kind}.supported_platforms"
         ),
         remote_transport=_literal(
             raw.get("remote_transport", "raw_http"),
@@ -279,6 +315,8 @@ def _resolve_optional(text: LocalizedText | None, locale: str) -> str | None:
 def catalog_entry_to_dict(
     entry: ConnectorCatalogEntry, *, oauth_ready: bool = False, locale: str = "en"
 ) -> dict[str, object]:
+    import sys
+
     from octop.infra.connectors.oauth import oauth_mode_for_kind  # noqa: PLC0415
 
     oauth_mode = oauth_mode_for_kind(entry.kind)
@@ -291,6 +329,9 @@ def catalog_entry_to_dict(
         "icon": entry.icon,
         "color": entry.color,
         "phase": entry.phase,
+        "available_on_host": entry.supported_platforms is None
+        or sys.platform in entry.supported_platforms,
+        "supported_platforms": list(entry.supported_platforms or ()),
         "mcp_mode": entry.mcp_mode,
         "category": entry.category,
         "quick_auth_url": entry.quick_auth_url,

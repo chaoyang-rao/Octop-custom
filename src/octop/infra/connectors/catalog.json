@@ -760,6 +760,973 @@
         }
       ],
       "remote_transport": "streamable_http"
+    },
+    {
+      "kind": "aave",
+      "name": {
+        "en": "Aave",
+        "zh": "Aave"
+      },
+      "description": {
+        "en": "Read protocol data and prepare unsigned transactions for wallet review",
+        "zh": "查询协议数据，构建待钱包确认的未签名交易"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://www.aave.com/docs/mcp",
+      "icon": "plug",
+      "color": "#1a11bd",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.aave.com"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "airtable",
+      "name": {
+        "en": "Airtable",
+        "zh": "Airtable"
+      },
+      "description": {
+        "en": "Work with bases, records, interfaces and automations",
+        "zh": "操作工作区、数据记录、界面和自动化"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://www.airtable.com/platform/mcp",
+      "icon": "plug",
+      "color": "#40c57b",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.airtable.com/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.airtable.com/mcp",
+      "oauth_issuer": "https://mcp.airtable.com",
+      "oauth_resource": "https://mcp.airtable.com/mcp"
+    },
+    {
+      "kind": "atlassian",
+      "name": {
+        "en": "Atlassian",
+        "zh": "Atlassian"
+      },
+      "description": {
+        "en": "Access Jira and Confluence through the vendor MCP service",
+        "zh": "通过厂商 MCP 访问 Jira 与 Confluence"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://developer.atlassian.com/cloud/mcp/",
+      "icon": "plug",
+      "color": "#651b2c",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.atlassian.com/v2/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.atlassian.com/v2/mcp",
+      "oauth_issuer": "https://mcp.atlassian.com",
+      "oauth_resource": "https://mcp.atlassian.com/v2/mcp"
+    },
+    {
+      "kind": "canva",
+      "name": {
+        "en": "Canva",
+        "zh": "Canva"
+      },
+      "description": {
+        "en": "Create, edit and export designs with Canva Connect",
+        "zh": "通过 Canva Connect 创建、编辑和导出设计"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://www.canva.dev/docs/apps/mcp/",
+      "icon": "plug",
+      "color": "#3db1f5",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://api.canva.com/connect/v1/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://api.canva.com/connect/v1/mcp",
+      "oauth_issuer": "https://api.canva.com",
+      "oauth_resource": "https://api.canva.com/connect/v1/mcp"
+    },
+    {
+      "kind": "cloudflare",
+      "name": {
+        "en": "Cloudflare",
+        "zh": "Cloudflare"
+      },
+      "description": {
+        "en": "Manage Cloudflare resources with the official remote MCP service",
+        "zh": "通过官方远程 MCP 管理 Cloudflare 资源"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/",
+      "icon": "plug",
+      "color": "#738e22",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.cloudflare.com/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.cloudflare.com/mcp",
+      "oauth_issuer": "https://mcp.cloudflare.com",
+      "oauth_resource": "https://mcp.cloudflare.com/mcp"
+    },
+    {
+      "kind": "cobrain",
+      "name": {
+        "en": "Cobrain",
+        "zh": "Cobrain"
+      },
+      "description": {
+        "en": "Search connected knowledge using the service MCP endpoint",
+        "zh": "通过服务商 MCP 检索已连接的知识"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://cobrain.space/",
+      "icon": "plug",
+      "color": "#4f4fa6",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "knowledge",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://cobrain.space/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://cobrain.space/mcp",
+      "oauth_issuer": "https://cobrain.space",
+      "oauth_resource": "https://cobrain.space/mcp"
+    },
+    {
+      "kind": "huggingface",
+      "name": {
+        "en": "Hugging Face",
+        "zh": "Hugging Face"
+      },
+      "description": {
+        "en": "Find models, datasets and Spaces from the official Hub MCP",
+        "zh": "通过官方 Hub MCP 查询模型、数据集与 Spaces"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://huggingface.co/docs/hub/en/hf-mcp-server",
+      "icon": "plug",
+      "color": "#d203a2",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "knowledge",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://huggingface.co/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "linear",
+      "name": {
+        "en": "Linear",
+        "zh": "Linear"
+      },
+      "description": {
+        "en": "Search and manage issues, projects and comments",
+        "zh": "检索与管理议题、项目和评论"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://linear.app/docs/mcp",
+      "icon": "plug",
+      "color": "#7f2fe5",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "productivity",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.linear.app/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.linear.app/mcp",
+      "oauth_issuer": "https://mcp.linear.app",
+      "oauth_resource": "https://mcp.linear.app/mcp"
+    },
+    {
+      "kind": "neon",
+      "name": {
+        "en": "Neon",
+        "zh": "Neon"
+      },
+      "description": {
+        "en": "Manage Neon projects and database operations",
+        "zh": "管理 Neon 项目及数据库操作"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://neon.com/docs/ai/neon-mcp-server",
+      "icon": "plug",
+      "color": "#1b6405",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.neon.tech/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.neon.tech/mcp",
+      "oauth_issuer": "https://mcp.neon.tech",
+      "oauth_resource": "https://mcp.neon.tech/mcp"
+    },
+    {
+      "kind": "netlify",
+      "name": {
+        "en": "Netlify",
+        "zh": "Netlify"
+      },
+      "description": {
+        "en": "Manage sites, deployments and project resources",
+        "zh": "管理站点、部署和项目资源"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://docs.netlify.com/build/build-with-ai/agent-setup-guides/agent-setup-overview/",
+      "icon": "plug",
+      "color": "#58465a",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://netlify-mcp.netlify.app/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://netlify-mcp.netlify.app/mcp",
+      "oauth_issuer": "https://netlify-mcp.netlify.app",
+      "oauth_resource": "https://netlify-mcp.netlify.app/mcp"
+    },
+    {
+      "kind": "prisma",
+      "name": {
+        "en": "Prisma",
+        "zh": "Prisma"
+      },
+      "description": {
+        "en": "Manage Prisma databases, compute and storage",
+        "zh": "管理 Prisma 数据库、计算与存储"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://www.prisma.io/docs/ai/tools/mcp-server",
+      "icon": "plug",
+      "color": "#99497c",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.prisma.io/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.prisma.io/mcp",
+      "oauth_issuer": "https://mcp.prisma.io",
+      "oauth_resource": "https://mcp.prisma.io/mcp"
+    },
+    {
+      "kind": "railway",
+      "name": {
+        "en": "Railway",
+        "zh": "Railway"
+      },
+      "description": {
+        "en": "Manage project environments and deployments",
+        "zh": "管理项目环境和部署"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://docs.railway.com/ai/mcp-server",
+      "icon": "plug",
+      "color": "#e34d1c",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.railway.com"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.railway.com",
+      "oauth_issuer": "https://mcp.railway.com",
+      "oauth_resource": "https://mcp.railway.com"
+    },
+    {
+      "kind": "resend",
+      "name": {
+        "en": "Resend",
+        "zh": "Resend"
+      },
+      "description": {
+        "en": "Manage email delivery, contacts and inbound messages",
+        "zh": "管理邮件发送、联系人和入站邮件"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://resend.com/docs/mcp-server",
+      "icon": "plug",
+      "color": "#6de1be",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.resend.com/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.resend.com/mcp",
+      "oauth_issuer": "https://mcp.resend.com",
+      "oauth_resource": "https://mcp.resend.com/mcp"
+    },
+    {
+      "kind": "sentry",
+      "name": {
+        "en": "Sentry",
+        "zh": "Sentry"
+      },
+      "description": {
+        "en": "Investigate issues, traces and application errors",
+        "zh": "排查问题、链路与应用错误"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://docs.sentry.io/product/sentry-mcp/",
+      "icon": "plug",
+      "color": "#0cf685",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.sentry.dev/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.sentry.dev/mcp",
+      "oauth_issuer": "https://mcp.sentry.dev",
+      "oauth_resource": "https://mcp.sentry.dev/mcp"
+    },
+    {
+      "kind": "stripe",
+      "name": {
+        "en": "Stripe",
+        "zh": "Stripe"
+      },
+      "description": {
+        "en": "Access Stripe resources through an explicitly authorized account",
+        "zh": "通过明确授权的账号访问 Stripe 资源"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://docs.stripe.com/mcp",
+      "icon": "plug",
+      "color": "#2bed20",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.stripe.com"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.stripe.com",
+      "oauth_issuer": "https://mcp.stripe.com",
+      "oauth_resource": "https://mcp.stripe.com"
+    },
+    {
+      "kind": "supabase",
+      "name": {
+        "en": "Supabase",
+        "zh": "Supabase"
+      },
+      "description": {
+        "en": "Manage project databases and development resources",
+        "zh": "管理项目数据库及开发资源"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://supabase.com/docs/guides/ai-tools/mcp",
+      "icon": "plug",
+      "color": "#4d7594",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.supabase.com/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.supabase.com/mcp",
+      "oauth_issuer": "https://mcp.supabase.com",
+      "oauth_resource": "https://mcp.supabase.com/mcp"
+    },
+    {
+      "kind": "todoist",
+      "name": {
+        "en": "Todoist",
+        "zh": "Todoist"
+      },
+      "description": {
+        "en": "Read and manage tasks and projects",
+        "zh": "读取与管理任务和项目"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://developer.todoist.com/api/v1/#tag/Todoist-MCP",
+      "icon": "plug",
+      "color": "#282a6d",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "productivity",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://ai.todoist.net/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://ai.todoist.net/mcp",
+      "oauth_issuer": "https://ai.todoist.net",
+      "oauth_resource": "https://ai.todoist.net/mcp"
+    },
+    {
+      "kind": "trello",
+      "name": {
+        "en": "Trello",
+        "zh": "Trello"
+      },
+      "description": {
+        "en": "Work with boards, cards, lists and checklists",
+        "zh": "管理看板、卡片、列表和检查清单"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://github.com/atlassian/trello-mcp-server",
+      "icon": "plug",
+      "color": "#1768c2",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "productivity",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.trello.com/v1"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.trello.com/v1",
+      "oauth_issuer": "https://mcp.trello.com",
+      "oauth_resource": "https://mcp.trello.com/v1"
+    },
+    {
+      "kind": "vercel",
+      "name": {
+        "en": "Vercel",
+        "zh": "Vercel"
+      },
+      "description": {
+        "en": "Manage projects, deployments and logs",
+        "zh": "管理项目、部署和日志"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://vercel.com/docs/agent-resources/vercel-mcp",
+      "icon": "plug",
+      "color": "#9d3508",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.vercel.com"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      },
+      "mcp_url": "https://mcp.vercel.com",
+      "oauth_issuer": "https://mcp.vercel.com",
+      "oauth_resource": "https://mcp.vercel.com"
+    },
+    {
+      "kind": "github",
+      "name": {
+        "en": "GitHub",
+        "zh": "GitHub"
+      },
+      "description": {
+        "en": "Read and manage repositories, issues and pull requests",
+        "zh": "读取与管理仓库、议题和拉取请求"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://github.com/github/github-mcp-server",
+      "icon": "plug",
+      "color": "#c0b010",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "Authorization": "Bearer {token}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "token",
+          "label": {
+            "en": "Fine-grained access token",
+            "zh": "细粒度访问令牌"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Choose only the required repositories and permissions when creating the token.",
+        "zh": "创建令牌时只选择需要的仓库和权限。"
+      }
+    },
+    {
+      "kind": "render",
+      "name": {
+        "en": "Render",
+        "zh": "Render"
+      },
+      "description": {
+        "en": "Manage services, database queries and deployment logs",
+        "zh": "管理服务、数据库查询与部署日志"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://render.com/docs/mcp-server",
+      "icon": "plug",
+      "color": "#887270",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.render.com/mcp",
+        "headers": {
+          "Authorization": "Bearer {api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "api_key",
+          "label": {
+            "en": "API key",
+            "zh": "API 密钥"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "posthog",
+      "name": {
+        "en": "PostHog",
+        "zh": "PostHog"
+      },
+      "description": {
+        "en": "Query product analytics and manage observability resources",
+        "zh": "查询产品分析并管理可观测性资源"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://posthog.com/docs/model-context-protocol",
+      "icon": "plug",
+      "color": "#67e5a3",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.posthog.com/mcp",
+        "headers": {
+          "Authorization": "Bearer {api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "api_key",
+          "label": {
+            "en": "Personal API key",
+            "zh": "个人 API 密钥"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "context7",
+      "name": {
+        "en": "Context7",
+        "zh": "Context7"
+      },
+      "description": {
+        "en": "Retrieve current library documentation and examples",
+        "zh": "检索当前版本的代码库文档和示例"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://github.com/upstash/context7",
+      "icon": "plug",
+      "color": "#047211",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "knowledge",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "https://mcp.context7.com/mcp",
+        "headers": {
+          "CONTEXT7_API_KEY": "{api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "api_key",
+          "label": {
+            "en": "API key (optional)",
+            "zh": "API 密钥（可选）"
+          },
+          "field_type": "password",
+          "required": false,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "figma",
+      "name": {
+        "en": "Figma Desktop",
+        "zh": "Figma Desktop"
+      },
+      "description": {
+        "en": "Read design context from the local Figma desktop MCP server",
+        "zh": "从本机 Figma 桌面 MCP 服务读取设计上下文"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://developers.figma.com/docs/figma-mcp-server/local-server-installation/",
+      "icon": "plug",
+      "color": "#5b79d0",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "http://127.0.0.1:3845/mcp"
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Enable the desktop MCP server in Figma on the host computer.",
+        "zh": "请在运行 Octop 的电脑上开启 Figma 桌面 MCP 服务。"
+      },
+      "supported_platforms": [
+        "darwin",
+        "win32"
+      ]
+    },
+    {
+      "kind": "composio",
+      "name": {
+        "en": "Composio",
+        "zh": "Composio"
+      },
+      "description": {
+        "en": "Connect an MCP endpoint generated in your Composio account",
+        "zh": "连接当前 Composio 账号生成的 MCP 地址"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://docs.composio.dev/kb/guide/consumer-project-boundaries-and-auth-selection",
+      "icon": "plug",
+      "color": "#64c1d2",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "professional",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "url": "{mcp_url}",
+        "headers": {
+          "x-consumer-api-key": "{api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "mcp_url",
+          "label": {
+            "en": "Account MCP URL",
+            "zh": "账号 MCP 地址"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        },
+        {
+          "key": "api_key",
+          "label": {
+            "en": "Consumer API key",
+            "zh": "Consumer API 密钥"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "brave-search",
+      "name": {
+        "en": "Brave Search",
+        "zh": "Brave Search"
+      },
+      "description": {
+        "en": "Use the official Brave Search MCP server",
+        "zh": "使用官方 Brave Search MCP 服务"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://github.com/brave/brave-search-mcp-server",
+      "icon": "plug",
+      "color": "#9b2e4d",
+      "phase": "available",
+      "mcp_mode": "stdio",
+      "category": "knowledge",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@brave/brave-search-mcp-server@2.1.4"
+        ],
+        "env": {
+          "BRAVE_API_KEY": "{api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "api_key",
+          "label": {
+            "en": "Search API key",
+            "zh": "搜索 API 密钥"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "firecrawl",
+      "name": {
+        "en": "Firecrawl",
+        "zh": "Firecrawl"
+      },
+      "description": {
+        "en": "Extract, crawl and search websites through the official MCP server",
+        "zh": "通过官方 MCP 提取、抓取与搜索网页"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://docs.firecrawl.dev/mcp-server",
+      "icon": "plug",
+      "color": "#702a4d",
+      "phase": "available",
+      "mcp_mode": "stdio",
+      "category": "knowledge",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "firecrawl-mcp@3.36.0"
+        ],
+        "env": {
+          "FIRECRAWL_API_KEY": "{api_key}"
+        }
+      },
+      "credential_fields": [
+        {
+          "key": "api_key",
+          "label": {
+            "en": "API key",
+            "zh": "API 密钥"
+          },
+          "field_type": "password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "auth_hint": {
+        "en": "Connect using the provider account and review the granted permissions.",
+        "zh": "使用服务商账号连接，并核对授权权限。"
+      }
+    },
+    {
+      "kind": "apple-apps",
+      "name": {
+        "en": "Apple Apps",
+        "zh": "Apple Apps"
+      },
+      "description": {
+        "en": "Connect local Apple application automation through a compatible MCP server",
+        "zh": "通过兼容 MCP 服务连接本机 Apple 应用自动化"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://www.npmjs.com/package/mcp-icloud",
+      "icon": "plug",
+      "color": "#9d903b",
+      "phase": "available",
+      "mcp_mode": "stdio",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "mcp-icloud@2.1.3"
+        ]
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Requires macOS and user-approved access to the Apple apps requested by the server.",
+        "zh": "需要 macOS；使用时由用户确认相关 Apple 应用的访问权限。"
+      },
+      "supported_platforms": [
+        "darwin"
+      ]
+    },
+    {
+      "kind": "paper",
+      "name": {
+        "en": "Paper",
+        "zh": "Paper"
+      },
+      "description": {
+        "en": "Use the MCP command supplied by the installed Paper application",
+        "zh": "使用已安装 Paper 应用提供的 MCP 命令"
+      },
+      "auth_kind": "custom_fields",
+      "doc_url": "https://paper.design/",
+      "icon": "plug",
+      "color": "#382635",
+      "phase": "available",
+      "mcp_mode": "stdio",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "mcp_config": {
+        "command": "~/.paper/bin/paper",
+        "args": [
+          "mcp"
+        ]
+      },
+      "credential_fields": [],
+      "auth_hint": {
+        "en": "Install Paper on the host before connecting.",
+        "zh": "连接前请在运行 Octop 的电脑上安装 Paper。"
+      },
+      "supported_platforms": [
+        "darwin"
+      ]
     }
   ]
 }

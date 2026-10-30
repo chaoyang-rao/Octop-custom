@@ -2753,7 +2753,14 @@
     "discordAllowAllChannelsHelp": "On by default; no channel IDs needed. Turn off to restrict access to the channels listed below. Mention the bot to get a reply.",
     "discordSetupHelp": "Enable Message Content Intent on the Discord Bot page and invite the bot to your server. All server text channels the bot can access are allowed by default; mention the bot to get a reply. DMs only accept the user IDs listed below; leave empty to disable DMs.",
     "telegramAllowedUsers": "Allowed Telegram user IDs (comma or newline separated)",
-    "telegramAllowedUsersHelp": "Only these numeric user IDs can talk to the bot, in private chats and groups. Leave empty to let anyone who finds the bot use it."
+    "telegramAllowedUsersHelp": "Only these numeric user IDs can talk to the bot, in private chats and groups. Leave empty to let anyone who finds the bot use it.",
+    "label_slack": "Slack",
+    "slackSetupHelp": "Enable Socket Mode. App token: connections:write. Bot: chat:write, app_mentions:read, im:history; attachments: files:read, files:write. Subscribe to app_mention and message.im.",
+    "slackAllowAllChannels": "Allow mentions in all joined channels",
+    "slackAllowedChannels": "Allowed channel IDs",
+    "slackAllowedUsers": "Allowed DM user IDs",
+    "slackAllowedUsersHelp": "Empty denies DMs. Channels require a bot mention; each thread has an independent conversation.",
+    "slackInvalidIds": "Enter Slack channel or user IDs separated by spaces or commas"
   },
   "tokenUsage": {
     "title": "Token Usage Analytics",
@@ -6539,7 +6546,8 @@
     "weknoraFound": "Detected local WeKnora and filled in the URL",
     "weknoraNotFound": "WeKnora not found at 127.0.0.1:8080 on the Octop host",
     "weknoraStep1": "Open WeKnora and create an API Key",
-    "weknoraStep2": "Detect the local service or enter the deployment URL manually"
+    "weknoraStep2": "Detect the local service or enter the deployment URL manually",
+    "unsupportedHost": "Not supported on this host"
   },
   "mbtiPage": {
     "pickAgent": "Select an Agent first"

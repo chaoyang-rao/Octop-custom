@@ -1488,6 +1488,9 @@ async def oauth_callback(
             tokens["oauth_client_id"] = ctx["client_id"]
         if ctx.get("client_secret"):
             tokens["oauth_client_secret"] = ctx["client_secret"]
+        for key in ("issuer", "resource"):
+            if ctx.get(key):
+                tokens[f"oauth_{key}"] = ctx[key]
         delete_oauth_ctx(server.services.settings_repo, row.state_id)
     except Exception as exc:
         logger.exception("oauth callback failed for %s", row.kind)

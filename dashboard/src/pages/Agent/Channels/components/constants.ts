@@ -23,6 +23,7 @@ export type ChannelKey =
   | "qq"
   | "weixin"
   | "discord"
+  | "slack"
   | "yuanbao"
   | "xiaoyi"
   | "mqtt"
@@ -44,12 +45,17 @@ export const CHANNEL_KEYS: ChannelKey[] = [
   "dingtalk",
   "telegram",
   "discord",
+  "slack",
   "xiaoyi",
   "mqtt",
 ];
 
 /** Overseas / less-common kinds hidden behind "更多通道" until expanded. */
-const COLLAPSED_CHANNEL_KEYS = new Set<ChannelKey>(["telegram", "discord"]);
+const COLLAPSED_CHANNEL_KEYS = new Set<ChannelKey>([
+  "telegram",
+  "discord",
+  "slack",
+]);
 
 export function isCollapsedChannelKey(key: ChannelKey): boolean {
   return COLLAPSED_CHANNEL_KEYS.has(key);
@@ -83,6 +89,7 @@ export const CHANNEL_LABEL_KEYS: Record<ChannelKey, string> = {
   qq: "channels.label_qq",
   weixin: "channels.label_weixin",
   discord: "channels.label_discord",
+  slack: "channels.label_slack",
   yuanbao: "channels.label_yuanbao",
   xiaoyi: "channels.label_xiaoyi",
   mqtt: "channels.label_mqtt",
@@ -101,6 +108,7 @@ export const CHANNEL_LABELS: Record<ChannelKey, string> = {
   yuanbao: "元宝",
   dingtalk: "钉钉",
   discord: "Discord",
+  slack: "Slack",
   xiaoyi: "小艺",
   mqtt: "MQTT",
   telegram: "Telegram",
@@ -116,6 +124,7 @@ export const CHANNEL_ICONS: Record<ChannelKey, string> = {
   qq: qqIcon,
   weixin: weixinIcon,
   discord: discordIcon,
+  slack: consoleIcon,
   yuanbao: yuanbaoIcon,
   xiaoyi: xiaoyiIcon,
   mqtt: mqttIcon,
@@ -137,6 +146,7 @@ export const CHANNEL_COLORS: Record<ChannelKey, string> = {
   xiaoyi: "#CF0A2C",
   mqtt: "#7C3AED",
   discord: "#5865F2",
+  slack: "#611F69",
   dashboard: "#6366F1",
   agentchat: "#64748B",
   octopbot: "#10B981",
@@ -155,6 +165,7 @@ export const CHANNEL_URLS: Partial<Record<ChannelKey, string>> = {
   dingtalk: "https://open-dev.dingtalk.com/",
   qq: "https://q.qq.com/qqbot/openclaw/",
   discord: "https://discord.com/developers/applications",
+  slack: "https://api.slack.com/apps",
   yuanbao: "https://yuanbao.tencent.com/bot",
   wecom: "https://work.weixin.qq.com/wework_admin/frame#/aiHelper/create",
   telegram: "https://t.me/BotFather",
@@ -316,6 +327,37 @@ export const CHANNEL_FIELDS: Partial<Record<ChannelKey, ChannelField[]>> = {
     { name: "app_id", label: "App ID", required: true },
     { name: "secret", label: "App Secret", type: "password", required: true },
   ],
+  slack: [
+    {
+      name: "bot_token",
+      label: "Bot Token (xoxb-)",
+      type: "password",
+      required: true,
+    },
+    {
+      name: "app_token",
+      label: "App Token (xapp-)",
+      type: "password",
+      required: true,
+      helpKey: "channels.slackSetupHelp",
+    },
+    {
+      name: "allow_all_channels",
+      label: "channels.slackAllowAllChannels",
+      type: "switch",
+    },
+    {
+      name: "allowed_channel_ids",
+      label: "channels.slackAllowedChannels",
+      type: "textarea",
+    },
+    {
+      name: "allowed_user_ids",
+      label: "channels.slackAllowedUsers",
+      type: "textarea",
+      helpKey: "channels.slackAllowedUsersHelp",
+    },
+  ],
   discord: [
     { name: "bot_token", label: "Bot Token", type: "password", required: true },
     {
@@ -447,6 +489,7 @@ export function applyQqChannelSaveConfig(
 export function normalizeChannelFieldValue(
   fieldName: string,
   value: unknown,
+  kind?: string,
 ): unknown {
   if (fieldName === "allowed_channel_ids" || fieldName === "allowed_user_ids") {
     const entries = Array.isArray(value)
@@ -455,8 +498,9 @@ export function normalizeChannelFieldValue(
           .trim()
           .split(/[,\s]+/)
           .filter(Boolean);
-    if (entries.some((entry) => !/^\d+$/.test(String(entry)))) {
-      throw new Error("Invalid Discord ID");
+    const pattern = kind === "slack" ? /^[A-Z][A-Z0-9]+$/ : /^\d+$/;
+    if (entries.some((entry) => !pattern.test(String(entry)))) {
+      throw new Error("Invalid channel or user ID");
     }
     return [...new Set(entries.map(String))];
   }

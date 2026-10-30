@@ -162,9 +162,11 @@ interface ChannelDrawerProps {
 
 function FormItemForField({
   field,
+  kind,
   disabled = false,
 }: {
   field: ChannelField;
+  kind: string;
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
@@ -202,7 +204,7 @@ function FormItemForField({
       validator: async (_: unknown, value: unknown) => {
         if (!value) return;
         try {
-          normalizeChannelFieldValue(field.name, value);
+          normalizeChannelFieldValue(field.name, value, kind);
         } catch {
           throw new Error(
             t("channels.fieldMustBeJsonObject", { label: field.label }),
@@ -218,9 +220,15 @@ function FormItemForField({
     rules.push({
       validator: async (_: unknown, value: unknown) => {
         try {
-          normalizeChannelFieldValue(field.name, value);
+          normalizeChannelFieldValue(field.name, value, kind);
         } catch {
-          throw new Error(t("channels.discordInvalidIds"));
+          throw new Error(
+            t(
+              kind === "slack"
+                ? "channels.slackInvalidIds"
+                : "channels.discordInvalidIds",
+            ),
+          );
         }
       },
     });
@@ -1186,7 +1194,7 @@ export function ChannelDrawer({
         ) {
           continue;
         }
-        config[k] = normalizeChannelFieldValue(k, v);
+        config[k] = normalizeChannelFieldValue(k, v, selectedKind);
       }
     } else if (__raw_config !== undefined) {
       const trimmed = __raw_config.trim();
@@ -1891,6 +1899,7 @@ export function ChannelDrawer({
                   <FormItemForField
                     key={f.name}
                     field={f}
+                    kind={selectedKind}
                     disabled={
                       selectedKind === "discord" &&
                       f.name === "allowed_channel_ids" &&

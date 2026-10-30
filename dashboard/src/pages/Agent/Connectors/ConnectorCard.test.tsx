@@ -7,8 +7,8 @@
  *     ConnectorInstanceCard.test.tsx; jsdom cannot measure truncation)
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { ConnectorCatalogEntry } from "../../../api/modules/connectors";
 import { ConnectorCard } from "./ConnectorCard";
@@ -35,6 +35,21 @@ function makeEntry(
 }
 
 describe("<ConnectorCard />", () => {
+  it("blocks connection on an unsupported host", () => {
+    const configure = vi.fn();
+    const { container } = render(
+      <ConnectorCard
+        entry={makeEntry({ available_on_host: false })}
+        onConfigure={configure}
+      />,
+    );
+    const card = container.querySelector('[role="button"]')!;
+    expect(card.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(card);
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(configure).not.toHaveBeenCalled();
+  });
+
   it("keeps long catalog names ellipsis-enabled so hover shows the full name", () => {
     render(<ConnectorCard entry={makeEntry()} onConfigure={() => undefined} />);
 

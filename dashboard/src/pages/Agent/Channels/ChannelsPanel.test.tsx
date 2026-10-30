@@ -38,6 +38,43 @@ beforeEach(() => {
 });
 
 describe("<ChannelsPanel /> create-flow default", () => {
+  it("saves Slack credentials and exact alphanumeric allowlists", async () => {
+    render(<ChannelsPanel agentId="ag1" />);
+    await userEvent.click(
+      await screen.findByRole("button", { name: /channels\.showMoreChannels/ }),
+    );
+    await userEvent.click(
+      (await screen.findAllByText("channels.label_slack"))[0],
+    );
+    expect(
+      await screen.findByLabelText("channels.slackAllowAllChannels"),
+    ).not.toBeChecked();
+    await userEvent.type(screen.getByLabelText(/Bot Token/i), "fake-slack-bot");
+    await userEvent.type(screen.getByLabelText(/App Token/i), "fake-slack-app");
+    await userEvent.type(
+      screen.getByLabelText("channels.slackAllowedChannels"),
+      "C0123,C0456",
+    );
+    await userEvent.type(
+      screen.getByLabelText("channels.slackAllowedUsers"),
+      "U0123",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => {
+      const post = api.mock.calls.find(([, init]) => init?.method === "POST");
+      expect(post).toBeDefined();
+      expect(JSON.parse(String(post![1]!.body))).toMatchObject({
+        kind: "slack",
+        config: {
+          bot_token: "fake-slack-bot",
+          app_token: "fake-slack-app",
+          allowed_channel_ids: ["C0123", "C0456"],
+          allowed_user_ids: ["U0123"],
+        },
+      });
+    });
+  });
+
   it("defaults Discord to all channels and saves without channel IDs", async () => {
     render(<ChannelsPanel agentId="ag1" />);
     await userEvent.click(

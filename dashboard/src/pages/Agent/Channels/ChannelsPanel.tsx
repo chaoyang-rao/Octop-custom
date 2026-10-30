@@ -62,7 +62,7 @@ function configFromFormValues(
         continue;
       }
       if (v === undefined || v === null || v === "") continue;
-      config[k] = normalizeChannelFieldValue(k, v);
+      config[k] = normalizeChannelFieldValue(k, v, values.kind);
     }
   } else if (__raw_config !== undefined) {
     const trimmed = __raw_config.trim();

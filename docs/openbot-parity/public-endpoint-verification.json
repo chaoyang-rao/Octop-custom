@@ -1,0 +1,238 @@
+{
+  "endpoint_checks": {
+    "checked_at": "2026-10-30T16:57:04.504539+00:00",
+    "method": "Unauthenticated HTTP GET only; status is not proof of authorization or MCP tool availability",
+    "results": [
+      {
+        "kind": "aave",
+        "url": "https://mcp.aave.com",
+        "reachable": true,
+        "status": 405
+      },
+      {
+        "kind": "airtable",
+        "url": "https://mcp.airtable.com/mcp",
+        "reachable": true,
+        "status": 405
+      },
+      {
+        "kind": "atlassian",
+        "url": "https://mcp.atlassian.com/v2/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "canva",
+        "url": "https://api.canva.com/connect/v1/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "cloudflare",
+        "url": "https://mcp.cloudflare.com/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "cobrain",
+        "url": "https://cobrain.space/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "huggingface",
+        "url": "https://huggingface.co/mcp",
+        "reachable": true,
+        "status": 405
+      },
+      {
+        "kind": "linear",
+        "url": "https://mcp.linear.app/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "neon",
+        "url": "https://mcp.neon.tech/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "netlify",
+        "url": "https://netlify-mcp.netlify.app/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "prisma",
+        "url": "https://mcp.prisma.io/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "railway",
+        "url": "https://mcp.railway.com",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "resend",
+        "url": "https://mcp.resend.com/mcp",
+        "reachable": true,
+        "status": 405
+      },
+      {
+        "kind": "sentry",
+        "url": "https://mcp.sentry.dev/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "stripe",
+        "url": "https://mcp.stripe.com",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "supabase",
+        "url": "https://mcp.supabase.com/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "todoist",
+        "url": "https://ai.todoist.net/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "trello",
+        "url": "https://mcp.trello.com/v1",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "vercel",
+        "url": "https://mcp.vercel.com",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "github",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "render",
+        "url": "https://mcp.render.com/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "posthog",
+        "url": "https://mcp.posthog.com/mcp",
+        "reachable": true,
+        "status": 401
+      },
+      {
+        "kind": "context7",
+        "url": "https://mcp.context7.com/mcp",
+        "reachable": true,
+        "status": 405
+      }
+    ]
+  },
+  "mcp_discovery": {
+    "checked_at": "2026-10-30T16:57:45.093318+00:00",
+    "method": "Unauthenticated MCP initialize and tools/list only; no tool invocation, account access or transaction",
+    "results": [
+      {
+        "kind": "aave",
+        "ok": true,
+        "tool_count": 56,
+        "tool_names": [
+          "get_chains",
+          "get_markets",
+          "get_emode_categories",
+          "get_user_positions",
+          "get_position_items",
+          "get_user_summary",
+          "get_transaction_processed",
+          "get_reserve_details",
+          "get_apy_history",
+          "get_user_activity",
+          "get_protocol_history",
+          "get_user_summary_history",
+          "get_hubs",
+          "get_hub_assets",
+          "get_market_history",
+          "get_asset_history",
+          "get_reserve_holders",
+          "get_interest_rate_model",
+          "get_wallet_balances",
+          "get_risk_premium",
+          "get_spoke_configs",
+          "get_multichain_asset",
+          "prepare_liquidation",
+          "prepare_set_emode",
+          "prepare_action",
+          "prepare_set_collateral",
+          "preview_action",
+          "get_swappable_tokens",
+          "get_swap_quote",
+          "get_position_swap_quote",
+          "get_repay_with_supply_quote",
+          "get_leverage_quote",
+          "prepare_order",
+          "submit_signed_order",
+          "prepare_cancel_order",
+          "cancel_order",
+          "get_order_status",
+          "get_pending_orders",
+          "get_user_rewards",
+          "prepare_claim_rewards",
+          "get_sgho_vault",
+          "get_sgho_preview",
+          "prepare_sgho_action",
+          "prepare_stkgho_migrate",
+          "get_safety_module",
+          "get_vaults",
+          "get_vault_preview",
+          "prepare_vault_action",
+          "get_vault_activity",
+          "search_governance_proposals",
+          "get_governance_proposal",
+          "get_proposal_votes",
+          "get_user_vote",
+          "get_proposal_payloads",
+          "get_aave_guide",
+          "get_started"
+        ],
+        "error_type": null
+      },
+      {
+        "kind": "huggingface",
+        "ok": true,
+        "tool_count": 4,
+        "tool_names": [
+          "hf_whoami",
+          "hub_repo_search",
+          "hub_repo_details",
+          "hf_fs"
+        ],
+        "error_type": null
+      },
+      {
+        "kind": "context7",
+        "ok": true,
+        "tool_count": 2,
+        "tool_names": [
+          "resolve-library-id",
+          "query-docs"
+        ],
+        "error_type": null
+      }
+    ]
+  }
+}

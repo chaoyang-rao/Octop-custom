@@ -108,6 +108,9 @@ class Gateway:
         trajectory_service: Any | None = None,
         history_archive: Any | None = None,
     ) -> None:
+        from octop.infra.gateway.channels.host_channels import register_host_channels
+
+        register_host_channels()
         self._agent_manager = agent_manager
         self._repos = repos
         self._trajectory_service = trajectory_service
@@ -666,6 +669,13 @@ class Gateway:
     def _format_probe_error(exc: Exception, locale: Locale) -> str:
         msg = str(exc)
         if msg in {
+            "slack_invalid_token",
+            "slack_missing_scope",
+            "slack_api_failed",
+            "slack_connection_failed",
+            "slack_disconnected",
+            "slack_invalid_allowlist",
+            "slack_file_too_large",
             "discord_invalid_token",
             "discord_intents_required",
             "discord_connect_timeout",

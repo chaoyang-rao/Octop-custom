@@ -178,8 +178,21 @@ async def start_oauth(
     if kind not in mcp_oauth_kinds():
         raise ValueError(f"oauth not supported for {kind}")
     issuer = issuer_for_kind(kind)
-    metadata = await fetch_authorization_metadata(issuer)
     resource = resource_for_kind(kind)
+    entry = get_mcp_oauth_remote(kind)
+    if entry is not None and entry.mcp_config is not None:
+        # MCP resources may delegate OAuth to a different authorization server.
+        # Discover it rather than treating the API hostname as the issuer.
+        found = await discover_oauth_from_mcp_url(entry.mcp_url or "")
+        if not found.get("available"):
+            raise ValueError(str(found.get("error") or "OAuth discovery failed"))
+        issuer = str(found["issuer"])
+        resource = str(found.get("resource") or "").strip() or resource
+        metadata = found.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = await fetch_authorization_metadata(issuer)
+    else:
+        metadata = await fetch_authorization_metadata(issuer)
     return await _start_mcp_oauth_from_discovery(
         flow="mcp",
         kind=kind,
@@ -344,9 +357,10 @@ async def exchange_oauth_code(
         )
 
     if flow == "mcp" or kind in mcp_oauth_kinds():
+        issuer = str(ctx.get("issuer") or "").strip() or issuer_for_kind(kind)
         metadata = ctx.get("metadata")
         if not isinstance(metadata, dict):
-            metadata = await fetch_authorization_metadata(issuer_for_kind(kind))
+            metadata = await fetch_authorization_metadata(issuer)
         client_id = str(ctx.get("client_id") or "")
         client_secret_raw = ctx.get("client_secret")
         secret = str(client_secret_raw) if client_secret_raw else None
@@ -358,7 +372,7 @@ async def exchange_oauth_code(
         exchange_redirect = str(ctx.get("redirect_uri") or "").strip() or redirect_uri
         return await exchange_authorization_code(
             metadata,
-            issuer=issuer_for_kind(kind),
+            issuer=issuer,
             client_id=client_id,
             client_secret=secret,
             code=code,
@@ -382,7 +396,7 @@ async def refresh_oauth_credentials(
         return creds
 
     if kind in mcp_oauth_kinds():
-        issuer = issuer_for_kind(kind)
+        issuer = str(creds.get("oauth_issuer") or "").strip() or issuer_for_kind(kind)
         metadata = await fetch_authorization_metadata(issuer)
         client_id = str(creds.get("oauth_client_id") or "")
         client_secret_raw = creds.get("oauth_client_secret")
@@ -395,7 +409,7 @@ async def refresh_oauth_credentials(
             client_id=client_id,
             client_secret=secret,
             refresh_token=refresh,
-            resource=resource_for_kind(kind),
+            resource=str(creds.get("oauth_resource") or "").strip() or resource_for_kind(kind),
         )
 
     return creds

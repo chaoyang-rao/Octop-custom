@@ -1,0 +1,983 @@
+{
+  "schema_version": 1,
+  "basis": {
+    "openbot_commit": "1cd89066662bda7daf641a93af5e464c5cbc8b9a",
+    "octop_base": "785e0c65",
+    "public_reference": "https://github.com/nightly-labs/openbot/tree/1cd89066662bda7daf641a93af5e464c5cbc8b9a",
+    "license": "PolyForm Noncommercial 1.0.0",
+    "method": "Independent implementation from public behavior and vendor interfaces; no OpenBot implementation or artwork copied"
+  },
+  "scope": {
+    "user_features": "all, including mobile and remote access",
+    "operations_separate": [
+      "云账号服务的商业运营",
+      "收费、订阅与 Stripe 运营后台",
+      "付费托管资源供应",
+      "产品营销及运营站点"
+    ]
+  },
+  "completion_rule": "Only actual implementation plus acceptance evidence can move an item to verified. Catalog entries alone do not prove account authorization or tool calls.",
+  "features": [
+    {
+      "id": "agent-profiles",
+      "group": "existing-core",
+      "requirement": "专家角色、模型与能力编辑",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "dashboard/src/pages/Experts/components/EditAgentDrawer.tsx"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "agent-templates",
+      "group": "existing-core",
+      "requirement": "模板创建与专家复制",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/experts/copy.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "agent-hidden",
+      "group": "existing-core",
+      "requirement": "隐藏与恢复专家入口",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "dashboard/src/pages/Chat/hooks/useHiddenSharedExperts.ts"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "multiple-threads",
+      "group": "existing-core",
+      "requirement": "多会话、分叉与项目归类",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/db/repos/threads.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "native-context",
+      "group": "existing-core",
+      "requirement": "上下文占用与自动压缩",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/settings/runtime_limits.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "usage",
+      "group": "existing-core",
+      "requirement": "用量、计费统计与模型参数",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/usage.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "browser",
+      "group": "existing-core",
+      "requirement": "内置浏览器与手动接管",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/browser/harness.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "browser-profiles",
+      "group": "existing-core",
+      "requirement": "浏览器档案及会话隔离",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/middleware/browser_profile.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "computer-use",
+      "group": "existing-core",
+      "requirement": "电脑操作与远程桌面",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/desktop/stream.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "record-replay",
+      "group": "existing-core",
+      "requirement": "浏览器录制和回放",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/browser/record_replay.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "attachments",
+      "group": "existing-core",
+      "requirement": "上传、下载和多媒体附件",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/uploads.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "tools-discovery",
+      "group": "existing-core",
+      "requirement": "工具搜索与延迟载入",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "customization/packages/octop_harness/middleware/tool_search.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "history-retrieval",
+      "group": "existing-core",
+      "requirement": "按权限检索会话历史",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/history/conversations.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "tool-approval",
+      "group": "existing-core",
+      "requirement": "工具审批、提问和继续执行",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/gateway/hitl/store.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "group-speakers",
+      "group": "existing-core",
+      "requirement": "主专家协调与成员实名发言",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/teams/primary.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "cron",
+      "group": "existing-core",
+      "requirement": "定时任务及手动执行",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/cron/manager.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "memory",
+      "group": "existing-core",
+      "requirement": "长期记忆与压缩备份恢复",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/memory/slim.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "skills-packages",
+      "group": "existing-core",
+      "requirement": "技能包、复制政策和专家安装",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/skills/skill_package_store.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "plugins",
+      "group": "existing-core",
+      "requirement": "插件目录和工具管理",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/plugins"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "custom-mcp",
+      "group": "existing-core",
+      "requirement": "自定义 MCP 与 OAuth",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/connectors/custom_mcp.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "speech",
+      "group": "existing-core",
+      "requirement": "语音输入与语音输出",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "dashboard/src/hooks/useVoiceInput.ts"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "web-mobile",
+      "group": "existing-core",
+      "requirement": "移动网页和 PWA 访问",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "dashboard/src/components/PwaInstallPrompt/index.tsx"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "remote-bridge",
+      "group": "existing-core",
+      "requirement": "跨实例专家、会话及附件访问",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/bridge/manager.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "permissions",
+      "group": "existing-core",
+      "requirement": "多用户、角色、邀请和权限",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/users"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "local-models",
+      "group": "existing-core",
+      "requirement": "本地模型及兼容接口",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/api/routers/ollama_models.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "backups",
+      "group": "existing-core",
+      "requirement": "数据备份及升级恢复",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/backup"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "status",
+      "group": "existing-core",
+      "requirement": "专家活动与待确认状态",
+      "state": "present_needs_validation",
+      "octop_evidence": [
+        "src/octop/infra/agents/work_status.py"
+      ],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "profile-generation",
+      "group": "agents",
+      "requirement": "自然语言生成专家配置并逐段审阅",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "native-cli-engines",
+      "group": "agents",
+      "requirement": "以 Codex、Claude 或 ACP CLI 直接驱动专家会话",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "provider-account-switch",
+      "group": "agents",
+      "requirement": "提供商和登录账号切换后保留工作区及历史",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "cli-managed-updates",
+      "group": "agents",
+      "requirement": "厂商 CLI 检测、诊断、下载和受管更新",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "provider-failover",
+      "group": "agents",
+      "requirement": "备用模型和失败切换",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "archive-restore",
+      "group": "conversation",
+      "requirement": "会话归档与恢复",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "side-questions",
+      "group": "conversation",
+      "requirement": "不打断主任务的旁路提问",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "reactions",
+      "group": "conversation",
+      "requirement": "用户和专家消息表情反馈",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "quote-replies",
+      "group": "conversation",
+      "requirement": "消息引用与定向回复",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "interactive-forms",
+      "group": "conversation",
+      "requirement": "多选、表单和受控交互块",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "durable-fifo",
+      "group": "tasks",
+      "requirement": "持久化 FIFO 队列与重启恢复",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "queue-controls",
+      "group": "tasks",
+      "requirement": "暂停、恢复、取消和队列查看",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "channel-task-owner",
+      "group": "tasks",
+      "requirement": "群任务负责人与重新指派",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "task-archive-restore",
+      "group": "tasks",
+      "requirement": "任务归档及恢复",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "routine-quiet",
+      "group": "tasks",
+      "requirement": "定时任务无变化时保持安静",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "routine-failure",
+      "group": "tasks",
+      "requirement": "任务执行失败的明确报告",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "routine-calendar",
+      "group": "tasks",
+      "requirement": "定时任务日历订阅",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "routine-flows",
+      "group": "tasks",
+      "requirement": "带依赖和分支的任务流程",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "workflows",
+      "group": "tasks",
+      "requirement": "可复用工作流及执行记录",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "webhook-triggers",
+      "group": "tasks",
+      "requirement": "外部事件触发工作流",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "local-scripts",
+      "group": "tasks",
+      "requirement": "受控本地脚本调用与幂等交付",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "managed-transfer",
+      "group": "files",
+      "requirement": "专家之间有来源记录的文件传递",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "file-references",
+      "group": "files",
+      "requirement": "会话文件引用与范围化文件访问",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "hosted-sites",
+      "group": "files",
+      "requirement": "每实例的静态站点与预览",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "skill-revisions",
+      "group": "skills",
+      "requirement": "本地技能修订历史和并发冲突保护",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "skill-update-protection",
+      "group": "skills",
+      "requirement": "更新技能时保护用户修改",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "provider-skill-layouts",
+      "group": "skills",
+      "requirement": "CLI 提供商技能目录发现及适配",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "grok-import",
+      "group": "portability",
+      "requirement": "用户拥有的 Grok 导出包导入",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "instance-transfer",
+      "group": "portability",
+      "requirement": "专家及实例便携迁移",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "diagnostics",
+      "group": "portability",
+      "requirement": "隐私脱敏诊断包",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "device-pairing",
+      "group": "remote",
+      "requirement": "移动设备配对与撤销",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "remote-auth-relay",
+      "group": "remote",
+      "requirement": "远程授权回调中继与准确目标匹配",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "remote-controls",
+      "group": "remote",
+      "requirement": "远程管理连接器、任务与工作流",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "notifications",
+      "group": "remote",
+      "requirement": "按专家和关注级别通知",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "ios-client",
+      "group": "remote",
+      "requirement": "iPhone 原生访问客户端",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": "Apple 开发签名与 APNs 配置仅在真机分发/后台推送时需要"
+    },
+    {
+      "id": "ios-live-activity",
+      "group": "remote",
+      "requirement": "iPhone 实时活动和后台通知",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": "Apple 开发签名与 APNs 配置仅在真机分发/后台推送时需要"
+    },
+    {
+      "id": "android-client",
+      "group": "remote",
+      "requirement": "Android 访问与后台通知",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "vault-refs",
+      "group": "vault",
+      "requirement": "不把密码放进模型上下文的凭据引用",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    },
+    {
+      "id": "vault-consent",
+      "group": "vault",
+      "requirement": "凭据请求的授权、来源和目标约束",
+      "state": "open",
+      "octop_evidence": [],
+      "verification": "pending targeted acceptance",
+      "dependency": null
+    }
+  ],
+  "applications": [
+    {
+      "id": "aave",
+      "kind": "aave",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json",
+        "docs/openbot-parity/public-endpoint-verification.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "live_check": "MCP initialize and tools/list passed without account credentials; no tool invoked"
+    },
+    {
+      "id": "airtable",
+      "kind": "airtable",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "apple-apps",
+      "kind": "apple-apps",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "atlassian",
+      "kind": "atlassian",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "brave-search",
+      "kind": "brave-search",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "canva",
+      "kind": "canva",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "resource_dependency": "Provider-approved/registered OAuth client or supported local desktop/token setup; no client identity impersonation"
+    },
+    {
+      "id": "cloudflare",
+      "kind": "cloudflare",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "cobrain",
+      "kind": "cobrain",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "composio",
+      "kind": "composio",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "context7",
+      "kind": "context7",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json",
+        "docs/openbot-parity/public-endpoint-verification.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "live_check": "MCP initialize and tools/list passed without account credentials; no tool invoked"
+    },
+    {
+      "id": "figma",
+      "kind": "figma",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "resource_dependency": "Provider-approved/registered OAuth client or supported local desktop/token setup; no client identity impersonation"
+    },
+    {
+      "id": "firecrawl",
+      "kind": "firecrawl",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "huggingface",
+      "kind": "huggingface",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json",
+        "docs/openbot-parity/public-endpoint-verification.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "live_check": "MCP initialize and tools/list passed without account credentials; no tool invoked"
+    },
+    {
+      "id": "linear",
+      "kind": "linear",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "neon",
+      "kind": "neon",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "netlify",
+      "kind": "netlify",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "notion",
+      "kind": "notion",
+      "state": "present_needs_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "obsidian",
+      "kind": "obsidian-cli",
+      "state": "present_needs_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "paper",
+      "kind": "paper",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "posthog",
+      "kind": "posthog",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "prisma",
+      "kind": "prisma",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "railway",
+      "kind": "railway",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "render",
+      "kind": "render",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "resend",
+      "kind": "resend",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "sentry",
+      "kind": "sentry",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "stripe",
+      "kind": "stripe",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "supabase",
+      "kind": "supabase",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "todoist",
+      "kind": "todoist",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "trello",
+      "kind": "trello",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP"
+    },
+    {
+      "id": "vercel",
+      "kind": "vercel",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/connectors/catalog.json"
+      ],
+      "account_authorization": "required on use unless public/local MCP",
+      "resource_dependency": "Provider-approved/registered OAuth client or supported local desktop/token setup; no client identity impersonation"
+    }
+  ],
+  "account_connections": [
+    {
+      "id": "github",
+      "state": "implemented_pending_validation"
+    },
+    {
+      "id": "slack",
+      "state": "implemented_pending_validation",
+      "evidence": [
+        "src/octop/infra/gateway/channels/slack.py",
+        "docs/slack-channel.md",
+        "tests/unit/gateway/test_slack_channel.py"
+      ],
+      "resource_dependency": "User-owned Slack app and workspace installation; real message and attachment acceptance pending"
+    },
+    {
+      "id": "discord",
+      "state": "present_needs_validation"
+    },
+    {
+      "id": "telegram",
+      "state": "present_needs_validation"
+    },
+    {
+      "id": "onepassword",
+      "state": "open"
+    },
+    {
+      "id": "bitwarden",
+      "state": "open"
+    }
+  ]
+}

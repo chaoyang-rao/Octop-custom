@@ -63,6 +63,35 @@ are updating `catalog.json` in the same change.
 | `yuque-mcp` | Yuque (official MCP) | 语雀（官方 MCP） | knowledge | personal_token | stdio |
 | `weknora` | WeKnora | WeKnora | knowledge | custom_fields | gateway |
 | `dify` | Dify | Dify | self_hosted | custom_fields | remote |
+| `aave` | Aave | Aave | professional | custom_fields | remote |
+| `airtable` | Airtable | Airtable | office | oauth2 | remote |
+| `atlassian` | Atlassian | Atlassian | office | oauth2 | remote |
+| `canva` | Canva | Canva | office | oauth2 | remote |
+| `cloudflare` | Cloudflare | Cloudflare | professional | oauth2 | remote |
+| `cobrain` | Cobrain | Cobrain | knowledge | oauth2 | remote |
+| `huggingface` | Hugging Face | Hugging Face | knowledge | custom_fields | remote |
+| `linear` | Linear | Linear | productivity | oauth2 | remote |
+| `neon` | Neon | Neon | professional | oauth2 | remote |
+| `netlify` | Netlify | Netlify | professional | oauth2 | remote |
+| `prisma` | Prisma | Prisma | professional | oauth2 | remote |
+| `railway` | Railway | Railway | professional | oauth2 | remote |
+| `resend` | Resend | Resend | office | oauth2 | remote |
+| `sentry` | Sentry | Sentry | professional | oauth2 | remote |
+| `stripe` | Stripe | Stripe | professional | oauth2 | remote |
+| `supabase` | Supabase | Supabase | professional | oauth2 | remote |
+| `todoist` | Todoist | Todoist | productivity | oauth2 | remote |
+| `trello` | Trello | Trello | productivity | oauth2 | remote |
+| `vercel` | Vercel | Vercel | professional | oauth2 | remote |
+| `github` | GitHub | GitHub | professional | custom_fields | remote |
+| `render` | Render | Render | professional | custom_fields | remote |
+| `posthog` | PostHog | PostHog | professional | custom_fields | remote |
+| `context7` | Context7 | Context7 | knowledge | custom_fields | remote |
+| `figma` | Figma Desktop | Figma Desktop | office | custom_fields | remote |
+| `composio` | Composio | Composio | professional | custom_fields | remote |
+| `brave-search` | Brave Search | Brave Search | knowledge | custom_fields | stdio |
+| `firecrawl` | Firecrawl | Firecrawl | knowledge | custom_fields | stdio |
+| `apple-apps` | Apple Apps | Apple Apps | office | custom_fields | stdio |
+| `paper` | Paper | Paper | office | custom_fields | stdio |
 
 ## MCP modes / MCP 模式
 

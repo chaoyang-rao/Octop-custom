@@ -47,6 +47,7 @@ jobs:
       - run: npm ci --prefix dashboard
       - name: Verify the customized project picker and preserved UI behavior
         run: |
+          node customization/frontend/test_application_connectors_patch.mjs
           node customization/frontend/test_expert_reuse.mjs
           node customization/frontend/test_primary_team.mjs
           node customization/frontend/test_team_experience.mjs
@@ -66,6 +67,9 @@ jobs:
         working-directory: dashboard
         run: >-
           npx vitest run
+          src/pages/Agent/Channels/ChannelsPanel.test.tsx
+          src/pages/Agent/Channels/components/constants.test.ts
+          src/pages/Agent/Connectors/ConnectorCard.test.tsx
           src/pages/Chat/components/AssistantProcessSummary.test.tsx
           src/pages/Chat/components/MessageBubble.teamSpeaker.test.tsx
           src/pages/Chat/components/TurnProcessBlocks.teamSpeaker.test.tsx

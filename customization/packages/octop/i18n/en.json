@@ -705,7 +705,14 @@
       "discord_connect_timeout": "Discord connection timed out. Check the network and HTTP proxy settings.",
       "discord_connection_failed": "Discord connection failed. Check the network, proxy and bot configuration.",
       "discord_disconnected": "Discord is disconnected or reconnecting.",
-      "discord_proxy_auth_invalid": "Proxy authentication must use user:password."
+      "discord_proxy_auth_invalid": "Proxy authentication must use user:password.",
+      "slack_invalid_token": "Slack token is invalid or revoked. Check the bot and app tokens.",
+      "slack_missing_scope": "Slack permissions are missing. Check Socket Mode and scopes, then reinstall the app.",
+      "slack_api_failed": "Slack API request failed. Check permissions and channel membership.",
+      "slack_connection_failed": "Slack connection failed. Reconnecting; check networking and Socket Mode.",
+      "slack_disconnected": "Slack disconnected; reconnecting.",
+      "slack_invalid_allowlist": "Invalid Slack allowlist. Enter channel or user IDs separated by spaces or commas.",
+      "slack_file_too_large": "Slack attachment exceeds the 25 MB limit."
     }
   },
   "threads": {
@@ -1003,5 +1010,8 @@
     "error_exited": "laya-serve exited before it was ready.",
     "error_not_installed": "Laya is not installed yet.",
     "error_stalled": "The install produced no result for too long and was stopped."
+  },
+  "connectors": {
+    "unsupported_host_platform": "{name} is not supported on this host platform"
   }
 }

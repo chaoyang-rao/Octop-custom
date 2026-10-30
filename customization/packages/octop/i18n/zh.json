@@ -705,7 +705,14 @@
       "discord_connect_timeout": "Discord 连接超时，请检查网络与 HTTP 代理设置。",
       "discord_connection_failed": "Discord 连接失败，请检查网络、代理和机器人配置。",
       "discord_disconnected": "Discord 尚未连接或正在重连。",
-      "discord_proxy_auth_invalid": "代理认证格式应为 user:password。"
+      "discord_proxy_auth_invalid": "代理认证格式应为 user:password。",
+      "slack_invalid_token": "Slack 令牌无效或已撤销，请检查 Bot Token 和 App Token。",
+      "slack_missing_scope": "Slack 令牌权限不足，请检查 Socket Mode 和应用权限后重新安装应用。",
+      "slack_api_failed": "Slack API 请求失败，请检查权限和应用所在频道。",
+      "slack_connection_failed": "Slack 连接失败，正在重连，请检查网络和 Socket Mode 设置。",
+      "slack_disconnected": "Slack 连接已断开，正在重连。",
+      "slack_invalid_allowlist": "Slack 访问名单格式无效，请填写以空格或逗号分隔的频道或用户 ID。",
+      "slack_file_too_large": "Slack 附件超过 25 MB 限制。"
     }
   },
   "threads": {
@@ -1003,5 +1010,8 @@
     "error_exited": "laya-serve 在就绪前退出了。",
     "error_not_installed": "尚未安装 Laya。",
     "error_stalled": "安装长时间没有结果，已停止。"
+  },
+  "connectors": {
+    "unsupported_host_platform": "{name} 不支持当前主机系统，请在支持的平台连接"
   }
 }

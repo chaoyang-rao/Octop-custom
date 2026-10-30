@@ -36,6 +36,10 @@ router = APIRouter()
 def _validate_channel_kind(value: str) -> str:
     """Accept builtin kinds plus plugin-registered kinds (case-normalized)."""
     normalized = str(value).strip().lower()
+    from octop.infra.gateway.channels.host_channels import HOST_CHANNEL_KINDS
+
+    if normalized in HOST_CHANNEL_KINDS:
+        return normalized
     try:
         ChannelKind(normalized)
         return normalized
