@@ -32,7 +32,7 @@ async def test_catalog(env):
     kinds = {e["kind"] for e in r.json()}
     assert "tencent-docs" in kinds
     assert "notion" in kinds
-    assert "figma" not in kinds
+    assert "figma" in kinds
     assert "baidu-netdisk" not in kinds
     for kind in (
         "openalex",
@@ -93,6 +93,8 @@ async def test_catalog(env):
         "oauth_ready": True,
         "credential_fields": [],
         "supports_quick_auth": True,
+        "available_on_host": True,
+        "supported_platforms": [],
     }
 
 
@@ -463,7 +465,7 @@ async def test_patch_instance_status(env):
     assert r2.json()["status"] == "disabled"
 
 
-async def test_catalog_weknora_dify_last(env):
+async def test_catalog_preserves_original_order_before_new_presets(env):
     c, _, auth, _ = env
     r = await c.get("/api/connectors/catalog", headers=auth)
     assert r.status_code == 200
@@ -475,7 +477,8 @@ async def test_catalog_weknora_dify_last(env):
     assert kinds.index("obsidian-cli") < kinds.index("weknora")
     assert kinds.index("wecom-cli") < kinds.index("dify")
     assert kinds.index("didi") < kinds.index("weknora")
-    assert kinds[-2:] == ["weknora", "dify"]
+    assert kinds.index("weknora") + 1 == kinds.index("dify")
+    assert kinds.index("dify") < kinds.index("github")
 
 
 async def test_obsidian_cli_install_registers_binary(
