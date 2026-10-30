@@ -793,6 +793,13 @@ class AgentManager:
                 )
             profile = extract_profile_from_config(config)
             config = strip_profile_config(config)
+            if spec.kind != "team":
+                from octop.infra.agents.settings.avatar_policy import created_avatar
+
+                existing = (await asyncio.to_thread(self._repos.agent_repo.list_by_user, spec.user_id)
+                            if spec.user_id is not None else [])
+                occupied = [parse_config_json(item.config_json).get("avatar", {}) for item in existing]
+                config["avatar"] = created_avatar(config, occupied)
             package_ids_json = (
                 dump_id_list(spec.skill_package_ids)
                 if spec.skill_package_ids is not None

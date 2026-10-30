@@ -1,10 +1,10 @@
-"""Validated opt-in geometric avatar metadata stored in config_json.avatar.
+"""Geometric expert portrait metadata; original files remain privately stored.
 
-Existing image URLs and workspace files remain intact when a geometric shape
-is selected. A null shape restores the existing image/legacy presentation.
+Public expert portraits always use geometry. Account portraits are independent.
 """
 from __future__ import annotations
 
+import hashlib
 from typing import Any, Literal
 
 AvatarShape = Literal["blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle"]
@@ -73,11 +73,16 @@ def merge_avatar_config(
     return out
 
 
-def avatar_response(config: dict[str, Any], uploaded_icon_url: str | None) -> dict[str, Any]:
+def avatar_response(config: dict[str, Any], uploaded_icon_url: str | None, *, identity: str = "") -> dict[str, Any]:
     """Project the geometric URL for all old icon consumers without changing storage."""
     fields = public_avatar_fields(config)
     shape, color = fields["avatar_shape"], fields["avatar_color"] or "ink"
-    icon_url = f"/expert-avatars/v2/{shape}-{color}.svg" if shape else uploaded_icon_url
+    if not shape:
+        digest = hashlib.sha256(str(identity or (uploaded_icon_url or "expert").split("?", 1)[0].split("#", 1)[0]).encode()).digest()
+        shape = AVATAR_SHAPES[digest[0] % len(AVATAR_SHAPES)]
+        color = fields["avatar_color"] if fields["avatar_color"] in AVATAR_COLORS else tuple(AVATAR_COLORS)[digest[1] % len(AVATAR_COLORS)]
+        fields = {"avatar_shape": shape, "avatar_color": color}
+    icon_url = f"/expert-avatars/v2/{shape}-{color}.svg"
     return {**fields, "icon_url": icon_url, "uploaded_icon_url": uploaded_icon_url}
 
 

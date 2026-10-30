@@ -1,3 +1,4 @@
+import { ExpertPortrait } from "../../../components/expertPortrait";
 import { memo, useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,6 @@ import {
   deleteConversation,
 } from "../utils/deleteConversation";
 import { isImeComposing } from "../../../utils/ime";
-import { ExpertIcon } from "../../Experts/components/iconForName";
 import { useHiddenSharedExperts } from "../hooks/useHiddenSharedExperts";
 import SessionChannelIcon from "./SessionChannelIcon";
 import SessionWorkStatusIcon from "./SessionWorkStatusIcon";
@@ -328,10 +328,11 @@ function ActiveAgentCard({
             boxShadow: `0 0 0 1px ${accent}22`,
           }}
         >
-          <ExpertIcon
+          <ExpertPortrait
+            agent={agent}
             iconUrl={agent.icon_url}
             iconName={agent.icon_name}
-            size={agent.icon_url?.trim() ? 28 : 16}
+            size={48}
           />
         </div>
         <div className={styles.agentCardInfo}>
@@ -473,10 +474,11 @@ function InactiveAgentRow({
           className={styles.agentRowAvatar}
           style={{ color: accent, background: `${accent}12` }}
         >
-          <ExpertIcon
+          <ExpertPortrait
+            agent={agent}
             iconUrl={agent.icon_url}
             iconName={agent.icon_name}
-            size={agent.icon_url?.trim() ? 26 : 14}
+            size={48}
           />
         </div>
         <div className={styles.agentRowInfo}>
@@ -593,7 +595,7 @@ export default function SessionList({
 
   const sortedAgents = useMemo(() => {
     const visible = filterVisible(agents, {
-      keepAgentIds: activeAgentId ? [activeAgentId] : [],
+      keepAgentIds: [],
     });
     return sortExpertsByPin(visible, pinnedIds).filter((agent) =>
       matchesChatNavScope(agent, navScope),

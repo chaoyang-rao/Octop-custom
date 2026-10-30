@@ -66,6 +66,7 @@ class SkillHubMarketAgentCreateOptions:
     composer_copies: tuple[tuple[str, Any], ...] = ()
     composer_report: Any = None
     quick_prompts: list[dict[str, Any]] | None = None
+    avatar: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -292,6 +293,10 @@ async def create_agent_from_skillhub_skillset(
             "welcome_enrichment": welcome_enrichment,
         }
     }
+    if options.avatar is not None:
+        from octop.infra.agents.settings.geometric_avatar import validate_avatar
+
+        config_extra["avatar"] = validate_avatar(options.avatar)
     if options.providers:
         config_extra["providers"] = list(options.providers)
     if options.backend:

@@ -107,7 +107,7 @@ class AvatarApiTests(unittest.TestCase):
         self.assertEqual(self.update_calls, [], "display-only saves must not reload the harness")
         self.assertEqual(self.image.read_bytes(), b"existing private image bytes")
 
-    def test_partial_choice_changes_and_explicit_disable_restore_old_image(self):
+    def test_partial_choices_and_legacy_clear_keep_geometry_and_preserve_image(self):
         self.client.patch("/api/agents/expert", json={"avatar_shape": "star", "avatar_color": "jade"})
         color_only = self.client.patch("/api/agents/expert", json={"avatar_color": "ink"}).json()
         self.assertEqual(color_only["avatar_shape"], "star")
@@ -115,8 +115,8 @@ class AvatarApiTests(unittest.TestCase):
         shape_only = self.client.patch("/api/agents/expert", json={"avatar_shape": "cloud"}).json()
         self.assertEqual(shape_only["avatar_color"], "ink")
         disabled = self.client.patch("/api/agents/expert", json={"avatar_shape": None}).json()
-        self.assertIsNone(disabled["avatar_shape"])
-        self.assertEqual(disabled["icon_url"], disabled["uploaded_icon_url"])
+        self.assertIn(disabled["avatar_shape"], AVATAR_SHAPES)
+        self.assertNotEqual(disabled["icon_url"], disabled["uploaded_icon_url"])
         self.assertTrue(self.image.exists())
 
     def test_save_readback_after_reopen_and_full_config_edits_keep_metadata(self):
@@ -167,11 +167,11 @@ class AvatarApiTests(unittest.TestCase):
 
     def test_legacy_image_and_missing_color_have_safe_defaults(self):
         result = self.client.get("/api/agents/expert").json()
-        self.assertIsNone(result["avatar_shape"])
-        self.assertTrue(result["icon_url"].startswith("/api/agents/expert/avatar"))
+        self.assertIn(result["avatar_shape"], AVATAR_SHAPES)
+        self.assertTrue(result["icon_url"].startswith("/expert-avatars/v2/"))
         active = self.client.patch("/api/agents/expert", json={"avatar_shape": "pebble"}).json()
         self.assertEqual(active["icon_url"], "/expert-avatars/v2/pebble-ink.svg")
-        self.assertEqual(avatar_response({"avatar": {"shape": "<bad>"}}, "/image.png")["icon_url"], "/image.png")
+        self.assertTrue(avatar_response({"avatar": {"shape": "<bad>"}}, "/image.png")["icon_url"].startswith("/expert-avatars/v2/"))
 
     def test_old_editor_projection_echo_does_not_replace_uploaded_image(self):
         self.client.patch("/api/agents/expert", json={"avatar_shape": "star", "avatar_color": "blue"})
@@ -184,9 +184,9 @@ class AvatarApiTests(unittest.TestCase):
         self.assertEqual(self.repo.get("expert").icon_url, "/api/agents/expert/avatar")
         self.assertNotIn("icon_url", self.update_calls[-1])
         restored = self.client.patch("/api/agents/expert", json={"avatar_shape": None}).json()
-        self.assertIsNone(restored["avatar_shape"])
-        self.assertTrue(restored["icon_url"].startswith("/api/agents/expert/avatar"))
-        self.assertEqual(restored["icon_url"], restored["uploaded_icon_url"])
+        self.assertIn(restored["avatar_shape"], AVATAR_SHAPES)
+        self.assertTrue(restored["icon_url"].startswith("/expert-avatars/v2/"))
+        self.assertNotEqual(restored["icon_url"], restored["uploaded_icon_url"])
 
     def test_nested_projection_echo_is_removed_before_profile_lifting(self):
         self.client.patch("/api/agents/expert", json={"avatar_shape": "blob", "avatar_color": "jade"})
@@ -214,7 +214,7 @@ class AvatarApiTests(unittest.TestCase):
             self.assertEqual(result.status_code, 200, result.text)
             self.assertEqual(self.repo.get("expert").icon_url, url)
 
-    def test_both_projection_versions_can_be_echoed_when_restoring_the_uploaded_image(self):
+    def test_old_editor_echo_preserves_original_storage_but_never_displays_it(self):
         for version in ("v1", "v2"):
             for suffix in ("?v=old-tab", "#cached-preview"):
                 with self.subTest(version=version, suffix=suffix):
@@ -224,8 +224,8 @@ class AvatarApiTests(unittest.TestCase):
                         "icon_url": f"/expert-avatars/{version}/star-blue.svg{suffix}",
                     })
                     self.assertEqual(response.status_code, 200, response.text)
-                    self.assertIsNone(response.json()["avatar_shape"])
-                    self.assertTrue(response.json()["icon_url"].startswith("/api/agents/expert/avatar"))
+                    self.assertIn(response.json()["avatar_shape"], AVATAR_SHAPES)
+                    self.assertTrue(response.json()["icon_url"].startswith("/expert-avatars/v2/"))
                     self.assertEqual(self.repo.get("expert").icon_url, "/api/agents/expert/avatar")
                     self.assertEqual(self.image.read_bytes(), b"existing private image bytes")
 
@@ -239,7 +239,7 @@ class AvatarApiTests(unittest.TestCase):
         frontend = dict(re.findall(r"id:\s*['\"]([a-z]+)['\"][^\n}]*?hex:\s*['\"](#[0-9A-Fa-f]{6})['\"]", source))
         self.assertEqual({key: value.upper() for key, value in frontend.items()}, expected)
 
-    def test_top_level_selection_wins_over_stale_form_config_and_upload_switches_to_image(self):
+    def test_top_level_selection_and_legacy_upload_keep_geometry_public(self):
         self.client.patch("/api/agents/expert", json={"avatar_shape": "blob", "avatar_color": "blue"})
         stale = parse_config_json(self.repo.get("expert").config_json)
         result = self.client.patch("/api/agents/expert", json={"config": stale,
@@ -255,9 +255,9 @@ class AvatarApiTests(unittest.TestCase):
             uploaded = self.client.post("/api/agents/expert/avatar", files={
                 "file": ("new.png", b"boundary-mocked-image", "image/png")})
         self.assertEqual(uploaded.status_code, 201, uploaded.text)
-        self.assertIsNone(uploaded.json()["avatar_shape"])
-        self.assertEqual(uploaded.json()["avatar_color"], "jade")
-        self.assertEqual(uploaded.json()["icon_url"], uploaded.json()["uploaded_icon_url"])
+        self.assertIn(uploaded.json()["avatar_shape"], AVATAR_SHAPES)
+        self.assertIn(uploaded.json()["avatar_color"], AVATAR_COLORS)
+        self.assertNotEqual(uploaded.json()["icon_url"], uploaded.json()["uploaded_icon_url"])
         self.assertEqual(writer.await_count, 1)
 
     def test_template_snapshot_export_catalog_import_and_published_install_roundtrip(self):

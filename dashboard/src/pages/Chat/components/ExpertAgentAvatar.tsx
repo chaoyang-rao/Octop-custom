@@ -1,5 +1,4 @@
 import { ExpertIcon } from "../../Experts/components/iconForName";
-import styles from "../index.module.less";
 
 export interface ChatAgentOption {
   agent_id: string;
@@ -35,30 +34,15 @@ interface ExpertAgentAvatarProps {
 export default function ExpertAgentAvatar({
   iconName,
   iconUrl,
-  color,
-  iconSize,
   size = 32,
   className,
-  muted = false,
 }: ExpertAgentAvatarProps) {
-  const accent = muted ? "#94a3b8" : color || "#6366f1";
-  const photo = Boolean(iconUrl?.trim());
-  const inner = photo
-    ? size
-    : iconSize ?? Math.max(12, Math.round(size * 0.55));
-
   return (
-    <span
-      className={`${styles.expertAgentAvatar} ${className ?? ""}`}
-      style={{
-        width: size,
-        height: size,
-        color: accent,
-        background: muted ? "rgba(148, 163, 184, 0.14)" : `${accent}1a`,
-      }}
-      aria-hidden
-    >
-      <ExpertIcon iconUrl={iconUrl} iconName={iconName} size={inner} />
-    </span>
+    <ExpertIcon
+      iconUrl={iconUrl}
+      iconName={iconName}
+      size={size}
+      className={className}
+    />
   );
 }

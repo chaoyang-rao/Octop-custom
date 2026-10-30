@@ -1159,7 +1159,8 @@
     "mbtiBtn": "MBTI",
     "channelsBtn": "Channels",
     "memoryBtn": "Memory",
-    "openChat": "Chat"
+    "openChat": "Chat",
+    "randomAvatar": "Randomize avatar"
   },
   "subagents": {
     "catalogTitle": "Manage subagents",
@@ -1556,7 +1557,7 @@
     "expertPickerManage": "Manage experts",
     "expertPin": "Pin expert",
     "expertUnpin": "Unpin expert",
-    "expertHide": "Hide shared expert",
+    "expertHide": "Hide expert",
     "expertUnhide": "Show expert again",
     "expertPickerHidden": "Hidden experts ({{count}})",
     "expertPickerShowVisible": "Back to experts",
@@ -1564,7 +1565,7 @@
     "expertPickerHiddenEmpty": "No hidden experts",
     "expertListHidden": "Hidden experts ({{count}})",
     "expertListShowVisible": "Back to expert list",
-    "expertListHiddenEmpty": "No hidden shared experts",
+    "expertListHiddenEmpty": "No hidden experts",
     "subagentPicker": "Subagents",
     "subagentPickerSearch": "Search subagents",
     "subagentPickerEmpty": "No installed subagents",

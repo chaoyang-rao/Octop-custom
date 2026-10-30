@@ -24,10 +24,6 @@ export function isTeamHostSpeaker(
 }
 
 /** Team card / chat portrait; falls back to the bundled cartoon. */
-export function teamPortraitUrl(iconUrl?: string | null): string {
-  const url = iconUrl?.trim() || "";
-  if (!url || url === "/experts/avatars/multi-agent-orchestrator.svg") {
-    return TEAM_AVATAR_URL;
-  }
-  return url;
+export function teamPortraitUrl(_iconUrl?: string | null): string {
+  return TEAM_AVATAR_URL;
 }

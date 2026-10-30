@@ -1,3 +1,4 @@
+import { randomAvatar } from "../../../components/expertPortrait";
 // dashboard/src/pages/Experts/components/CreateFromExpertDrawer.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -259,6 +260,7 @@ export default function CreateFromExpertDrawer({
   const [skillPackages, setSkillPackages] = useState<SkillPackage[]>([]);
   const [skillPackagesLoading, setSkillPackagesLoading] = useState(false);
   const [colorPalette, setColorPalette] = useState<string>("rose");
+  const [avatarChoice, setAvatarChoice] = useState(randomAvatar);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [detailPrompts, setDetailPrompts] = useState<QuickPrompt[] | null>(
@@ -303,6 +305,7 @@ export default function CreateFromExpertDrawer({
     setPathMappings([]);
     const defaults = sourceDefaults(source, lang);
     setColorPalette(parseStoredColor(defaults.color) ?? DEFAULT_PALETTE);
+    setAvatarChoice(randomAvatar());
     setAvatarFile(null);
     setAvatarPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
@@ -444,6 +447,8 @@ export default function CreateFromExpertDrawer({
           ? serializeQuickPrompts(welcomeSnap.data.quick_prompts)
           : undefined;
       const payload = {
+        avatar_shape: avatarChoice.shape,
+        avatar_color: avatarChoice.color,
         name: values.name,
         description: values.description || undefined,
         agent_id: values.agent_id?.trim() || undefined,
@@ -731,6 +736,8 @@ export default function CreateFromExpertDrawer({
 
         <Form.Item label={t("experts.avatar")}>
           <ExpertAvatarPicker
+            avatar={avatarChoice}
+            onAvatarChange={setAvatarChoice}
             iconUrl={avatarPreview ?? sourceIcon(source).iconUrl}
             iconName={sourceIcon(source).iconName}
             color={

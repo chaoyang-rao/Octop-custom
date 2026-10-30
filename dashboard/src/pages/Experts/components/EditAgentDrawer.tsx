@@ -1,3 +1,4 @@
+import { randomAvatar, avatarUi } from "../../../components/expertPortrait";
 // dashboard/src/pages/Experts/components/EditAgentDrawer.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -245,6 +246,9 @@ function EditAgentDrawerBody({
   const [colorPalette, setColorPalette] = useState<string>(
     () => parseStoredColor(agent.color) ?? DEFAULT_PALETTE,
   );
+  const [avatarChoice, setAvatarChoice] = useState(
+    () => avatarUi.parseAvatarUrl(agent.icon_url) ?? randomAvatar(),
+  );
   const [iconUrl, setIconUrl] = useState<string | null>(agent.icon_url);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -306,6 +310,7 @@ function EditAgentDrawerBody({
             ? ag.icon_url
             : null,
         );
+        setAvatarChoice(avatarUi.parseAvatarUrl(ag.icon_url) ?? randomAvatar());
         const parsedBackend = parseBackendSpec(cfg.backend);
         setPathMappings(parsedBackend.pathMappings);
 
@@ -485,7 +490,9 @@ function EditAgentDrawerBody({
           is_shared: values.is_shared ?? false,
           default_model: defaultModelFromForm(values.default_model),
           color: nextColor,
-          config: nextConfig,
+          config: { ...nextConfig, avatar: avatarChoice },
+          avatar_shape: avatarChoice.shape,
+          avatar_color: avatarChoice.color,
           welcome_message: stored.welcome_message ?? "",
           knowledge_base_ids: stored.knowledge_base_ids ?? [],
           mcp_servers: stored.mcp_servers ?? [],
@@ -517,7 +524,7 @@ function EditAgentDrawerBody({
         default_model: defaultModel,
         is_shared: values.is_shared ?? false,
         color: nextColor,
-        icon_url: iconUrl,
+        icon_url: avatarUi.avatarUrl(avatarChoice.shape, avatarChoice.color),
       });
       onClose();
     } catch (err) {
@@ -533,6 +540,7 @@ function EditAgentDrawerBody({
     colorPalette,
     form,
     iconUrl,
+    avatarChoice,
     onClose,
     onSaved,
     pathMappings,
@@ -751,6 +759,8 @@ function EditAgentDrawerBody({
               </Form.Item>
               <Form.Item label={t("experts.avatar")}>
                 <ExpertAvatarPicker
+                  avatar={avatarChoice}
+                  onAvatarChange={setAvatarChoice}
                   iconUrl={iconUrl}
                   iconName={agent.icon_name}
                   color={

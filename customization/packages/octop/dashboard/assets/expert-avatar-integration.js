@@ -1,3 +1,4 @@
+import { randomAvatar, portraitFor } from "./expert-presentation.js";
 /** Small form and chat integration layer for Octop's original avatar library. */
 const AVATAR_SHAPES = new Set(['blob', 'pebble', 'squircle', 'droplet', 'cloud', 'star', 'triangle']);
 
@@ -14,16 +15,13 @@ export function userBubblePresentation(agent, isTeamRoom, bubbleStyle) {
   };
 }
 
-export function createAvatarSettings({ React, avatars }) {
+export function createAvatarSettings({ React, avatars, useTranslation }) {
   const h = React.createElement;
-  return function AvatarSettings({ shape, color, onShapeChange, onColorChange,
-    disabled = false, imagePicker, hasImage, onUseImage }) {
+  return function AvatarSettings({ shape, color, onShapeChange, onColorChange, disabled = false }) {
+    const translation = useTranslation?.();
+    const selected = shape ? {shape,color:color||'ink'} : portraitFor('expert',avatars);
     return h('div', { className: 'octop-avatar-settings' },
-      h(avatars.ShapeColorPicker, { shape, color: color || 'ink', onShapeChange, onColorChange, disabled }),
-      !shape ? h('p', { className: 'octop-avatar-mode-hint' }, '当前使用图片或原头像，选择形状即可启用动态头像。') : null,
-      h('details', { className: 'octop-avatar-image-options' },
-        h('summary', null, '图片头像'),
-        h('div', { className: 'octop-avatar-image-body' }, imagePicker,
-          shape && hasImage ? h('button', { type: 'button', disabled, className: 'octop-avatar-restore-image', onClick: onUseImage }, '使用已上传图片') : null)));
+      h(avatars.ShapeColorPicker, { ...selected, onShapeChange, onColorChange, disabled }),
+      h('button',{type:'button',disabled,className:'octop-avatar-random',onClick:()=>{const next=randomAvatar();onShapeChange(next.shape);onColorChange(next.color)}},translation?.t('experts.randomAvatar',{defaultValue:translation?.i18n?.language?.startsWith('zh')?'随机换一组':'Randomize avatar'})||'随机换一组'));
   };
 }

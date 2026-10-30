@@ -21,6 +21,7 @@ from typing import Any, cast
 from octop_harness.backends.workspace import BackendWorkspace
 
 from octop.infra.agents.manager import AgentCreateSpec
+from octop.infra.agents.settings.geometric_avatar import valid_avatar_or_none
 from octop.infra.agents.workspace.dir import DEFAULT_SYSTEM_FILES_PATH
 from octop.infra.errors import ErrorCode, OctopError
 
@@ -133,6 +134,7 @@ class ExpertSummary:
     color: str | None = None
     quick_prompts: tuple[ExpertQuickPrompt, ...] = ()
     task_examples: dict[str, list[str]] | None = None
+    avatar: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -815,6 +817,7 @@ class ExpertCatalog:
                         scene=_manifest_scene(data),
                     ),
                     color=data.get("color"),
+                    avatar=valid_avatar_or_none(data.get("avatar")),
                     quick_prompts=_parse_quick_prompts(data),
                     task_examples=normalize_task_examples_for_display(parse_task_examples(data)),
                 )
@@ -931,6 +934,15 @@ def build_create_spec_from_expert(
             or expert.summary.label_zh
         )
     extra = dict(config_extra or {})
+    inherited_avatar = getattr(expert.summary, "avatar", None)
+    if "avatar" in extra:
+        from octop.infra.agents.settings.geometric_avatar import merge_avatar_option
+
+        extra["avatar"] = merge_avatar_option(inherited_avatar, extra["avatar"])
+    elif inherited_avatar is not None:
+        from octop.infra.agents.settings.geometric_avatar import validate_avatar
+
+        extra["avatar"] = validate_avatar(inherited_avatar)
     extra_color = extra.pop("color", None)
     extra_icon_url = extra.pop("icon_url", None)
     extra_icon_name = extra.pop("icon_name", None)

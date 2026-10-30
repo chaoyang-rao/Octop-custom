@@ -35,6 +35,13 @@ from octop.infra.agents.experts.publish import (
     resolve_published_expert_slug,
 )
 from octop.infra.agents.manager import AgentCreateSpec
+from octop.infra.agents.settings.geometric_avatar import (
+    avatar_response,
+    merge_avatar_option,
+    public_avatar_fields,
+    validate_avatar,
+)
+from octop.infra.agents.settings.profile import parse_config_json
 from octop.infra.db.repos.published_experts import PublishedExpertRow
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.history.trajectory.settings import apply_enable_trajectory
@@ -67,6 +74,7 @@ class PublishedExpertInstallOptions:
     composer_copies: tuple[tuple[str, Any], ...] = ()
     composer_report: Any = None
     quick_prompts: list[dict[str, Any]] | None = None
+    avatar: dict[str, Any] | None = None
 
 
 def _snapshot_dir(services: Any, expert_id: str) -> Path:
@@ -158,6 +166,14 @@ def _snapshot_meta(
         welcome_message_en=welcome_message_en,
         quick_prompts=quick_prompts,
         task_examples=task_examples,
+        avatar={
+            key.removeprefix("avatar_"): value
+            for key, value in public_avatar_fields(
+                parse_config_json(getattr(source, "config_json", None))
+            ).items()
+        }
+        if "avatar" in parse_config_json(getattr(source, "config_json", None))
+        else None,
     )
 
 
@@ -365,6 +381,12 @@ async def install_published_expert(
         registry.assert_backend_supports_skill_packages(options.backend)
 
     config_extra: dict[str, Any] = {}
+    manifest = await asyncio.to_thread(_read_snapshot_manifest, snapshot_dir)
+    avatar = manifest.get("avatar")
+    if options.avatar is not None:
+        avatar = merge_avatar_option(avatar, options.avatar)
+    if avatar is not None:
+        config_extra["avatar"] = validate_avatar(avatar)
     if options.providers:
         config_extra["providers"] = list(options.providers)
     if options.backend:
@@ -423,5 +445,6 @@ async def install_published_expert(
         "default_model": created.default_model,
         "state": created.last_state or "unknown",
         "published_expert_id": row.id,
+        **avatar_response(parse_config_json(created.config_json), created.icon_url),
         "bootstrap_pending": not registry.is_bootstrapped(created.agent_id),
     }

@@ -1,3 +1,4 @@
+import { ExpertPortrait } from "../../../components/expertPortrait";
 /**
  * iconForName — map an expert's ``icon_name`` (a free-form string from the
  * manifest, e.g. ``"cpu"``, ``"trending-up"``, ``"baby"``) to a lucide-react
@@ -9,7 +10,6 @@
  */
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
 import {
   Sparkles,
   Globe,
@@ -57,8 +57,6 @@ import {
   Satellite,
   MapPin,
 } from "lucide-react";
-import { useAuthImageSrc } from "../../../hooks/useAuthImageSrc";
-import { needsAuthBlobFetch } from "../../../utils/toolMediaBlocks";
 
 const iconMap: Record<string, (size: number) => ReactNode> = {
   sparkles: (size) => <Sparkles size={size} />,
@@ -130,18 +128,14 @@ export function ExpertIcon({
   size?: number;
   className?: string;
 }): ReactNode {
-  const url = resolveExpertAvatarUrl(iconUrl);
-  if (url) {
-    return (
-      <ExpertIconImage
-        url={url}
-        iconName={iconName}
-        size={size}
-        className={className}
-      />
-    );
-  }
-  return iconForName(iconName, size);
+  return (
+    <ExpertPortrait
+      iconUrl={iconUrl}
+      iconName={iconName}
+      size={size}
+      className={className}
+    />
+  );
 }
 
 /**
@@ -182,46 +176,6 @@ export function resolveExpertAvatarUrl(iconUrl?: string | null): string | null {
     return normalizeAgentScopedApiUrl(url);
   }
   return url;
-}
-
-function ExpertIconImage({
-  url,
-  iconName,
-  size,
-  className,
-}: {
-  url: string;
-  iconName?: string | null;
-  size: number;
-  className?: string;
-}) {
-  const { src, loadState } = useAuthImageSrc(url);
-  const [imgFailed, setImgFailed] = useState(false);
-  useEffect(() => {
-    setImgFailed(false);
-  }, [url]);
-  if (!src || loadState !== "ready" || imgFailed) {
-    return iconForName(iconName, size);
-  }
-  const cover =
-    needsAuthBlobFetch(url) ||
-    url.startsWith("blob:") ||
-    url.includes("/experts/avatars/");
-  return (
-    <img
-      src={src}
-      alt=""
-      className={className}
-      onError={() => setImgFailed(true)}
-      style={{
-        width: size,
-        height: size,
-        objectFit: cover ? "cover" : "contain",
-        display: "block",
-        borderRadius: "inherit",
-      }}
-    />
-  );
 }
 
 /**

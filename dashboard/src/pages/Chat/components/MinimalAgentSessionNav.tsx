@@ -1,3 +1,8 @@
+import { useHiddenSharedExperts } from "../hooks/useHiddenSharedExperts";
+import {
+  ExpertPortrait,
+  HiddenRestore,
+} from "../../../components/expertPortrait";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +19,6 @@ import {
   Trash2,
 } from "lucide-react";
 import type { OctopAgent } from "../../../context/AgentContext";
-import { ExpertIcon } from "../../Experts/components/iconForName";
 import { octopThreadsApi } from "../../../api/modules/octopThreads";
 import {
   confirmDeleteConversation,
@@ -316,13 +320,15 @@ export default function MinimalAgentSessionNav({
       agents.find((agent) => agent.agent_id === activeAgentId),
     ),
   );
+  const visibility = useHiddenSharedExperts();
+  const hiddenAgents = visibility.pickHidden(agents);
   const { pinnedIds, isPinned, togglePin } = usePinnedExperts();
   const sortedAgents = useMemo(
     () =>
-      sortExpertsByPin(agents, pinnedIds).filter((agent) =>
-        matchesChatNavScope(agent, navScope),
+      sortExpertsByPin(visibility.filterVisible(agents), pinnedIds).filter(
+        (agent) => matchesChatNavScope(agent, navScope),
       ),
-    [agents, pinnedIds, navScope],
+    [agents, pinnedIds, navScope, visibility.filterVisible],
   );
   const searching = searchQuery.trim().length > 0;
   const catalog = useExpertSessionCatalog(sortedAgents, searching);
@@ -568,6 +574,11 @@ export default function MinimalAgentSessionNav({
           aria-label={t("chat.searchSessions", "搜索会话")}
         />
       </div>
+      <HiddenRestore
+        agents={hiddenAgents}
+        onRestore={visibility.unhide}
+        label={t("chat.expertListHidden", { count: hiddenAgents.length })}
+      />
       <ChatNavScopeTabs value={navScope} onChange={setNavScope} />
       {visibleAgents.length === 0 ? (
         searching ? (
@@ -616,10 +627,11 @@ export default function MinimalAgentSessionNav({
                   }}
                   aria-hidden
                 >
-                  <ExpertIcon
+                  <ExpertPortrait
+                    agent={agent}
                     iconUrl={agent.icon_url}
                     iconName={agent.icon_name}
-                    size={agent.icon_url?.trim() ? 22 : 14}
+                    size={48}
                   />
                 </span>
                 <button
@@ -660,6 +672,7 @@ export default function MinimalAgentSessionNav({
               </button>
               <ExpertNavActions
                 variant="minimal"
+                onHide={() => visibility.hide(agent.agent_id)}
                 pinned={isPinned(agent.agent_id)}
                 onTogglePin={() => togglePin(agent.agent_id)}
                 onNewChat={() => onNewChat(agent.agent_id)}

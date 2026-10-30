@@ -1159,7 +1159,8 @@
     "mbtiBtn": "MBTI",
     "channelsBtn": "通道",
     "memoryBtn": "记忆",
-    "openChat": "对话"
+    "openChat": "对话",
+    "randomAvatar": "随机换一组"
   },
   "subagents": {
     "catalogTitle": "子智能体管理",
@@ -1556,7 +1557,7 @@
     "expertPickerManage": "管理专家",
     "expertPin": "置顶专家",
     "expertUnpin": "取消置顶专家",
-    "expertHide": "隐藏共享专家",
+    "expertHide": "隐藏专家",
     "expertUnhide": "重新显示专家",
     "expertPickerHidden": "已隐藏专家（{{count}}）",
     "expertPickerShowVisible": "返回专家列表",
@@ -1564,7 +1565,7 @@
     "expertPickerHiddenEmpty": "暂无已隐藏专家",
     "expertListHidden": "已隐藏专家（{{count}}）",
     "expertListShowVisible": "返回专家列表",
-    "expertListHiddenEmpty": "暂无已隐藏的共享专家",
+    "expertListHiddenEmpty": "暂无已隐藏的专家",
     "subagentPicker": "子智能体",
     "subagentPickerSearch": "搜索子智能体",
     "subagentPickerEmpty": "暂无已安装的子智能体",

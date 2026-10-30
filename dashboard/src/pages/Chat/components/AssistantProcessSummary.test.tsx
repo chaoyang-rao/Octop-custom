@@ -65,12 +65,12 @@ function TitleBar({ isTeam = false }: { isTeam?: boolean }) {
 describe("thinking display preference", () => {
   beforeEach(() => localStorage.clear());
 
-  it("keeps the existing default: expand while streaming, collapse on completion", () => {
+  it("keeps solo analysis collapsed during streaming and after completion", () => {
     const split = thinkingSplit();
     const { rerender } = render(
       <AssistantProcessSummary split={split} isStreaming />,
     );
-    expect(screen.getByText("Thinking content")).toBeInTheDocument();
+    expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
     rerender(<AssistantProcessSummary split={split} isStreaming={false} />);
     expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
   });
@@ -113,54 +113,25 @@ describe("thinking display preference", () => {
     ).toBeInTheDocument();
   });
 
-  it("saves the menu choice and applies it to mounted panels and later visits", async () => {
-    const { unmount } = render(
-      <>
-        <TitleBar />
-        <AssistantProcessSummary split={thinkingSplit()} isStreaming />
-      </>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "更多" }));
-    const preference = await screen.findByRole("switch", {
-      name: "chat.collapseThinking",
-    });
-    expect(preference).not.toBeChecked();
-    fireEvent.click(
-      screen.getByRole("menuitem", { name: /chat.collapseThinking/ }),
-    );
-    expect(localStorage.getItem(COLLAPSE_THINKING_SOLO_KEY)).toBe("true");
-    expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
-    unmount();
-    render(
-      <>
-        <TitleBar />
-        <AssistantProcessSummary split={thinkingSplit()} isStreaming />
-      </>,
+  it("ignores legacy automatic-expansion preferences", () => {
+    localStorage.setItem(COLLAPSE_THINKING_SOLO_KEY, "false");
+    localStorage.setItem(COLLAPSE_THINKING_TEAM_KEY, "false");
+    const { rerender } = render(
+      <AssistantProcessSummary split={thinkingSplit()} isStreaming />,
     );
     expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "更多" }));
-    expect(
-      await screen.findByRole("switch", { name: "chat.collapseThinking" }),
-    ).toBeChecked();
+    rerender(
+      <AssistantProcessSummary split={thinkingSplit()} isStreaming isTeam />,
+    );
+    expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
   });
 
-  it("defaults team menu switch on and stores team preference separately", async () => {
-    render(
-      <>
-        <TitleBar isTeam />
-        <AssistantProcessSummary split={thinkingSplit()} isStreaming isTeam />
-      </>,
-    );
-    expect(screen.queryByText("Thinking content")).not.toBeInTheDocument();
+  it("does not offer a menu that can re-enable automatic expansion", () => {
+    render(<TitleBar />);
     fireEvent.click(screen.getByRole("button", { name: "更多" }));
-    const preference = await screen.findByRole("switch", {
-      name: "chat.collapseThinking",
-    });
-    expect(preference).toBeChecked();
-    fireEvent.click(preference);
-    expect(localStorage.getItem(COLLAPSE_THINKING_TEAM_KEY)).toBe("false");
-    expect(localStorage.getItem(COLLAPSE_THINKING_SOLO_KEY)).toBeNull();
-    expect(screen.getByText("Thinking content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("switch", { name: "chat.collapseThinking" }),
+    ).not.toBeInTheDocument();
   });
 
   it("allows manual expansion during streaming without resetting on content updates", () => {
@@ -181,10 +152,7 @@ describe("thinking display preference", () => {
       <AssistantProcessSummary split={thinkingSplit()} isStreaming={false} />,
     );
     rerender(<AssistantProcessSummary split={thinkingSplit()} isStreaming />);
-    expect(screen.getByRole("button")).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "true");
   });
 
   it("keeps a decision row collapsed like other tools", () => {
@@ -216,25 +184,21 @@ describe("thinking display preference", () => {
     expect(screen.getByText(/可以收工/)).toBeInTheDocument();
   });
 
-  it("can restore automatic expansion from the menu", async () => {
-    localStorage.setItem(COLLAPSE_THINKING_SOLO_KEY, "true");
-    render(
-      <>
-        <TitleBar />
-        <AssistantProcessSummary split={thinkingSplit()} isStreaming />
-      </>,
+  it("only reopens a manually collapsed panel after another click", () => {
+    const { rerender } = render(
+      <AssistantProcessSummary split={thinkingSplit()} isStreaming />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "更多" }));
-    const preference = await screen.findByRole("switch", {
-      name: "chat.collapseThinking",
-    });
-    expect(preference).toBeChecked();
-    fireEvent.click(preference);
-    expect(localStorage.getItem(COLLAPSE_THINKING_SOLO_KEY)).toBe("false");
+    fireEvent.click(screen.getByRole("button"));
     expect(screen.getByText("Thinking content")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "更多" }));
-    expect(
-      await screen.findByRole("switch", { name: "chat.collapseThinking" }),
-    ).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button"));
+    rerender(
+      <AssistantProcessSummary
+        split={thinkingSplit("next update")}
+        isStreaming
+      />,
+    );
+    expect(screen.queryByText("next update")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText("next update")).toBeInTheDocument();
   });
 });

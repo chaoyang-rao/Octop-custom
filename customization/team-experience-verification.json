@@ -1,0 +1,54 @@
+{
+  "release": "avatars-v16",
+  "requested_features": {
+    "random_new_expert_shape_and_color": true,
+    "legacy_expert_images_never_rendered": true,
+    "account_avatar_preserved": true,
+    "team_member_collage_without_circle": true,
+    "member_named_individual_replies": true,
+    "relevant_member_cross_review_instructions": true,
+    "manual_only_process_details": true,
+    "owned_and_shared_expert_hide_restore": true,
+    "team_badge_status_wrap_layout": true
+  },
+  "data_preservation": {
+    "original_expert_image_files_preserved_privately": true,
+    "legacy_face_stable_across_cache_nonce_changes": true,
+    "hidden_experts_not_deleted_or_stopped": true,
+    "visibility_scoped_per_account": true,
+    "existing_chat_database_not_restored": true
+  },
+  "checks": {
+    "customization_unittests": 79,
+    "team_and_i18n_pytest": 99,
+    "manager_pytest_passed": 126,
+    "manager_pytest_skipped": 1,
+    "api_unit_pytest": 342,
+    "source_react_and_team_stream_vitest": 43,
+    "real_source_frozen_dom_integration": "passed",
+    "frontend_production_build": "passed",
+    "typescript": "passed",
+    "ruff": "passed",
+    "mypy_touched_modules": "passed",
+    "active_asset_graph": 232,
+    "active_javascript_syntax_checked": 183
+  },
+  "local_runtime": {
+    "installed": true,
+    "changed_program_files_installed": 243,
+    "restart_authorized_by_user": "任务已完成，可以重启",
+    "restarted": true,
+    "health_ok": true,
+    "new_expert_navigation_icons_verified": true,
+    "owned_expert_hide_buttons_verified": true,
+    "account_image_verified": true,
+    "team_collage_and_nonoverlapping_badges_verified": true,
+    "history_process_panels_collapsed_verified": true,
+    "synthetic_live_model_request_sent": false,
+    "member_stream_identity_validation": "Mocked source team stream and React tests; did not send a live model task."
+  },
+  "git": {
+    "branch": "custom/main",
+    "remote_quality_gate": "pending"
+  }
+}

@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import Response
 
 from octop.api.common.agent import assert_agent_access_row, assert_agent_owner
-from octop.api.common.agent_runtime import AgentRuntimeFields, runtime_field_updates
+from octop.api.common.agent_avatar import AgentAvatarFields, avatar_config_from_body
+from octop.api.common.agent_runtime import runtime_field_updates
 from octop.api.common.validators import assert_user_backend_root_dirs
 from octop.api.common.workspace import require_agent_workspace
 from octop.api.deps import current_user, get_server
@@ -20,6 +21,10 @@ from octop.infra.agents.experts.avatar import (
     display_agent_icon_url,
     read_workspace_avatar,
     write_workspace_avatar,
+)
+from octop.infra.agents.settings.geometric_avatar import (
+    avatar_response,
+    is_generated_avatar_icon_url,
 )
 from octop.infra.agents.settings.profile import (
     id_list_from_row,
@@ -41,7 +46,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class AgentCreateBody(AgentRuntimeFields):
+class AgentCreateBody(AgentAvatarFields):
     name: str
     description: str | None = None
     persona_mbti: str | None = None
@@ -60,7 +65,7 @@ class AgentCreateBody(AgentRuntimeFields):
     mcp_servers: list[str] | None = None
 
 
-class AgentPatchBody(AgentRuntimeFields):
+class AgentPatchBody(AgentAvatarFields):
     name: str | None = None
     description: str | None = None
     persona_mbti: str | None = None
@@ -174,10 +179,14 @@ def _row_dict(
         "icon": row.icon,
         "template_name": row.template_name,
         "icon_name": row.icon_name or cfg.get("icon_name"),
-        "icon_url": display_agent_icon_url(
-            agent_id=row.agent_id,
-            stored=_agent_icon_url(row, cfg),
-            updated_at=getattr(row, "updated_at", None),
+        **avatar_response(
+            cfg,
+            display_agent_icon_url(
+                agent_id=row.agent_id,
+                stored=_agent_icon_url(row, cfg),
+                updated_at=getattr(row, "updated_at", None),
+            ),
+            identity=row.agent_id,
         ),
         "color": row.color or cfg.get("color"),
         "skill_package_ids": packages,
@@ -204,6 +213,10 @@ def _row_dict(
             payload["member_ids"] = []
     if bootstrap_pending is not None:
         payload["bootstrap_pending"] = bootstrap_pending
+    if getattr(row, "kind", None) == "team":
+        payload.update(
+            icon_url="/experts/avatars/team-host.svg", avatar_shape=None, avatar_color=None
+        )
     return payload
 
 
@@ -322,7 +335,7 @@ async def create_agent(
         persona_mbti=body.persona_mbti,
         default_model=body.default_model,
         system_prompt=body.system_prompt,
-        config=body.config,
+        config=avatar_config_from_body(body, body.config),
         runtime_config=runtime_field_updates(body, exclude_unset=True),
         icon=body.icon,
         template_name=body.template_name,
@@ -409,6 +422,8 @@ async def patch_agent(
         if key
         not in {
             "config",
+            "avatar_shape",
+            "avatar_color",
             "is_shared",
             "welcome_message",
             "skill_package_ids",
@@ -416,8 +431,15 @@ async def patch_agent(
             "mcp_servers",
         }
     }
-    if body.config is not None:
-        updates["config_json"] = json.dumps(body.config)
+    avatar_changed = bool(body.model_fields_set.intersection({"avatar_shape", "avatar_color"}))
+    if is_generated_avatar_icon_url(updates.get("icon_url")):
+        updates.pop("icon_url", None)
+    if body.config is not None or avatar_changed:
+        previous = parse_config_json(row.config_json)
+        cfg = avatar_config_from_body(
+            body, body.config if body.config is not None else previous, previous=previous
+        )
+        updates["config_json"] = json.dumps(cfg)
     if body.welcome_message is not None:
         updates["welcome_message"] = body.welcome_message
     if updates:

@@ -63,7 +63,7 @@ function assistant(extra: Partial<ChatMessage> = {}): ChatMessage {
 }
 
 describe("MessageBubble team speaker chrome", () => {
-  it("does not print the member name next to the bubble", () => {
+  it("prints the actual member name next to the member reply", () => {
     render(
       <MessageBubble
         message={assistant({ speakerAgentId: "doctor" })}
@@ -74,7 +74,9 @@ describe("MessageBubble team speaker chrome", () => {
     );
 
     expect(screen.getByText("please rest")).toBeInTheDocument();
-    expect(screen.queryByText("小通 · 通用助手")).not.toBeInTheDocument();
+    expect(screen.getByText("小通 · 通用助手")).toHaveClass(
+      "octop-member-name",
+    );
   });
 
   it("labels the host avatar as team host and opens a member profile", () => {

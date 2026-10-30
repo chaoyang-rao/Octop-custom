@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { MessageSquarePlus, Pin } from "lucide-react";
+import { MessageSquarePlus, Pin, EyeOff } from "lucide-react";
 import styles from "../index.module.less";
 
 function ExpertPinButton({
@@ -36,11 +36,13 @@ export default function ExpertNavActions({
   pinned,
   onTogglePin,
   onNewChat,
+  onHide,
 }: {
   variant: "classic" | "minimal";
   pinned: boolean;
   onTogglePin: () => void;
   onNewChat: () => void;
+  onHide?: () => void;
 }) {
   const { t } = useTranslation();
   const pinClass =
@@ -66,6 +68,17 @@ export default function ExpertNavActions({
       >
         <MessageSquarePlus size={14} strokeWidth={1.75} aria-hidden />
       </button>
+      {onHide && (
+        <button
+          type="button"
+          className={styles.agentHideBtn}
+          aria-label={t("chat.expertHide")}
+          title={t("chat.expertHide")}
+          onClick={onHide}
+        >
+          <EyeOff size={14} />
+        </button>
+      )}
       <ExpertPinButton
         pinned={pinned}
         className={pinClass}

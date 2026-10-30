@@ -1,3 +1,5 @@
+import { TeamPortrait } from "../../../components/expertPortrait";
+import ExpertWorkStatus from "../../Chat/components/ExpertWorkStatus";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +34,6 @@ import {
   isAgentChatReady,
   isAgentModelConfigError,
 } from "../../../utils/agentError";
-import { TEAM_ICON_NAME, teamPortraitUrl } from "../../../utils/teamAgent";
 import RemoteExpertHint from "../../Chat/components/RemoteExpertHint";
 import {
   expertDeleteConfirm,
@@ -227,10 +228,12 @@ export const TeamCard = memo(function TeamCard({
       <div className={`${styles.agentCard2} ${styles.teamCard}`}>
         <div className={styles.agentCard2Header}>
           <div className={`${styles.agentCard2Icon} ${styles.teamCardIcon}`}>
-            <ExpertIcon
-              iconUrl={teamPortraitUrl(agent.icon_url)}
-              iconName={TEAM_ICON_NAME}
-              size={40}
+            <TeamPortrait
+              members={members.map((member) => ({
+                agent_id: member.id,
+                icon_url: member.iconUrl,
+              }))}
+              size={48}
             />
           </div>
 
@@ -242,6 +245,7 @@ export const TeamCard = memo(function TeamCard({
                 {t("chat.teamBadge")}
               </span>
               <RemoteExpertHint agent={agent} />
+              <ExpertWorkStatus agent={{ ...agent, state: localState }} />
               <Tooltip title={formatAgentState(localState, t)}>
                 <span
                   className={

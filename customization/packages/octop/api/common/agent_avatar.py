@@ -23,7 +23,7 @@ class AgentAvatarFields(AgentRuntimeFields):
 def avatar_config_from_body(
     body: AgentAvatarFields, config: dict[str, Any], *, previous: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    updates = {}
+    updates: dict[str, Any] = {}
     if "avatar_shape" in body.model_fields_set:
         updates["shape"] = body.avatar_shape
     if "avatar_color" in body.model_fields_set:
@@ -34,7 +34,7 @@ def avatar_config_from_body(
 def avatar_option_from_body(body: AgentAvatarFields) -> dict[str, Any] | None:
     # Installers must distinguish omitted fields from explicit null so a
     # color-only override keeps the template's shape (and vice versa).
-    option = {}
+    option: dict[str, Any] = {}
     if "avatar_shape" in body.model_fields_set:
         option["shape"] = body.avatar_shape
     if "avatar_color" in body.model_fields_set:

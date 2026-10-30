@@ -180,7 +180,7 @@ def _row_dict(
             agent_id=row.agent_id,
             stored=_agent_icon_url(row, cfg),
             updated_at=getattr(row, "updated_at", None),
-        )),
+        ), identity=row.agent_id),
         "color": row.color or cfg.get("color"),
         "skill_package_ids": packages,
         "knowledge_base_ids": id_list_from_row(row, "knowledge_base_ids"),
@@ -206,6 +206,8 @@ def _row_dict(
             payload["member_ids"] = []
     if bootstrap_pending is not None:
         payload["bootstrap_pending"] = bootstrap_pending
+    if getattr(row, "kind", None) == "team":
+        payload.update(icon_url="/experts/avatars/team-host.svg", avatar_shape=None, avatar_color=None)
     return payload
 
 

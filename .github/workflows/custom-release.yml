@@ -47,6 +47,7 @@ jobs:
       - run: npm ci --prefix dashboard
       - name: Verify the customized project picker and preserved UI behavior
         run: |
+          node customization/frontend/test_team_experience.mjs
           node customization/frontend/test_expert_status_patch.mjs
           node customization/frontend/test_status_refresh_patch.mjs
           node customization/frontend/test_voice_input_patch.mjs
@@ -59,6 +60,16 @@ jobs:
           node customization/frontend/test_account_avatar.mjs
           node customization/frontend/test_account_avatar_settings.mjs
           node customization/frontend/test_bubble_palette.mjs
+      - name: Verify member speakers, manual disclosures and expert visibility
+        working-directory: dashboard
+        run: >-
+          npx vitest run
+          src/pages/Chat/components/AssistantProcessSummary.test.tsx
+          src/pages/Chat/components/MessageBubble.teamSpeaker.test.tsx
+          src/pages/Chat/components/TurnProcessBlocks.teamSpeaker.test.tsx
+          src/pages/Chat/hooks/chatStore.teamStream.test.ts
+          src/pages/Chat/utils/hiddenExpertsPrefs.test.ts
+          --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
       - name: Require a clean formatted source tree

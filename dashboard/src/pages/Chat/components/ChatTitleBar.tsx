@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Dropdown, Switch } from "antd";
+import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,7 +18,6 @@ import RemoteExpertHint from "./RemoteExpertHint";
 import styles from "../index.module.less";
 import { DESKTOP_DRAG_REGION_CLASS } from "../../../utils/desktopChrome";
 import { isImeComposing } from "../../../utils/ime";
-import { useCollapseThinking } from "../hooks/useCollapseThinking";
 
 interface ChatTitleBarProps {
   session: Session;
@@ -50,7 +49,6 @@ export default function ChatTitleBar({
   agent = null,
 }: ChatTitleBarProps) {
   const { t } = useTranslation();
-  const [collapseThinking, setCollapseThinking] = useCollapseThinking(isTeam);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,21 +76,6 @@ export default function ChatTitleBar({
 
   const menuItems: MenuProps["items"] = useMemo(
     () => [
-      {
-        key: "collapse-thinking",
-        label: t("chat.collapseThinking"),
-        title: t("chat.collapseThinkingHint"),
-        icon: (
-          <Switch
-            size="small"
-            checked={collapseThinking}
-            tabIndex={-1}
-            aria-label={t("chat.collapseThinking")}
-          />
-        ),
-        onClick: () => setCollapseThinking(!collapseThinking),
-      },
-      { type: "divider" },
       {
         key: "pin",
         label: session.pinned
@@ -122,8 +105,6 @@ export default function ChatTitleBar({
       },
     ],
     [
-      collapseThinking,
-      setCollapseThinking,
       session.id,
       session.pinned,
       onPin,

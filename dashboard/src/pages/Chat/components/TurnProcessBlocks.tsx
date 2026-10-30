@@ -62,7 +62,7 @@ export function TurnProcessBlocks({
     : speakerId || undefined;
   const rendererVersion = useToolRendererVersion();
   const { pinned, folded } = useMemo(
-    () => partitionPinnedTools(split),
+    () => ({ pinned: [] as ChatMessage[], folded: split }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [split, rendererVersion],
   );
@@ -127,5 +127,5 @@ export function turnHasVisibleProcess(split: AssistantTurnSplit): boolean {
 
 /** True when the foldable「已调用 N 次工具 / 深度思考」row will render. */
 export function turnHasProcessSummary(split: AssistantTurnSplit): boolean {
-  return hasFoldContent(partitionPinnedTools(split).folded);
+  return hasFoldContent(split);
 }

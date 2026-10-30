@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { ChevronRight, Scale } from "lucide-react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -7,7 +7,6 @@ import type { DecisionNotice } from "../hooks/useChat";
 import type { AssistantTurnSplit } from "../utils/messageContent";
 import { countProcessStats } from "../utils/messageContent";
 import { ToolDetailsInline } from "./MessageBubble";
-import { useCollapseThinking } from "../hooks/useCollapseThinking";
 import styles from "../index.module.less";
 
 function decisionTitle(notice: DecisionNotice, t: TFunction): string {
@@ -194,16 +193,12 @@ function AssistantProcessSummary({
   split,
   statsSplit,
   isStreaming = false,
-  isTeam = false,
   onAcpPermissionSelect,
   hideToolMedia = false,
   agentId = null,
 }: AssistantProcessSummaryProps) {
   const { t } = useTranslation();
-  const [collapseThinking] = useCollapseThinking(isTeam);
-  const [expanded, setExpanded] = useState(isStreaming && !collapseThinking);
-  const prevStreaming = useRef(isStreaming);
-  const prevCollapseThinking = useRef(collapseThinking);
+  const [expanded, setExpanded] = useState(false);
   const { toolCount, thinkingCount } = useMemo(
     () => countProcessStats(statsSplit ?? split),
     [statsSplit, split],
@@ -216,29 +211,6 @@ function AssistantProcessSummary({
     toolCount === 0 && thinkingCount === 0
       ? split.processSteps.find((step) => step.kind === "decision")
       : undefined;
-
-  // Manual toggles hold until streaming or the display preference changes.
-  // History stays collapsed, and generation respects the saved preference.
-  // Only collapse when streaming ends — never flicker closed between tool rounds.
-  useEffect(() => {
-    if (
-      prevStreaming.current === isStreaming &&
-      prevCollapseThinking.current === collapseThinking
-    )
-      return;
-    const wasStreaming = prevStreaming.current;
-    prevStreaming.current = isStreaming;
-    prevCollapseThinking.current = collapseThinking;
-    if (isStreaming) {
-      setExpanded(!collapseThinking);
-      return;
-    }
-    if (wasStreaming) {
-      setExpanded(false);
-    } else if (collapseThinking) {
-      setExpanded(false);
-    }
-  }, [isStreaming, collapseThinking]);
 
   if (toolCount === 0 && thinkingCount === 0) {
     return decisionOnly?.kind === "decision" ? (

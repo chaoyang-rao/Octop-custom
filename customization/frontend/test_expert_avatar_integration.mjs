@@ -31,11 +31,9 @@ assert.equal(picker.props.shape, 'star');
 assert.equal(picker.props.color, 'amber');
 assert.equal(picker.props.onShapeChange, shapeChange);
 assert.equal(picker.props.onColorChange, colorChange);
-const details = tree.props.children[2];
-assert.equal(details.type, 'details', 'Original image upload stays available in a native disclosure');
-assert.equal(details.props.children[1].props.children[1].props.onClick, useImage);
-const oldImageSettings = Settings({ shape: null, color: 'ink', imagePicker: null });
-assert.equal(oldImageSettings.props.children[0].props.shape, null, 'Original-image mode must not mark a geometry shape as selected');
+assert.equal(tree.props.children.length, 2, 'Expert settings contain only shape/color selection and randomize');
+assert.equal(tree.props.children[1].type, 'button');
+assert.ok(!JSON.stringify(tree).includes('original-upload-picker'), 'Old expert upload UI is not rendered');
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const manifestPath = path.join(root, 'avatar-asset-release.json');
@@ -54,28 +52,14 @@ if (fs.existsSync(manifestPath)) {
   const messages = fs.readFileSync(path.join(assets, `index.Bexwf9h5.${release.release}.js`), 'utf8');
   assert.ok(messages.includes('className:chatStyles.userText,...userBubblePresentation(activeAgent,isTeamRoom,expertAvatarUi.bubbleStyle)'));
   const main = fs.readFileSync(path.join(assets, release.main), 'utf8');
-  for (const [wrapper, legacy] of [['ExpertIcon', 'LegacyExpertIcon'], ['ExpertAgentAvatar', 'LegacyExpertAgentAvatar']]) {
-    const body = main.slice(main.indexOf(`function ${wrapper}(props){`), main.indexOf(`function ${legacy}(`));
-    assert.ok(body.includes(`jsxRuntimeExports.jsx(${legacy},props)`), `${wrapper} must mount the legacy component through React`);
-    assert.ok(!body.includes('useAuthImageSrc') && !body.includes('reactExports.use'), `${wrapper} must not conditionally execute hooks`);
-    assert.ok(!new RegExp(`return\\s+${legacy}\\(`).test(body), `${wrapper} must not directly call the legacy function`);
-    const legacyComponent = () => null;
-    const getWrapper = new Function('expertAvatarUi', 'jsxRuntimeExports', legacy,
-      `${body};return ${wrapper};`);
-    const component = getWrapper({ parseAvatarUrl: url => url === 'generated' ? { shape: 'blob', color: 'ink' } : null,
-      renderAvatar: props => props }, { jsx: (type, props) => ({ type, props }) }, legacyComponent);
-    if (Number(release.release.split('-v')[1]) >= 2) {
-      const originalSize = wrapper === 'ExpertIcon' ? 22 : 32;
-      const enlarged = component({ iconUrl: 'generated', size: originalSize });
-      assert.equal(enlarged.size, Math.ceil(originalSize * 1.2));
-      assert.equal(enlarged.style.maxWidth, '100%');
-      assert.equal(enlarged.style.maxHeight, '100%');
-    }
-    const oldImage = component({ iconUrl: '/old-avatar.png', size: 22 });
-    assert.equal(oldImage.type, legacyComponent);
-    assert.equal(oldImage.props.size, 22, 'Uploaded avatars must retain their original size and React boundary');
+  for (const wrapper of ['ExpertIcon','ExpertAgentAvatar']) {
+    const start=main.indexOf(`function ${wrapper}(props){`);
+    const end=main.indexOf(`function Legacy${wrapper}(`,start);
+    const body=main.slice(start,end);
+    assert.ok(body.includes('jsxRuntimeExports.jsx(expertPresentation.ExpertPortrait,props)'), 'Every expert image mounts the geometry-only portrait through React');
+    assert.ok(!body.includes('useAuthImageSrc') && !body.includes('reactExports.use'), 'Wrapper never conditionally invokes hooks');
   }
   assert.ok(main.includes('createProjectFolders'), 'Existing project folders customization must remain');
   assert.ok(main.includes('sso') || main.includes('SSO'), 'The saved desktop SSO customization must remain');
 }
-console.log('PASS avatar picker binding, uploaded-image recovery, solo-only user bubble style, team/original-image preservation, selection contrast' + (fs.existsSync(manifestPath) ? ', versioned graph and previous customizations' : ' (graph checks run after build)'));
+console.log('PASS avatar picker binding, private uploaded-image retention, solo-only user bubble style, team and account scope, selection contrast' + (fs.existsSync(manifestPath) ? ', versioned graph and previous customizations' : ' (graph checks run after build)'));

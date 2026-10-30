@@ -967,6 +967,14 @@ function MessageBubble({
               </div>
             ) : (
               <div className={`${styles.assistantText} ${groupCls}`}>
+                {isTeamRoom && (
+                  <span className="octop-member-name">
+                    {avatarTooltip ||
+                      expert?.name ||
+                      speakerId ||
+                      activeAgent?.name}
+                  </span>
+                )}
                 {imageAttachments.length > 0 && (
                   <ImageGallery images={imageAttachments} agentId={agentId} />
                 )}

@@ -1,0 +1,22 @@
+.octop-team-portrait{display:inline-block;position:relative;flex:none;background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;vertical-align:middle}
+.octop-team-face{position:absolute;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 1px 1px #0002)}
+.octop-team-face[data-face="0"]{left:-3%;top:2%;transform:rotate(-10deg);z-index:1}
+.octop-team-face[data-face="1"]{right:-5%;top:0;transform:rotate(9deg);z-index:2}
+.octop-team-face[data-face="2"]{left:17%;bottom:-7%;transform:rotate(-2deg);z-index:3}
+.octop-team-face[data-face="3"]{right:-10%;bottom:-11%;transform:rotate(12deg);z-index:4}
+.octop-member-name{display:block;font-size:12px;font-weight:600;line-height:1.5;margin:0 0 5px;opacity:.85}
+[class*="agentNameCluster"]{display:flex!important;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0;overflow:visible!important;line-height:1.6}
+[class*="agentNameCluster"]>[class*="Name"]{flex:1 1 70px;min-width:0}
+[class*="teamChatBadge"],[class*="teamCardBadge"],.octop-work-status{position:static!important;flex:none;white-space:nowrap;margin:0!important;line-height:1.4}
+[class*="agentCard2NameRow"]{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:0}
+[class*="teamCardIcon"],[class*="teamMemberAvatar"]{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+[class*="agentHideBtn"],[class*="minimalAgentHideBtn"]{opacity:1!important;visibility:visible!important;position:static!important;flex:none}
+.octop-hidden-restore{margin:6px 8px;font-size:12px;color:var(--fn-text-secondary)}
+.octop-hidden-restore summary{cursor:pointer;padding:5px 0}
+.octop-hidden-restore button,.octop-avatar-random{display:inline-flex;align-items:center;padding:5px 9px;margin:4px;border:1px solid var(--fn-border-color,#8885);border-radius:7px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+
+[class*="teamMember"][class*="Avatar"]{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important}
+[class*="agentCardAvatar"],[class*="agentRowAvatar"],[class*="minimalAgentAvatar"],[class*="agentCard2Icon"]{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+[class*="agentCardAvatar"],[class*="agentRowAvatar"],[class*="minimalAgentIconSlot"]{width:48px!important;height:48px!important;flex-shrink:0}
+[class*="minimalAgentHeader"]{min-height:56px}
+[class*="teamCardIcon"]{width:48px;height:48px;min-width:48px;min-height:48px}

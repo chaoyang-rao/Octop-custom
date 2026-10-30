@@ -19,7 +19,8 @@ from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 
 from octop.api.common.agent import require_agent_owner_row, user_owns_agent
-from octop.api.common.agent_runtime import AgentRuntimeFields, runtime_field_updates
+from octop.api.common.agent_avatar import AgentAvatarFields, avatar_option_from_body
+from octop.api.common.agent_runtime import runtime_field_updates
 from octop.api.common.validators import assert_user_backend_root_dirs
 from octop.api.deps import current_user, get_server
 from octop.infra.agents.experts.avatar import (
@@ -72,6 +73,8 @@ from octop.infra.agents.experts.skillhub_market import (
     browse_skillsets,
     fetch_skillset,
 )
+from octop.infra.agents.settings.geometric_avatar import avatar_response
+from octop.infra.agents.settings.profile import parse_config_json
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.history.trajectory.settings import apply_enable_trajectory
 from octop.infra.utils.locale import resolve_user_locale
@@ -127,7 +130,7 @@ class ComposerCopySkillBody(BaseModel):
     slug: str
 
 
-class FromExpertBody(AgentRuntimeFields):
+class FromExpertBody(AgentAvatarFields):
     name: str | None = None
     description: str | None = None
     providers: list[str] | None = None
@@ -170,7 +173,7 @@ class RefreshPublishedExpertBody(BaseModel):
     quick_prompts: list[QuickPromptResponse] | None = None
 
 
-class InstallPublishedExpertBody(AgentRuntimeFields):
+class InstallPublishedExpertBody(AgentAvatarFields):
     """Same create knobs as bundled / market experts, plus required name."""
 
     name: str = Field(min_length=1)
@@ -319,6 +322,9 @@ class MarketCreateSourceResponse(BaseModel):
 
 
 class MarketCreateResponse(BaseModel):
+    avatar_shape: str | None = None
+    avatar_color: str | None = None
+    uploaded_icon_url: str | None = None
     id: int | str
     agent_id: str
     user_id: int
@@ -374,7 +380,7 @@ def _summary_dict(s: Any) -> dict[str, Any]:
             "en": s.welcome_message_en,
         },
         "icon_name": s.icon_name,
-        "icon_url": getattr(s, "icon_url", None),
+        **avatar_response({"avatar": getattr(s, "avatar", None)}, getattr(s, "icon_url", None)),
         "color": s.color,
         "quick_prompts": [_quick_prompt_dict(p) for p in getattr(s, "quick_prompts", ())],
         "task_examples": getattr(s, "task_examples", None),
@@ -454,6 +460,12 @@ def _published_manifest_icon_url(snapshot_dir: Any) -> str | None:
 
 def _published_summary_dict(row: Any, server: Any) -> dict[str, Any]:
     snapshot_dir = _published_snapshot_dir(server, row.id)
+    try:
+        manifest = json.loads((snapshot_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        manifest = {}
+    if not isinstance(manifest, dict):
+        manifest = {}
     return {
         "id": row.id,
         "slug": row.slug,
@@ -463,11 +475,14 @@ def _published_summary_dict(row: Any, server: Any) -> dict[str, Any]:
         "creator_username": _published_creator_username(server, row.created_by),
         "source_agent_id": row.source_agent_id,
         "icon_name": row.icon_name or None,
-        "icon_url": display_published_expert_icon_url(
-            expert_id=row.id,
-            snapshot_dir=snapshot_dir,
-            updated_at=row.updated_at,
-            fallback_icon_url=_published_manifest_icon_url(snapshot_dir),
+        **avatar_response(
+            manifest,
+            display_published_expert_icon_url(
+                expert_id=row.id,
+                snapshot_dir=snapshot_dir,
+                updated_at=row.updated_at,
+                fallback_icon_url=_published_manifest_icon_url(snapshot_dir),
+            ),
         ),
         "color": row.color or None,
         "created_at": row.created_at,
@@ -675,6 +690,7 @@ async def install_published_expert(
             knowledge_base_ids=kb_ids,
             mcp_servers=servers,
             color=body.color,
+            avatar=avatar_option_from_body(body),
             agent_id=body.agent_id,
             welcome_message=body.welcome_message,
             runtime_config=runtime_field_updates(body, exclude_unset=True),
@@ -784,6 +800,7 @@ async def install_expert_hub_item(
                 default_model=body.default_model,
                 backend=body.backend,
                 color=body.color,
+                avatar=avatar_option_from_body(body),
                 agent_id=body.agent_id,
                 welcome_message=body.welcome_message,
                 skill_package_ids=package_ids,
@@ -812,7 +829,7 @@ async def install_expert_hub_item(
         "state": row.last_state or "unknown",
         "expert_id": result.expert_id,
         "icon_name": result.icon_name,
-        "icon_url": getattr(row, "icon_url", None),
+        **avatar_response(parse_config_json(row.config_json), getattr(row, "icon_url", None)),
         "color": result.color,
         "market": {
             "source": "skillhub",
@@ -883,6 +900,9 @@ async def create_agent_from_expert(
         user_repo=server.services.user_repo,
         user_id=user.id,
     )
+    avatar_option = avatar_option_from_body(body)
+    if avatar_option is not None:
+        config_extra["avatar"] = avatar_option
     spec = build_create_spec_from_expert(
         expert_id=expert_id,
         expert=expert,
@@ -921,7 +941,7 @@ async def create_agent_from_expert(
         "state": row.last_state or "unknown",
         "expert_id": expert_id,
         "icon_name": row.icon_name or expert.summary.icon_name,
-        "icon_url": row.icon_url,
+        **avatar_response(parse_config_json(row.config_json), row.icon_url),
         "color": row.color or expert.summary.color,
         "bootstrap_pending": not server.app_runtime.agent_registry.is_bootstrapped(row.agent_id),
         **report.as_api_fields(),
