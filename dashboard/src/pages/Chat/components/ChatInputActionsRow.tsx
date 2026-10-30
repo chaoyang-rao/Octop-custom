@@ -1,3 +1,4 @@
+import "./ComposerToolGlyphs.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -1134,6 +1135,7 @@ export default function ChatInputActionsRow({
   return (
     <div
       ref={actionsRowRef}
+      data-octop-composer-tools=""
       className={`${styles.actionsRow}${
         isMobile ? ` ${styles.actionsRowCompact}` : ""
       }`}

@@ -167,8 +167,51 @@ class TeamService:
         except TypeError:
             writer(TEAM_MANIFEST_WORKSPACE, content)
 
+    def primary_expert_for_user(self, user_id: int | None) -> AgentRow | None:
+        if user_id is None:
+            return None
+        binding = self._repos.settings_repo.get(f"teams.primary_expert.{user_id}")
+        if binding:
+            selected = self._repos.agent_repo.get(binding)
+            if selected is not None and selected.user_id == user_id and not is_team_agent(selected):
+                return selected
+        owned = [
+            row for row in self._repos.agent_repo.list_by_user(user_id) if not is_team_agent(row)
+        ]
+        named = [row for row in owned if row.name == "小通"]
+        if len(named) == 1:
+            return named[0]
+        if binding:
+            return None
+        defaults = [row for row in owned if row.template_name == "general-assistant"]
+        return defaults[0] if len(defaults) == 1 else None
+
+    def primary_for_team(self, team_agent_id: str) -> AgentRow | None:
+        row = self._repos.agent_repo.get(team_agent_id)
+        if row is None or not is_team_agent(row):
+            return None
+        return self.primary_expert_for_user(row.user_id)
+
+    def require_primary(self, user_id: int | None) -> AgentRow:
+        row = self.primary_expert_for_user(user_id)
+        if row is None:
+            from octop.i18n import tr
+            from octop.infra.utils.locale import DEFAULT_LOCALE
+
+            raise OctopError(ErrorCode.AGENT_NOT_FOUND, tr("teams.primary_missing", DEFAULT_LOCALE))
+        key = f"teams.primary_expert.{user_id}"
+        if self._repos.settings_repo.get(key) != row.agent_id:
+            self._repos.settings_repo.set(key, row.agent_id)
+        return row
+
     def member_ids(self, team_agent_id: str) -> list[str]:
-        return _member_ids_from_manifest(self._read_manifest(team_agent_id))
+        ids = _member_ids_from_manifest(self._read_manifest(team_agent_id))
+        primary = self.primary_for_team(team_agent_id)
+        return (
+            [primary.agent_id, *[item for item in ids if item != primary.agent_id]]
+            if primary
+            else ids
+        )
 
     def visible_member_ids(self, team_agent_id: str) -> list[str]:
         """Persisted roster minus deleted / team-host ids. Does not rewrite disk."""
@@ -180,7 +223,9 @@ class TeamService:
             out.append(member_id)
         return out
 
-    def validate_member_ids(self, user: Any, member_ids: list[str]) -> list[str]:
+    def validate_member_ids(
+        self, user: Any, member_ids: list[str], *, primary_user_id: int | None = None
+    ) -> list[str]:
         """Treat *member_ids* as the complete next roster, not incremental adds.
 
         Missing, unusable, or team-host ids raise ``TEAM_MEMBER_INVALID``.
@@ -189,6 +234,11 @@ class TeamService:
         seen: set[str] = set()
         out: list[str] = []
         invalid: list[str] = []
+        primary = self.primary_expert_for_user(
+            primary_user_id if primary_user_id is not None else getattr(user, "id", None)
+        )
+        if primary is not None:
+            member_ids = [primary.agent_id, *member_ids]
         for raw in member_ids:
             member_id = str(raw or "").strip()
             if not member_id or member_id in seen:
@@ -268,6 +318,24 @@ class TeamService:
             changed.append(row.agent_id)
         return changed
 
+    @staticmethod
+    def _member_payload(member: AgentRow) -> dict[str, Any]:
+        from octop.infra.agents.settings.geometric_avatar import avatar_response
+        from octop.infra.agents.settings.profile import parse_config_json
+
+        return {
+            "agent_id": member.agent_id,
+            "name": member.name,
+            "color": member.color,
+            "icon_name": member.icon_name,
+            **avatar_response(
+                parse_config_json(member.config_json), member.icon_url, identity=member.agent_id
+            ),
+            "state": member.last_state or "unknown",
+            "is_shared": bool(member.is_shared),
+            "user_id": member.user_id,
+        }
+
     def team_payload(self, row: AgentRow) -> dict[str, Any]:
         ids = self.visible_member_ids(row.agent_id)
         member_rows = [self._repos.agent_repo.get(member_id) for member_id in ids]
@@ -283,20 +351,13 @@ class TeamService:
             "welcome_message": row.welcome_message,
             "state": row.last_state or "unknown",
             "kind": TEAM_KIND,
+            "primary_agent_id": (
+                primary.agent_id if (primary := self.primary_expert_for_user(row.user_id)) else None
+            ),
+            "primary_agent_name": primary.name if primary else None,
             "member_ids": ids,
             "members": [
-                {
-                    "agent_id": member.agent_id,
-                    "name": member.name,
-                    "color": member.color,
-                    "icon_name": member.icon_name,
-                    "icon_url": member.icon_url,
-                    "state": member.last_state or "unknown",
-                    "is_shared": bool(int(member.is_shared or 0)),
-                    "user_id": member.user_id,
-                }
-                for member in member_rows
-                if member is not None
+                self._member_payload(member) for member in member_rows if member is not None
             ],
         }
 

@@ -1,3 +1,7 @@
+import {
+  PrimaryExpertNotice,
+  primaryExpertForTeam,
+} from "../../../components/expertPortrait";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Collapse, Drawer, Form, Input, Select, Spin } from "antd";
@@ -61,6 +65,11 @@ export default function TeamDrawer({
   const pickerExperts = useMemo(
     () => mergeTeamPickerExperts(experts, rosterExtras),
     [experts, rosterExtras],
+  );
+
+  const primaryExpert = primaryExpertForTeam(pickerExperts, team);
+  const memberPickerExperts = pickerExperts.filter(
+    (expert) => expert.agent_id !== primaryExpert?.agent_id,
   );
 
   useEffect(() => {
@@ -139,7 +148,7 @@ export default function TeamDrawer({
   }, [open]);
 
   const hasNoModels = !modelsLoading && models.length === 0;
-  const blocked = submitting || hasNoModels;
+  const blocked = submitting || hasNoModels || !primaryExpert;
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
@@ -150,7 +159,7 @@ export default function TeamDrawer({
       icon_name: TEAM_ICON_NAME,
       icon_url: TEAM_AVATAR_URL,
       welcome_message: values.welcome_message?.trim() || null,
-      member_ids: selectedRosterIds(values.member_ids, pickerExperts),
+      member_ids: selectedRosterIds(values.member_ids, memberPickerExperts),
     };
     setSubmitting(true);
     try {
@@ -257,6 +266,12 @@ export default function TeamDrawer({
             optionFilterProp="label"
           />
         </Form.Item>
+        <PrimaryExpertNotice
+          expert={primaryExpert}
+          label={t("experts.teams.primaryExpert", {
+            name: primaryExpert?.name || "小通",
+          })}
+        />
         <Form.Item
           name="member_ids"
           label={t("experts.teams.members")}
@@ -264,14 +279,23 @@ export default function TeamDrawer({
           rules={[
             {
               validator: async (_, value: string[]) => {
-                if (selectedRosterIds(value, pickerExperts).length < 2) {
-                  throw new Error(t("experts.teams.membersMin"));
+                if (
+                  selectedRosterIds(value, memberPickerExperts).length <
+                  (primaryExpert ? 1 : 2)
+                ) {
+                  throw new Error(
+                    t(
+                      primaryExpert
+                        ? "experts.teams.otherMemberMin"
+                        : "experts.teams.membersMin",
+                    ),
+                  );
                 }
               },
             },
           ]}
         >
-          <TeamMemberPicker experts={pickerExperts} />
+          <TeamMemberPicker experts={memberPickerExperts} />
         </Form.Item>
       </Form>
 

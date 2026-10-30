@@ -1,13 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import MessageBubble from "./MessageBubble";
 import type { ChatMessage } from "../hooks/useChat";
 import { ChatAgentProfileProvider } from "../ChatAgentProfileContext";
 
+const primaryState = vi.hoisted(() => ({ enabled: false }));
+afterEach(() => {
+  primaryState.enabled = false;
+});
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, opts?: { name?: string }) =>
-      key === "chat.teamHostHover" ? `[${opts?.name ?? ""}] 主持人` : key,
+      key === "chat.teamHostHover" || key === "chat.teamPrimaryHostHover"
+        ? `[${opts?.name ?? ""}] 主持人`
+        : key,
   }),
 }));
 
@@ -31,6 +38,8 @@ vi.mock("../../../context/AgentContext", () => ({
   useAgent: () => ({
     activeAgent: {
       agent_id: "host",
+      primary_agent_id: primaryState.enabled ? "doctor" : undefined,
+      primary_agent_name: primaryState.enabled ? "小通" : undefined,
       name: "主持团队",
       kind: "team",
       icon_name: "bot",
@@ -106,6 +115,27 @@ describe("MessageBubble team speaker chrome", () => {
       </ChatAgentProfileProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "小通 · 通用助手" }));
+    expect(onOpen).toHaveBeenCalledWith("doctor");
+  });
+  it("uses the real primary avatar and profile for a legacy team host reply", () => {
+    primaryState.enabled = true;
+    const onOpen = vi.fn();
+    render(
+      <ChatAgentProfileProvider canOpen onOpen={onOpen} isTeam>
+        <MessageBubble
+          message={assistant({ speakerAgentId: "host" })}
+          agentId="host"
+          showAvatar
+          groupPosition="only"
+        />
+      </ChatAgentProfileProvider>,
+    );
+    expect(
+      screen.queryByRole("button", { name: "[主持团队] 主持人" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "[小通 · 通用助手] 主持人" }),
+    );
     expect(onOpen).toHaveBeenCalledWith("doctor");
   });
 });

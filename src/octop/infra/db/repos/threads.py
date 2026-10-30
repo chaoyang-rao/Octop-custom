@@ -345,3 +345,25 @@ class ThreadRepo:
     def delete(self, thread_id: str) -> None:
         with self._db.transaction() as conn:
             conn.execute("DELETE FROM threads WHERE thread_id = ?", (thread_id,))
+
+    def list_owned_conversations(
+        self,
+        user_id: int,
+        *,
+        agent_id: str = "",
+        limit: int = 20,
+        offset: int = 0,
+        is_admin: bool = False,
+    ) -> list[ThreadRow]:
+        sql = "SELECT t.* FROM threads t JOIN agents a ON a.agent_id=t.agent_id WHERE t.user_id = ?"
+        params: list[object] = [user_id]
+        if not is_admin:
+            sql += " AND (a.user_id=? OR a.is_shared=1)"
+            params.append(user_id)
+        if agent_id:
+            sql += " AND t.agent_id = ?"
+            params.append(agent_id)
+        sql += " ORDER BY t.last_active DESC, t.created_at DESC, t.thread_id DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        with self._db.connect() as conn:
+            return map_rows(conn.execute(sql, tuple(params)).fetchall(), ThreadRow)

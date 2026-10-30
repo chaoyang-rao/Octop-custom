@@ -171,6 +171,14 @@ async def get_tool_settings(
     if row is None:
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
+    resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
+    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    if target_id != agent_id:
+        agent_id = target_id
+        row = server.app_runtime.agent_registry.get_row(agent_id)
+        if row is None:
+            raise OctopError(ErrorCode.AGENT_NOT_FOUND, "primary expert not found")
+        _assert_agent_owner(row, user)
 
     locale = resolve_request_locale(request)
     agent_cfg = server.app_runtime.agent_registry.get_config(agent_id)
@@ -226,6 +234,14 @@ async def put_tool_settings(
     if row is None:
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
+    resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
+    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    if target_id != agent_id:
+        agent_id = target_id
+        row = server.app_runtime.agent_registry.get_row(agent_id)
+        if row is None:
+            raise OctopError(ErrorCode.AGENT_NOT_FOUND, "primary expert not found")
+        _assert_agent_owner(row, user)
 
     if is_team_agent(row):
         raise HTTPException(
@@ -262,6 +278,14 @@ async def patch_tool_setting(
     if row is None:
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
     _assert_agent_owner(row, user)
+    resolver = getattr(server.app_runtime.agent_registry, "principal_agent_id", None)
+    target_id = resolver(agent_id) if callable(resolver) else agent_id
+    if target_id != agent_id:
+        agent_id = target_id
+        row = server.app_runtime.agent_registry.get_row(agent_id)
+        if row is None:
+            raise OctopError(ErrorCode.AGENT_NOT_FOUND, "primary expert not found")
+        _assert_agent_owner(row, user)
 
     name = tool_name.strip()
     if not name:

@@ -891,7 +891,9 @@
       "emptyGuideStepHowDetail": "Create at least two experts under My Experts, then pick members (owned or shared) and a host model.",
       "emptyGuideStepChat": "How to chat",
       "emptyGuideStepChatDetail": "Open the team from the sidebar. The host schedules; members speak in the same room.",
-      "total": "{{count}} team(s)"
+      "total": "{{count}} team(s)",
+      "primaryExpert": "Primary expert: {{name}} (all teams)",
+      "otherMemberMin": "Choose at least one other member to work with the primary expert"
     },
     "goToLibrary": "Go to Built-in Experts",
     "emptyLibrary": "No built-in experts available",
@@ -1821,7 +1823,8 @@
     "historyRetry": "Retry",
     "creatingSession": "Creating session…",
     "resizePopup": "Resize window",
-    "unreadMessages": "Unread messages"
+    "unreadMessages": "Unread messages",
+    "teamPrimaryHostHover": "{{name}} · Primary expert"
   },
   "tools": {
     "unknown": "Unknown tool",
@@ -1873,7 +1876,8 @@
     "generate_image": "Generate image",
     "generate_video": "Generate video",
     "bilibili_search_anime": "Search Bilibili anime",
-    "search_arxiv": "Search arXiv papers"
+    "search_arxiv": "Search arXiv papers",
+    "conversation_history": "Conversation history"
   },
   "toolSettings": {
     "title": "Tool settings",

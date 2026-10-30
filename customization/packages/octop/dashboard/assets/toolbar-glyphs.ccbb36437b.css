@@ -1,0 +1,8 @@
+/* Enlarge the glyphs without changing the existing 24px button targets. */
+[data-octop-composer-tools] button > svg:is([width="12"], [width="14"], [width="15"], [width="16"], [width="18"]) {
+  width: 16px !important;
+  height: 16px !important;
+}
+[data-octop-composer-tools] [class*="contextRingLabel"] {
+  font-size: 10px;
+}

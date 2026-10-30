@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -315,3 +316,39 @@ class ThreadMessageRepo:
                     )
         self.mark_projection(thread_id, "ready")
         return len(messages)
+
+    def search_owned_conversations(
+        self,
+        user_id: int,
+        query: str,
+        *,
+        agent_id: str = "",
+        limit: int = 50,
+        offset: int = 0,
+        is_admin: bool = False,
+    ) -> list[tuple[str, ThreadMessageRow]]:
+        def literal_pattern(text: str) -> str:
+            return "%" + text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+
+        patterns = [
+            literal_pattern(query),
+            literal_pattern(json.dumps(query, ensure_ascii=True)[1:-1]),
+        ]
+        sql = (
+            "SELECT m.thread_id, m.seq, m.message_id, m.role, m.message_json, m.created_at "
+            "FROM thread_messages m JOIN threads t ON t.thread_id=m.thread_id JOIN agents a ON a.agent_id=t.agent_id "
+            "WHERE t.user_id=? AND (LOWER(m.message_json) LIKE LOWER(?) ESCAPE '\\' "
+            "OR LOWER(m.message_json) LIKE LOWER(?) ESCAPE '\\')"
+        )
+        params: list[object] = [user_id, *patterns]
+        if not is_admin:
+            sql += " AND (a.user_id=? OR a.is_shared=1)"
+            params.append(user_id)
+        if agent_id:
+            sql += " AND t.agent_id=?"
+            params.append(agent_id)
+        sql += " ORDER BY m.created_at DESC, m.thread_id, m.seq DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        with self._db.connect() as conn:
+            rows = conn.execute(sql, tuple(params)).fetchall()
+        return [(str(row["thread_id"]), ThreadMessageRow.from_row(row)) for row in rows]

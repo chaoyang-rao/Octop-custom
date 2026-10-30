@@ -10,6 +10,8 @@ import styles from "../index.module.less";
 export interface TeamMemberOption {
   agent_id: string;
   name: string;
+  template_name?: string | null;
+  is_team_primary?: boolean;
   description?: string | null;
   color?: string | null;
   icon_name?: string | null;

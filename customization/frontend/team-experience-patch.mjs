@@ -69,3 +69,7 @@ export function patchExperienceLocale(source) {
   if(source.includes('隐藏共享专家'))return source.replace('隐藏共享专家','隐藏专家').replace('暂无已隐藏的共享专家','暂无已隐藏的专家');
   return once(source,'Hide shared expert','Hide expert').replace('No hidden shared experts','No hidden experts');
 }
+
+export function patchToolbarGlyphs(source) {
+  return once(source,'className:`${chatStyles.actionsRow}${','"data-octop-composer-tools":"",className:`${chatStyles.actionsRow}${');
+}

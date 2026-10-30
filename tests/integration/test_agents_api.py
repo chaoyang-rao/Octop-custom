@@ -45,7 +45,8 @@ async def test_list_survives_text_datetime_updated_at(env):
     listed = await c.get("/api/agents", headers=auth)
     assert listed.status_code == 200, listed.text
     row = next(a for a in listed.json() if a["agent_id"] == agent_id)
-    assert row["icon_url"].startswith(f"{local}?v=")
+    assert row["icon_url"].startswith("/expert-avatars/v2/")
+    assert row["uploaded_icon_url"].startswith(f"{local}?v=")
 
 
 async def test_agent_runtime_fields_are_first_class_api_fields(env):

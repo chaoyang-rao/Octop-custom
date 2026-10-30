@@ -51,15 +51,23 @@ export function TurnProcessBlocks({
     speakerId,
     activeAgent?.agent_id,
   );
+  const primaryId =
+    rewritePeerSpeakerId(
+      activeAgent?.agent_id,
+      activeAgent?.primary_agent_id,
+    ) || activeAgent?.primary_agent_id;
+  const authorId = hostSpeaker && primaryId ? primaryId : speakerId;
   const expert =
-    (speakerId && agents.find((item) => item.agent_id === speakerId)) ||
-    (!isTeamRoom || hostSpeaker ? activeAgent : undefined);
+    (authorId && agents.find((item) => item.agent_id === authorId)) ||
+    (!isTeamRoom ? activeAgent : undefined);
   const avatarTooltip = hostSpeaker
-    ? t("chat.teamHostHover", { name: activeAgent?.name || expert?.name || "" })
+    ? primaryId
+      ? t("chat.teamPrimaryHostHover", {
+          name: expert?.name || activeAgent?.primary_agent_name || "小通",
+        })
+      : t("chat.teamHostHover", { name: activeAgent?.name || "" })
     : expert?.name || undefined;
-  const avatarProfileId = hostSpeaker
-    ? activeAgent?.agent_id
-    : speakerId || undefined;
+  const avatarProfileId = authorId || undefined;
   const rendererVersion = useToolRendererVersion();
   const { pinned, folded } = useMemo(
     () => ({ pinned: [] as ChatMessage[], folded: split }),

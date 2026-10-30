@@ -158,6 +158,11 @@ class RecordingTracker(TurnHistoryTracker):
                 )
             self._assistant["data"].setdefault("additional_kwargs", {})["history_source"] = source
             self._append_part(self._assistant)
+        speaker = chunk.get("speaker_agent_id")
+        if isinstance(speaker, str) and speaker.strip():
+            self._assistant["data"].setdefault("additional_kwargs", {})["speaker_agent_id"] = (
+                speaker.strip()
+            )
         self._mark_changed(self._assistant)
         return self._assistant["data"]  # type: ignore[no-any-return]
 
@@ -338,7 +343,12 @@ class RecordingTracker(TurnHistoryTracker):
             data_extra = data.setdefault("additional_kwargs", {})
             if CHECKPOINT_TS_KEY not in data_extra and prev_extra.get(CHECKPOINT_TS_KEY):
                 data_extra[CHECKPOINT_TS_KEY] = prev_extra[CHECKPOINT_TS_KEY]
-            for key in ("reasoning_content", "history_source", "history_stream_id"):
+            for key in (
+                "reasoning_content",
+                "history_source",
+                "history_stream_id",
+                "speaker_agent_id",
+            ):
                 value = prev_extra.get(key)
                 if value and not data_extra.get(key):
                     # Final state may already carry the same visible thinking

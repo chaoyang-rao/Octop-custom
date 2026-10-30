@@ -76,6 +76,7 @@ BUILTIN_TOOL_CATALOG: tuple[BuiltinToolEntry, ...] = (
     BuiltinToolEntry("searchfree_search", "web"),
     BuiltinToolEntry("generate_image", "media"),
     BuiltinToolEntry("generate_video", "media"),
+    BuiltinToolEntry("conversation_history", "memory"),
     BuiltinToolEntry("memory_search", "memory"),
     BuiltinToolEntry("memory_get", "memory"),
     BuiltinToolEntry("memory_save", "memory"),

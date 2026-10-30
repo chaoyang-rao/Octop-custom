@@ -130,3 +130,43 @@ export function createExpertPresentation({ React, avatars, useAgent }) {
   }
   return { TeamPortrait, ExpertPortrait, HiddenRestore };
 }
+
+/** The designated primary is the account's own General Assistant, not a team persona. */
+export function primaryExpertForTeam(experts, team) {
+  const explicit = team?.primary_agent_id;
+  return (
+    (explicit && experts.find((item) => item.agent_id === explicit)) ||
+    experts.find(
+      (item) => item.is_owner !== false && item.is_team_primary === true,
+    ) ||
+    experts.find((item) => item.is_owner !== false && item.name === "小通") ||
+    experts.find(
+      (item) =>
+        item.is_owner !== false && item.template_name === "general-assistant",
+    )
+  );
+}
+export function createPrimaryNotice({ React, Avatar }) {
+  return function PrimaryExpertNotice({ expert, label }) {
+    if (!expert) return null;
+    return React.createElement(
+      "div",
+      {
+        className: "octop-primary-expert-note",
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 12,
+        },
+      },
+      React.createElement(Avatar, {
+        agent: expert,
+        iconUrl: expert.icon_url,
+        iconName: expert.icon_name,
+        size: 24,
+      }),
+      React.createElement("span", null, label),
+    );
+  };
+}

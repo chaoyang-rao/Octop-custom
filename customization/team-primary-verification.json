@@ -1,0 +1,39 @@
+{
+  "release": "avatars-v17",
+  "all_current_and_future_teams_use_owned_primary": "小通",
+  "real_primary_execution": true,
+  "speaker_identity_separate_from_room_transport": true,
+  "cross_conversation_history": "current-user scoped list/read/search; versioned archive and legacy checkpoint paginated read; indexed-text search reports coverage",
+  "stored_chats_remain_separate": true,
+  "tool_button_outer_px": 24,
+  "tool_inner_glyph_px": 16,
+  "context_ring_outer_px": 24,
+  "context_percent_font_px": 10,
+  "checks": {
+    "primary_pytest": 15,
+    "related_archive_pytest_passed": 61,
+    "related_archive_pytest_skipped": 1,
+    "api_team_i18n_pytest": 518,
+    "avatar_integration_and_primary_pytest": 33,
+    "manager_pytest_passed": 126,
+    "manager_pytest_skipped": 1,
+    "native_customization_unittest": 83,
+    "primary_and_team_stream_vitest": 38,
+    "source_frozen_node_suites": "passed",
+    "mypy_source_files": 604,
+    "frontend_build": "passed",
+    "typescript": "passed",
+    "ruff": "passed",
+    "frozen_asset_graph": 233,
+    "javascript_syntax": 183
+  },
+  "local_runtime": {
+    "installed": false,
+    "restart_deferred": "Data analyst task active; do not interrupt."
+  },
+  "git": {
+    "branch": "custom/main",
+    "remote_quality_gate": "pending",
+    "local_full_suite_omitted": "8GB Mac previously entered heavy swap; bounded local checks passed; full make all PYTEST_JOBS=2 required on GitHub."
+  }
+}

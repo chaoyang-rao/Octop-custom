@@ -1,13 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ChatMessage } from "../hooks/useChat";
 import { ChatAgentProfileProvider } from "../ChatAgentProfileContext";
 import { TurnProcessBlocks } from "./TurnProcessBlocks";
 
+const primaryState = vi.hoisted(() => ({ enabled: false }));
+afterEach(() => {
+  primaryState.enabled = false;
+});
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, opts?: { name?: string }) =>
-      key === "chat.teamHostHover" ? `[${opts?.name ?? ""}] 主持人` : key,
+      key === "chat.teamHostHover" || key === "chat.teamPrimaryHostHover"
+        ? `[${opts?.name ?? ""}] 主持人`
+        : key,
   }),
 }));
 
@@ -15,6 +22,8 @@ vi.mock("../../../context/AgentContext", () => ({
   useAgent: () => ({
     activeAgent: {
       agent_id: "host",
+      primary_agent_id: primaryState.enabled ? "doctor" : undefined,
+      primary_agent_name: primaryState.enabled ? "小通" : undefined,
       name: "主持团队",
       kind: "team",
       icon_name: "bot",
@@ -89,6 +98,25 @@ describe("TurnProcessBlocks team speaker chrome", () => {
       </ChatAgentProfileProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "临床辅助专家" }));
+    expect(onOpen).toHaveBeenCalledWith("doctor");
+  });
+  it("uses the real primary profile for host tool details", () => {
+    primaryState.enabled = true;
+    const onOpen = vi.fn();
+    render(
+      <ChatAgentProfileProvider canOpen onOpen={onOpen} isTeam>
+        <TurnProcessBlocks
+          split={splitWithTool("host")}
+          isStreaming={false}
+          hideToolMedia
+          agentId="host"
+          showAvatar
+        />
+      </ChatAgentProfileProvider>,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "[临床辅助专家] 主持人" }),
+    );
     expect(onOpen).toHaveBeenCalledWith("doctor");
   });
 });

@@ -1166,10 +1166,13 @@ function isHostTurnTerminal(
   data: {
     type?: unknown;
     agent_id?: unknown;
+    turn_owner_agent_id?: unknown;
+    team_wrapup?: unknown;
   },
   hostAgentId?: string,
   activeTurnId?: string | null,
 ): boolean {
+  if (data.team_wrapup === true && data.turn_owner_agent_id) return false;
   // Logical mid-turn steer turn ends only on turn.ended (issue #1300).
   // Intermediate harness ``done`` must NOT close the live socket or the
   // Dashboard misses drain continuation + falsely flushes the local queue.
@@ -1177,7 +1180,11 @@ function isHostTurnTerminal(
   if (data.type === "error" || data.type === "hitl_required") return true;
   if (data.type !== "done") return false;
   if (activeTurnId) return false;
-  const speaker = chunkSpeakerId(data, hostAgentId);
+  const speaker =
+    typeof data.turn_owner_agent_id === "string"
+      ? rewritePeerSpeakerId(hostAgentId, data.turn_owner_agent_id) ||
+        data.turn_owner_agent_id
+      : chunkSpeakerId(data, hostAgentId);
   if (!speaker) return true;
   const host = (hostAgentId || "").trim();
   // Room id not remembered yet — treat a stamped done as the 1:1 host.
@@ -1252,6 +1259,27 @@ function handleHarnessChunk(
   sessionId?: string,
 ): void {
   const speaker = chunkSpeakerId(chunk, sessionHostAgentId(state, sessionId));
+  const owner = sessionHostAgentId(state, sessionId);
+  if (
+    speaker &&
+    !chunk.team_wrapup &&
+    !chunk.team_snapshot &&
+    chunk.turn_owner_agent_id &&
+    rewritePeerSpeakerId(owner, chunk.turn_owner_agent_id) === owner
+  ) {
+    // A primary-origin frame authors the room's pending host placeholder.
+    // Ordinary member frames cannot claim or leave that placeholder spinning.
+    state.messages = state.messages.map((message) =>
+      message.role === "assistant" &&
+      message.status === "streaming" &&
+      (!message.speakerAgentId || message.speakerAgentId === owner) &&
+      !message.content &&
+      !message.toolData &&
+      !message.contentBlocks?.length
+        ? { ...message, speakerAgentId: speaker }
+        : message,
+    );
+  }
   if (sessionId && (state.isStreaming || speaker)) {
     touchStreamActivity(sessionId);
   }

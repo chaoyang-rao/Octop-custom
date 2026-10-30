@@ -23,6 +23,8 @@ export interface TeamRecord {
   welcome_message?: string | null;
   state?: string;
   kind: "team";
+  primary_agent_id?: string | null;
+  primary_agent_name?: string | null;
   member_ids: string[];
   members: TeamMemberSummary[];
 }

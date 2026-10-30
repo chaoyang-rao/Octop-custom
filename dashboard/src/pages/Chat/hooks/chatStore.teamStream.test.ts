@@ -880,3 +880,85 @@ describe("team member live stream", () => {
     ).toBe("bridge:cid:doctor");
   });
 });
+
+it("keeps the primary author separate from the team turn owner and releases the composer", async () => {
+  class FakeWebSocket {
+    static instances: FakeWebSocket[] = [];
+    readyState = 0;
+    sent: string[] = [];
+    onopen: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    onclose: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    constructor() {
+      FakeWebSocket.instances.push(this);
+      queueMicrotask(() => {
+        this.readyState = 1;
+        this.onopen?.();
+      });
+    }
+    send(data: string) {
+      this.sent.push(data);
+    }
+    close() {
+      this.readyState = 3;
+      this.onclose?.();
+    }
+  }
+  const original = globalThis.WebSocket;
+  globalThis.WebSocket = FakeWebSocket as unknown as typeof WebSocket;
+  let turn: Promise<unknown> | undefined;
+  try {
+    setSessionTeamRoom(SESSION, true);
+    turn = sendTurn(
+      SESSION,
+      "hello",
+      "room",
+      "",
+      undefined,
+      undefined,
+      null,
+      SESSION,
+    );
+    await Promise.resolve();
+    const ws = FakeWebSocket.instances[0];
+    ws.onmessage?.({
+      data: JSON.stringify({
+        type: "token",
+        content: "我是小通",
+        agent_id: "room",
+        speaker_agent_id: "lead",
+        turn_owner_agent_id: "room",
+      }),
+    });
+    expect(
+      getSnapshot(SESSION).messages.find(
+        (message) => message.speakerAgentId === "lead",
+      )?.content,
+    ).toBe("我是小通");
+    ws.onmessage?.({
+      data: JSON.stringify({
+        type: "done",
+        agent_id: "room",
+        speaker_agent_id: "lead",
+        turn_owner_agent_id: "room",
+      }),
+    });
+    expect(getSnapshot(SESSION).isStreaming).toBe(false);
+    expect(
+      getSnapshot(SESSION).messages.filter(
+        (message) =>
+          message.role === "assistant" &&
+          message.status === "streaming" &&
+          !message.content,
+      ),
+    ).toEqual([]);
+    ws.close();
+    await turn;
+  } finally {
+    FakeWebSocket.instances.forEach((ws) => ws.close());
+    await Promise.allSettled(turn ? [turn] : []);
+    removeSession(SESSION);
+    globalThis.WebSocket = original;
+  }
+});

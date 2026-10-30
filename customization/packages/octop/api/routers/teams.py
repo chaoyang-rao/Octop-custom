@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends
@@ -73,7 +74,8 @@ async def create_team(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     teams = _teams(server)
-    member_ids = teams.validate_member_ids(user, body.member_ids)
+    await asyncio.to_thread(teams.require_primary, user.id)
+    member_ids = await asyncio.to_thread(teams.validate_member_ids, user, body.member_ids)
     assert server.app_runtime is not None
     spec = AgentCreateSpec(
         name=body.name.strip(),
@@ -131,12 +133,12 @@ async def patch_team(
     user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
-    _require_owned_team(server, user, team_id)
+    current = _require_owned_team(server, user, team_id)
     teams = _teams(server)
     assert server.app_runtime is not None
     roster_changed = False
     if body.member_ids is not None:
-        next_ids = teams.validate_member_ids(user, body.member_ids)
+        next_ids = teams.validate_member_ids(user, body.member_ids, primary_user_id=current.user_id)
         teams.assert_roster_writable(team_id, next_ids)
         teams.replace_members(team_id, next_ids)
         roster_changed = True

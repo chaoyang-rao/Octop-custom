@@ -529,6 +529,7 @@ class OctopServer:
                 enabled=config.history_v2_enabled,
             )
             trajectory_store = ArchiveTrajectoryStore(history_archive)
+        registry.set_history_archive(history_archive)
         trajectory_service = TrajectoryService(
             trajectory_store,
             TrajectoryLiveBus(),

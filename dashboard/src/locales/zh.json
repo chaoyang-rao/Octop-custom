@@ -891,7 +891,9 @@
       "emptyGuideStepHowDetail": "先在「我的专家」里准备至少两名专家，再选择成员（自己的或分享来的）和主持人模型。",
       "emptyGuideStepChat": "怎么聊天",
       "emptyGuideStepChatDetail": "从侧栏进入团队聊天。主持人负责调度，成员气泡会出现在同一房间。",
-      "total": "共 {{count}} 个团队"
+      "total": "共 {{count}} 个团队",
+      "primaryExpert": "主专家：{{name}}（所有团队统一）",
+      "otherMemberMin": "请至少选择一位与主专家协作的成员"
     },
     "goToLibrary": "去内置专家",
     "emptyLibrary": "暂无可用的内置专家",
@@ -1821,7 +1823,8 @@
     "historyRetry": "重试",
     "creatingSession": "正在创建会话，请稍候",
     "resizePopup": "调整窗口大小",
-    "unreadMessages": "未读消息"
+    "unreadMessages": "未读消息",
+    "teamPrimaryHostHover": "{{name}} · 主专家"
   },
   "tools": {
     "unknown": "未知工具",
@@ -1873,7 +1876,8 @@
     "generate_image": "生成图片",
     "generate_video": "生成视频",
     "bilibili_search_anime": "搜索番剧",
-    "search_arxiv": "查询 arXiv 论文"
+    "search_arxiv": "查询 arXiv 论文",
+    "conversation_history": "读取对话历史"
   },
   "toolSettings": {
     "title": "工具设置",

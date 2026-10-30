@@ -7,12 +7,13 @@ import base64
 import json
 from typing import Any
 
+from octop.infra.db.repos.thread_messages import ThreadMessageRepo
 from octop.infra.history.legacy import checkpoint_snapshot, checkpoint_wires
 from octop.infra.history.service import HistoryArchive
 
 
 async def read_page(
-    archive: HistoryArchive,
+    archive: HistoryArchive | None,
     registry: Any,
     agent_id: str,
     thread_id: str,
@@ -20,10 +21,14 @@ async def read_page(
     limit: int,
     offset: int = 0,
     cursor: str | None = None,
+    messages: ThreadMessageRepo | None = None,
 ) -> dict[str, Any]:
     async def legacy(anchor: dict[str, Any]) -> list[Any]:
         return await checkpoint_wires(registry.get_agent(agent_id), thread_id, anchor)
 
+    repo = archive.messages if archive is not None else messages
+    if repo is None:
+        raise ValueError("History message repository required")
     boundary = None
     if cursor and cursor.startswith("legacy:"):
         try:
@@ -34,8 +39,8 @@ async def read_page(
                 raise ValueError("Invalid legacy source")
         except (ValueError, TypeError, KeyError) as exc:
             raise ValueError("Invalid legacy cursor") from exc
-    segments = await asyncio.to_thread(archive.store.segments, thread_id)
-    if boundary is None and segments:
+    segments = await asyncio.to_thread(archive.store.segments, thread_id) if archive else []
+    if boundary is None and segments and archive is not None:
         return await archive.page(
             thread_id, limit=limit, cursor=cursor, offset=offset, legacy_reader=legacy
         )
@@ -46,7 +51,7 @@ async def read_page(
         if boundary
         else (
             "projection"
-            if await asyncio.to_thread(archive.messages.projection_status, thread_id) == "ready"
+            if await asyncio.to_thread(repo.projection_status, thread_id) == "ready"
             else "checkpoint"
         )
     )
@@ -54,12 +59,12 @@ async def read_page(
     if source == "projection":
         if boundary:
             descending = await asyncio.to_thread(
-                archive.messages.range_page, thread_id, 0, boundary["before"] - 1, limit + 1
+                repo.range_page, thread_id, 0, boundary["before"] - 1, limit + 1
             )
             rows, has_more = list(reversed(descending[:limit])), len(descending) > limit
         else:
             rows, has_more = await asyncio.to_thread(
-                archive.messages.page, thread_id, limit=limit, offset=offset
+                repo.page, thread_id, limit=limit, offset=offset
             )
         wires = [json.loads(row.message_json) for row in rows]
         before = rows[0].seq if rows else 0

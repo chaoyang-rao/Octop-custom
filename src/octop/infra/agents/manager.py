@@ -478,6 +478,7 @@ class AgentManager:
         self._cron_manager: CronManager | None = None
         self._proactive_scheduler: ProactiveCareScheduler | None = None
         self._team_processor: Any | None = None
+        self._history_archive: Any | None = None
         self._hitl_session_store: HitlSessionPolicyStore | None = None
         from octop.infra.agents.teams import TeamJobTracker, TeamService
 
@@ -1922,10 +1923,81 @@ class AgentManager:
         finally:
             self._end_invocation(agent_id, thread_id)
 
+    def set_history_archive(self, archive: Any) -> None:
+        self._history_archive = archive
+
+    async def read_conversation_page(
+        self, agent_id: str, thread_id: str, *, limit: int, cursor: str | None = None
+    ) -> dict[str, Any]:
+        from octop.infra.history.reader import read_page
+
+        return await read_page(
+            self._history_archive,
+            self,
+            agent_id,
+            thread_id,
+            limit=limit,
+            cursor=cursor,
+            messages=self._repos.thread_message_repo,
+        )
+
+    def principal_agent_id(self, agent_id: str) -> str:
+        teams = getattr(self, "_teams", None)
+        primary = teams.primary_for_team(agent_id) if teams is not None else None
+        return primary.agent_id if primary is not None else agent_id
+
+    async def _primary_for_room(self, agent_id: str) -> Any:
+        teams = getattr(self, "_teams", None)
+        if teams is None:
+            return None
+        from octop.infra.agents.teams.service import is_team_agent
+
+        row = await asyncio.to_thread(self.get_row, agent_id)
+        if row is None or not is_team_agent(row):
+            return None
+        if not row.enabled:
+            raise self._unavailable_error(agent_id)
+        primary = await asyncio.to_thread(teams.require_primary, row.user_id)
+        if not primary.enabled or primary.last_state in {"stopped", "failed", "error"}:
+            raise self._unavailable_error(primary.agent_id)
+        return primary
+
+    async def _primary_room_stream(
+        self, agent_id: str, primary_id: str, request: dict[str, Any]
+    ) -> AsyncIterator[Any]:
+        from octop.infra.agents.teams.primary import (
+            PrimaryRoom,
+            primary_request,
+            primary_room_scope,
+            request_user_id,
+            stamp_primary_chunk,
+        )
+
+        thread_id = str(request.get("thread_id") or "")
+        user_id = request_user_id(request)
+        if user_id is None:
+            thread = await asyncio.to_thread(self._repos.thread_repo.get, thread_id)
+            user_id = thread.user_id if thread and thread.agent_id == agent_id else None
+        room = PrimaryRoom(agent_id, primary_id, thread_id, user_id)
+        peers = await asyncio.to_thread(self._teams.visible_member_ids, agent_id)
+        req = primary_request(request, room, peers)
+        async with (
+            self._thread_execution_lock(agent_id, thread_id),
+            self._track_invocation(agent_id, thread_id),
+        ):
+            with primary_room_scope(room):
+                async for chunk in self.stream(primary_id, req):
+                    yield stamp_primary_chunk(chunk, room)
+
     async def stream(self, agent_id: str, request: dict[str, Any]) -> AsyncIterator[Any]:
         """Stream harness chunks (Langfuse tracing handled inside octop-harness)."""
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        primary = await self._primary_for_room(agent_id)
+        if primary is not None:
+            async for chunk in self._primary_room_stream(agent_id, primary.agent_id, request):
+                yield chunk
+            return
 
         thread_id = str(request.get("thread_id") or "")
         async with (
@@ -1946,6 +2018,33 @@ class AgentManager:
         """Non-streaming harness invocation (one-shot agent call)."""
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        primary = await self._primary_for_room(agent_id)
+        if primary is not None:
+            from octop.infra.agents.teams.primary import (
+                PrimaryRoom,
+                primary_request,
+                primary_room_scope,
+                request_user_id,
+                stamp_message,
+            )
+
+            thread_id = str(request.get("thread_id") or "")
+            room = PrimaryRoom(agent_id, primary.agent_id, thread_id, request_user_id(request))
+            peers = await asyncio.to_thread(self._teams.visible_member_ids, agent_id)
+            async with (
+                self._thread_execution_lock(agent_id, thread_id),
+                self._track_invocation(agent_id, thread_id),
+            ):
+                with primary_room_scope(room):
+                    result = await self.call(
+                        primary.agent_id, primary_request(request, room, peers)
+                    )
+                    if isinstance(result.get("messages"), list):
+                        result = {
+                            **result,
+                            "messages": [stamp_message(msg, room) for msg in result["messages"]],
+                        }
+                    return result
         async with self._track_invocation(agent_id, thread_id_from_request(request) or ""):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
             req = self._prepare_stream_request(agent_id, request)
@@ -1969,6 +2068,26 @@ class AgentManager:
         """Resume a paused HITL interrupt for *thread_id*."""
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        primary = await self._primary_for_room(agent_id)
+        if primary is not None:
+            from octop.infra.agents.teams.primary import (
+                PrimaryRoom,
+                primary_room_scope,
+                stamp_primary_chunk,
+            )
+
+            thread = await asyncio.to_thread(self._repos.thread_repo.get, thread_id)
+            room = PrimaryRoom(
+                agent_id, primary.agent_id, thread_id, thread.user_id if thread else None
+            )
+            async with (
+                self._thread_execution_lock(agent_id, thread_id),
+                self._track_invocation(agent_id, thread_id),
+            ):
+                with primary_room_scope(room):
+                    async for chunk in self.resume_hitl(primary.agent_id, thread_id, decisions):
+                        yield stamp_primary_chunk(chunk, room)
+            return
         async with (
             self._thread_execution_lock(agent_id, thread_id),
             self._track_invocation(agent_id, thread_id),
@@ -1987,7 +2106,9 @@ class AgentManager:
     def cancel_stream(self, agent_id: str, thread_id: str) -> None:
         """Signal octop-harness to stop the active stream for *(agent_id, thread_id)*."""
         if self._harness_manager is not None:
-            self._harness_manager.cancel(agent_id, thread_id)
+            teams = getattr(self, "_teams", None)
+            primary = teams.primary_for_team(agent_id) if teams is not None else None
+            self._harness_manager.cancel(primary.agent_id if primary else agent_id, thread_id)
 
     def get_thread_model(self, agent_id: str, thread_id: str) -> str | None:
         if self._harness_manager is None:
@@ -2310,7 +2431,7 @@ class AgentManager:
         """Composer MCP servers selected on the expert for new sessions."""
         from octop.infra.agents.teams import is_team_agent
 
-        row = self._repos.agent_repo.get(agent_id)
+        row = self._repos.agent_repo.get(self.principal_agent_id(agent_id))
         if row is None or is_team_agent(row):
             return []
         return id_list_from_row(row, "mcp_servers")
@@ -2336,6 +2457,7 @@ class AgentManager:
 
         Returns server names that still have no loaded tools after reload/retry.
         """
+        agent_id = self.principal_agent_id(agent_id)
         if not names:
             return []
         from octop.infra.agents.teams import is_team_agent
@@ -3973,6 +4095,24 @@ class AgentManager:
         merged_tools.extend(knowledge_tools)
         merged_tools.extend(mobile_tools)
         merged_tools.extend(plugin_tools)
+        if not team_host:
+            from octop.infra.agents.middleware.team_context import TeamConversationContextMiddleware
+            from octop.infra.history.conversations import build_conversation_tools
+
+            merged_tools.extend(
+                build_conversation_tools(
+                    self._repos, self._teams, page_reader=self.read_conversation_page
+                )
+            )
+            agent_middleware.insert(
+                0,
+                TeamConversationContextMiddleware(
+                    repos=self._repos,
+                    teams=self._teams,
+                    workspace_for=self.workspace_for_agent,
+                    page_reader=self.read_conversation_page,
+                ),
+            )
         # agent_list / ask_agent: PeerAgentMiddleware (team_enabled=True), not config.tools.
 
         acp_section = cfg.get("acp")

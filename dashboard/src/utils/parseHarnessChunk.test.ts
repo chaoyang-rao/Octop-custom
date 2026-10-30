@@ -79,3 +79,18 @@ describe("parseHarnessChunk usage", () => {
     });
   });
 });
+
+it("preserves the real primary speaker separately from the room transport owner", () => {
+  const chunk = parseHarnessChunk(
+    'data: {"type":"token","content":"本人回复","agent_id":"room","speaker_agent_id":"lead","turn_owner_agent_id":"room"}',
+  );
+  expect(chunk).toMatchObject({
+    type: "token",
+    agent_id: "lead",
+    speaker_agent_id: "lead",
+    turn_owner_agent_id: "room",
+  });
+  expect(streamSpeakerId({ agent_id: "room", speaker_agent_id: "lead" })).toBe(
+    "lead",
+  );
+});

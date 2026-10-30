@@ -72,6 +72,10 @@ export interface OctopAgent {
   kind?: "expert" | "team" | string;
   /** Member agent ids when ``kind === "team"``. */
   member_ids?: string[];
+  is_team_primary?: boolean;
+  primary_agent_id?: string | null;
+  primary_agent_name?: string | null;
+  primary_icon_url?: string | null;
   welcome_message?: string | null;
   /** True when this row is a remote shadow expert via cloud collab. */
   bridge?: boolean;
@@ -163,6 +167,10 @@ export function agentsSnapshotEqual(
       return (
         a.agent_id === b.agent_id &&
         a.state === b.state &&
+        a.is_team_primary === b.is_team_primary &&
+        a.primary_agent_id === b.primary_agent_id &&
+        a.primary_agent_name === b.primary_agent_name &&
+        a.primary_icon_url === b.primary_icon_url &&
         a.work_status === b.work_status &&
         a.working_count === b.working_count &&
         a.waiting_count === b.waiting_count &&
@@ -399,6 +407,9 @@ export function mapBridgeAgent(
     kind?: string | null;
     state?: string | null;
     member_ids?: unknown;
+    primary_agent_id?: string | null;
+    primary_agent_name?: string | null;
+    primary_icon_url?: string | null;
     is_owner?: boolean;
     is_shared?: boolean;
     default_model?: unknown;
@@ -448,9 +459,18 @@ export function mapBridgeAgent(
     config: bridgeShadowConfig(agent.config),
     knowledge_base_ids: stringIdList(agent.knowledge_base_ids),
     // Team hosts do not attach connectors; match the local agents list.
-    mcp_servers: kind === "team" ? [] : stringIdList(agent.mcp_servers),
+    mcp_servers:
+      kind === "team" && !agent.primary_agent_id
+        ? []
+        : stringIdList(agent.mcp_servers),
     kind,
     member_ids: memberIds,
+    primary_agent_id:
+      typeof agent.primary_agent_id === "string"
+        ? toBridgeShadowAgentId(conn.connection_id, agent.primary_agent_id)
+        : null,
+    primary_agent_name: agent.primary_agent_name,
+    primary_icon_url: agent.primary_icon_url,
     bridge: true,
     is_owner: agent.is_owner !== false,
     is_shared: agent.is_shared === true,

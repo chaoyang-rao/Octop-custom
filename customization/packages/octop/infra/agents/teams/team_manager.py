@@ -156,6 +156,7 @@ class TeamManager:
         # A refresh mid-answer has no history row; the new subscriber gets this.
         self._live_member_text: dict[str, dict[str, str]] = {}
         self._member_wall_lock = asyncio.Lock()
+        self._live_member_speakers: dict[str, dict[str, str]] = {}
 
     def replace_thread_message_repo(self, repo: Any) -> None:
         self._thread_message_repo = repo
@@ -694,6 +695,10 @@ class TeamManager:
         row = self._agent_manager.get_row(agent_id)
         if not is_team_agent(row):
             return
+        if self._primary_speaker_id(agent_id) != agent_id:
+            # The real expert keeps its own tools/connectors, including explicit
+            # per-turn selections. Only legacy virtual hosts need stripping.
+            return
         cfg = dict(request.get("configurable") or {})
         cfg["peer_invoke_mode"] = "async"
         cfg.pop("mcp_use_default", None)
@@ -788,6 +793,13 @@ class TeamManager:
         extra: dict[str, Any] = {"peer_invoke_mode": "sync"}
         host = self._agent_manager.get_row(call.from_agent_id)
         if is_team_agent(host):
+            primary_id = self._primary_speaker_id(call.from_agent_id)
+            if primary_id != call.from_agent_id:
+                extra.update(
+                    octop_team_id=call.from_agent_id,
+                    octop_team_thread_id=str(call.source_thread_id or ""),
+                    octop_team_primary_id=primary_id,
+                )
             extra["team_peers"] = [
                 member_id
                 for member_id in self._agent_manager.teams.member_ids(call.from_agent_id)
@@ -969,7 +981,8 @@ class TeamManager:
         if getter is None:
             return []
         try:
-            harness = getter(agent_id)
+            actual = self._primary_speaker_id(agent_id)
+            harness = getter(actual)
             hist = getattr(harness, "aget_history", None)
             if hist is None:
                 return []
@@ -1035,6 +1048,10 @@ class TeamManager:
             if not bucket:
                 return
             bucket.pop(speaker, None)
+            identities = getattr(self, "_live_member_speakers", {}).get(room, {})
+            identities.pop(speaker, None)
+            if not identities:
+                getattr(self, "_live_member_speakers", {}).pop(room, None)
             if not bucket:
                 self._live_member_text.pop(room, None)
 
@@ -1045,12 +1062,19 @@ class TeamManager:
         for speaker, text in bucket.items():
             if not speaker or not text:
                 continue
+            actual = getattr(self, "_live_member_speakers", {}).get(room, {}).get(speaker, speaker)
+            identity = (
+                {"speaker_agent_id": actual, "turn_owner_agent_id": speaker}
+                if actual != speaker
+                else {}
+            )
             frames.append(
                 {
                     "type": "token",
                     "content": text,
                     "agent_id": speaker,
                     "agent": speaker,
+                    **identity,
                     "team_snapshot": True,
                     "team_live": True,
                     "thread_id": room,
@@ -1120,6 +1144,11 @@ class TeamManager:
         try:
             async with self._member_wall_lock:
                 await hub.push_to_thread(room_thread_id, stamped)
+                actual = chunk.get("speaker_agent_id")
+                if isinstance(actual, str) and actual:
+                    if not hasattr(self, "_live_member_speakers"):
+                        self._live_member_speakers = {}
+                    self._live_member_speakers.setdefault(room_thread_id, {})[speaker_id] = actual
                 if piece:
                     self._append_live_member(room_thread_id, speaker_id, piece)
         except Exception:
@@ -1276,11 +1305,12 @@ class TeamManager:
         reasoning_parts: list[str] | None = None,
     ) -> list[Any]:
         reasoning = "".join(reasoning_parts or []).strip()
+        actual_speaker = await asyncio.to_thread(self._primary_speaker_id, speaker_id)
         messages = await self._history(speaker_id, member_tid)
         if messages:
             room = _room_peer_messages(messages)
             if room:
-                stamped = [_with_speaker(msg, speaker_id) for msg in room]
+                stamped = [_with_speaker(msg, actual_speaker) for msg in room]
                 if reasoning:
                     for msg in reversed(stamped):
                         if _message_is_assistant(msg):
@@ -1290,7 +1320,7 @@ class TeamManager:
         text = "".join(text_parts).strip()
         if not text and not reasoning:
             return []
-        extra: dict[str, Any] = {"speaker_agent_id": speaker_id}
+        extra: dict[str, Any] = {"speaker_agent_id": actual_speaker}
         if reasoning:
             extra["reasoning_content"] = reasoning
         return [
@@ -1308,6 +1338,13 @@ class TeamManager:
         self._live_host_replies.discard(tid)
         return True
 
+    def _primary_speaker_id(self, speaker_id: str) -> str:
+        teams = getattr(self._agent_manager, "teams", None)
+        resolve = getattr(teams, "primary_for_team", None)
+        primary = resolve(speaker_id) if callable(resolve) else None
+        actual = getattr(primary, "agent_id", None)
+        return actual if isinstance(actual, str) and actual else speaker_id
+
     def _persist_room_assistant(
         self,
         thread_id: str,
@@ -1322,7 +1359,7 @@ class TeamManager:
         if not thread_id or not body or self._thread_message_repo is None:
             return
         self._ensure_projection(thread_id)
-        extra: dict[str, Any] = {"speaker_agent_id": speaker_id}
+        extra: dict[str, Any] = {"speaker_agent_id": self._primary_speaker_id(speaker_id)}
         if wrapup:
             extra["team_wrapup"] = True
         if error:
@@ -1452,14 +1489,20 @@ class TeamManager:
         if hub is None:
             return
         extra = {"team_wrapup": True} if wrapup else {"team_snapshot": True}
+        actual = await asyncio.to_thread(self._primary_speaker_id, speaker_id)
+        identity: dict[str, Any] = (
+            {"speaker_agent_id": actual, "turn_owner_agent_id": speaker_id}
+            if actual != speaker_id
+            else {}
+        )
         try:
             await hub.push_to_thread(
                 thread_id,
                 stamp_stream_speaker(
                     (
-                        {"type": "error", "message": body, **extra}
+                        {"type": "error", "message": body, **extra, **identity}
                         if error
-                        else {"type": "token", "content": body, **extra}
+                        else {"type": "token", "content": body, **extra, **identity}
                     ),
                     speaker_id,
                 ),
@@ -1467,7 +1510,7 @@ class TeamManager:
             await hub.push_to_thread(
                 thread_id,
                 stamp_stream_speaker(
-                    {"type": "done", **extra},
+                    {"type": "done", **extra, **identity},
                     speaker_id,
                     include_done=True,
                 ),
@@ -2231,6 +2274,15 @@ def wire_host_dispatch(
         session_key: str | None = None,
         **kwargs: Any,
     ) -> Any:
+        from octop.infra.agents.teams.primary import current_primary_room
+
+        room = current_primary_room()
+        if (
+            room is not None
+            and from_agent_id == room.primary_id
+            and source_thread_id == room.thread_id
+        ):
+            from_agent_id = room.team_id
         if getattr(harness_team, "enabled", False) and is_team(from_agent_id):
             return harness_team.submit_peer(
                 from_agent_id=from_agent_id,

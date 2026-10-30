@@ -132,7 +132,7 @@ export interface AttachmentChunk {
   agent_id?: string;
 }
 
-export type HarnessChunk =
+export type HarnessChunk = (
   | TokenChunk
   | ReasoningChunk
   | ToolCallChunk
@@ -145,7 +145,13 @@ export type HarnessChunk =
   | ErrorChunk
   | HitlRequiredChunk
   | SlashActionChunk
-  | AttachmentChunk;
+  | AttachmentChunk
+) & {
+  speaker_agent_id?: string;
+  turn_owner_agent_id?: string;
+  team_wrapup?: boolean;
+  team_snapshot?: boolean;
+};
 
 /**
  * Parse one ``data: …`` SSE frame line into a typed chunk.
@@ -159,6 +165,29 @@ export type HarnessChunk =
  * the renderer can show a debug pill rather than dropping data silently.
  */
 export function parseHarnessChunk(line: string): HarnessChunk | null {
+  const parsed = parseHarnessChunkBase(line);
+  if (!parsed) return null;
+  const raw = JSON.parse(line.slice(5).trim()) as Record<string, unknown>;
+  const speaker =
+    typeof raw.speaker_agent_id === "string"
+      ? raw.speaker_agent_id.trim()
+      : undefined;
+  const room =
+    typeof raw.turn_owner_agent_id === "string"
+      ? raw.turn_owner_agent_id
+      : speaker && typeof raw.agent_id === "string" && speaker !== raw.agent_id
+      ? raw.agent_id
+      : undefined;
+  return {
+    ...parsed,
+    ...(speaker ? { speaker_agent_id: speaker } : {}),
+    ...(room ? { turn_owner_agent_id: room } : {}),
+    ...(raw.team_wrapup === true ? { team_wrapup: true } : {}),
+    ...(raw.team_snapshot === true ? { team_snapshot: true } : {}),
+  };
+}
+
+function parseHarnessChunkBase(line: string): HarnessChunk | null {
   // Tolerate both "data:foo" and "data: foo" (the standard form has a
   // single space, but our backend doesn't insert one — match either).
   const prefix = line.startsWith("data:")
@@ -330,7 +359,7 @@ export function streamSpeakerId(
 }
 
 function optionalAgentId(obj: Record<string, unknown>): string | undefined {
-  for (const key of ["agent_id", "agent", "speaker_agent_id"] as const) {
+  for (const key of ["speaker_agent_id", "agent_id", "agent"] as const) {
     const raw = obj[key];
     if (typeof raw !== "string") continue;
     const value = raw.trim();

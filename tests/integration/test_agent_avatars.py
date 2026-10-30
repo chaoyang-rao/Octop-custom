@@ -20,14 +20,25 @@ async def test_upload_get_delete_avatar(env):
         files={"file": ("face.png", PNG, "image/png")},
     )
     assert r.status_code == 201, r.text
-    icon_url = r.json()["icon_url"]
+    icon_url = r.json()["uploaded_icon_url"]
+    public_icon = r.json()["icon_url"]
+    assert public_icon.startswith("/expert-avatars/v2/")
     assert icon_url.startswith(f"/api/agents/{agent_id}/avatar?")
     assert "v=" in icon_url
 
     listed = (await c.get("/api/agents", headers=auth)).json()
     row = next(a for a in listed if a["agent_id"] == agent_id)
-    assert row["icon_url"] == icon_url
-    assert "avatar" not in (row.get("config") or {})
+    assert row["icon_url"] == public_icon
+    assert row["uploaded_icon_url"] == icon_url
+    assert row["avatar_shape"] in {
+        "blob",
+        "pebble",
+        "squircle",
+        "droplet",
+        "cloud",
+        "star",
+        "triangle",
+    }
 
     got = await c.get(icon_url, headers=auth)
     assert got.status_code == 200
@@ -46,7 +57,8 @@ async def test_upload_get_delete_avatar(env):
     cleared = next(
         a for a in (await c.get("/api/agents", headers=auth)).json() if a["agent_id"] == agent_id
     )
-    assert cleared["icon_url"] in (None, "")
+    assert cleared["icon_url"].startswith("/expert-avatars/v2/")
+    assert cleared["uploaded_icon_url"] in (None, "")
 
 
 async def test_reject_non_image_avatar(env):

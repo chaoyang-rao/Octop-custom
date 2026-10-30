@@ -592,16 +592,26 @@ function MessageBubble({
     speakerId,
     activeAgent?.agent_id,
   );
+  const primaryId =
+    rewritePeerSpeakerId(
+      activeAgent?.agent_id,
+      activeAgent?.primary_agent_id,
+    ) || activeAgent?.primary_agent_id;
+  const authorId = isTeamHostSpeaker && primaryId ? primaryId : speakerId;
   const expert = useMemo(
     () =>
-      (speakerId && agents.find((item) => item.agent_id === speakerId)) ||
-      (isTeamHostSpeaker || !isTeamRoom ? activeAgent : undefined),
-    [speakerId, agents, activeAgent, isTeamHostSpeaker, isTeamRoom],
+      (authorId && agents.find((item) => item.agent_id === authorId)) ||
+      (!isTeamRoom ? activeAgent : undefined),
+    [authorId, agents, activeAgent, isTeamRoom],
   );
   const avatarTooltip = isTeamHostSpeaker
-    ? t("chat.teamHostHover", { name: activeAgent?.name || expert?.name || "" })
+    ? primaryId
+      ? t("chat.teamPrimaryHostHover", {
+          name: expert?.name || activeAgent?.primary_agent_name || "小通",
+        })
+      : t("chat.teamHostHover", { name: activeAgent?.name || "" })
     : expert?.name;
-  const avatarProfileId = isTeamHostSpeaker ? activeAgent?.agent_id : speakerId;
+  const avatarProfileId = authorId;
   const userName = accountDisplayName(user);
 
   const [isEditing, setIsEditing] = useState(false);

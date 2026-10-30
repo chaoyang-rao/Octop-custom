@@ -202,8 +202,30 @@ def _row_dict(
         teams = getattr(registry, "teams", None)
         if teams is not None:
             payload["member_ids"] = teams.visible_member_ids(row.agent_id)
+            primary = teams.primary_for_team(row.agent_id)
+            payload["primary_agent_id"] = primary.agent_id if primary else None
+            payload["primary_agent_name"] = primary.name if primary else None
+            if primary is not None:
+                payload["mcp_servers"] = id_list_from_row(primary, "mcp_servers")
+                if not payload["knowledge_base_ids"]:
+                    payload["knowledge_base_ids"] = id_list_from_row(primary, "knowledge_base_ids")
+            payload["primary_icon_url"] = (
+                avatar_response(
+                    parse_config_json(primary.config_json),
+                    primary.icon_url,
+                    identity=primary.agent_id,
+                )["icon_url"]
+                if primary
+                else None
+            )
         else:
             payload["member_ids"] = []
+    if row.user_id == viewer_user_id and payload["kind"] != "team":
+        registry = getattr(getattr(server, "app_runtime", None), "agent_registry", None)
+        teams = getattr(registry, "teams", None)
+        resolve = getattr(teams, "primary_expert_for_user", None)
+        primary = resolve(row.user_id) if callable(resolve) else None
+        payload["is_team_primary"] = bool(primary is not None and primary.agent_id == row.agent_id)
     if bootstrap_pending is not None:
         payload["bootstrap_pending"] = bootstrap_pending
     if getattr(row, "kind", None) == "team":
@@ -502,12 +524,10 @@ async def upload_agent_avatar(
     icon_url = agent_avatar_api_path(agent_id)
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.set_icon_url(agent_id, icon_url)
-    cfg = merge_avatar_config(parse_config_json(row.config_json), shape=None)
-    server.services.agent_repo.update_config(agent_id, config_json=json.dumps(cfg, ensure_ascii=False))
-    row = server.app_runtime.agent_registry.get_row(agent_id)
-    return avatar_response(cfg, display_agent_icon_url(
+    return avatar_response(parse_config_json(row.config_json), display_agent_icon_url(
         agent_id=agent_id, stored=row.icon_url, updated_at=row.updated_at,
-    ) or icon_url)
+    ), identity=agent_id)
+
 
 
 @router.get("/{agent_id}/avatar", summary="Fetch expert avatar")

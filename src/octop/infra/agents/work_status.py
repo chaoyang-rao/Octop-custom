@@ -63,10 +63,20 @@ async def attach_expert_work_status(
         if agent_id in visible:
             visible[agent_id].add(thread_id)
 
+    primary_rooms: dict[str, list[str]] = {}
+    for payload in payloads:
+        primary_id = payload.get("primary_agent_id")
+        team_id = payload["agent_id"]
+        if payload.get("kind") == "team" and primary_id in visible:
+            visible[primary_id].update(visible.get(team_id, set()))
+            primary_rooms.setdefault(primary_id, []).append(team_id)
+
     async def update(payload: dict[str, Any]) -> None:
         agent_id = payload["agent_id"]
         allowed = frozenset(visible[agent_id])
         waiting = set(pending_threads(agent_id=agent_id, user_id=user_id)) & allowed
+        for team_id in primary_rooms.get(agent_id, ()):
+            waiting.update(set(pending_threads(agent_id=team_id, user_id=user_id)) & allowed)
         regular = (set(active_threads(agent_id)) & allowed) | {
             thread_id for thread_id in allowed if is_turn_active(thread_id)
         }

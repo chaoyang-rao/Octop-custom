@@ -341,7 +341,7 @@ export default function MessageList(props: MessageListProps) {
     () =>
       resolveLiveSpeakerNames(liveSpeakers, agents, {
         hostId: activeAgent?.agent_id,
-        hostName: activeAgent?.name,
+        hostName: activeAgent?.primary_agent_name || activeAgent?.name,
         limit: 2,
       }),
     [liveSpeakers, agents, activeAgent?.agent_id, activeAgent?.name],
