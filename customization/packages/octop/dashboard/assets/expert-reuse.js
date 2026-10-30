@@ -21,7 +21,7 @@ export function createExpertReuseDialogs({React,Modal,Input,Select,Alert,useTran
    finally {saving.current=false;setBusy(false)}
   };
   return h(React.Fragment,null,children({copy:()=>{setName('');setMode('copy')},cli:()=>{setTargets([]);setMode('cli')}}),
-   h(Modal,{open:mode!==null,title:t(mode==='copy'?'experts.reuse.copyTitle':'experts.reuse.cliTitle'),onCancel:close,onOk:save,confirmLoading:busy,closable:!busy,maskClosable:!busy,keyboard:!busy,okText:t(mode==='copy'?'common.create':'common.apply'),cancelText:t('common.cancel'),okButtonProps:{disabled:mode==='cli'&&!targets.some(id=>eligible.some(item=>item.agent_id===id&&!working(item)))}},
+   h(Modal,{open:mode!==null,title:t(mode==='copy'?'experts.reuse.copyTitle':'experts.reuse.cliTitle'),onCancel:close,onOk:save,confirmLoading:busy,closable:!busy,maskClosable:!busy,keyboard:!busy,okText:t(mode==='copy'?'common.create':'experts.reuse.apply'),cancelText:t('common.cancel'),okButtonProps:{disabled:mode==='cli'&&!targets.some(id=>eligible.some(item=>item.agent_id===id&&!working(item)))}},
     h('p',null,t('experts.reuse.source',{name:agent.name})),
     h(Alert,{type:'info',showIcon:true,message:t(mode==='copy'?'experts.reuse.copyHint':'experts.reuse.cliHint'),style:{marginBottom:16}}),
     mode==='cli'?h('p',null,t('experts.reuse.sourceState',{state:agent.config?.acp?.tool_enabled&&!agent.config?.tools_disabled?.includes('acp_runner')?t('experts.reuse.enabled'):t('experts.reuse.disabled')})):null,

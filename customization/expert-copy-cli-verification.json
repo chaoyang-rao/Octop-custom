@@ -1,5 +1,5 @@
 {
-  "release": "avatars-v18",
+  "release": "avatars-v19",
   "scope": {
     "copy": "Owned local individual experts; independent private identity/workspace; role/settings/skills only",
     "cli_reuse": "Source ACP config and acp_runner tool toggle; current account global runner definitions reused",
@@ -20,10 +20,19 @@
     "eslint_changed_files": "passed",
     "prettier": "passed",
     "active_assets": 234,
-    "javascript_syntax": 184
+    "javascript_syntax": 184,
+    "visible_locale_keys": "All dialog labels validated against the actual Chinese locale, including the apply action"
   },
   "local_runtime": {
-    "installed": false
+    "installed": true,
+    "backend_and_initial_dashboard": "avatars-v18",
+    "frontend_label_fix": "avatars-v19 prepared",
+    "backup": "backups/deployment-20261030-194529-634858",
+    "restarted": true,
+    "health_ok": true,
+    "copy_dialog_open_cancel_verified": true,
+    "cli_dialog_open_cancel_verified": true,
+    "test_copy_or_config_mutation_sent": false
   },
   "git": {
     "branch": "custom/main",

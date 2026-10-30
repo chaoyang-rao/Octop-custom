@@ -100,7 +100,7 @@ export function createExpertReuseDialogs({
           closable: !busy,
           maskClosable: !busy,
           keyboard: !busy,
-          okText: t(mode === "copy" ? "common.create" : "common.apply"),
+          okText: t(mode === "copy" ? "common.create" : "experts.reuse.apply"),
           cancelText: t("common.cancel"),
           okButtonProps: {
             disabled:
