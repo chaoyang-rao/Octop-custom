@@ -49,6 +49,8 @@
   },
   "git": {
     "branch": "custom/main",
-    "remote_quality_gate": "pending"
+    "remote_quality_gate": "The v16 run had four obsolete portrait assertions; corrected in v17 and passed the full gate.",
+    "superseding_commit": "b40d1e2b1355178b0471921f117da15c4dddc816",
+    "superseding_run": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/41039871234"
   }
 }

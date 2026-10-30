@@ -29,15 +29,50 @@
     "final_manager_archive_pytest_passed": 177,
     "final_manager_archive_pytest_skipped": 1,
     "nonblocking_lookup_regression_pytest": 86,
-    "eslint": "Three pre-existing errors in Agent/Channels/constants.test.ts, chatStore.ts Boolean(team_wrapup), Settings/Models/ModelListEditor.tsx; no new ESLint errors."
+    "eslint": "Three pre-existing errors in Agent/Channels/constants.test.ts, chatStore.ts Boolean(team_wrapup), Settings/Models/ModelListEditor.tsx; no new ESLint errors.",
+    "full_make_all": "passed on GitHub with PYTEST_JOBS=2",
+    "full_pytest_passed": 5042,
+    "full_pytest_skipped": 29,
+    "remote_react_vitest_passed": 51,
+    "remote_frontend_build": "passed",
+    "remote_formatted_tree": "clean",
+    "native_platforms": {
+      "windows-amd64": "passed",
+      "darwin-amd64": "passed",
+      "darwin-arm64": "passed"
+    }
   },
   "local_runtime": {
-    "installed": false,
-    "restart_deferred": "Data analyst task active; do not interrupt."
+    "installed": true,
+    "changed_files_installed": 250,
+    "backup": "backups/deployment-20261030-183951-081917",
+    "restart_authorization": "任务已完成，可以重启",
+    "restarted": true,
+    "health_ok": true,
+    "managed_program_files_verified": 3744,
+    "dashboard_release_verified": "avatars-v17",
+    "existing_group_primary_name_and_avatar_verified": true,
+    "tool_glyphs_visually_verified": true,
+    "stored_chat_text_preserved": true,
+    "synthetic_live_model_request_sent": false,
+    "model_behavior_validation": "Isolated source and native tests; no paid live model task sent.",
+    "remaining_native_original_modules": [
+      "octop/api/routers/health.py",
+      "octop/infra/setup/self_update.py"
+    ],
+    "native_original_module_note": "These existing official-client modules were kept outside the local overlay; the release package has its separate custom-build guard."
   },
   "git": {
     "branch": "custom/main",
-    "remote_quality_gate": "pending",
-    "local_full_suite_omitted": "8GB Mac previously entered heavy swap; bounded local checks passed; full make all PYTEST_JOBS=2 required on GitHub."
+    "remote_quality_gate": "success",
+    "local_full_suite_omitted": "8GB Mac previously entered heavy swap; bounded local checks passed; full make all PYTEST_JOBS=2 required on GitHub.",
+    "source_commit": "b40d1e2b1355178b0471921f117da15c4dddc816",
+    "run_id": 41039871234,
+    "run_url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/41039871234"
+  },
+  "artifacts": {
+    "windows-amd64": 12970057973,
+    "darwin-amd64": 12970625173,
+    "darwin-arm64": 12969308672
   }
 }
