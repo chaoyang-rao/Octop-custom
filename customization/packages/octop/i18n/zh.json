@@ -732,7 +732,8 @@
       "active_model_unset": "未设置全局默认模型。用 octop models active --provider <名称> --model <模型ID> 设置；专家也可以单独绑定模型。",
       "model_global": "（全局：{model}）",
       "model_unset": "（未设置）"
-    }
+    },
+    "copy_name": "{name} 副本"
   },
   "agent_errors": {
     "no_models_configured": "未配置可用模型，请前往「管理 → 模型」配置模型，然后重新启用此专家。",

@@ -1162,7 +1162,25 @@
     "channelsBtn": "Channels",
     "memoryBtn": "Memory",
     "openChat": "Chat",
-    "randomAvatar": "Randomize avatar"
+    "randomAvatar": "Randomize avatar",
+    "reuse": {
+      "copyTitle": "Copy expert",
+      "cliTitle": "Reuse CLI configuration",
+      "copySuccess": "Independent expert copy created",
+      "cliSuccess": "CLI settings applied to selected experts",
+      "failed": "Operation failed. Please retry.",
+      "source": "Source expert: {{name}}",
+      "copyHint": "Copy role, model, tools and skills into an independent workspace with a random expression avatar. Chats, memories, login files and project sessions remain with the source.",
+      "cliHint": "Reuse the source ACP and tool toggles. CLI commands, arguments and environment settings are shared within this account; workspaces and sessions stay independent. Busy or awaiting-confirmation experts cannot be overwritten.",
+      "namePlaceholder": "{{name}} copy (leave blank to number automatically)",
+      "targets": "Select target experts",
+      "busy": "Busy or awaiting confirmation",
+      "sourceState": "Source CLI state: {{state}}",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "apply": "Apply to selected experts",
+      "busySelection": "The selection changed. Wait for active tasks to finish before applying."
+    }
   },
   "subagents": {
     "catalogTitle": "Manage subagents",

@@ -914,6 +914,22 @@ class AgentManager:
                 self._proactive_scheduler.ensure_scheduled(agent_id)
             return row
 
+    async def copy_expert(
+        self, agent_id: str, *, user_id: int, name: str | None = None, locale: str = "zh"
+    ) -> AgentRow:
+        from octop.infra.agents.experts.copy import copy_expert
+
+        return cast(
+            "AgentRow", await copy_expert(self, agent_id, user_id=user_id, name=name, locale=locale)
+        )
+
+    async def reuse_cli_config(
+        self, agent_id: str, targets: list[str], *, user_id: int
+    ) -> dict[str, Any]:
+        from octop.infra.agents.settings.cli_reuse import reuse_cli_config
+
+        return await reuse_cli_config(self, agent_id, targets, user_id=user_id)
+
     async def _abort_incomplete_create(self, agent_id: str) -> None:
         """Best-effort rollback after a failed create. Caller holds ``_lock``."""
         try:

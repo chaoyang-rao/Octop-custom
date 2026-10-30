@@ -509,6 +509,7 @@ export default function AgentExpertsTable({
                   />
                 )}
                 <AgentMoreActions
+                  agent={row}
                   buttonClassName={styles.tableActionBtn}
                   onSkills={() => setSkillCatalogAgentId(row.agent_id)}
                   onSubagents={() => openSubagentCatalog(row.agent_id)}

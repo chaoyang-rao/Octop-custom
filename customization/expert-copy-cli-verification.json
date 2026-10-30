@@ -1,0 +1,33 @@
+{
+  "release": "avatars-v18",
+  "scope": {
+    "copy": "Owned local individual experts; independent private identity/workspace; role/settings/skills only",
+    "cli_reuse": "Source ACP config and acp_runner tool toggle; current account global runner definitions reused",
+    "conversations_memory_login_files_projects_copied": false,
+    "busy_or_awaiting_targets_rejected": true,
+    "card_and_table_menus": true
+  },
+  "checks": {
+    "source_api_integration": 6,
+    "source_related_regression_passed": 231,
+    "source_related_regression_skipped": 1,
+    "native_customization_unittests": 88,
+    "mypy_files": 606,
+    "typescript": "passed",
+    "frontend_production_build": "passed",
+    "source_frozen_dialog_behavior": "passed",
+    "preserved_node_suites": "passed",
+    "eslint_changed_files": "passed",
+    "prettier": "passed",
+    "active_assets": 234,
+    "javascript_syntax": 184
+  },
+  "local_runtime": {
+    "installed": false
+  },
+  "git": {
+    "branch": "custom/main",
+    "remote_quality_gate": "pending",
+    "local_full_gate": "Full make all runs on GitHub; bounded checks locally because this Mac has 8GB RAM."
+  }
+}

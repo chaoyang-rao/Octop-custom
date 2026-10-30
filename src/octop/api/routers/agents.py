@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 
 from octop.api.common.agent import assert_agent_access_row, assert_agent_owner
 from octop.api.common.agent_avatar import AgentAvatarFields, avatar_config_from_body
@@ -40,6 +42,7 @@ from octop.infra.agents.settings.runtime_limits import (
 from octop.infra.agents.work_status import attach_expert_work_status
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.permissions import user_has_permission
+from octop.infra.utils.locale import resolve_request_locale
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,36 @@ class AgentCreateBody(AgentAvatarFields):
     skill_package_ids: list[str] | None = None
     knowledge_base_ids: list[str] | None = None
     mcp_servers: list[str] | None = None
+
+
+class ExpertCopyBody(BaseModel):
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        description="New expert name; omitted generates a unique copy name",
+    )
+
+
+class ExpertCopyResult(BaseModel):
+    agent_id: str
+    name: str
+    state: str
+
+
+class CliReuseBody(BaseModel):
+    agent_ids: list[str] = Field(
+        min_length=1,
+        max_length=100,
+        description="Owned individual experts that receive this expert's CLI settings",
+    )
+
+
+class CliReuseResult(BaseModel):
+    source_agent_id: str
+    agent_ids: list[str]
+    tool_enabled: bool
+    tool_disabled: bool
 
 
 class AgentPatchBody(AgentAvatarFields):
@@ -377,6 +410,49 @@ async def create_agent(
         owner_username=user.username,
         bootstrap_pending=_bootstrap_pending_for(server, row.agent_id),
         server=server,
+    )
+
+
+@router.post(
+    "/{agent_id}/copy",
+    status_code=201,
+    response_model=ExpertCopyResult,
+    summary="Copy an owned expert",
+    description="Create an independent private expert with copied role files, skills and settings. Conversations, memories, credentials and project bindings remain with the source.",
+)
+async def copy_expert(
+    agent_id: str,
+    body: ExpertCopyBody,
+    request: Request,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    registry = server.app_runtime.agent_registry
+    row = await registry.copy_expert(
+        agent_id, user_id=user.id, name=body.name, locale=resolve_request_locale(request)
+    )
+    return await asyncio.to_thread(
+        _row_dict, row, viewer_user_id=user.id, owner_username=user.username, server=server
+    )
+
+
+@router.post(
+    "/{agent_id}/cli/reuse",
+    response_model=CliReuseResult,
+    summary="Reuse an expert's CLI configuration",
+    description="Apply the source expert's ACP tool settings to selected owned experts; runner definitions are already shared within the account. Active targets are rejected before mutation.",
+)
+async def reuse_cli_config(
+    agent_id: str,
+    body: CliReuseBody,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    return cast(
+        dict[str, Any],
+        await server.app_runtime.agent_registry.reuse_cli_config(
+            agent_id, body.agent_ids, user_id=user.id
+        ),
     )
 
 

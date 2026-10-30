@@ -732,7 +732,8 @@
       "active_model_unset": "No global default model is set. Set one with: octop models active --provider <name> --model <model-id> (agents can also bind their own model).",
       "model_global": "(global: {model})",
       "model_unset": "(not set)"
-    }
+    },
+    "copy_name": "{name} copy"
   },
   "agent_errors": {
     "no_models_configured": "No models are configured. Go to Admin → Model Management to add a provider, then enable this expert again.",

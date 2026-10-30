@@ -491,6 +491,8 @@ export const AgentCard = memo(function AgentCard({
               )}
 
               <AgentMoreActions
+                agent={agent}
+                onCopied={onPollSettled}
                 buttonClassName={styles.agentCard2EditBtn}
                 onSkills={() => setSkillCatalogOpen(true)}
                 onSubagents={openSubagentCatalog}

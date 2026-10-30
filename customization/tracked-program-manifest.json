@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.2",
   "upstream_commit": "dd9dce470844c25d59effb50615bb3c667ea25cd",
-  "program_files": 6838,
-  "changed_program_files": 4191,
+  "program_files": 7069,
+  "changed_program_files": 4422,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -199,7 +199,7 @@
     },
     {
       "path": "octop/api/routers/agents.py",
-      "sha256": "48ca39f85fe6d98ca05bc6aba8f3994119663d1af8a0e535d8df5e7978b8c85c",
+      "sha256": "17ff8fd10be630ed484fc378991e5f1b295bf3fbf7bece262b83b69fa8d7357c",
       "upstream_program_sha256": "008457218c4f09eb176a6fd02cbd6947f9bf6ecc1eecade02b9dbb87dced1a6c",
       "changed_from_saved_original": true
     },
@@ -1008,6 +1008,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/AgentPluginsPanel.BJlhPlDN.avatars-v18.js",
+      "sha256": "8ec3e5f9d8bd9564e15b880da38e696f0cc56788412f83af35e6f8193454e26f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/AgentPluginsPanel.BJlhPlDN.avatars-v2.js",
       "sha256": "87633730b09ae193aba826e262a94e8fd72c374b734e667b7ddd1f874002f2c8",
       "upstream_program_sha256": null,
@@ -1117,6 +1123,12 @@
     },
     {
       "path": "octop/dashboard/assets/AgentPluginsPanel.voOybFnP.avatars-v17.css",
+      "sha256": "86f8c82248e047a501c9f9c74b90808350eddf5953be4717f3bf9ad5bdd1c73e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/AgentPluginsPanel.voOybFnP.avatars-v18.css",
       "sha256": "86f8c82248e047a501c9f9c74b90808350eddf5953be4717f3bf9ad5bdd1c73e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -1236,6 +1248,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/AuthFileDownloadLink.DQC9rSmW.avatars-v18.js",
+      "sha256": "77020f8579dd728f705bf5759ac16e84e13371198276bc031404f4fd93894cfd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/AuthFileDownloadLink.DQC9rSmW.avatars-v2.js",
       "sha256": "1a32da9bdd38a83bd71dfbf9ff01d1786820df1ae606be260cd63036d609ee75",
       "upstream_program_sha256": null,
@@ -1346,6 +1364,12 @@
     {
       "path": "octop/dashboard/assets/CardSkeleton.BOEc71GJ.avatars-v17.js",
       "sha256": "5999fc5758721b22d72a286a102d741d3af0fe86b2d7c3756260462dd3307659",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/CardSkeleton.BOEc71GJ.avatars-v18.js",
+      "sha256": "65ffcbbb6099dd7d5e15cc0e06bb505e768d718d4a35e1192fb57434f0df6df2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1464,6 +1488,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/CopyableResourceId.8y3Y_8uc.avatars-v18.js",
+      "sha256": "7e9f01989239b2ee19d14911a8e7e840bd1c9ecba607b55eba8870711ad1f2ba",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/CopyableResourceId.8y3Y_8uc.avatars-v2.js",
       "sha256": "a3a3737a35584919106591174b558005453b4f2c2eb900e02fa990f8a44bc0b5",
       "upstream_program_sha256": null,
@@ -1573,6 +1603,12 @@
     },
     {
       "path": "octop/dashboard/assets/CopyableResourceId.DcPg4LkZ.avatars-v17.css",
+      "sha256": "a5d6109b50f16271407cddaa2c7b5698c2bffeb894a54468a1f519c5ca266d91",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/CopyableResourceId.DcPg4LkZ.avatars-v18.css",
       "sha256": "a5d6109b50f16271407cddaa2c7b5698c2bffeb894a54468a1f519c5ca266d91",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -1692,6 +1728,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/EditAgentDrawer.BKiWLT__.avatars-v18.css",
+      "sha256": "ea037591495a2334b3dd522c5317d0b51d44b8d6be45193434e27c94c791b3c8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/EditAgentDrawer.BKiWLT__.avatars-v2.css",
       "sha256": "ea037591495a2334b3dd522c5317d0b51d44b8d6be45193434e27c94c791b3c8",
       "upstream_program_sha256": null,
@@ -1802,6 +1844,12 @@
     {
       "path": "octop/dashboard/assets/EditAgentDrawer.w674TDCV.avatars-v17.js",
       "sha256": "2174e615262e1726bd58aed6b591d8d0bd9b0d5add1b0569810498685ae22e40",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/EditAgentDrawer.w674TDCV.avatars-v18.js",
+      "sha256": "9ff1d92d8ca4ba7317fab332d17394d4afaa462d9a8aba5213cf5ed2cb5060c5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2274,6 +2322,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/LazyMarkdown.xHp3di3S.avatars-v18.js",
+      "sha256": "9fa5e72ff678aea7a51d1d2a96d30c901c194e48beb2785ace1d3ba5fefc7991",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/LazyMarkdown.xHp3di3S.avatars-v2.js",
       "sha256": "ba331fbea1354ca6e85581c95a7e12d55a84fd5f88054948fe61a4ec569a20c9",
       "upstream_program_sha256": null,
@@ -2388,6 +2442,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/NotFoundPage.CqDvdQeL.avatars-v18.js",
+      "sha256": "ffc5a963435fc83b597f00bcbff1fffd0f8a9bef0107cef2e5dcc913882ba3c2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/NotFoundPage.CqDvdQeL.avatars-v2.js",
       "sha256": "dc191eca1cd0d32ab84a67fadb660961ec47d65e58fb46db801ce0449d4a129b",
       "upstream_program_sha256": null,
@@ -2497,6 +2557,12 @@
     },
     {
       "path": "octop/dashboard/assets/NotFoundPage.DRS7wjz-.avatars-v17.css",
+      "sha256": "cdc55eaf7ee506fd8576f97643ecb8cae107a88f9520708656023017da51e61e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/NotFoundPage.DRS7wjz-.avatars-v18.css",
       "sha256": "cdc55eaf7ee506fd8576f97643ecb8cae107a88f9520708656023017da51e61e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -2616,6 +2682,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/PageShell.8ngNwS9L.avatars-v18.js",
+      "sha256": "0caa9c53b75ce5535fa6b2601001a20939925f5ac93b4409ebf85e9d820b0a22",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/PageShell.8ngNwS9L.avatars-v2.js",
       "sha256": "0369badbdf509603ad83c75a552101c193ee1473e9c6ffa0807b7c26da3e94b9",
       "upstream_program_sha256": null,
@@ -2725,6 +2797,12 @@
     },
     {
       "path": "octop/dashboard/assets/PageShell.BgrZ6oXn.avatars-v17.css",
+      "sha256": "82f112e0026d94e5c5dc22ad53e8a79ec64390700313ac348e1529dc116152fc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/PageShell.BgrZ6oXn.avatars-v18.css",
       "sha256": "82f112e0026d94e5c5dc22ad53e8a79ec64390700313ac348e1529dc116152fc",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -2844,6 +2922,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/PeerOnlyRemoteAlert.B0srpEt9.avatars-v18.js",
+      "sha256": "b740d805dbeec87fb7d266b6436e351108816e95fa092c6f0759adfd4efb4a14",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/PeerOnlyRemoteAlert.B0srpEt9.avatars-v2.js",
       "sha256": "8d4e487e0da20e6e033e5c34f345b9b09d8ae2adb6fee9de40ad1320047dce7e",
       "upstream_program_sha256": null,
@@ -2954,6 +3038,12 @@
     {
       "path": "octop/dashboard/assets/PieChart.B6MMA9GE.avatars-v17.js",
       "sha256": "351173709f56ccc75ba99d093e40c961152da0da8f852c7dec790669994eb088",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/PieChart.B6MMA9GE.avatars-v18.js",
+      "sha256": "8c7df62fc44aa9f2a5a24997cb0d18cfc9f4e7bab47dd09a3de8d9943117b41e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3072,6 +3162,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/SkillHubTab.ByYOm00n.avatars-v18.js",
+      "sha256": "899e5a3511eb888bea458543f2d206c14725e1e6d07d884cfecf15c7751da139",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/SkillHubTab.ByYOm00n.avatars-v2.js",
       "sha256": "14033279c614689a191343ac6c72ad5165116e8cd8535d577aa4d09620abaf35",
       "upstream_program_sha256": null,
@@ -3181,6 +3277,12 @@
     },
     {
       "path": "octop/dashboard/assets/SkillHubTab.D5WeJoju.avatars-v17.css",
+      "sha256": "dc53970f99c2fab1363e7a39f53885595b7f51abf5345e5feaa4545dd7412d06",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/SkillHubTab.D5WeJoju.avatars-v18.css",
       "sha256": "dc53970f99c2fab1363e7a39f53885595b7f51abf5345e5feaa4545dd7412d06",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -3300,6 +3402,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/SkillsTabs.BwL6T1Jc.avatars-v18.js",
+      "sha256": "e8404482c3ae5829983cd95113fd58b5ff820c6a06216a7477c970a08a5d5e3e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/SkillsTabs.BwL6T1Jc.avatars-v2.js",
       "sha256": "7a8cceb9e91e13ede35f5e1e2b843c6899dd574e237ebf062bdeade84b042c3c",
       "upstream_program_sha256": null,
@@ -3409,6 +3517,12 @@
     },
     {
       "path": "octop/dashboard/assets/SkillsTabs.VxEVpMV5.avatars-v17.css",
+      "sha256": "e840e9d0f6d324a4436989782d22a5912a8cb42d4f2856b9bd3e5f3197fa4d61",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/SkillsTabs.VxEVpMV5.avatars-v18.css",
       "sha256": "e840e9d0f6d324a4436989782d22a5912a8cb42d4f2856b9bd3e5f3197fa4d61",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -3528,6 +3642,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/StreamSetupGuide.BX4_ZFvD.avatars-v18.js",
+      "sha256": "9c2f8df384a32618c1c37ff4798f81ede8c6d01947c322e6fb8cbdefd26d43ef",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/StreamSetupGuide.BX4_ZFvD.avatars-v2.js",
       "sha256": "bd10dcc47a0d0300d902a83f7fa9487ab2bb19bf0bae295c605be9b46152c707",
       "upstream_program_sha256": null,
@@ -3637,6 +3757,12 @@
     },
     {
       "path": "octop/dashboard/assets/StreamSetupGuide.DmLDVh1D.avatars-v17.css",
+      "sha256": "4dff2263e3eec6827c42abb1266478a01132cca2d689cf92d448ab5b3b742e9c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/StreamSetupGuide.DmLDVh1D.avatars-v18.css",
       "sha256": "4dff2263e3eec6827c42abb1266478a01132cca2d689cf92d448ab5b3b742e9c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -3756,6 +3882,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/TabBar.DHfji3ca.avatars-v18.js",
+      "sha256": "05632e5e81c5f5284d98277fcfa613b5475b7fe786f7f6da51e53fc0162af986",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/TabBar.DHfji3ca.avatars-v2.js",
       "sha256": "e70710ddf918a0a465c88f3098b88e304b0322bac1a105aa3a91a1d37db83763",
       "upstream_program_sha256": null,
@@ -3865,6 +3997,12 @@
     },
     {
       "path": "octop/dashboard/assets/TabPanelHeader.BXWWcA2I.avatars-v17.css",
+      "sha256": "06bc4dcff4ff0e214fdc973a52531fcd53760e315041006683b7677c80df06c3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/TabPanelHeader.BXWWcA2I.avatars-v18.css",
       "sha256": "06bc4dcff4ff0e214fdc973a52531fcd53760e315041006683b7677c80df06c3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -3984,6 +4122,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/TabPanelHeader.DSqqHepQ.avatars-v18.js",
+      "sha256": "f25c41828abaf46e306eecb8a89a087261781bbeae3dd1a83b8dc55383736db5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/TabPanelHeader.DSqqHepQ.avatars-v2.js",
       "sha256": "f24235d4a23d3087805d4e6726c29674c86a8270430d0624f01e195375f235e7",
       "upstream_program_sha256": null,
@@ -4094,6 +4238,12 @@
     {
       "path": "octop/dashboard/assets/WorkspaceDrawer.Cc8YzXoV.avatars-v17.js",
       "sha256": "387bef50026448945c9a65c45bd85d83d2eef9b882a348b9595f2e04381378ac",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/WorkspaceDrawer.Cc8YzXoV.avatars-v18.js",
+      "sha256": "4c92e346d71959a774d9f16d9fcf454cc95dc645fe4e2a7795a03c582e389a63",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -4242,6 +4392,18 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/account-avatar.avatars-v18.css",
+      "sha256": "65f9f3b4a5f5ea887e801c271ebefd153b5c0f35829e24b8459736a3463a2000",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/account-avatar.avatars-v18.js",
+      "sha256": "e6cc38b4521ae47d406b7aa20312438672a6f6b5f275f23141108776381a892d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/account-avatar.avatars-v4.css",
       "sha256": "07990a5c75a514d25cf27673456db04aab44aa7b71bc34f48aac3ac9ef61ee51",
       "upstream_program_sha256": null,
@@ -4374,6 +4536,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/agentBackendForm.Cyogjd5F.avatars-v18.js",
+      "sha256": "4743ae6fc9bc9787e855ea3b51ee7c528f002231b99beed15969933c3051ba21",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/agentBackendForm.Cyogjd5F.avatars-v2.js",
       "sha256": "3dec8dd7902957cd2f9e18056371d48ae7ac81e99f6e42316a421cb1392ebb13",
       "upstream_program_sha256": null,
@@ -4484,6 +4652,12 @@
     {
       "path": "octop/dashboard/assets/agentChat.BPMckKf8.avatars-v17.js",
       "sha256": "529b9ddfd47db4a186c982abca29f2165a7ad9572a7ddb9ddc351d8539ff4939",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/agentChat.BPMckKf8.avatars-v18.js",
+      "sha256": "1c46d3a4bbbeeaae8d7fcd6994ed4ce3812d79bcc70b682a3e9ddc99f46a722e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -4602,6 +4776,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/agentRuntimeConfig.VJnO6pld.avatars-v18.js",
+      "sha256": "6c3d86ae6b95c2725225059755ee396834c8f2091899be386d3e941119ba2117",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/agentRuntimeConfig.VJnO6pld.avatars-v2.js",
       "sha256": "0788a93e5b5570aff2b2234d9497b17ee85fe9730f5fc8932168d72dbe07596f",
       "upstream_program_sha256": null,
@@ -4712,6 +4892,12 @@
     {
       "path": "octop/dashboard/assets/aiden0z-pptx-renderer.es.FsOErv6n.avatars-v17.js",
       "sha256": "d7447e8396c0e65c603fb24ca655e819ab83d391f861b36b13cddf7803afffd7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/aiden0z-pptx-renderer.es.FsOErv6n.avatars-v18.js",
+      "sha256": "7362266e6d5e39e9759ea08fee8a22d4ef0c16fb0134af02f58197cad92163cd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -4836,6 +5022,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/arc.C4lJrdy6.avatars-v18.js",
+      "sha256": "882acc89db58826492ab22003893f87877f5a34d5f63c6988219af41dbfdefe7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/arc.C4lJrdy6.avatars-v2.js",
       "sha256": "f37ad2140be3f88e8f43ec3961038413a7bcbd5e9e79a38f0f3e8c462acac291",
       "upstream_program_sha256": null,
@@ -4946,6 +5138,12 @@
     {
       "path": "octop/dashboard/assets/architectureDiagram-3BPJPVTR.TMyKZ9uQ.avatars-v17.js",
       "sha256": "cb9617b2a573d84968035b840d287c4cfb57b99f88859ca432c27d759cff8d54",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/architectureDiagram-3BPJPVTR.TMyKZ9uQ.avatars-v18.js",
+      "sha256": "190bfd2a85b7e51b6cd5b383f95e8211a1a54b9f07af9c326d870eaee96f5dcd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -5064,6 +5262,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/band.CudBVStT.avatars-v18.js",
+      "sha256": "7ab21d5fd46cf8b14e75271fe8260ef2fec3f3e2e6d24563f02a65923cc03272",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/band.CudBVStT.avatars-v2.js",
       "sha256": "7df34cf229f72fa7277cf3acded995006fa19f5d069ef931dd3706ce6a6ef7a6",
       "upstream_program_sha256": null,
@@ -5173,6 +5377,12 @@
     },
     {
       "path": "octop/dashboard/assets/bash.C7aaPQPZ.avatars-v17.js",
+      "sha256": "cb4676ca99841b065c454b1c8d28f5a7610dd135df4e4b65ddf389a8d5909806",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/bash.C7aaPQPZ.avatars-v18.js",
       "sha256": "cb4676ca99841b065c454b1c8d28f5a7610dd135df4e4b65ddf389a8d5909806",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -5288,6 +5498,12 @@
     {
       "path": "octop/dashboard/assets/blockDiagram-GPEHLZMM.DjrwR_5e.avatars-v17.js",
       "sha256": "909186cab67cdd34176f7e54e4225bba42b07d88844380f181a88c37cf2b37fa",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/blockDiagram-GPEHLZMM.DjrwR_5e.avatars-v18.js",
+      "sha256": "e203efe13ebdc9a111092171b519ed036082d1eb1b9a2a29d78d3146f18426b6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -5412,6 +5628,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/bridge.CS4EPjYd.avatars-v18.js",
+      "sha256": "5e7773994f97d5201f7eb7a199d539205b3a5ce95a132055980b40b86af65c7d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/bridge.CS4EPjYd.avatars-v2.js",
       "sha256": "af20760f63a168882c84f16e2e7ba43edfbcc66bee7f31b4b643a89215f4f5af",
       "upstream_program_sha256": null,
@@ -5522,6 +5744,12 @@
     {
       "path": "octop/dashboard/assets/builtinToolIcons.BB0yeh2V.avatars-v17.js",
       "sha256": "999b5109359135fd918a56579c652bd85b169de5963982ef4bbe51b71794904c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/builtinToolIcons.BB0yeh2V.avatars-v18.js",
+      "sha256": "5e45d83515ba751c5adbb2a2d3c68e7860ada0dc18bc61b0de7737c57703dc6e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -5640,6 +5868,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/c.BgpyoaDV.avatars-v18.js",
+      "sha256": "7c8dca727dbfb74be79a0c023cc9dac20d71b5a73245107796bf20cbb8aebc19",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/c.BgpyoaDV.avatars-v2.js",
       "sha256": "bed395129cf3000b4d00b45a662eea112416c0dc2fc519dc4a1e4ac7c91410c9",
       "upstream_program_sha256": null,
@@ -5750,6 +5984,12 @@
     {
       "path": "octop/dashboard/assets/c.Ji4TZplN.avatars-v17.js",
       "sha256": "07d7cd0b30128d244dd508f19e91100c26b68fb944f7a8f532336ab2537c0e9f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/c.Ji4TZplN.avatars-v18.js",
+      "sha256": "0b06c5355c66c3243631b1fa923ef6905b6e81660fed9ed0dc1712f09b658ab0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -5868,6 +6108,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/c4Diagram-AAUBKEIU.DWxB1Q0G.avatars-v18.js",
+      "sha256": "bf8f5ffc4ca6a9479f562fe1d8abf9b7a1b6b70a09355cd5aa3e404308a3ec3d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/c4Diagram-AAUBKEIU.DWxB1Q0G.avatars-v2.js",
       "sha256": "50fa5c1e348859006d2392c42e729bf5d1dad8a5915f1ae15627afb935e10fa3",
       "upstream_program_sha256": null,
@@ -5978,6 +6224,12 @@
     {
       "path": "octop/dashboard/assets/channel.C81DwWXg.avatars-v17.js",
       "sha256": "d55e21566e1e27dc2ab9da3bbc8f14ec936de226fba4223f4d7f640e0718c3a4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/channel.C81DwWXg.avatars-v18.js",
+      "sha256": "e46d0ef799084b28009297a965841e4efc8406b83e4f35b9a2b35b68584454a3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6096,6 +6348,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/chunk-2J33WTMH.BrNdWQtV.avatars-v18.js",
+      "sha256": "e0ed4e0d1129182e546259d8acfc00b8a04a6802de4c66063c7c34ce71e6a61b",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/chunk-2J33WTMH.BrNdWQtV.avatars-v2.js",
       "sha256": "302461ae5cc4048c2d42d35184fccf270279ee2f47feba10aa33f8c8b0c6c72e",
       "upstream_program_sha256": null,
@@ -6206,6 +6464,12 @@
     {
       "path": "octop/dashboard/assets/chunk-4BX2VUAB.Dt5z7Z0k.avatars-v17.js",
       "sha256": "a44c5706150336b0b9334863b4d787624760995e638c74cbaebb72af18fb6b7a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/chunk-4BX2VUAB.Dt5z7Z0k.avatars-v18.js",
+      "sha256": "8869f725701c38e3521d7313c4e712dbf11f7294c54ea9eb7fe358a63026f53c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6324,6 +6588,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/chunk-55IACEB6.DA3zh9g7.avatars-v18.js",
+      "sha256": "9748c055b4f8642aa484076c4bf7bd7fa0a1174a3687c3b74d5047167e2ef75c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/chunk-55IACEB6.DA3zh9g7.avatars-v2.js",
       "sha256": "d0d390daa753ccbc572cc37f4f85184784665f85a0e0cc6d3c7fc287e3562d18",
       "upstream_program_sha256": null,
@@ -6434,6 +6704,12 @@
     {
       "path": "octop/dashboard/assets/chunk-727SXJPM.BHbb6I-3.avatars-v17.js",
       "sha256": "5d37b39a45702589f207ccb7be888e0afe6896c903376022440c01fc45d1eabe",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/chunk-727SXJPM.BHbb6I-3.avatars-v18.js",
+      "sha256": "ebea250a2b1c808162569bfa91a5cf303c9a47ba62c28e5c9a75f8e12f8fbc4a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6552,6 +6828,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/chunk-AQP2D5EJ.CQ3jAq8F.avatars-v18.js",
+      "sha256": "81c70a767c6d0e8a0e6a698e258ca8792b1f8433619bd6c6fbe8e7617277cbfa",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/chunk-AQP2D5EJ.CQ3jAq8F.avatars-v2.js",
       "sha256": "240b8aee50cc676104ae949211db35deee6a14bf3cf1386260128001d842d954",
       "upstream_program_sha256": null,
@@ -6662,6 +6944,12 @@
     {
       "path": "octop/dashboard/assets/chunk-FMBD7UC4.e8ytq19x.avatars-v17.js",
       "sha256": "910f2709febb72ecbb28020a451b5154c91fc7b7a54b8c8ba17956602527fc16",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/chunk-FMBD7UC4.e8ytq19x.avatars-v18.js",
+      "sha256": "a7563a9eda6fd4d0fa889aaac505c269942872155c45a9c24cc3c81301cd5480",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6780,6 +7068,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/chunk-ND2GUHAM.DmIRSVQy.avatars-v18.js",
+      "sha256": "d8dd2677fdfee1dfef55066e27e2fa23774054ac211b48f626aa92a5f0be150f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/chunk-ND2GUHAM.DmIRSVQy.avatars-v2.js",
       "sha256": "679e3bf508dc29dd33a574a3cc20976c57a7fa636e02661c668986e2e145ab17",
       "upstream_program_sha256": null,
@@ -6890,6 +7184,12 @@
     {
       "path": "octop/dashboard/assets/chunk-QZHKN3VN.DMi7aXHr.avatars-v17.js",
       "sha256": "39be8bebb1b4aa4f5e0ae9eaabede54897ff66fde4e2215aae07c1a23104f7ea",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/chunk-QZHKN3VN.DMi7aXHr.avatars-v18.js",
+      "sha256": "6373c54369e988a7c1a9faf359da4902f123fd834be5be55db43eb2d79aef1c8",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -7008,6 +7308,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/classDiagram-4FO5ZUOK.CJWgUZ5M.avatars-v18.js",
+      "sha256": "4a5ef727766c9980de85e3875d6cccf5b672de094d59aed6b8fccde89bb08842",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/classDiagram-4FO5ZUOK.CJWgUZ5M.avatars-v2.js",
       "sha256": "aa8d007b3922eafeca8ee7c8e23015f8ba4ce4f2059fa172de8b7da7c135eb2a",
       "upstream_program_sha256": null,
@@ -7122,6 +7428,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/classDiagram-v2-Q7XG4LA2.CJWgUZ5M.avatars-v18.js",
+      "sha256": "4a5ef727766c9980de85e3875d6cccf5b672de094d59aed6b8fccde89bb08842",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/classDiagram-v2-Q7XG4LA2.CJWgUZ5M.avatars-v2.js",
       "sha256": "aa8d007b3922eafeca8ee7c8e23015f8ba4ce4f2059fa172de8b7da7c135eb2a",
       "upstream_program_sha256": null,
@@ -7231,6 +7543,12 @@
     },
     {
       "path": "octop/dashboard/assets/clike.CPA0YzTK.avatars-v17.js",
+      "sha256": "de390dd38c14e0d0ef20412bfe5114073acc99018c8b7e89e97ae1d63f6a8743",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/clike.CPA0YzTK.avatars-v18.js",
       "sha256": "de390dd38c14e0d0ef20412bfe5114073acc99018c8b7e89e97ae1d63f6a8743",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -7350,6 +7668,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/compact-chat.avatars-v18.css",
+      "sha256": "41f3b7e7931aa7f0037bc563396070593ce109ce6b50d566baa0c20717a03bf2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/compact-chat.avatars-v5.css",
       "sha256": "41f3b7e7931aa7f0037bc563396070593ce109ce6b50d566baa0c20717a03bf2",
       "upstream_program_sha256": null,
@@ -7424,6 +7748,12 @@
     {
       "path": "octop/dashboard/assets/confirmModal.DXH0-jZp.avatars-v17.js",
       "sha256": "14bcd15656f627e8cf462cfa339d53fb28423518655bc7bd0eb2c6259768bb03",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/confirmModal.DXH0-jZp.avatars-v18.js",
+      "sha256": "910995bf25912113e8cf6f574597981217c984c83fd2bb0343f5ee3b92cd13de",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -7537,6 +7867,12 @@
     },
     {
       "path": "octop/dashboard/assets/connectorDefs.Cu4tm4IW.avatars-v17.css",
+      "sha256": "b3e7779160ef06bbeadfd2bccdb4714723f9fecf1d4c5be35a7ff1042fb1fe06",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/connectorDefs.Cu4tm4IW.avatars-v18.css",
       "sha256": "b3e7779160ef06bbeadfd2bccdb4714723f9fecf1d4c5be35a7ff1042fb1fe06",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -7656,6 +7992,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/connectorDefs.D69XOP1x.avatars-v18.js",
+      "sha256": "a8bf7ca4498f52553bba88c5f24ef25b97a7171d9845fda6c65fe3a416d8de7e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/connectorDefs.D69XOP1x.avatars-v2.js",
       "sha256": "a7ec1656c620f4f912a41c3c1b70aec24d0c7b6bf6e5b83602d3fb45bd8df1c9",
       "upstream_program_sha256": null,
@@ -7770,6 +8112,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/connectors.BOgw8HEB.avatars-v18.js",
+      "sha256": "4ed15da41de7299f37c7e57bc0be1b1408db842dc4fa749bbdd89db4d3042862",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/connectors.BOgw8HEB.avatars-v2.js",
       "sha256": "0d53702e77ae6bc4f22b379b6d20607068b3c62bee8288aa4c80b113abeacbad",
       "upstream_program_sha256": null,
@@ -7879,6 +8227,12 @@
     },
     {
       "path": "octop/dashboard/assets/copyText.31kHvk1y.avatars-v17.js",
+      "sha256": "ca07b7698b10f40e9e2ea515e957e916a7c3e1716e83dee119692ead18206375",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/copyText.31kHvk1y.avatars-v18.js",
       "sha256": "ca07b7698b10f40e9e2ea515e957e916a7c3e1716e83dee119692ead18206375",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -7998,6 +8352,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/cose-bilkent-S5V4N54A.BIn02t04.avatars-v18.js",
+      "sha256": "19e1f3d45f9aeaef1ba39199d8516fcdd7ea952855a85888ee5c291352aaff86",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/cose-bilkent-S5V4N54A.BIn02t04.avatars-v2.js",
       "sha256": "c253be85454938e0ecb2ed2a2398064195b995f6d9cfd1007ec227c2d9cb8c8e",
       "upstream_program_sha256": null,
@@ -8112,6 +8472,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/cpp.Bh3md360.avatars-v18.js",
+      "sha256": "e98a8ade067c66a7c108b8c657155ba3f4efcbf4eb670e107710c263364bc7ec",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/cpp.Bh3md360.avatars-v2.js",
       "sha256": "b90ab4db9c2c54ac9cbfd2880def730a5a0442a146783a2f724266ab5a0446eb",
       "upstream_program_sha256": null,
@@ -8221,6 +8587,12 @@
     },
     {
       "path": "octop/dashboard/assets/css.Dn-1w2Q4.avatars-v17.js",
+      "sha256": "4df4fe5810a61e5ad5dc881f3d3979a14ba02dd5781c84ef3c78e8a1dc73006f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/css.Dn-1w2Q4.avatars-v18.js",
       "sha256": "4df4fe5810a61e5ad5dc881f3d3979a14ba02dd5781c84ef3c78e8a1dc73006f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -8352,6 +8724,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/customMcpUtils.XVuTpzYg.avatars-v18.js",
+      "sha256": "9a82280531bf844d158a1492cea8cd4fc6eb650760314884a6a51fb2dc04e9b7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/customMcpUtils.XVuTpzYg.avatars-v2.js",
       "sha256": "9a82280531bf844d158a1492cea8cd4fc6eb650760314884a6a51fb2dc04e9b7",
       "upstream_program_sha256": null,
@@ -8461,6 +8839,12 @@
     },
     {
       "path": "octop/dashboard/assets/cytoscape.esm.DqnC6J6I.avatars-v17.js",
+      "sha256": "899fb70e4fd67ad3642cfa9274c1216aaefcd7cced149adbf31c37552d659b91",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/cytoscape.esm.DqnC6J6I.avatars-v18.js",
       "sha256": "899fb70e4fd67ad3642cfa9274c1216aaefcd7cced149adbf31c37552d659b91",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -8576,6 +8960,12 @@
     {
       "path": "octop/dashboard/assets/dagre-BM42HDAG.DPz6OBSV.avatars-v17.js",
       "sha256": "65515440a708b85a384872fd9eeb791a99740417c87ebdad2743e69f4bb4417b",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/dagre-BM42HDAG.DPz6OBSV.avatars-v18.js",
+      "sha256": "f74863852b2b699128fae400a439053e9b0ce6a6f795bffe0b57d4262b8ab3bb",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -8706,6 +9096,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/defaultLocale.CcTwRAjA.avatars-v18.js",
+      "sha256": "8ee07b5c92d8ec026ee51dbf4ea5182b944c0a6f25c02cf99daaa52f6041f60f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/defaultLocale.CcTwRAjA.avatars-v2.js",
       "sha256": "8ee07b5c92d8ec026ee51dbf4ea5182b944c0a6f25c02cf99daaa52f6041f60f",
       "upstream_program_sha256": null,
@@ -8820,6 +9216,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/detailRequestGate.CAwTyMBp.avatars-v18.js",
+      "sha256": "85e79f969a7af8c8a85f5b1148fe83732db1e49f61db733c81f1e16c285f56a3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/detailRequestGate.CAwTyMBp.avatars-v2.js",
       "sha256": "b6ec3fa50dc8732d16490c01d9910e57cea6b3f8dfdba49c1790c5e50ef1969f",
       "upstream_program_sha256": null,
@@ -8929,6 +9331,12 @@
     },
     {
       "path": "octop/dashboard/assets/detailRequestGate.DuK91rVc.avatars-v17.css",
+      "sha256": "651baeb5f4f3a7cfa7bff46e9ccff932ba0b46e26a256094fc0b98e33ad4ad64",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/detailRequestGate.DuK91rVc.avatars-v18.css",
       "sha256": "651baeb5f4f3a7cfa7bff46e9ccff932ba0b46e26a256094fc0b98e33ad4ad64",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -9048,6 +9456,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/diagram-2AECGRRQ.rNUm64G3.avatars-v18.js",
+      "sha256": "c926a79db06f98583b73f4c6bb5bf8cc502ef60e805917c2207aaae63eb2b3f6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/diagram-2AECGRRQ.rNUm64G3.avatars-v2.js",
       "sha256": "75265396e51cd3ae9bf5c92745567af9bfb3e9a373fefc66b05780c3e41986bf",
       "upstream_program_sha256": null,
@@ -9158,6 +9572,12 @@
     {
       "path": "octop/dashboard/assets/diagram-5GNKFQAL.KNYjOxDK.avatars-v17.js",
       "sha256": "2d5f90afd3f1feb25efdff1cba25c34ce0ef3c76ca0011578f6be9dd17b0e2e4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/diagram-5GNKFQAL.KNYjOxDK.avatars-v18.js",
+      "sha256": "42aa35a1cd42548d41eaba50f25ec5b8eb4e4a43fa6ba38ad971f0f891aeaa22",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -9276,6 +9696,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/diagram-KO2AKTUF.BBLMeyGA.avatars-v18.js",
+      "sha256": "e7cc77aad4bd6d09c1d9ed5ce65befe5694c3a7a7648bc608e2d7e145baa3a42",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/diagram-KO2AKTUF.BBLMeyGA.avatars-v2.js",
       "sha256": "0edfd647fb2c15c8e9dd07701c95eb2e419669b27bcffa3ea747c7794baa9e55",
       "upstream_program_sha256": null,
@@ -9386,6 +9812,12 @@
     {
       "path": "octop/dashboard/assets/diagram-LMA3HP47.CaGVZ4wJ.avatars-v17.js",
       "sha256": "37ced97a7b5e585e8fe6390c1c31d2c76356c98dc67d9c907118a58ac620ab14",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/diagram-LMA3HP47.CaGVZ4wJ.avatars-v18.js",
+      "sha256": "472e369a2e988dbbe1de86cb1a66b283fe812fb27f891eae324db8baec5f5c5b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -9504,6 +9936,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/diagram-OG6HWLK6.Ce4peo31.avatars-v18.js",
+      "sha256": "d7999724e03f6c9d8c619d2bc09490a206effeb9dff5f1461d2c5f85576ba98f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/diagram-OG6HWLK6.Ce4peo31.avatars-v2.js",
       "sha256": "7587f77f12b29ba367facc1d323e2134b1743edfeb50c37095fb60799173f460",
       "upstream_program_sha256": null,
@@ -9618,6 +10056,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/diff.BYE4s9y_.avatars-v18.js",
+      "sha256": "4e0b732d8da066aa66be27c7b7d3743c678874f70c52826e320b28783f3b9498",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/diff.BYE4s9y_.avatars-v2.js",
       "sha256": "4e0b732d8da066aa66be27c7b7d3743c678874f70c52826e320b28783f3b9498",
       "upstream_program_sha256": null,
@@ -9727,6 +10171,12 @@
     },
     {
       "path": "octop/dashboard/assets/docKind.DxmOLsrX.avatars-v17.js",
+      "sha256": "c243312f54dfca8691f6d01c8cc9924223fa3825256d9dffc9e0c696ba81999e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/docKind.DxmOLsrX.avatars-v18.js",
       "sha256": "c243312f54dfca8691f6d01c8cc9924223fa3825256d9dffc9e0c696ba81999e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -9870,6 +10320,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/docker.-fJRh9XC.avatars-v18.js",
+      "sha256": "bfbdc26e87c8c429d3e3df9f019ecd4414bb853cbf3e026d117511ab694a4cc1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/docker.-fJRh9XC.avatars-v2.js",
       "sha256": "bfbdc26e87c8c429d3e3df9f019ecd4414bb853cbf3e026d117511ab694a4cc1",
       "upstream_program_sha256": null,
@@ -9990,6 +10446,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/docx-preview.Dms6UQRC.avatars-v18.js",
+      "sha256": "a8114bc2890268346e1cf595ca58603ec6bb8fedafb85679ad846c30c57b9670",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/docx-preview.Dms6UQRC.avatars-v2.js",
       "sha256": "6bf8538e7f362799b72437272cc82748673ab73cc61194b083bb7ab267b7ed23",
       "upstream_program_sha256": null,
@@ -10100,6 +10562,12 @@
     {
       "path": "octop/dashboard/assets/en.CaWe8dRV.avatars-v17.js",
       "sha256": "223e79cbcdb9e8cfbfc01e8cc903963733ed53ce1b3144bf1b0f4735f6e3214e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/en.CaWe8dRV.avatars-v18.js",
+      "sha256": "cb57d92078e90e7b3a6d2485a4c36998feb695245462b286a3c4613f09626162",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -10218,6 +10686,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/ensureBuiltins.FqYeL7_D.avatars-v18.js",
+      "sha256": "b0bec16d905e6a90b616e8e90ef08c756617592095ff4decaf6837c14ba5066f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/ensureBuiltins.FqYeL7_D.avatars-v2.js",
       "sha256": "8178ae68f10a9eb45d4124e964b29ddd56b4fdd8035a991966a7795057a15e2f",
       "upstream_program_sha256": null,
@@ -10328,6 +10802,12 @@
     {
       "path": "octop/dashboard/assets/erDiagram-TEJ5UH35.CC6xdiq5.avatars-v17.js",
       "sha256": "88f67a4a8304d025a461ce71391eed08ab2451b318344154db156d2de64d0711",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/erDiagram-TEJ5UH35.CC6xdiq5.avatars-v18.js",
+      "sha256": "05fc78abe7818effc40db82661da29f9322020d91ecb02b1e7a70f2b1b89a421",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -10484,6 +10964,18 @@
     {
       "path": "octop/dashboard/assets/expert-avatar-integration.avatars-v17.js",
       "sha256": "0260abd3ee959ed762c1b151202ab224ec9ae6922ad6eb5cf7ceb7d4900ab68a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-avatar-integration.avatars-v18.css",
+      "sha256": "96e83bebaafc3cc88c8788efd3df3f54c3ab45e4712d8e4f3ba459d219bb4e0f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-avatar-integration.avatars-v18.js",
+      "sha256": "39e971be2bc94336b9ecefb230b4d25fcc81c9be3bbeb25947f10adf3942f8a6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -10680,6 +11172,18 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/expert-avatars.avatars-v18.css",
+      "sha256": "364eee0bd6cb8f42e85314b9081eac3d5f9661fb4a8d0106ff866c77e9ef3dc5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-avatars.avatars-v18.js",
+      "sha256": "79f0bde8aa1884979b7cb4b26593e6f1fe803f053264c7d5f846cfd4c9081e15",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/expert-avatars.avatars-v2.css",
       "sha256": "364eee0bd6cb8f42e85314b9081eac3d5f9661fb4a8d0106ff866c77e9ef3dc5",
       "upstream_program_sha256": null,
@@ -10818,6 +11322,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/expert-presentation.avatars-v18.js",
+      "sha256": "39c4ef4647a49cbff7c60c3411e23c3c6856fe9858f77096d15174108974e270",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/expert-presentation.ba25237f1d.css",
       "sha256": "ba25237f1d6e96068336733d2c34a9994fe82d716241d1151be81fd1c567fa88",
       "upstream_program_sha256": null,
@@ -10832,6 +11342,18 @@
     {
       "path": "octop/dashboard/assets/expert-presentation.js",
       "sha256": "39c4ef4647a49cbff7c60c3411e23c3c6856fe9858f77096d15174108974e270",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-reuse.avatars-v18.js",
+      "sha256": "65a8a3d32de20327c146800e72d63bbdc0cd1c675d71e5f529433a3ab825999c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-reuse.js",
+      "sha256": "65a8a3d32de20327c146800e72d63bbdc0cd1c675d71e5f529433a3ab825999c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -10855,6 +11377,12 @@
     },
     {
       "path": "octop/dashboard/assets/expert-work-status.avatars-v17.js",
+      "sha256": "2d7026e4b3bb83d9a121f6a99416436a1add4bdf2fcd11b3ece1a9f02afc978b",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expert-work-status.avatars-v18.js",
       "sha256": "2d7026e4b3bb83d9a121f6a99416436a1add4bdf2fcd11b3ece1a9f02afc978b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -10910,6 +11438,12 @@
     {
       "path": "octop/dashboard/assets/expertMarket.Drt0Z0gb.avatars-v17.js",
       "sha256": "68014018cf4dc41966f0a59d64e8fa7db58c7d67be2afb001bcd166c39f13ed7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/expertMarket.Drt0Z0gb.avatars-v18.js",
+      "sha256": "45e8f26103180eb7da2c74714dd804fb233ee99df5f7dd8bbae568d8166164b4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -11034,6 +11568,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/fileKind.Ce-W68us.avatars-v18.js",
+      "sha256": "0fb1cf4cc5c0fc8823f71f141271dfb4105dd33307f662515ec6a55681228213",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/fileKind.Ce-W68us.avatars-v2.js",
       "sha256": "0fb1cf4cc5c0fc8823f71f141271dfb4105dd33307f662515ec6a55681228213",
       "upstream_program_sha256": null,
@@ -11143,6 +11683,12 @@
     },
     {
       "path": "octop/dashboard/assets/fileTreeIcon.0systHJG.avatars-v17.css",
+      "sha256": "4402d3bf63bfb2a78f04a430d0dae54ed5dd65b7c0d29dd147a43e778154239c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/fileTreeIcon.0systHJG.avatars-v18.css",
       "sha256": "4402d3bf63bfb2a78f04a430d0dae54ed5dd65b7c0d29dd147a43e778154239c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -11262,6 +11808,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/fileTreeIcon.QTgjm1tj.avatars-v18.js",
+      "sha256": "d104c6419b417a657042892452e4d224c64a7268a6769f5f7c78f8245e750e25",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/fileTreeIcon.QTgjm1tj.avatars-v2.js",
       "sha256": "c02ea92e26edf193af61e99a720e0a94fa59b1439e1bb605d0c44ed508c67c01",
       "upstream_program_sha256": null,
@@ -11372,6 +11924,12 @@
     {
       "path": "octop/dashboard/assets/fileTreeNodes.BjDCEnE-.avatars-v17.js",
       "sha256": "bfe3efbb9f8ffda316e983759b4a2c5dce2ed00c2c6ff3c373cbd7c66dc2ae11",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/fileTreeNodes.BjDCEnE-.avatars-v18.js",
+      "sha256": "110104c54b60062540dc0cd45853086ec9470995515051bb99c4a633fd31fed2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -11496,6 +12054,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/flowDiagram-I6XJVG4X.Dy5i77Up.avatars-v18.js",
+      "sha256": "23781b57d52687c7b9646f6ae5534faa42bf96aa574bee630c6a0a35624024ea",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/flowDiagram-I6XJVG4X.Dy5i77Up.avatars-v2.js",
       "sha256": "6935d1920343a3bf3a17ae9eb07340a6245c942b327f3b85d90327b6dc11c6d2",
       "upstream_program_sha256": null,
@@ -11605,6 +12169,12 @@
     },
     {
       "path": "octop/dashboard/assets/formDraft.d8WbgDpb.avatars-v17.js",
+      "sha256": "14cce87991455987bb19627b916452277ec9f6c7a284a184fa4ac3e9c01377bd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/formDraft.d8WbgDpb.avatars-v18.js",
       "sha256": "14cce87991455987bb19627b916452277ec9f6c7a284a184fa4ac3e9c01377bd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -11724,6 +12294,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/formatMessageTime.C9oWSxOW.avatars-v18.js",
+      "sha256": "038cf85194c7a0c9c578039816a0b0b2bf9aca23461fae74f422754140967e68",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/formatMessageTime.C9oWSxOW.avatars-v2.js",
       "sha256": "038cf85194c7a0c9c578039816a0b0b2bf9aca23461fae74f422754140967e68",
       "upstream_program_sha256": null,
@@ -11834,6 +12410,12 @@
     {
       "path": "octop/dashboard/assets/ganttDiagram-6RSMTGT7.2QLA4LMv.avatars-v17.js",
       "sha256": "7ce604c96b9a010c99bc794af52d0e040482a669b9a61ee501423a366904dfd4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/ganttDiagram-6RSMTGT7.2QLA4LMv.avatars-v18.js",
+      "sha256": "4f2c1966569a51e955d03005713f726c390a4218806a11bf73d3e36a01c1114d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -11952,6 +12534,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/gitGraphDiagram-PVQCEYII.DvYmEEY7.avatars-v18.js",
+      "sha256": "f82ac08433d46ebbe68a1566a7bbae7699c7cf8974d0253cca900f149e04eba0",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/gitGraphDiagram-PVQCEYII.DvYmEEY7.avatars-v2.js",
       "sha256": "afaf7f37c58df25284e886545405a2cd4d742186f7d3bcf4b1e6b09783a27d54",
       "upstream_program_sha256": null,
@@ -12066,6 +12654,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/go.Camj7avl.avatars-v18.js",
+      "sha256": "ebfb3fa65275d1f54b941561801f2f87fd771b8bd448c5df746c54e295748e52",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/go.Camj7avl.avatars-v2.js",
       "sha256": "362fd8542d357f30b947018e77c7372f13bf4860f5f3a54d29290492489773ec",
       "upstream_program_sha256": null,
@@ -12175,6 +12769,12 @@
     },
     {
       "path": "octop/dashboard/assets/graph.Bad5vU0y.avatars-v17.js",
+      "sha256": "3766aafdf0158a323eae8622b4a50adbc14100c7ffdc16be55248c5c908778a0",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/graph.Bad5vU0y.avatars-v18.js",
       "sha256": "3766aafdf0158a323eae8622b4a50adbc14100c7ffdc16be55248c5c908778a0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -12300,6 +12900,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.7t8MmVD3.avatars-v18.js",
+      "sha256": "c26220455b22256cfb2f25da3b3895a9261142798790c13e3016a388dff96cf4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.7t8MmVD3.avatars-v2.js",
       "sha256": "95517ea97b965d5dd18361462568b1b49626f96270477db62977c09291dec345",
       "upstream_program_sha256": null,
@@ -12410,6 +13016,12 @@
     {
       "path": "octop/dashboard/assets/index.B63AzAzb.avatars-v17.js",
       "sha256": "d73f4ca9d1cc9a582e909e6d689c275f365db001ac86526f30ef674aa53aef04",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.B63AzAzb.avatars-v18.js",
+      "sha256": "dffb75b4e8b188520b35eb7109757b72818acaa482a2f4f26303fe790da0c5da",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -12528,6 +13140,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.BB2TACFT.avatars-v18.js",
+      "sha256": "d404207cab22645334c3a435620f21f908629a1b612aba99286f7af8bfa2ddd1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.BB2TACFT.avatars-v2.js",
       "sha256": "95033ef47842a1b2bb3abb8b0c1f9196f78112fa181d37b18f639c83007653bf",
       "upstream_program_sha256": null,
@@ -12638,6 +13256,12 @@
     {
       "path": "octop/dashboard/assets/index.BDgsFf1o.avatars-v17.js",
       "sha256": "08b29acd017cfd49568584a3d4b9b0ea51af38a78586ca73e0d6a8b28926e9e5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BDgsFf1o.avatars-v18.js",
+      "sha256": "0ef99893a99031b557de67a79194fa18924e9546ee64b40edf69d52b8cbf5d22",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -12756,6 +13380,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.BGKpDfUo.avatars-v18.js",
+      "sha256": "772ae954e7a937bbd05c364e6098981460eaac9108d2958eaadd7cccffe354b5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.BGKpDfUo.avatars-v2.js",
       "sha256": "4afa712f5c7f3d317206cbc5c0464bcf53c758af8501fb28012f911e50580742",
       "upstream_program_sha256": null,
@@ -12865,6 +13495,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.BOSlOnE5.avatars-v17.css",
+      "sha256": "09cfe8f0e867527090796a32a95912801422f25ba35360e7f9df5d705c28f9a9",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BOSlOnE5.avatars-v18.css",
       "sha256": "09cfe8f0e867527090796a32a95912801422f25ba35360e7f9df5d705c28f9a9",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -12984,6 +13620,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.BQ1HUqpX.avatars-v18.css",
+      "sha256": "11fcad238c5e9364e10ad1cb141e097aa7d79adcbee77575af82c14a8e852838",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.BQ1HUqpX.avatars-v2.css",
       "sha256": "11fcad238c5e9364e10ad1cb141e097aa7d79adcbee77575af82c14a8e852838",
       "upstream_program_sha256": null,
@@ -13098,6 +13740,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Bexwf9h5.avatars-v18.js",
+      "sha256": "f65409c2ca2defb9d8ae0ad65c35888a056865307c23dd47ae34c6435d89cdd6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Bexwf9h5.avatars-v2.js",
       "sha256": "6ac776e3e2a433f97a803e4fc716d6f336aaaba4e95cc3873517929f214c4e4e",
       "upstream_program_sha256": null,
@@ -13207,6 +13855,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.Bf2P8KOW.avatars-v17.css",
+      "sha256": "788ca9f3ad0383d4b0c28db0d57cc14075d736054aa1c26dbd699393781e2fca",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.Bf2P8KOW.avatars-v18.css",
       "sha256": "788ca9f3ad0383d4b0c28db0d57cc14075d736054aa1c26dbd699393781e2fca",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -13326,6 +13980,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.BnR0UZNm.avatars-v18.css",
+      "sha256": "a16d9625fd183240c3a5d909124a442f8a3fc0f583ed7b6d9a0709446e15caee",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.BnR0UZNm.avatars-v2.css",
       "sha256": "a16d9625fd183240c3a5d909124a442f8a3fc0f583ed7b6d9a0709446e15caee",
       "upstream_program_sha256": null,
@@ -13435,6 +14095,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.BqxIKm3E.avatars-v17.css",
+      "sha256": "1acf00a32372eaf16e25e27526f9849461e37ff934773ab5875b2f40ee7854db",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BqxIKm3E.avatars-v18.css",
       "sha256": "1acf00a32372eaf16e25e27526f9849461e37ff934773ab5875b2f40ee7854db",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -13554,6 +14220,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.BsYGCvv_.avatars-v18.js",
+      "sha256": "fc3ca999dc14ff69e3098681c8f2e7c50548ac923f525a17090ea55a6ffeb937",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.BsYGCvv_.avatars-v2.js",
       "sha256": "564ff6ebf9c1ecdeef31df8c98175376c548b0ad3e07c2580bf944f56aa18206",
       "upstream_program_sha256": null,
@@ -13663,6 +14335,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.BsfH4C6q.avatars-v17.css",
+      "sha256": "c111b203c7fc6c0430ac4c893894404c4dcb4dcbdde6acd49bc26c19bb95e094",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BsfH4C6q.avatars-v18.css",
       "sha256": "c111b203c7fc6c0430ac4c893894404c4dcb4dcbdde6acd49bc26c19bb95e094",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -13782,6 +14460,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Bxr_iAco.avatars-v18.js",
+      "sha256": "90f603b92ea11a1c0a214463f16e246136848f805a4199b648781f579d7fb442",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Bxr_iAco.avatars-v2.js",
       "sha256": "2c808bbec047df0df9a972aae5e8149f1908c43d11aa074abb72eef0662d915f",
       "upstream_program_sha256": null,
@@ -13896,6 +14580,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.C03jfRo1.avatars-v18.js",
+      "sha256": "484f4f744dbf9aab71116606681303ef2d9b4d24a2997505281471b148e8890c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.C03jfRo1.avatars-v2.js",
       "sha256": "de9c692d9fa47916aebccf87eabfafb332e4f364e2cb46f5f2cc2ad28f877c36",
       "upstream_program_sha256": null,
@@ -14005,6 +14695,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.C1PiI6iC.avatars-v17.css",
+      "sha256": "038f4885c458f8d2ea86d89cf89c5ec296eead5d2b806e3a9316879c133e54c5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.C1PiI6iC.avatars-v18.css",
       "sha256": "038f4885c458f8d2ea86d89cf89c5ec296eead5d2b806e3a9316879c133e54c5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -14124,6 +14820,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.C1lMbskB.avatars-v18.js",
+      "sha256": "cebcee9102be3253c4643da824b2fd9165365e9e065ec93c38919c96c465171a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.C1lMbskB.avatars-v2.js",
       "sha256": "0943bec7c42a338c501a204c9d9ff756b830f9c1e9128639b9b5479e0b74132b",
       "upstream_program_sha256": null,
@@ -14233,6 +14935,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.C2dl2LAE.avatars-v17.css",
+      "sha256": "e0d8f41b76656cf12bed61cf3609651d101ae3fcdf238dcf8011287e1eade34d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.C2dl2LAE.avatars-v18.css",
       "sha256": "e0d8f41b76656cf12bed61cf3609651d101ae3fcdf238dcf8011287e1eade34d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -14352,6 +15060,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.C4yxPFQf.avatars-v18.css",
+      "sha256": "c03764314de763594afc3daa80e4e3930a762020a9881ea258beed4e2dcc7ffc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.C4yxPFQf.avatars-v2.css",
       "sha256": "c03764314de763594afc3daa80e4e3930a762020a9881ea258beed4e2dcc7ffc",
       "upstream_program_sha256": null,
@@ -14461,6 +15175,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.CC_uo9wK.avatars-v17.css",
+      "sha256": "89607a152ee9531b6ac6b8c3ea5fe7afccaf7c8b9cd36a56a6efc04fb0169f17",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.CC_uo9wK.avatars-v18.css",
       "sha256": "89607a152ee9531b6ac6b8c3ea5fe7afccaf7c8b9cd36a56a6efc04fb0169f17",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -14580,6 +15300,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.CUATZ323.avatars-v18.css",
+      "sha256": "69fe250f7aa8b4b236bbcd3fd6b700a3a16f42d7b0150ac1c594e67cb638fbcd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.CUATZ323.avatars-v2.css",
       "sha256": "69fe250f7aa8b4b236bbcd3fd6b700a3a16f42d7b0150ac1c594e67cb638fbcd",
       "upstream_program_sha256": null,
@@ -14694,6 +15420,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.CcscnKYC.avatars-v18.js",
+      "sha256": "b8c0c9d8aa28980ef0c4344018fe35e3e8963b2143399df444e0706cdd2921aa",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.CcscnKYC.avatars-v2.js",
       "sha256": "39855da45a6c1636019c95415111103238a5cb6109d75b2f3f6f40309f214390",
       "upstream_program_sha256": null,
@@ -14803,6 +15535,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.Cjc4TCPe.avatars-v17.css",
+      "sha256": "58bb29b8d5c2e9d0b1d6eeb13b442b14bb60bcbdd465c53b4a23ec17f43c3286",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.Cjc4TCPe.avatars-v18.css",
       "sha256": "58bb29b8d5c2e9d0b1d6eeb13b442b14bb60bcbdd465c53b4a23ec17f43c3286",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -14922,6 +15660,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Cl5Q7N4w.avatars-v18.css",
+      "sha256": "409527f8ef5962b8b0892602eb86bade8db43c808575c8e12a75b3c2cd4a25dd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Cl5Q7N4w.avatars-v2.css",
       "sha256": "409527f8ef5962b8b0892602eb86bade8db43c808575c8e12a75b3c2cd4a25dd",
       "upstream_program_sha256": null,
@@ -15032,6 +15776,12 @@
     {
       "path": "octop/dashboard/assets/index.CrSjNUub.avatars-v17.js",
       "sha256": "bfe6173cb0fb2536063bfb6e7a0bda9e3ffcd2ad54a5cd42ed3ef3ae57104b68",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.CrSjNUub.avatars-v18.js",
+      "sha256": "6c6b38d16b31429bed31975ebaa616b695f5af51b7f6c3ff65252524c8f57121",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -15150,6 +15900,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Cz7IYLwr.avatars-v18.js",
+      "sha256": "63d3ccdf1936c025eb610626ee8a8abc19760f8486777f44d22e1c30d7444fdd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Cz7IYLwr.avatars-v2.js",
       "sha256": "9bb085e58c90e4972f20eee74e869c4014e40960f273fb7fd355d921b4da2e30",
       "upstream_program_sha256": null,
@@ -15264,6 +16020,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.D-iyj8DH.avatars-v18.js",
+      "sha256": "e8da50371f237057239e989ac238849f0bc2c33440a53250965ba727e9700cc9",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.D-iyj8DH.avatars-v2.js",
       "sha256": "cd10d8bb0161fbc863f6e18acd9bcb293e3d722a5a211720b9fdbb12cdc767e2",
       "upstream_program_sha256": null,
@@ -15373,6 +16135,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.D4OCT0Yt.avatars-v17.css",
+      "sha256": "2632c6eeb37a9822ea2549be4dfc0846bc6431d140e8d764c4790e0c2feb20b3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.D4OCT0Yt.avatars-v18.css",
       "sha256": "2632c6eeb37a9822ea2549be4dfc0846bc6431d140e8d764c4790e0c2feb20b3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -15492,6 +16260,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.D6xoRuBe.avatars-v18.js",
+      "sha256": "4c85cbe0b02c99ab472809960e28dfac86e1fe68739f5d9490114fea92c4ca2c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.D6xoRuBe.avatars-v2.js",
       "sha256": "0a9fbccbca2c835e40b1e3ffe52736559ea904001c3be3e8b01853d3ecd6e71a",
       "upstream_program_sha256": null,
@@ -15601,6 +16375,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.D7nEM7nv.avatars-v17.css",
+      "sha256": "c2d56c655eda06498e718e721115514fa4f79ce1377a6e7ff2e7b9dc240ba1db",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.D7nEM7nv.avatars-v18.css",
       "sha256": "c2d56c655eda06498e718e721115514fa4f79ce1377a6e7ff2e7b9dc240ba1db",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -15720,6 +16500,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.DCrcvDUN.avatars-v18.css",
+      "sha256": "e8f6393fdbdf1e49d4ede2979f1e7056e73528a64c15d63ab466dcde781e455c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.DCrcvDUN.avatars-v2.css",
       "sha256": "e8f6393fdbdf1e49d4ede2979f1e7056e73528a64c15d63ab466dcde781e455c",
       "upstream_program_sha256": null,
@@ -15834,6 +16620,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.DH7bXiZ0.avatars-v18.js",
+      "sha256": "da264c2a3401adad70faf2cffefb66620c8e369a6cc80af2995ddeab134526cf",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.DH7bXiZ0.avatars-v2.js",
       "sha256": "099eaabf80f898456c3d58cce46b984932fef3589654432abd889760448c0a07",
       "upstream_program_sha256": null,
@@ -15943,6 +16735,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.DRfjDAAF.avatars-v17.css",
+      "sha256": "2c2dfa2f1fa3492caf133e5cd729aa58118027817253c3f01ee92f36f15416b6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.DRfjDAAF.avatars-v18.css",
       "sha256": "2c2dfa2f1fa3492caf133e5cd729aa58118027817253c3f01ee92f36f15416b6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -16062,6 +16860,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.DWqAV4n3.avatars-v18.js",
+      "sha256": "9e64435c4e1d9d74f2db1332c3fb4622c2016a6ee2e1ffbba53354b8103a9d5e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.DWqAV4n3.avatars-v2.js",
       "sha256": "57766deb13fe6f8817f8ac3a4390d0fba97e6100c875affc60697675bb34639c",
       "upstream_program_sha256": null,
@@ -16176,6 +16980,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.DWyIhCFK.avatars-v18.js",
+      "sha256": "4878eb4e15d7cf732598a258a24db1f16cc1ed64f0e52dc699503ca76729e0a5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.DWyIhCFK.avatars-v2.js",
       "sha256": "e80dd22b89c78c6ce57d78b7c7522c52b95e03b6d45902515de41974d5473eff",
       "upstream_program_sha256": null,
@@ -16285,6 +17095,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.DZrflTr9.avatars-v17.css",
+      "sha256": "b9ebff380fb30825604a8c478e214e5e1dd4f1c17bda3cfed709a3f237ae64a6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.DZrflTr9.avatars-v18.css",
       "sha256": "b9ebff380fb30825604a8c478e214e5e1dd4f1c17bda3cfed709a3f237ae64a6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -16404,6 +17220,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Dd4k5Ti-.avatars-v18.js",
+      "sha256": "14237b379d6d88a991dbc52099560b8112052792c74f4c6e69c7e49a3895313a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Dd4k5Ti-.avatars-v2.js",
       "sha256": "be7b3b964dd51fa3c5adf291a8ba5c55a6bc1bc1333a48c154001fd56b73a579",
       "upstream_program_sha256": null,
@@ -16514,6 +17336,12 @@
     {
       "path": "octop/dashboard/assets/index.DjpO9Zui.avatars-v17.js",
       "sha256": "fc994f36bb0d671422002cb20ea4ea4719e4901b9bbef7ab9a8dc9e3606636e3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.DjpO9Zui.avatars-v18.js",
+      "sha256": "c5495023125b6c2f54ff2825afda1ecc88dbbdce2f1ddb4f398be8a9fdb45c72",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -16632,6 +17460,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.DkFEuo4I.avatars-v18.js",
+      "sha256": "2d39253e8a0edef8d08970bfcbcc67e825f8645747ad9b17444dcaf4fec080f1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.DkFEuo4I.avatars-v2.js",
       "sha256": "e4ab46927b76cf3e91b373b6f76e1325a98b98208ebb9b24070646704ac90dfa",
       "upstream_program_sha256": null,
@@ -16741,6 +17575,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.Dpb1ICSh.avatars-v17.css",
+      "sha256": "1793da3f44f51dec8be7cc132891ee579147eddece179036af3c6e67b85ce119",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.Dpb1ICSh.avatars-v18.css",
       "sha256": "1793da3f44f51dec8be7cc132891ee579147eddece179036af3c6e67b85ce119",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -16860,6 +17700,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.Ds_DN6_-.avatars-v18.css",
+      "sha256": "43708e6732e59fc4ce3ffe38aef08291c199a08b879fc232c30e5f36a8f09385",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Ds_DN6_-.avatars-v2.css",
       "sha256": "ec56b6b12de9712d78e1e9635c664335d96fc6f122c1796d61e71a1e9ae928bc",
       "upstream_program_sha256": null,
@@ -16969,6 +17815,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.Fzwav60h.avatars-v17.css",
+      "sha256": "f3746ec15c196799cc74138bcc8d13afbfe58290c73ef5eb0f043715d480b592",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.Fzwav60h.avatars-v18.css",
       "sha256": "f3746ec15c196799cc74138bcc8d13afbfe58290c73ef5eb0f043715d480b592",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -17088,6 +17940,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.G9_xhF8C.avatars-v18.js",
+      "sha256": "557186f6d3b7d421cfb315124108bfb583bcb803e64343b1065d97acbbd38a41",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.G9_xhF8C.avatars-v2.js",
       "sha256": "3a8a203ed14da3bc6816ff49ae625e11f8b7c40debe2caab31c4d666b52d83b9",
       "upstream_program_sha256": null,
@@ -17198,6 +18056,12 @@
     {
       "path": "octop/dashboard/assets/index.GTq9IEDq.avatars-v17.js",
       "sha256": "3ad3c66978d8755783807045e05a2f079e60a5d29a6f6cae326ca69279c94968",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.GTq9IEDq.avatars-v18.js",
+      "sha256": "b9d1d30a05fe993ad210ebec18fed8d9104e345704b2c76933d136b9889f1ce2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -17316,6 +18180,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.IcHPDMJY.avatars-v18.js",
+      "sha256": "c676fa2b3ece86fda900f7b9b99b0ade540cc43d9e0f04709e3ba1bb2fc73e6e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.IcHPDMJY.avatars-v2.js",
       "sha256": "e9778b4fb5161f122a56810748eb787de98e94bb3d2b74bab740045fd6bc16ba",
       "upstream_program_sha256": null,
@@ -17425,6 +18295,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.U8WmVql_.avatars-v17.css",
+      "sha256": "2f37cd8fec766648a28390b2e9c47d2f87917d43a6f26d73bb901ea5063ea766",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.U8WmVql_.avatars-v18.css",
       "sha256": "2f37cd8fec766648a28390b2e9c47d2f87917d43a6f26d73bb901ea5063ea766",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -17544,6 +18420,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.XeflAzh6.avatars-v18.js",
+      "sha256": "bef569ae4ff3d52141f0847c7343264b85a5936c9bf3e3118f93ae6425c10796",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.XeflAzh6.avatars-v2.js",
       "sha256": "2f30d607b86776231934c62b2359e139482ea4cf2323106760b8bfb6ae71bd8c",
       "upstream_program_sha256": null,
@@ -17654,6 +18536,12 @@
     {
       "path": "octop/dashboard/assets/index.bLemDvv8.avatars-v17.js",
       "sha256": "eb581e577e4fd754b1224ff56615a256da558e12336f4dd63d9b471326722682",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.bLemDvv8.avatars-v18.js",
+      "sha256": "c7f91b7b6164a35f03e004de4bcd1547ec3773454526e7b36c39b6535efb8c66",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -17772,6 +18660,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.ev1UC638.avatars-v18.js",
+      "sha256": "189a813156d5552971c8714bb8a915a25bf52f7a3f87200657f26b9445b28e2c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.ev1UC638.avatars-v2.js",
       "sha256": "e21295aebf126da54df16e4cf6603787ee636b30a227742e825774481c3ceb0c",
       "upstream_program_sha256": null,
@@ -17882,6 +18776,12 @@
     {
       "path": "octop/dashboard/assets/index.module.B9de4inW.avatars-v17.js",
       "sha256": "f6203a7764047d84797e04bb249e5a0fd66254f630943d5ab84fc72756bf4618",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.module.B9de4inW.avatars-v18.js",
+      "sha256": "b044a2becba0fc56033990ec386a11a747754974f21b22f5eb4c452443d43796",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -18000,6 +18900,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/index.o73Ap-yM.avatars-v18.js",
+      "sha256": "1dd17db7147bb428876f1ea4b6de1aa525ad8a893a52dec6f9f721c60eb35127",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.o73Ap-yM.avatars-v2.js",
       "sha256": "a010c135c234b9e6fd2ece642a27e634a1eb44d18fae5e20a08aac8626854791",
       "upstream_program_sha256": null,
@@ -18109,6 +19015,12 @@
     },
     {
       "path": "octop/dashboard/assets/index.wE0QXcyN.avatars-v17.css",
+      "sha256": "14120edcb1d54e678813eb527c8abef568a53f8233cd08f07b2b1c87031c45ce",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.wE0QXcyN.avatars-v18.css",
       "sha256": "14120edcb1d54e678813eb527c8abef568a53f8233cd08f07b2b1c87031c45ce",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -18228,6 +19140,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/infoDiagram-5YYISTIA.B5DCRsIU.avatars-v18.js",
+      "sha256": "0711425dc422ddf9987f170262828c1a29511ad25247d403e58d24ad8ef0a061",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/infoDiagram-5YYISTIA.B5DCRsIU.avatars-v2.js",
       "sha256": "ccce895bf9011b625610fd07e3222d9135a9ef31a0e0529cce8cf599e0ea7a65",
       "upstream_program_sha256": null,
@@ -18337,6 +19255,12 @@
     },
     {
       "path": "octop/dashboard/assets/init.DDlSWoZO.avatars-v17.js",
+      "sha256": "51af645291781a4a9ea2605687376ad0318483a815192b71a3a41c2f9a159d7c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/init.DDlSWoZO.avatars-v18.js",
       "sha256": "51af645291781a4a9ea2605687376ad0318483a815192b71a3a41c2f9a159d7c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -18456,6 +19380,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/ishikawaDiagram-YF4QCWOH.BMqclxra.avatars-v18.js",
+      "sha256": "fc7b983ed0a570332e0ab5a57b18bcba278f6166facaffa4a1dc0d8bf9d02663",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/ishikawaDiagram-YF4QCWOH.BMqclxra.avatars-v2.js",
       "sha256": "40aecbf0544ceee4fda20fd70f785ad8a655a133bcaac789c079598253737882",
       "upstream_program_sha256": null,
@@ -18566,6 +19496,12 @@
     {
       "path": "octop/dashboard/assets/java.CLDpgQbZ.avatars-v17.js",
       "sha256": "bea23e84fa344f48fcdb493bd9716051a09c4e5882c1f235fbf9067225dbbdac",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/java.CLDpgQbZ.avatars-v18.js",
+      "sha256": "b4635dfa81262c8330e9bdbebc4e8911fa637194416c530ceed47d3daf420cf1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -18684,6 +19620,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/javascript.BCEfN6Kw.avatars-v18.js",
+      "sha256": "9033f668688a4a9ae4bd3eef56aca58ca4b4c91eb782a7ead8eff20759ff0a9c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/javascript.BCEfN6Kw.avatars-v2.js",
       "sha256": "64f8ca2eea3dbaf07a75cb7193dbae7ceb9cbadf15733256c3f31f32dfadf94c",
       "upstream_program_sha256": null,
@@ -18794,6 +19736,12 @@
     {
       "path": "octop/dashboard/assets/javascript.C0YHZvne.avatars-v17.js",
       "sha256": "84ab32ec812a66254468781f5c3a26bf70302631e99bbb18d8ae9059b74cce7c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/javascript.C0YHZvne.avatars-v18.js",
+      "sha256": "cc6d30b42ec2b7946883078bf50c4c0c4b1dd03bd6ce57aa0b3868f4c0f9c11a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -18918,6 +19866,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/journeyDiagram-JHISSGLW.DKhU2Q9D.avatars-v18.js",
+      "sha256": "12664f150ac598c95bc77541bb332e72a0e9607880b3db6294f7a7e1f7733d00",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/journeyDiagram-JHISSGLW.DKhU2Q9D.avatars-v2.js",
       "sha256": "2126ff69daa53e15503aaff1c6ed2e67cb2ef39ebd57e7960db9594cf7d94fa6",
       "upstream_program_sha256": null,
@@ -19027,6 +19981,12 @@
     },
     {
       "path": "octop/dashboard/assets/json.P74dTKQ0.avatars-v17.js",
+      "sha256": "e2e3bd14714a58f32802eff709dd0270bcbcb721b569747f86d9e3b52c6233c7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/json.P74dTKQ0.avatars-v18.js",
       "sha256": "e2e3bd14714a58f32802eff709dd0270bcbcb721b569747f86d9e3b52c6233c7",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -19146,6 +20106,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/kanban-definition-UN3LZRKU.QKkipNYE.avatars-v18.js",
+      "sha256": "f89bc13adeb86344974ceff83c223a9103f9bf00187d49331b42e8dbd22a436b",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/kanban-definition-UN3LZRKU.QKkipNYE.avatars-v2.js",
       "sha256": "ad4f6d31d6e92c51f6123bfdc1daedccc526fc38bea173937eec068d5b142966",
       "upstream_program_sha256": null,
@@ -19260,6 +20226,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/knowledgeCitationDisplay.DMM3mIg7.avatars-v18.js",
+      "sha256": "7fedb73ddd428d1c7d07dc6e55cb38f2d54680d8667f7a4a2167609b27f3a8ea",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/knowledgeCitationDisplay.DMM3mIg7.avatars-v2.js",
       "sha256": "f32700ffcf0c4222f2ebb9c6290ff82b98d7e32cb5fba3999892274ec556d4c5",
       "upstream_program_sha256": null,
@@ -19369,6 +20341,12 @@
     },
     {
       "path": "octop/dashboard/assets/knowledgeDocPreview.CRXKTGi6.avatars-v17.js",
+      "sha256": "5716bb38395f6c71e804f8b70f56807e4f52dbb4bf615d4b82896eee1bd9dc89",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/knowledgeDocPreview.CRXKTGi6.avatars-v18.js",
       "sha256": "5716bb38395f6c71e804f8b70f56807e4f52dbb4bf615d4b82896eee1bd9dc89",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -19494,6 +20472,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/layout.CYcqwDbi.avatars-v18.js",
+      "sha256": "394ff97c17f2789e3e3a8e28ead7d7f32785c241223fe4cfccc2d5d1905088b3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/layout.CYcqwDbi.avatars-v2.js",
       "sha256": "e96d7366dc98b98bd51391a434e99e534b84bc8879b8e88092fcfeeca781da22",
       "upstream_program_sha256": null,
@@ -19604,6 +20588,12 @@
     {
       "path": "octop/dashboard/assets/linear.CJtCR-3w.avatars-v17.js",
       "sha256": "a26db561e51aa6871c8ef8c31ad20ec98286c7e72d326b37e7b2e6ce64e00140",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/linear.CJtCR-3w.avatars-v18.js",
+      "sha256": "50e650ec35e1dcceb6d844fb6ce5f5a16ea6e01054d3609f7656b175f2303f62",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -19722,6 +20712,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/markdown.C2jwThto.avatars-v18.js",
+      "sha256": "1e4e7acb9a327734336259e3918decd697157f0615e35b171c7032b0e01af0f2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/markdown.C2jwThto.avatars-v2.js",
       "sha256": "3cd1d20c9b5f10305d9847b9ee48923f430bb4b9534e230ca2632d13d90c8c72",
       "upstream_program_sha256": null,
@@ -19831,6 +20827,12 @@
     },
     {
       "path": "octop/dashboard/assets/markup.BNAwpkfj.avatars-v17.js",
+      "sha256": "2029b9bed7a315c2db8bfe77d8cf4f2bd3af73b2172a715f8fea28c8c84ebe88",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/markup.BNAwpkfj.avatars-v18.js",
       "sha256": "2029b9bed7a315c2db8bfe77d8cf4f2bd3af73b2172a715f8fea28c8c84ebe88",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -20046,6 +21048,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/mermaid.core.Bg-GuoUs.avatars-v18.js",
+      "sha256": "a574c3aa77d7fd0fb7e34efbc1cd201a6059625a4c744e9839b69d4a0950c74c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/mermaid.core.Bg-GuoUs.avatars-v2.js",
       "sha256": "42e7101bfff106d2a5a880cc68d98dec16d229697c786755d7f9a161712956eb",
       "upstream_program_sha256": null,
@@ -20162,6 +21170,12 @@
     {
       "path": "octop/dashboard/assets/mindmap-definition-RKZ34NQL.DLAZa5J4.avatars-v17.js",
       "sha256": "79b6335458821798d27f3c271fd3292b908075f2507aa5e063999d43cd1c4d80",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/mindmap-definition-RKZ34NQL.DLAZa5J4.avatars-v18.js",
+      "sha256": "2476afa1ebf72e0b751a5e4f7aac2e2d72faeaad05d1493cb13ab34bb305ba28",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -20293,6 +21307,12 @@
     },
     {
       "path": "octop/dashboard/assets/modelOptions.BrFzajT7.avatars-v17.js",
+      "sha256": "378ba45d5ff68e94e86940ef27ecf29603c7909be07a4d9d6eb394d9563ba0fe",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/modelOptions.BrFzajT7.avatars-v18.js",
       "sha256": "378ba45d5ff68e94e86940ef27ecf29603c7909be07a4d9d6eb394d9563ba0fe",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -20460,6 +21480,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/one-dark.1LAQk5Ty.avatars-v18.js",
+      "sha256": "0c30d489586605d3f009b954fc493304c38bb55bd7b1ac4e2fe4b5e552af9c53",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/one-dark.1LAQk5Ty.avatars-v2.js",
       "sha256": "0c30d489586605d3f009b954fc493304c38bb55bd7b1ac4e2fe4b5e552af9c53",
       "upstream_program_sha256": null,
@@ -20569,6 +21595,12 @@
     },
     {
       "path": "octop/dashboard/assets/one-light.CMyozx7s.avatars-v17.js",
+      "sha256": "1bd19acffa83499343de293203b7d9bfbec4d11f4304428876615b1f631c89e5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/one-light.CMyozx7s.avatars-v18.js",
       "sha256": "1bd19acffa83499343de293203b7d9bfbec4d11f4304428876615b1f631c89e5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -20712,6 +21744,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/ordinal.djD5ulR0.avatars-v18.js",
+      "sha256": "354bbd3474010d813d897fd6ed82fe6ea1ee70f918110f3ebcbceba8aa9e3829",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/ordinal.djD5ulR0.avatars-v2.js",
       "sha256": "b4c8f35b27ab2e3a901fbf0325151cdd0f2490ed8b5e4af111087803c746bfa0",
       "upstream_program_sha256": null,
@@ -20832,6 +21870,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/pieDiagram-4H26LBE5.BMmfnM-m.avatars-v18.js",
+      "sha256": "9ed21db7ccc953fcc982f168e48e93b31005a6ebf0ef60ce1c0a4ce087f63de1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/pieDiagram-4H26LBE5.BMmfnM-m.avatars-v2.js",
       "sha256": "b4822bdaf5446a81596c6b40f0f88f459c5bc55d6cbccbf5d22904cdac1dfdc7",
       "upstream_program_sha256": null,
@@ -20942,6 +21986,12 @@
     {
       "path": "octop/dashboard/assets/plugins.CKG7_ncx.avatars-v17.js",
       "sha256": "97d18cb2e0ce0818921ecc844b91e110ae96da89445a7fb54c7ced76bb2b3e05",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/plugins.CKG7_ncx.avatars-v18.js",
+      "sha256": "bb3b2f05b00fc3bfd23e423e8bb55384d82d2e2e409663b218f49c93e9f7233a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -21066,6 +22116,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/prism-light.BOOS0CO3.avatars-v18.js",
+      "sha256": "db3b3d17ac4ada05d4165ecd9a4dcf5fc489c5d2b87c8fc909720067a3f4fe30",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/prism-light.BOOS0CO3.avatars-v2.js",
       "sha256": "3220b492b361279fe53303743778802b26c3276ca22b6951461b848eec946a68",
       "upstream_program_sha256": null,
@@ -21163,6 +22219,12 @@
     },
     {
       "path": "octop/dashboard/assets/project-folder-picker.avatars-v17.js",
+      "sha256": "8d3741518e63b72a7df97129a1265b9737d1755ef6540fd183cb62093842221d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/project-folder-picker.avatars-v18.js",
       "sha256": "8d3741518e63b72a7df97129a1265b9737d1755ef6540fd183cb62093842221d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -21266,6 +22328,18 @@
     {
       "path": "octop/dashboard/assets/project-folders.avatars-v17.js",
       "sha256": "3b20f3ac4bf7929e716ee616e21a11661957b80a28db5dcd31de38dcf24e15dc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/project-folders.avatars-v18.css",
+      "sha256": "96db3385ae7e47661e0e65b251d0fc1af7ce4721e6d45da99661dc51e8b72d57",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/project-folders.avatars-v18.js",
+      "sha256": "691577b5a115671addf8d34b2203858b13964d156a5ac700c7c849c3e08ff667",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -21456,6 +22530,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/python.DtXtXTKX.avatars-v18.js",
+      "sha256": "1225c4cca9d49a52ffc314b2d5898f95a7c7e148e621440443c53a8b28237385",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/python.DtXtXTKX.avatars-v2.js",
       "sha256": "1225c4cca9d49a52ffc314b2d5898f95a7c7e148e621440443c53a8b28237385",
       "upstream_program_sha256": null,
@@ -21566,6 +22646,12 @@
     {
       "path": "octop/dashboard/assets/quadrantDiagram-W4KKPZXB.B9GuMtQb.avatars-v17.js",
       "sha256": "1e73fcc3cee78d216d4b0f7d7df90ff96821df6667c9f577d89b86de82a97cd8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/quadrantDiagram-W4KKPZXB.B9GuMtQb.avatars-v18.js",
+      "sha256": "46b79ee1a7cc080831318e0eb7a0280cd02799406588b76beea25fe590b997d8",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -21684,6 +22770,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/requirementDiagram-4Y6WPE33.D9OCdpGT.avatars-v18.js",
+      "sha256": "232e70d8a50e0341512e4d56bd36e6dbb947dba212c58316ccdbf4ec93919ae8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/requirementDiagram-4Y6WPE33.D9OCdpGT.avatars-v2.js",
       "sha256": "d981fae74b69a6d09ea09600cb430699ece4ad4d5af980048618851edb16e127",
       "upstream_program_sha256": null,
@@ -21793,6 +22885,12 @@
     },
     {
       "path": "octop/dashboard/assets/rust.5cgPugzK.avatars-v17.js",
+      "sha256": "8697f29ed02ff617473d1aee77256fc3c575ffc90814eb18fae4434b905893df",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/rust.5cgPugzK.avatars-v18.js",
       "sha256": "8697f29ed02ff617473d1aee77256fc3c575ffc90814eb18fae4434b905893df",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -21912,6 +23010,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/sankeyDiagram-5OEKKPKP.DwG1hQlh.avatars-v18.js",
+      "sha256": "c0234510b563b3a6a79655bfd437893516749cc664b120c6c823a1df0f1c7474",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/sankeyDiagram-5OEKKPKP.DwG1hQlh.avatars-v2.js",
       "sha256": "1af85e24e776c9ac1956f92d59cda35f63d023e5d1d07d389610bd5ab503786e",
       "upstream_program_sha256": null,
@@ -22022,6 +23126,12 @@
     {
       "path": "octop/dashboard/assets/saveBlobAsFile.Bq4VCdIR.avatars-v17.js",
       "sha256": "50e15907bc21044df205657c79871966be1ae939a4767532fc549e45b22ac65a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/saveBlobAsFile.Bq4VCdIR.avatars-v18.js",
+      "sha256": "75cea663df41591c844b13002343940e1c38b8e7aadb4820d7dfb663f2428d5f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -22140,6 +23250,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/sequenceDiagram-3UESZ5HK.C8JwDwZu.avatars-v18.js",
+      "sha256": "0fd00afc69e7d6d3674b071512bd17eaa19b72e09e8a1d5768b3fff0e5aca700",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/sequenceDiagram-3UESZ5HK.C8JwDwZu.avatars-v2.js",
       "sha256": "a606f447e2575419b414139973f3f7b7f4aca81c22858a020bd3c0365d2b6256",
       "upstream_program_sha256": null,
@@ -22249,6 +23365,12 @@
     },
     {
       "path": "octop/dashboard/assets/shellCodeBlock.BHtT7p-E.avatars-v17.js",
+      "sha256": "b535bbef0f922f88b5d77dd3de119d6a320359ea48c1dda43b9cc6322994a5cf",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/shellCodeBlock.BHtT7p-E.avatars-v18.js",
       "sha256": "b535bbef0f922f88b5d77dd3de119d6a320359ea48c1dda43b9cc6322994a5cf",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -22364,6 +23486,12 @@
     {
       "path": "octop/dashboard/assets/showApiToast.BwqXoOxP.avatars-v17.js",
       "sha256": "ffa8e21c84c2a631193d47342e11f955e835b3e2e037c280f325577ff00ba533",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/showApiToast.BwqXoOxP.avatars-v18.js",
+      "sha256": "2ccb8f7d9d67e4e9a502cde6f1468ac032e01d38ff7f6be1c8de484a3f56f7a2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -22494,6 +23622,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/skillDisplayNames.ClhQkBfn.avatars-v18.js",
+      "sha256": "e631011c304034007efbf1e81f14d1041a9bc38731e8803bb043cca3449400e3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/skillDisplayNames.ClhQkBfn.avatars-v2.js",
       "sha256": "e3bb36007cc07dfecb6fb0b936eaeb932bdbd58936acbd770d6b23f30622e094",
       "upstream_program_sha256": null,
@@ -22603,6 +23737,12 @@
     },
     {
       "path": "octop/dashboard/assets/sql.x1lYX_si.avatars-v17.js",
+      "sha256": "c00609c01bd5bf3e83de3b182fbe87dbbba2596c820ed3f626696c0c5517ec05",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/sql.x1lYX_si.avatars-v18.js",
       "sha256": "c00609c01bd5bf3e83de3b182fbe87dbbba2596c820ed3f626696c0c5517ec05",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -22728,6 +23868,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/stateDiagram-AJRCARHV.BQu2cU7D.avatars-v18.js",
+      "sha256": "5be878657e44ca22e8c2edbf86b437c83a27bf74347b6957d6a0b983e4c111fc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/stateDiagram-AJRCARHV.BQu2cU7D.avatars-v2.js",
       "sha256": "42a4e3505dcf8680a9a758acba75b845bdc9f7a561fdc6f313c49955ffc40af3",
       "upstream_program_sha256": null,
@@ -22842,6 +23988,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/stateDiagram-v2-BHNVJYJU.BF4LUSzE.avatars-v18.js",
+      "sha256": "3ee6019b126f134415294c78aa8cb3b6b54b1dcf95f7f54ff4040b01ea45dcbe",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/stateDiagram-v2-BHNVJYJU.BF4LUSzE.avatars-v2.js",
       "sha256": "780d56672bc23d35b09a7887d65bf5e46de8f68e07bb3842b24c5208e89fbea4",
       "upstream_program_sha256": null,
@@ -22951,6 +24103,12 @@
     },
     {
       "path": "octop/dashboard/assets/string.C-vk08Zt.avatars-v17.js",
+      "sha256": "8c7e528856e670c0b780dbd8acf34f60eb00a246430bcdf96256c6e057eb19c9",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/string.C-vk08Zt.avatars-v18.js",
       "sha256": "8c7e528856e670c0b780dbd8acf34f60eb00a246430bcdf96256c6e057eb19c9",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -23082,6 +24240,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/sw-register.BB5nh-x9.avatars-v18.js",
+      "sha256": "904c9f5f7cbd19d1682f079ab9f1113bf91fd81d06ae96f00bccf02a53d2f9ac",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/sw-register.BB5nh-x9.avatars-v2.js",
       "sha256": "904c9f5f7cbd19d1682f079ab9f1113bf91fd81d06ae96f00bccf02a53d2f9ac",
       "upstream_program_sha256": null,
@@ -23198,6 +24362,12 @@
     {
       "path": "octop/dashboard/assets/teams.CdSyvhZG.avatars-v17.js",
       "sha256": "b9ec10d89656c6220f6fe1412ae30c66b892a383d1201910f8b1c0b95e300fd3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/teams.CdSyvhZG.avatars-v18.js",
+      "sha256": "bee08ff35e5193476d222c4c5231643ffba1c9aac41d3a50816fc4f18f1f73ef",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -23334,6 +24504,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/terminalThemes.0aI4bBTI.avatars-v18.js",
+      "sha256": "81604d471e07a0d758175a627f6c6794d6fb2ebd3fe7c7eee6a4a1614af55f0c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/terminalThemes.0aI4bBTI.avatars-v2.js",
       "sha256": "b57a86f22d0363f0b3ce831936c7ee1b6edd028fe9457de752c4df3fbf003e9f",
       "upstream_program_sha256": null,
@@ -23444,6 +24620,12 @@
     {
       "path": "octop/dashboard/assets/time.DyOCc4Rp.avatars-v17.js",
       "sha256": "e110274db30d70915366e5900dcde12b7dff07e5c0154a1178ad510ab269f725",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/time.DyOCc4Rp.avatars-v18.js",
+      "sha256": "5ef00b80e27ddcffe8cc7dae0a86bc3aae54698edcfeea2148c8fd7abf517543",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -23562,6 +24744,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/timeline-definition-PNZ67QCA.Dkge0DhL.avatars-v18.js",
+      "sha256": "79fc1bef9831b8312b0549b1d7568ee504945fd9bd3f30f0d8be5104236eca2b",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/timeline-definition-PNZ67QCA.Dkge0DhL.avatars-v2.js",
       "sha256": "1bb68123fcc9cc47ada40215777d3d1fa916a57a3b1eb069935065682e3633d5",
       "upstream_program_sha256": null,
@@ -23671,6 +24859,12 @@
     },
     {
       "path": "octop/dashboard/assets/tiny-invariant.KZqkzbCb.avatars-v17.js",
+      "sha256": "de2c80991c72a075f0b0813187c26b84deff43eb4afcc3fe19e02993bf126e6e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/tiny-invariant.KZqkzbCb.avatars-v18.js",
       "sha256": "de2c80991c72a075f0b0813187c26b84deff43eb4afcc3fe19e02993bf126e6e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -23786,6 +24980,12 @@
     {
       "path": "octop/dashboard/assets/toolPluginIndex.Bt1q0eH2.avatars-v17.js",
       "sha256": "17698b96d7feed3ed6e9747264d22421238cb388b26c278d5f7935ea59a0bda8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/toolPluginIndex.Bt1q0eH2.avatars-v18.js",
+      "sha256": "57cdcacc6ce783d6838d906578140522ac145d84e7d120eadd71294cafa8bec4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -23940,6 +25140,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/tsx.SFJiIzlP.avatars-v18.js",
+      "sha256": "548a213c242e98221c896ff11635916211d799d605221358e803d1937151d3f3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/tsx.SFJiIzlP.avatars-v2.js",
       "sha256": "e3f4a099754c7b98d3f4b744d30d795e9be0261b494c59815cfc9e946a652e77",
       "upstream_program_sha256": null,
@@ -24050,6 +25256,12 @@
     {
       "path": "octop/dashboard/assets/typescript.B-ryfxa4.avatars-v17.js",
       "sha256": "5482626004ec05f7a9cbef9539cec9e2765a7c95c3b0a77903460c9e1b739479",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/typescript.B-ryfxa4.avatars-v18.js",
+      "sha256": "b6fd848c251a0b72b6be3068d7498108edebdaf058a0bad2872ce1ccab70f544",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -24168,6 +25380,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/typescript.TG2tIqnY.avatars-v18.js",
+      "sha256": "eb606ffe504346b2ea5eb41f6e09e83f1e54c2faa3f291b49a93e1524ec8459e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/typescript.TG2tIqnY.avatars-v2.js",
       "sha256": "fb36c4ca31603e3b5f6c2c3150502425ebde71a84cc6910385d849b016a9fc91",
       "upstream_program_sha256": null,
@@ -24278,6 +25496,12 @@
     {
       "path": "octop/dashboard/assets/useAsyncResource.DfHlgN-i.avatars-v17.js",
       "sha256": "96140eaf034874e36ac7b7431a71b0bf4b86862fd6014b8d554ea2cd92cddd4c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/useAsyncResource.DfHlgN-i.avatars-v18.js",
+      "sha256": "cf7bb516f6ce12890a4541656f4c40468fe4e922f98a9d065f0b18d19585a012",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -24396,6 +25620,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/useCardTableView.BF_3-RaS.avatars-v18.js",
+      "sha256": "8b967d81dd61d8d171ca79f3f62ad0878eabde54299f160d2adedd97e57842c2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/useCardTableView.BF_3-RaS.avatars-v2.js",
       "sha256": "9c17e011918f23b933abc3d61583b58667ce448dd0a41b34f94a76f97de19e8f",
       "upstream_program_sha256": null,
@@ -24506,6 +25736,12 @@
     {
       "path": "octop/dashboard/assets/useGatedSearchTabs.BYgxOL9j.avatars-v17.js",
       "sha256": "a33f6ae6bc5505a76f6f0b5b49c802be716fb32ea022e27f2a06098eba3fbb9e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/useGatedSearchTabs.BYgxOL9j.avatars-v18.js",
+      "sha256": "986f05f8ebeadd464eba6c8b864edadce089a41c0ded01556942721c3afe739b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -24624,6 +25860,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/useHorizontalResize.BlO2xrI3.avatars-v18.js",
+      "sha256": "510270adf9331d69eaef47c64d3a2397a9396731536a0473e0785fd9a3be1ee8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/useHorizontalResize.BlO2xrI3.avatars-v2.js",
       "sha256": "3fbf11a741763ea2516d7fe44c11fba5cae70b1e07a1b67e4ae19045908d1602",
       "upstream_program_sha256": null,
@@ -24738,6 +25980,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/useLandscapeFullscreen.BHCFxZ6c.avatars-v18.js",
+      "sha256": "5a328b2cf2407ea87215106d747099cdcb756defb792b58043efeff781f06a91",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/useLandscapeFullscreen.BHCFxZ6c.avatars-v2.js",
       "sha256": "bac96ed71ddacd7d56ee15ff30568336c25b7cbc833f06a151a78e0c9a907d80",
       "upstream_program_sha256": null,
@@ -24847,6 +26095,12 @@
     },
     {
       "path": "octop/dashboard/assets/useLandscapeFullscreen.D9T5ieL9.avatars-v17.css",
+      "sha256": "c9797d7fd7e6166e7fdf38d334e25aaf47dcf795659039cc185d8c2e69726a8c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/useLandscapeFullscreen.D9T5ieL9.avatars-v18.css",
       "sha256": "c9797d7fd7e6166e7fdf38d334e25aaf47dcf795659039cc185d8c2e69726a8c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -24966,6 +26220,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/usePathTabs.FsA2xXjw.avatars-v18.js",
+      "sha256": "607c7f90f23071ee51ba056e71fbed57dda470b2179ddc01913445a02403a9dc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/usePathTabs.FsA2xXjw.avatars-v2.js",
       "sha256": "ec397427addb9f9ae5c996dde6ad70b042722bb9b8d8fd765622df3e2618ba2f",
       "upstream_program_sha256": null,
@@ -25076,6 +26336,12 @@
     {
       "path": "octop/dashboard/assets/useServerTimezone.BFsDQWJx.avatars-v17.js",
       "sha256": "d4de5e1ca64d083cf0f829d3dc0d4c3cb228d0d977f440db71cab4384aa7f94f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/useServerTimezone.BFsDQWJx.avatars-v18.js",
+      "sha256": "0ac8aea57d222fe1fd272cc5d10fa11c88d88fa9ebbe6f3cf9539188ada4c437",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -25194,6 +26460,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/useStorageBackends.OFPZoX4n.avatars-v18.js",
+      "sha256": "ed835a3fee2df84635fb8c65756017a50d95b9a97b9ca0591caee67f39cb80e8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/useStorageBackends.OFPZoX4n.avatars-v2.js",
       "sha256": "69a10561623a62c44f1555aabf8c813ac00ec82b3edb772ec7406f8c8b3f4c83",
       "upstream_program_sha256": null,
@@ -25304,6 +26576,12 @@
     {
       "path": "octop/dashboard/assets/vendor-antd.CTwSf1Lt.avatars-v17.js",
       "sha256": "66c4faff97d292f6f8cc601c24e975a4d5183e50bb5f83d77ef1b27432159dc5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/vendor-antd.CTwSf1Lt.avatars-v18.js",
+      "sha256": "500793d64eae99faaa281ed93c487c82cb1a0e43ca4439de0f96f79a2f181e82",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -25422,6 +26700,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/vendor-icons.D5K817Wm.avatars-v18.js",
+      "sha256": "9b433cfd15be8828c16fe8ebb895e9c4a7cbeafaf07a9d01f17cb07622fbac7a",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/vendor-icons.D5K817Wm.avatars-v2.js",
       "sha256": "0a31cd02ae097e9a44362f711237117316e12d87c4cd3ea95a2c3e10a645d22a",
       "upstream_program_sha256": null,
@@ -25536,6 +26820,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/vendor-markdown.8x0SH759.avatars-v18.js",
+      "sha256": "2af08712eed756a7bc5d9a2dacc90a53e7f5c72486396b598152f1a8910b25b9",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/vendor-markdown.8x0SH759.avatars-v2.js",
       "sha256": "36cbcf3c0b13b8b605509390e2d7e099d5cb4fcc201a7ffb06a92174adadbcfe",
       "upstream_program_sha256": null,
@@ -25645,6 +26935,12 @@
     },
     {
       "path": "octop/dashboard/assets/vendor-markdown.DVjVcbQd.avatars-v17.css",
+      "sha256": "31a8dcfc663ad30cf380bf3fb4e144699afffd5ca6dfcbc7e68bb517fc4109fa",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/vendor-markdown.DVjVcbQd.avatars-v18.css",
       "sha256": "31a8dcfc663ad30cf380bf3fb4e144699afffd5ca6dfcbc7e68bb517fc4109fa",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -25764,6 +27060,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/vendor-react.DWWhhpb4.avatars-v18.js",
+      "sha256": "b44150aa53200a090d9ce30c3c2006fe2289da7f3188585a55e544f0299bb410",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/vendor-react.DWWhhpb4.avatars-v2.js",
       "sha256": "b44150aa53200a090d9ce30c3c2006fe2289da7f3188585a55e544f0299bb410",
       "upstream_program_sha256": null,
@@ -25878,6 +27180,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/vendor-utils.Bxy7mX_Z.avatars-v18.js",
+      "sha256": "7b4eb2fae1a12d6235e39db117929277b48a76c92113ce77ff79fc35aa3cfd2f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/vendor-utils.Bxy7mX_Z.avatars-v2.js",
       "sha256": "ab06f6774ee52270ab853039b95c6e2f3666798523983710a35bbc1f0ecb122b",
       "upstream_program_sha256": null,
@@ -25987,6 +27295,12 @@
     },
     {
       "path": "octop/dashboard/assets/vendor-xterm.BnL5uhB6.avatars-v17.js",
+      "sha256": "d0189805535da2faf13261d42260d68e72f7a0e5891190713f409dbacda655b5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/vendor-xterm.BnL5uhB6.avatars-v18.js",
       "sha256": "d0189805535da2faf13261d42260d68e72f7a0e5891190713f409dbacda655b5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -26106,6 +27420,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/vendor-xterm.DYP7pi_n.avatars-v18.css",
+      "sha256": "7c5a01f382f76539fc9b4db6b18e18a7035741845fd14968c5cdc0a7e373d817",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/vendor-xterm.DYP7pi_n.avatars-v2.css",
       "sha256": "7c5a01f382f76539fc9b4db6b18e18a7035741845fd14968c5cdc0a7e373d817",
       "upstream_program_sha256": null,
@@ -26216,6 +27536,12 @@
     {
       "path": "octop/dashboard/assets/vennDiagram-CIIHVFJN.Bxcrb0E8.avatars-v17.js",
       "sha256": "3429220503cb0ae840fbb9582f79a8683c0c38b0a2932a4429eaba421564ca73",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/vennDiagram-CIIHVFJN.Bxcrb0E8.avatars-v18.js",
+      "sha256": "a6c247d55762c4ef5ef8c94330e78a431181156e5a7bb2b16ec3230a32314f0a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -26334,6 +27660,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/wardley-L42UT6IY.CDxYcuri.avatars-v18.js",
+      "sha256": "0a39ac6d25e9a00664ffb4baab2a70c2d894bd792d9cd27875eddf6f742fdeba",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/wardley-L42UT6IY.CDxYcuri.avatars-v2.js",
       "sha256": "9ba9a60ed857c353d7e3645d132c482848018676686d3eba9e2269569a51f79f",
       "upstream_program_sha256": null,
@@ -26444,6 +27776,12 @@
     {
       "path": "octop/dashboard/assets/wardleyDiagram-YWT4CUSO.ebCeL3XK.avatars-v17.js",
       "sha256": "0b6e4802954790dd1eec39cfa9ebe78f66608b80b7805173f6d37bcf52d95af5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/wardleyDiagram-YWT4CUSO.ebCeL3XK.avatars-v18.js",
+      "sha256": "329585aec1bec986c4d5db28530bfd52d1772b4e2a13fc53a772577f67df0611",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -26562,6 +27900,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/workspacePath.B1xlGfEs.avatars-v18.js",
+      "sha256": "a2ac57d9415b60631e809604c532f99929ec11f3bcf46fe88d83e8ceee93ee97",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/workspacePath.B1xlGfEs.avatars-v2.js",
       "sha256": "60b863e3f5dee0ff1ec1253567dabfcf9cf0cea73595e67aa90b5070edaa5e7b",
       "upstream_program_sha256": null,
@@ -26671,6 +28015,12 @@
     },
     {
       "path": "octop/dashboard/assets/workspacePath.C83dq62S.avatars-v17.css",
+      "sha256": "7434b19d6d4ae6f20149c982b4b625f76b95157195245e697cd7b4625a7704bc",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/workspacePath.C83dq62S.avatars-v18.css",
       "sha256": "7434b19d6d4ae6f20149c982b4b625f76b95157195245e697cd7b4625a7704bc",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -26796,6 +28146,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/xlsx.CHiiUxq-.avatars-v18.js",
+      "sha256": "647f3d7b577308841b48daa6649380686fe5cf7eeb2fa092745c3a8a76f58dc9",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/xlsx.CHiiUxq-.avatars-v2.js",
       "sha256": "647f3d7b577308841b48daa6649380686fe5cf7eeb2fa092745c3a8a76f58dc9",
       "upstream_program_sha256": null,
@@ -26910,6 +28266,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/dashboard/assets/xychartDiagram-2RQKCTM6.B2keBDWP.avatars-v18.js",
+      "sha256": "b8b010b82e138464c00bd09d89584d972a1f036eee62c29670e7adab20644420",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/xychartDiagram-2RQKCTM6.B2keBDWP.avatars-v2.js",
       "sha256": "9b6405e89355004b46aa981b6cc4ee9403f0c102c1663641e8e6e96b9fe64c9a",
       "upstream_program_sha256": null,
@@ -27019,6 +28381,12 @@
     },
     {
       "path": "octop/dashboard/assets/yaml.BOXLgM6u.avatars-v17.js",
+      "sha256": "56d782b8cf7fcfd552ee7ef53c46ccdda35cb7e2f33fcecf82905c0dc1f19004",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/yaml.BOXLgM6u.avatars-v18.js",
       "sha256": "56d782b8cf7fcfd552ee7ef53c46ccdda35cb7e2f33fcecf82905c0dc1f19004",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
@@ -27140,6 +28508,12 @@
     {
       "path": "octop/dashboard/assets/zh.D-7HvP3m.avatars-v17.js",
       "sha256": "05131db9c37afdf5bf52d239ff6c8aa4936a4a4f92577833a66cd3af274f1ac0",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/zh.D-7HvP3m.avatars-v18.js",
+      "sha256": "9f71b6f6695e09fd936eb24e73668b82bc70d1ba009d94c0a40d651377383b60",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -28057,7 +29431,7 @@
     },
     {
       "path": "octop/dashboard/index.html",
-      "sha256": "83612231979a919faf9dd1fedad075018694377286338d94643e100c8abaf30a",
+      "sha256": "9e400fede00063bf68e7bdf9db2d84ca5151cd939b06d914d66d8bef8d11f087",
       "upstream_program_sha256": "c40065d21701578976ab05074925200c4cee899bb0ecbdab5be6bb1e910c3ff0",
       "changed_from_saved_original": true
     },
@@ -28153,7 +29527,7 @@
     },
     {
       "path": "octop/dashboard/sw.js",
-      "sha256": "bc6f330e8a26e23e2c32184d4aed44f9c7c18c5bec794f208281460da89ec334",
+      "sha256": "092939829b3ab4453f1024927a3179fadb46e503e64dc09438d325fcf1c8234e",
       "upstream_program_sha256": "2f487470184a4004219994ff2a9b8aba21fd1e7577c94def0101811e5ae80879",
       "changed_from_saved_original": true
     },
@@ -28237,7 +29611,7 @@
     },
     {
       "path": "octop/i18n/en.json",
-      "sha256": "f9b002fa3eab402ea846aead1b89955be52ebd2995b8311533a46b65f7336e2e",
+      "sha256": "0ccb7d637c3d6959c9f442575d8487cd26668fadb32e05d978261749d1dcb81a",
       "upstream_program_sha256": "990dae596ced6e376828bb79038769402e57beadc57a0db3430046c6a0c5f47d",
       "changed_from_saved_original": true
     },
@@ -28249,7 +29623,7 @@
     },
     {
       "path": "octop/i18n/zh.json",
-      "sha256": "4621c1ba1f84165771681e639a3b8336270d7ec7e82f7e694e120044e695bc93",
+      "sha256": "452a1404c07c31c2e21b5e1aa4591760f3085cabbbea67de677043f86585ac37",
       "upstream_program_sha256": "746b1dcbb336f5de6b3384cc47c3ec228d074e9faef855c879bda1cd460bcc15",
       "changed_from_saved_original": true
     },
@@ -28318,6 +29692,12 @@
       "sha256": "c203719c6207feb84e1fdc577075ccf1d87b6f9c6827fef5c189c670c71e525d",
       "upstream_program_sha256": "c203719c6207feb84e1fdc577075ccf1d87b6f9c6827fef5c189c670c71e525d",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/infra/agents/experts/copy.py",
+      "sha256": "6f9dd7dcd5e4e985139abd9b241c0460c9fec1f2feeca6cae602cb7301196937",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/experts/default_agent.py",
@@ -31939,7 +33319,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "bfdcfc6871fd08d1dfe28478bc86a93f2188819b9e9813accbb52ef0ba92a396",
+      "sha256": "ac1a8d706ce4f1df00aed64a94dd83db01eb2d05732b7803a4f7b0dce6a1073d",
       "upstream_program_sha256": "445669cd8286acd7533a18a0fc66e558d3b7bb65d7fe0cabe8a7cfa5ec52f8e0",
       "changed_from_saved_original": true
     },
@@ -33062,6 +34442,12 @@
     {
       "path": "octop/infra/agents/settings/avatar_policy.py",
       "sha256": "6118baec9357138c134929eea904eeb840f93c1cdac31858ef2d40a20ee86deb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/agents/settings/cli_reuse.py",
+      "sha256": "8aeaeec69e361e14499d94f3b0f600cb6a37518d93fe7a2c366f328e2c3d5efd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
