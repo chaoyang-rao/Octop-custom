@@ -168,7 +168,9 @@ export function NativeCliPanel({
               label={t("nativeCli.model")}
               extra={t("nativeCli.modelHelp")}
             >
-              {capabilities?.runner === runner && capabilities.models.length ? (
+              {capabilities &&
+              capabilities.runner === runner &&
+              capabilities.models.length ? (
                 <Select
                   disabled={!enabled || busy || !canManage}
                   allowClear
@@ -189,7 +191,9 @@ export function NativeCliPanel({
               label={t("nativeCli.mode")}
               extra={t("nativeCli.modeHelp")}
             >
-              {capabilities?.runner === runner && capabilities.modes.length ? (
+              {capabilities &&
+              capabilities.runner === runner &&
+              capabilities.modes.length ? (
                 <Select
                   disabled={!enabled || busy || !canManage}
                   allowClear
@@ -248,7 +252,7 @@ export function NativeCliPanel({
               </Button>
             </Space>
           </Form>
-          {capabilities?.runner === runner && (
+          {capabilities && capabilities.runner === runner && (
             <Alert
               type="info"
               message={t("nativeCli.capabilitiesRead")}
