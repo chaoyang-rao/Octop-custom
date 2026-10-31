@@ -44,7 +44,7 @@ class UpdateProtectionTests(unittest.TestCase):
         )
         with patch.dict(os.environ, {"OCTOP_CUSTOM_BUILD": "1"}):
             self.assertEqual(
-                asyncio.run(health(server))["custom_release"], "1.0.2.post20261031"
+                asyncio.run(health(server))["custom_release"], "1.0.2.post20261101"
             )
         with patch.dict(os.environ, {"OCTOP_CUSTOM_BUILD": ""}):
             self.assertNotIn("custom_release", asyncio.run(health(server)))

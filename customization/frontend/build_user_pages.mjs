@@ -44,7 +44,7 @@ const report=await build({
  stdin:{contents:'import{useNotificationPresence}from"./pages/MobileAccess/useNotificationPresence";export function NotificationPresence(){useNotificationPresence();return null;}export{default as NativeCli}from"./pages/NativeCli";export{default as TaskQueue}from"./pages/TaskQueue";export{default as MobileAccess}from"./pages/MobileAccess";export{default as AccountConnections}from"./pages/AccountConnections";export{default as ConversationLibrary}from"./pages/ConversationLibrary";',resolveDir:path.join(root,'dashboard/src'),sourcefile:'user-features.entry.tsx',loader:'tsx'},
  outfile:path.join(root,'customization/packages/octop/dashboard/assets/user-features.pages.js'),
  bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,
- define:{'process.env.NODE_ENV':'"production"'},
+ define:{'process.env.NODE_ENV':'"production"','import.meta.env.BASE_URL':'""','import.meta.env.MODE':'"production"','import.meta.env.DEV':'false','import.meta.env.PROD':'true','BASE_URL':'""'},
  plugins:[{name:'preserved-dashboard-contexts',setup(builder){
   builder.onResolve({filter:/.*/},async args=>{
    if(args.path.startsWith('/assets/'))return{path:args.path,external:true};
@@ -61,6 +61,8 @@ const report=await build({
   builder.onLoad({filter:/.*/,namespace:'octop-shim'},args=>({contents:shims[args.path],loader:'js',resolveDir:root}));
  }}],
 });
+const emitted=fs.readFileSync(path.join(root,'customization/packages/octop/dashboard/assets/user-features.pages.js'),'utf8');
+for(const leftover of ['BASE_URL','import.meta.env'])if(emitted.includes(leftover))throw new Error(`Unresolved Vite env in user features bundle: ${leftover}`);
 const bundled=Object.keys(report.metafile.inputs);
 for(const blocked of ['node_modules/react/','node_modules/antd/','context/AgentContext.tsx','layouts/PageShell.tsx','src/i18n.ts']){
  if(bundled.some(input=>input.includes(blocked)))throw new Error(`Duplicated live context: ${blocked}`);
