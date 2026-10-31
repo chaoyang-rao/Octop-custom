@@ -5,11 +5,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.window.OnBackInvokedDispatcher;
 import android.view.View;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -57,6 +59,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state); OctopMessagingService.ensureChannel(this); store = new SecureStore(this); showServers(); if (IncomingShare.accepts(getIntent())) IncomingShare.receive(this, getIntent(), store, network); else handleNotification(getIntent());
+        if (Build.VERSION.SDK_INT >= 33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
     }
     @Override protected void onResume() { super.onResume(); syncExistingPush(); FOREGROUND = true; lifecycle.post(foregroundHeartbeat); }
     @Override protected void onPause() { FOREGROUND = false; lifecycle.removeCallbacks(foregroundHeartbeat); reportForeground(false); super.onPause(); }
@@ -254,6 +257,8 @@ public class MainActivity extends Activity {
         if (request == AUDIO_PERMISSION && audioPermission != null) { if (grants.length > 0 && grants[0] == PackageManager.PERMISSION_GRANTED) audioPermission.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE}); else audioPermission.deny(); audioPermission = null; }
         if (request == 43 && grants.length > 0 && grants[0] == PackageManager.PERMISSION_GRANTED) enableNotifications();
     }
-    @Override public void onBackPressed() { if (workspace != null && workspace.canGoBack()) workspace.goBack(); else showServers(); }
+    @SuppressLint("GestureBackNavigation")
+    @Override public void onBackPressed() { handleBack(); }
+    private void handleBack() { if (workspace != null && workspace.canGoBack()) workspace.goBack(); else showServers(); }
     @Override protected void onDestroy() { generation.incrementAndGet(); if (pairing != null) pairing.cancel(true); network.shutdownNow(); if (workspace != null) workspace.destroy(); super.onDestroy(); }
 }
