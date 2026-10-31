@@ -489,13 +489,6 @@ class AgentManager:
             workspace_for=self.workspace_for_agent,
         )
         self._harness_manager: HarnessAgentManager | None = None
-        from octop.infra.agents.native_cli.integration import resolve_native_context
-        from octop.infra.agents.native_cli.runtime import NativeRuntime
-
-        self._native_cli = NativeRuntime(
-            settings_repo=repos.settings_repo,
-            context_for=lambda aid, tid, uid: resolve_native_context(self, aid, tid, uid),
-        )
         self.memory_slim = MemorySlimCoordinator(self)
         self._lock = asyncio.Lock()
         # Serialize start/reload per agent so parallel provider reloads cannot
@@ -619,13 +612,6 @@ class AgentManager:
             team_processor=self._team_processor,
             file_logging=False,
         )
-        from octop.infra.agents.native_cli.factory import NativeRoutingFactory
-        from octop.infra.agents.native_cli.integration import native_owner
-
-        self._native_cli.loop = asyncio.get_running_loop()
-        self._harness_manager._shared_factory = NativeRoutingFactory(
-            providers, runtime=self._native_cli, agent_owner=lambda aid: native_owner(self, aid)
-        )
         if self._harness_manager is not None:
             self._harness_manager.team.bind_peer_enrich(self._refresh_peer_entry)
             proc = self._team_processor
@@ -696,31 +682,6 @@ class AgentManager:
     # ------------------------------------------------------------------
     # Exposed stores & paths (read-only accessors)
     # ------------------------------------------------------------------
-
-    @property
-    def native_cli(self) -> Any:
-        return self._native_cli
-
-    def native_execution_ref(self, agent_id: str) -> str | None:
-        """Effective engine for an expert or a team hosted by its real primary."""
-        from octop.infra.agents.native_cli.config import NativeSpec, native_ref
-
-        row = self.get_row(agent_id)
-        if row is None:
-            return None
-        target = self._teams.primary_for_team(agent_id) if row.kind == "team" else row
-        if target is None:
-            return None
-        return (
-            native_ref(target.agent_id)
-            if NativeSpec.from_config(self.get_config(target.agent_id)).enabled
-            else None
-        )
-
-    def native_execution_metadata(self, agent_id: str) -> dict[str, Any] | None:
-        from octop.infra.agents.native_cli.metadata import native_metadata
-
-        return native_metadata(self, agent_id)
 
     @property
     def providers(self) -> ProviderStore:
@@ -1221,7 +1182,6 @@ class AgentManager:
             if row is None:
                 raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
             async with self._lifecycle_lock_for(agent_id):
-                await self._native_cli.close_agent(agent_id)
                 await asyncio.to_thread(self._quiesce_octop_memory, agent_id)
                 await self._harness_manager.aremove_agent(agent_id)  # type: ignore[union-attr]
                 self._bootstrap_known.pop(agent_id, None)
@@ -2204,16 +2164,6 @@ class AgentManager:
             teams = getattr(self, "_teams", None)
             primary = teams.primary_for_team(agent_id) if teams is not None else None
             self._harness_manager.cancel(primary.agent_id if primary else agent_id, thread_id)
-            native_id = primary.agent_id if primary else agent_id
-            native = getattr(self, "_native_cli", None)
-            if native is not None and self.native_execution_ref(native_id) is not None:
-                row = self.get_row(native_id)
-                if row is not None and row.user_id is not None:
-                    asyncio.create_task(
-                        native.close_thread(
-                            user_id=row.user_id, agent_id=native_id, thread_id=thread_id
-                        )
-                    )
 
     def get_thread_model(self, agent_id: str, thread_id: str) -> str | None:
         if self._harness_manager is None:
@@ -2340,13 +2290,6 @@ class AgentManager:
         if self._harness_manager is None:
             return
         providers = self._providers.build_harness_configs()
-        from octop.infra.agents.native_cli.config import NativeProviderConfig
-
-        factory = self._harness_manager.shared_factory
-        if factory is not None:
-            providers.extend(
-                p for p in factory.provider_configs() if isinstance(p, NativeProviderConfig)
-            )
         sync_providers_to_harness(
             self._harness_manager,
             providers,
@@ -3499,14 +3442,7 @@ class AgentManager:
         self, row: AgentRow, *, init_workspace: bool = True
     ) -> HarnessAgent | None:
         assert self._harness_manager is not None, "_start_agent called before boot()"
-        from octop.infra.agents.native_cli.factory import NativeRoutingFactory
-
-        native_enabled = self.native_execution_ref(row.agent_id) is not None
-        if self._harness_manager.shared_factory is None or (
-            isinstance(self._harness_manager.shared_factory, NativeRoutingFactory)
-            and not native_enabled
-            and not self._providers.has_usable_providers()
-        ):
+        if self._harness_manager.shared_factory is None:
             self._repos.agent_repo.set_state(row.agent_id, "failed", error=NO_MODELS_CONFIGURED)
             return None
         async with self._lifecycle_lock_for(row.agent_id):
@@ -3839,17 +3775,6 @@ class AgentManager:
             if self._harness_manager.shared_factory is None:
                 return
 
-            await self._native_cli.close_agent(agent_id)
-            from octop.infra.agents.native_cli.factory import NativeRoutingFactory
-
-            if (
-                isinstance(self._harness_manager.shared_factory, NativeRoutingFactory)
-                and self.native_execution_ref(agent_id) is None
-                and not self._providers.has_usable_providers()
-            ):
-                await self._harness_manager.aremove_agent(agent_id)
-                self._repos.agent_repo.set_state(agent_id, "failed", error=NO_MODELS_CONFIGURED)
-                return
             try:
                 cfg, metadata, tags, user_display = self._agent_runtime_bundle(row)
                 entry = await self._harness_manager.arebuild_agent(
@@ -4029,31 +3954,6 @@ class AgentManager:
         )
         req["configurable"] = configurable
         agent_cfg = self.get_config(agent_id)
-        from octop.infra.agents.native_cli.config import NativeSpec, native_ref
-
-        if NativeSpec.from_config(agent_cfg).enabled:
-            native_model = native_ref(agent_id)
-            configurable = dict(req.get("configurable") or {})
-            configurable["model"] = native_model
-            metadata = self.native_execution_metadata(agent_id)
-            selected = configurable.get("octop_native_model_id")
-            if isinstance(selected, str):
-                from octop.infra.agents.native_cli.metadata import display_metadata
-
-                owner = self.get_row(agent_id)
-                user = (
-                    self._repos.user_repo.get(owner.user_id)
-                    if owner is not None and owner.user_id is not None
-                    else None
-                )
-                metadata = display_metadata(
-                    NativeSpec.from_config(agent_cfg).runner,
-                    selected,
-                    locale=str(user.locale or "en") if user else "en",
-                )
-            configurable["octop_native_execution"] = metadata
-            req["configurable"] = configurable
-            req["model"] = native_model
         plugins_cfg = agent_cfg.get("plugins")
         tool_configs = collect_plugin_tool_configs(
             plugins_cfg if isinstance(plugins_cfg, dict) else None
@@ -4484,7 +4384,7 @@ class AgentManager:
         if interrupt_on is not applied.interrupt_on:
             applied = replace(applied, interrupt_on=interrupt_on)
 
-        if applied.model_retry_enabled and self.native_execution_ref(row.agent_id) is None:
+        if applied.model_retry_enabled:
             factory = (
                 self._harness_manager.shared_factory if self._harness_manager is not None else None
             )
@@ -4525,15 +4425,9 @@ class AgentManager:
                     *(applied.middleware or []),
                 ],
             )
-        from octop.infra.agents.native_cli.integration import apply_native_config
-
-        return apply_native_config(
-            self,
-            row,
-            replace(
-                applied,
-                tool_guard_rules_dir=str(self._tool_guard_rules.rules_dir),
-            ),
+        return replace(
+            applied,
+            tool_guard_rules_dir=str(self._tool_guard_rules.rules_dir),
         )
 
     def _install_team_host_dispatch(self) -> None:

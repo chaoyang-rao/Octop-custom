@@ -189,8 +189,6 @@ export function agentsSnapshotEqual(
         a.bridge_disconnected === b.bridge_disconnected &&
         a.bridge_inbound === b.bridge_inbound &&
         a.default_model === b.default_model &&
-        JSON.stringify(a.config?.native_cli) ===
-          JSON.stringify(b.config?.native_cli) &&
         sameMemberIds(a.member_ids, b.member_ids) &&
         sameMemberIds(a.knowledge_base_ids, b.knowledge_base_ids) &&
         sameMemberIds(a.mcp_servers, b.mcp_servers)

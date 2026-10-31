@@ -83,7 +83,6 @@ export const SIDEBAR_NAV_KEYS = [
   "workbench",
   "remote-desktop",
   "acp",
-  "native-cli",
   "admin-users",
   "models",
   "admin-storage",
@@ -140,7 +139,6 @@ export const SIDEBAR_GROUPED_NAV_KEYS = [
   "workbench",
   "remote-desktop",
   "acp",
-  "native-cli",
   "admin-users",
   "models",
   "admin-storage",
@@ -307,12 +305,6 @@ export function buildNavSections(
       path: "/acp",
       icon: <Share2 size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.acp",
-    });
-    controlItems.push({
-      key: "native-cli",
-      path: "/native-cli",
-      icon: <Cpu size={iconSize} strokeWidth={iconStroke} />,
-      labelKey: "nav.nativeCli",
     });
   }
   if (controlItems.length > 0) {

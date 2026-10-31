@@ -93,7 +93,7 @@ class PortableBuilderTests(unittest.TestCase):
                 archive.writestr(extra_name, "invalid path")
         return {
             "upstream_version": "1.0.2",
-            "custom_version": "1.0.2.post20261101",
+            "custom_version": "1.0.2.post20261102",
             "upstream_commit": "upstream-commit",
             "assets": {
                 platform: {
@@ -151,7 +151,7 @@ class PortableBuilderTests(unittest.TestCase):
                 ):
                     self.assertEqual(getattr(after, attribute), getattr(before, attribute))
             version = result.read(f"{root}/VERSION.txt").decode()
-            self.assertIn("octop_version=1.0.2.post20261101", version)
+            self.assertIn("octop_version=1.0.2.post20261102", version)
             launch = result.read(f"{root}/launch.py")
             expected_launch = original.read(f"{root}/launch.py").replace(
                 b"def main() -> None:\n",

@@ -14,7 +14,6 @@ USER_TURN_WS_KEYS = frozenset(
         "thread_id",
         "model",
         "default_model",
-        "native_model_id",
         "reasoning_mode",
         "reasoning_effort",
         "conversation_mode",

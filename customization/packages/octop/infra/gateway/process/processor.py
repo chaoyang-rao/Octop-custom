@@ -558,10 +558,6 @@ class GlobalProcessor:
         - When a model is passed and the turn needs vision, upgrade to a vision ref.
         """
         providers = self._agent_manager.providers
-        native_resolver = getattr(self._agent_manager, "native_execution_ref", None)
-        native_model = native_resolver(agent_id) if callable(native_resolver) else None
-        if isinstance(native_model, str) and native_model.startswith("native_cli_"):
-            return _ResolvedModelRoute(native_model, automatic=False)
         thread_model = self._agent_manager.get_thread_model(agent_id, thread_id)
         thread_row = self._thread_registry.get_thread(thread_id)
         model_ref = self._model_ref_from_meta(
@@ -807,10 +803,6 @@ class GlobalProcessor:
             needs_multimodal=content_blocks_need_vision(content),
         )
         model_ref = model_route.model_ref
-        if model_ref and model_ref.startswith("native_cli_"):
-            from octop.infra.agents.native_cli.media import native_attachment_content
-
-            content = await native_attachment_content(msg, content, media_backend)
         mcp_servers = await self._resolve_turn_mcp_servers(
             agent_id=agent_id,
             user_id=user_id,
@@ -1437,10 +1429,6 @@ class GlobalProcessor:
             needs_multimodal=content_blocks_need_vision(content),
         )
         model_ref = model_route.model_ref
-        if model_ref and model_ref.startswith("native_cli_"):
-            from octop.infra.agents.native_cli.media import native_attachment_content
-
-            content = await native_attachment_content(msg, content, media_backend)
         reasoning_overrides = self._resolve_reasoning_overrides(
             user_id=user_id,
             thread_id=thread_id,
@@ -1514,10 +1502,6 @@ class GlobalProcessor:
         ):
             configurable = dict(request.get("configurable") or {})
             configurable["octop_authenticated_user_id"] = user_id
-            request["configurable"] = configurable
-        if isinstance(meta.get("native_cli_model_id"), str):
-            configurable = dict(request.get("configurable") or {})
-            configurable["octop_native_model_id"] = meta["native_cli_model_id"]
             request["configurable"] = configurable
         self.teams.stamp_host_runtime(request, agent_id)
         self._attach_turn_knowledge_config(

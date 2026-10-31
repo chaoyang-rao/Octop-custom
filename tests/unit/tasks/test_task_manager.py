@@ -840,28 +840,3 @@ async def test_cancelled_task_cannot_execute_a_not_yet_admitted_continuation(set
         release.set()
         await e.manager.stop()
         await e.channels.stop()
-
-
-@pytest.mark.asyncio
-async def test_native_expert_task_uses_authoritative_cli_route_not_stale_api_override(setup):
-    e = setup
-    await e.channels.start()
-    e.agents.native_execution_ref = lambda aid: f"native_cli_{aid}/session"
-    e.agents.providers.is_model_ref_usable = lambda _: False
-    try:
-        task = await e.manager.enqueue(
-            e.uid,
-            TaskCreate(
-                agent_id="a",
-                title="native",
-                prompt="native",
-                options={"model": "stale-api/disabled"},
-            ),
-        )
-        await e.manager.process_once()
-        await settled(e.manager)
-        assert e.repos.task_repo.get(task.id).state == "completed"
-        assert e.processor.received[-1].metadata["model"] == "native_cli_a/session"
-    finally:
-        await e.manager.stop()
-        await e.channels.stop()

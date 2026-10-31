@@ -58,11 +58,6 @@ class ChatTurnBody(BaseModel):
         description="Model ref override, e.g. `openai/gpt-4o`. Uses the agent default when omitted.",
     )
     reasoning_mode: Literal["auto", "enabled", "disabled"] | None = None
-    native_model_id: str | None = Field(
-        default=None,
-        max_length=200,
-        description="Conversation-local advertised native CLI model ID; empty uses CLI default. Does not change runner or permissions.",
-    )
     reasoning_effort: str | None = None
     conversation_mode: Literal["ask", "plan", "craft"] | None = Field(
         default=None,
@@ -119,7 +114,6 @@ class ChatTurnBody(BaseModel):
             default_model=str(model).strip()
             if isinstance(model, str) and str(model).strip()
             else None,
-            native_model_id=payload.get("native_model_id"),
             reasoning_mode=payload.get("reasoning_mode")
             if payload.get("reasoning_mode") in ("auto", "enabled", "disabled")
             else None,
@@ -163,7 +157,6 @@ class UserTurnWsFrame(BaseModel):
     thread_id: str | None = None
     model: str | None = None
     default_model: str | None = None
-    native_model_id: str | None = Field(default=None, max_length=200)
     reasoning_mode: Literal["auto", "enabled", "disabled"] | None = None
     reasoning_effort: str | None = None
     conversation_mode: Literal["ask", "plan", "craft"] | None = None

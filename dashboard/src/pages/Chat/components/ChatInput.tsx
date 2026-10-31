@@ -1,4 +1,3 @@
-import type { NativeCliPresentation } from "../utils/nativeCliPresentation";
 import {
   useState,
   useRef,
@@ -137,9 +136,6 @@ interface ChatInputProps {
   agentId?: string | null;
   threadId?: string | null;
   defaultModel?: string | null;
-  nativeCli?: NativeCliPresentation;
-  nativeModelId?: string | null;
-  onNativeModelChange?: (value: string | null) => void;
   contextUsedTokens?: number | null;
   contextMaxTokens?: number;
   decisionSaved?: number;
@@ -196,9 +192,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       agentId,
       threadId,
       defaultModel,
-      nativeCli,
-      nativeModelId,
-      onNativeModelChange,
       contextUsedTokens = null,
       contextMaxTokens = 128_000,
       decisionSaved = 0,
@@ -640,10 +633,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             reasoningMode,
             reasoningEffort,
           }),
-          nativeModelId: nativeCli ? nativeModelId : undefined,
-          modelRef: nativeCli
-            ? undefined
-            : resolveTurnModelRef(selectedModel, defaultModel),
+          modelRef: resolveTurnModelRef(selectedModel, defaultModel),
         });
         if (result === "full") {
           antMessage.warning(t("chat.queue.full"));
@@ -676,8 +666,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       reasoningMode,
       reasoningEffort,
       defaultModel,
-      nativeCli,
-      nativeModelId,
       t,
     ]);
 
@@ -701,7 +689,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               : item.text;
           setText(restoredText);
           restoreAttachments(item.attachments ?? []);
-          onNativeModelChange?.(item.nativeModelId ?? null);
           if (ctx) {
             onConnectorsChange?.(ctx.connectors ?? []);
             onKnowledgeBaseIdsChange?.(ctx.knowledgeBaseIds ?? []);
@@ -1032,9 +1019,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             hitlPolicy={hitlPolicy}
             onHitlPolicyChange={onHitlPolicyChange}
             defaultModel={defaultModel}
-            nativeCli={nativeCli}
-            nativeModelId={nativeModelId}
-            onNativeModelChange={onNativeModelChange}
             availableConnectors={availableConnectors}
             selectedConnectors={selectedConnectors}
             onConnectorsChange={onConnectorsChange}

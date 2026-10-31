@@ -40,7 +40,6 @@ const sourceRequire = name => {
   if (name.endsWith('assets/providers')) return { getProviderLogo: () => null, customProviderLogo: 'provider.svg' };
   if (name.endsWith('antdMessage')) return { message: { info() {} } };
   if (name.endsWith('ConversationModePicker')) return { ConversationModeMenu: Empty, conversationModeIcon: () => Icon };
-  if (name.endsWith('NativeCli/NativeModelPicker')) return { NativeModelPicker: Empty };
   if (name.endsWith('slashShortcutStyles')) return { SHORTCUT_ICON_TONE_CLASS: {} };
   if (name.endsWith('useVoiceInput')) return { isSttAvailable: () => true };
   if (name.endsWith('skillSlash')) return { parseSkillSlugsInText: () => [] };

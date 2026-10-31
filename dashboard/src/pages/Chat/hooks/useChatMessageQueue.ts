@@ -13,7 +13,6 @@ export type QueuedChatItem = {
   attachments?: ChatAttachment[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
-  nativeModelId?: string | null;
   createdAt: number;
 };
 
@@ -23,7 +22,6 @@ export type EnqueueChatItemInput = {
   attachments?: ChatAttachment[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
-  nativeModelId?: string | null;
 };
 
 export type ChatQueueFlushContext = {
@@ -162,7 +160,6 @@ export function useChatMessageQueue({
           ? { ...input.composerContext }
           : undefined,
         modelRef: input.modelRef ?? null,
-        nativeModelId: input.nativeModelId,
         quote: input.quote
           ? {
               reference: {

@@ -1,4 +1,4 @@
-"""Only owned uploaded inbound references become standard API/native multimodal content."""
+"""Only owned uploaded inbound references become standard API multimodal content."""
 
 from __future__ import annotations
 
@@ -7,13 +7,10 @@ import json
 
 import pytest
 from deepagents.backends.filesystem import FilesystemBackend
-from langchain_core.messages import HumanMessage
 from octop_harness.backends.workspace import BackendWorkspace
 from tests.unit.tasks.test_task_manager import settled
 from tests.unit.tasks.test_task_manager import setup as setup
 
-from octop.infra.agents.native_cli.media import native_attachment_content
-from octop.infra.agents.native_cli.model import NativeACPChatModel
 from octop.infra.errors import OctopError
 from octop.infra.gateway.media.ingress import AgentBackedMediaBackend
 from octop.infra.gateway.process.harness_request import build_content_from_message
@@ -48,7 +45,7 @@ async def uploads(e, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_uploaded_picture_and_document_flow_to_api_and_native_content(setup, tmp_path):
+async def test_uploaded_picture_and_document_flow_to_api_content(setup, tmp_path):
     e = setup
     workspace = await uploads(e, tmp_path)
     await e.channels.start()
@@ -90,14 +87,6 @@ async def test_uploaded_picture_and_document_flow_to_api_and_native_content(setu
         assert isinstance(blocks, list) and any(
             block.get("type") == "image_url" for block in blocks
         )
-        native_blocks = await native_attachment_content(
-            message, blocks, AgentBackedMediaBackend(workspace)
-        )
-        projected = NativeACPChatModel._prompt(
-            [HumanMessage(content=native_blocks)],
-            {"image": True, "audio": True, "embedded_context": True},
-        )
-        assert any(block.type == "image" and block.data for block in projected)
         assert "inbound/note.txt" in json.dumps(blocks)
     finally:
         await e.manager.stop()

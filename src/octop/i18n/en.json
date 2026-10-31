@@ -28,7 +28,7 @@
       "model_default": "{model} (agent default)",
       "model_auto": "auto (agent / provider default)",
       "tokens_none": "no usage recorded yet",
-      "tokens_summary": "{total:,} tokens ({input:,} in / {output:,} out, {turns} turns)",
+      "tokens_summary": "{total:} tokens ({input:} in / {output:} out, {turns} turns)",
       "context": "{count} checkpoint messages",
       "im_channels": "{count} ({kinds})",
       "owner_shared": "shared (no single owner)",
@@ -645,8 +645,7 @@
     "generate_video": "Generate video",
     "bilibili_search_anime": "Search Bilibili anime",
     "search_arxiv": "Search arXiv papers",
-    "conversation_history": "Conversation history",
-    "native_cli_permission": "Native CLI operation approval"
+    "conversation_history": "Conversation history"
   },
   "plugins": {
     "arxiv_search": {
@@ -1086,50 +1085,6 @@
     "push_activity": "New reply or task activity",
     "push_needs_input": "Your input or approval is needed",
     "push_failed": "Work did not complete and needs attention"
-  },
-  "nativeCli": {
-    "errors": {
-      "not_configured": "Native CLI execution is not enabled for this expert.",
-      "runner_disabled": "The selected CLI runner is disabled.",
-      "runner_missing": "CLI executable not found. Install it and log in first.",
-      "protocol_failed": "CLI protocol connection failed. Check runner version and settings.",
-      "authentication_required": "CLI login or an authenticated Octop caller is required.",
-      "actor_required": "Native CLI requires server-verified execution authority for the expert owner.",
-      "thread_not_owned": "This conversation does not belong to the current account and expert.",
-      "cwd_changed": "This native CLI session is bound to another project. Close its CLI connection before retrying.",
-      "cwd_unavailable": "Native CLI requires an accessible local project or folder.",
-      "busy": "This CLI session is running or awaiting approval.",
-      "tool_result_missing": "A pending CLI tool result is missing. Stopped to avoid replaying actions.",
-      "permission_rejected": "CLI operation was not approved and was not reported as successful.",
-      "mode_unavailable": "The CLI does not offer the selected permission mode; restrictions were not downgraded.",
-      "model_unavailable": "The CLI does not offer the selected model option.",
-      "session_closed": "CLI session closed. Send the current request again.",
-      "cancelled": "CLI execution cancelled.",
-      "cli_failed": "CLI execution failed. Check local CLI status; sensitive raw errors are not echoed.",
-      "bridge_failed": "CLI tool bridge connection failed.",
-      "invalid_input": "Invalid native CLI settings.",
-      "async_required": "This CLI model requires its running async executor.",
-      "interrupted": "The previous CLI run was interrupted with uncertain action state. Review it, close this CLI session, and send a new request; actions are not replayed automatically.",
-      "input_too_large": "CLI input exceeded the limit. Reduce the current input first.",
-      "admin_required": "Native CLI uses host CLI login profiles. Only the administrator who owns this individual expert may enable or run it.",
-      "managed_download_failed": "Managed download failed; existing CLIs were not replaced.",
-      "managed_integrity": "Package size, SHA256 or license check failed; this version was not activated.",
-      "managed_unsafe_archive": "Archive has unsafe paths, links or oversized contents and was rejected.",
-      "managed_missing_binary": "Archive did not contain exactly one expected CLI executable.",
-      "managed_unsupported_platform": "This reviewed version does not support this platform.",
-      "managed_busy": "This account already has an installation in progress for this package.",
-      "managed_modified": "Installed managed files changed; this operation did not overwrite them.",
-      "managed_install_failed": "Managed installation failed; existing runners and login data are preserved.",
-      "managed_not_installed": "Install and verify this version first.",
-      "managed_runner_changed": "The managed runner was manually modified; activation did not overwrite its settings.",
-      "managed_no_previous": "No previously activated version is available for rollback.",
-      "reuse_private_target": "Native CLI settings can only be reused on this account’s private individual experts.",
-      "unsupported_media": "This CLI did not advertise the required image/audio/embedded-resource capability, or the attachment format cannot be forwarded. Choose a supported CLI/model or upload again; the attachment was not silently ignored."
-    },
-    "tools": {
-      "permission": "Approve one native CLI operation after user review. Never grants persistent permission."
-    },
-    "cliDefaultModel": "CLI default model"
   },
   "conversations": {
     "errors": {

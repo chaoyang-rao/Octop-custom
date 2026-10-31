@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "v1.0.2-custom.20261101.1"
+        default: "v1.0.2-custom.20261102.1"
         required: true
         type: string
       publish_release:
@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.2.post20261101"
-  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261101.1' }}
+  CUSTOM_VERSION: "1.0.2.post20261102"
+  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261102.1' }}
 
 jobs:
   quality:

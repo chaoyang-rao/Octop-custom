@@ -147,18 +147,16 @@ def test_https_and_loopback_development_urls(url):
     assert validate_server_url(url) == url
 
 
-def test_native_model_catalog_is_only_get_for_chat_scoped_device():
+def test_chat_scoped_device_reads_models_but_not_agent_configuration():
     from octop.infra.mobile_access.access import authorize_device_path
     from octop.infra.mobile_access.service import DeviceSession
 
     session = DeviceSession(1, "device", ("chat",), 9999999999)
-    authorize_device_path(session, "/api/agents/A/native-cli/models", "GET")
+    authorize_device_path(session, "/api/agents/A/threads", "GET")
     for path, method in [
-        ("/api/agents/A/native-cli/models", "PUT"),
-        ("/api/agents/A/native-cli/models", "POST"),
-        ("/api/agents/A/native-cli/runner", "GET"),
-        ("/api/native-cli/managed/install", "POST"),
-        ("/api/agents/A/native-cli/mode", "PUT"),
+        ("/api/agents/A/config", "PUT"),
+        ("/api/agents/A/native-cli/models", "GET"),
+        ("/api/agents/A", "PUT"),
     ]:
         with pytest.raises(OctopError):
             authorize_device_path(session, path, method)

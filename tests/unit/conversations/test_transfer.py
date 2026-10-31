@@ -77,10 +77,6 @@ async def test_portable_export_import_excludes_auth_and_cli_and_does_not_overwri
                 "Help the user. api_key=profile-secret",
                 json.dumps(
                     {
-                        "native_cli": {
-                            "enabled": True,
-                            "argv": ["foreign-command", "--token", "private-cli"],
-                        },
                         "backend": {"root_dir": "host-sensitive"},
                         "acp": {"runners": {"secret": "private-acp"}},
                     }

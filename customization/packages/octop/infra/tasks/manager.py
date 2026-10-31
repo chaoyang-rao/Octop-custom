@@ -225,13 +225,7 @@ class TaskManager:
             self._agents.validate_mcp_servers(user_id, options.mcp_servers)
         if options.knowledge_base_ids is not None:
             self._agents.validate_knowledge_base_ids(user_id, options.knowledge_base_ids)
-        native_resolver = getattr(self._agents, "native_execution_ref", None)
-        native_model = native_resolver(agent_id) if callable(native_resolver) else None
-        if (
-            options.model
-            and not (isinstance(native_model, str) and native_model.startswith("native_cli_"))
-            and not self._agents.providers.is_model_ref_usable(options.model)
-        ):
+        if options.model and not self._agents.providers.is_model_ref_usable(options.model):
             raise self._error("model_unavailable", user_id=user_id)
 
     async def list(
@@ -560,14 +554,6 @@ class TaskManager:
                 value = getattr(options, key)
                 if value is not None:
                     metadata[key] = value
-            native_resolver = getattr(self._agents, "native_execution_ref", None)
-            native_model = (
-                await asyncio.to_thread(native_resolver, row.agent_id)
-                if callable(native_resolver)
-                else None
-            )
-            if isinstance(native_model, str) and native_model.startswith("native_cli_"):
-                metadata["model"] = native_model
             references = await self._prepare_attachments(
                 row.user_id, row.agent_id, options.attachments, check_expiry=False
             )

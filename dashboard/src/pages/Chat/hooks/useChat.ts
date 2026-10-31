@@ -906,7 +906,6 @@ export function useChat(
       reasoningEffort?: string | null,
       conversationMode?: "ask" | "plan" | "craft" | null,
       hitlPolicy?: HitlSessionPolicy | null,
-      nativeModelId?: string | null,
       quote?: QuoteReference,
     ) => {
       const key = storeKey || stableSessionId;
@@ -943,8 +942,7 @@ export function useChat(
         conversationMode,
         hitlPolicy,
       ];
-      if (quote) args.push(nativeModelId, quote);
-      else if (nativeModelId !== undefined) args.push(nativeModelId);
+      if (quote) args.push(quote);
       chatStore.sendTurn(...args);
     },
     [stableSessionId],

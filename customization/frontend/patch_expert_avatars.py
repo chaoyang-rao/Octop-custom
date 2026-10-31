@@ -16,7 +16,7 @@ BASE = ROOT / 'baselines' / 'projects-v2' / 'octop' / 'dashboard'
 DASH = ROOT / 'packages' / 'octop' / 'dashboard'
 ASSETS = DASH / 'assets'
 SOURCE_RELEASE = 'projects-v2'
-RELEASE = 'avatars-v24'
+RELEASE = 'avatars-v25'
 MAIN = 'index.BsYGCvv_.projects-v2.js'
 EDIT = 'EditAgentDrawer.w674TDCV.projects-v2.js'
 CREATE = 'index.Bxr_iAco.projects-v2.js'
@@ -224,11 +224,10 @@ patch_chunk('index.C1lMbskB.projects-v2.js', 'application-connectors-patch.mjs',
 for locale in ('en.CaWe8dRV.projects-v2.js', 'zh.D-7HvP3m.projects-v2.js'):
     patch_chunk(locale, 'application-connectors-patch.mjs', 'patchApplicationLocale')
 patch_chunk(MAIN, 'user-pages-patch.mjs', 'patchUserPagesMain')
-patch_chunk(COMPOSER, 'native-composer-patch.mjs', 'patchNativeComposer')
 for locale in ('en.CaWe8dRV.projects-v2.js', 'zh.D-7HvP3m.projects-v2.js'):
     patch_chunk(locale, 'user-pages-patch.mjs', 'patchUserPagesLocale')
 extra_files = ('expert-avatars.js', 'expert-avatars.css', 'expert-avatar-integration.js', 'expert-avatar-integration.css',
-               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'project-folder-picker.js', 'model-shortcut.css', 'expert-work-status.js', 'expert-work-status.css', 'expert-presentation.js', 'expert-presentation.css', 'toolbar-glyphs.css', 'expert-reuse.js', 'user-features.pages.js', 'native-cli-presentation.js')
+               *account_patch['EXTRA_ASSETS'], 'compact-chat.css', 'sidebar-scrollbars.css', 'toolbar-contrast.css', 'project-folder-picker.js', 'model-shortcut.css', 'expert-work-status.js', 'expert-work-status.css', 'expert-presentation.js', 'expert-presentation.css', 'toolbar-glyphs.css', 'expert-reuse.js', 'user-features.pages.js')
 for name in extra_files:
     sources[name] = (ASSETS / name).read_text(encoding='utf-8')
 mapping = {}

@@ -66,7 +66,6 @@ import {
   QuotedReplyDraft,
 } from "../../components/ChatConversationActions";
 import type { QuoteDraft } from "../../api/modules/conversations";
-import { nativeCliForChat } from "./utils/nativeCliPresentation";
 import WelcomeScreen from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
 import ModelConfigEmpty from "./components/ModelConfigEmpty";
@@ -219,15 +218,8 @@ function ChatPageInner() {
     activeAgent !== null && activeAgent.config?.enable_trajectory !== false;
   const sharedExpertViewer = isSharedExpertViewer(activeAgent ?? {});
   const isTeamChat = isTeamAgent(activeAgent);
-  const nativeCli = nativeCliForChat(
-    activeAgent,
-    agents,
-    user?.role === "admin",
-  );
-  const [nativeModelId, setNativeModelId] = useState<string | null>(null);
   const [quoteDraft, setQuoteDraft] = useState<QuoteDraft | null>(null);
   useEffect(() => setQuoteDraft(null), [activeThreadId, resolvedAgentId]);
-  useEffect(() => setNativeModelId(null), [resolvedAgentId, threadId]);
   const [agentProfileOpen, setAgentProfileOpen] = useState(false);
   const [profileAgentId, setProfileAgentId] = useState<string | null>(null);
   const profileAgent = useMemo(() => {
@@ -728,7 +720,6 @@ function ChatPageInner() {
     sessions,
     messagesLength: messages.length,
     selectedModel,
-    nativeModelId: nativeCli ? nativeModelId : undefined,
     quoteDraft,
     selectedConnectors,
     selectedKnowledgeBaseIds,
@@ -833,7 +824,6 @@ function ChatPageInner() {
       const ok = handleSend(item.text, item.attachments, {
         composerContext: item.composerContext,
         modelRef: item.modelRef,
-        nativeModelId: item.nativeModelId,
         quote: item.quote ?? null,
         selectedModel: item.composerContext?.model ?? item.modelRef ?? null,
         selectedConnectors: item.composerContext?.connectors,
@@ -901,7 +891,6 @@ function ChatPageInner() {
       removeQueued(id);
       if (result === "no_socket") {
         wrappedHandleSend(item.text, item.attachments, {
-          nativeModelId: item.nativeModelId,
           quote: item.quote ?? null,
         });
       }
@@ -1554,10 +1543,7 @@ function ChatPageInner() {
                   noAgents={noAgents}
                   loading={agentsLoading}
                 />
-              ) : showWelcome &&
-                modelsReady &&
-                availableModels.length === 0 &&
-                !nativeCli ? (
+              ) : showWelcome && modelsReady && availableModels.length === 0 ? (
                 <ModelConfigEmpty canConfigure={canConfigureModels} />
               ) : showWelcome ? (
                 <WelcomeScreen
@@ -1838,10 +1824,7 @@ function ChatPageInner() {
                 </div>
               </div>
             ) : null}
-            {!showWelcome &&
-            modelsReady &&
-            availableModels.length === 0 &&
-            !nativeCli ? (
+            {!showWelcome && modelsReady && availableModels.length === 0 ? (
               <div className={styles.modelConfigDock}>
                 <div className={styles.modelConfigDockInner}>
                   <Alert
@@ -1906,9 +1889,6 @@ function ChatPageInner() {
               onComposerCleared={() => {
                 prefillInputRef.current = "";
               }}
-              nativeCli={nativeCli}
-              nativeModelId={nativeModelId}
-              onNativeModelChange={setNativeModelId}
               availableModels={availableModels}
               selectedModel={selectedModel}
               onModelChange={setSelectedModel}

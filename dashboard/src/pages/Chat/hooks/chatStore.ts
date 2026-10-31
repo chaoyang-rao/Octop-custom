@@ -2809,7 +2809,6 @@ async function sendTurnWebSocket(
   reasoningEffort?: string | null,
   conversationMode?: "ask" | "plan" | "craft" | null,
   hitlPolicy?: { mode: string; tools?: string[] } | null,
-  nativeModelId?: string | null,
   quote?: QuoteReference,
 ): Promise<boolean> {
   const state = getOrCreate(sessionId);
@@ -2875,7 +2874,6 @@ async function sendTurnWebSocket(
       };
       if (threadId) payload.thread_id = threadId;
       if (modelRef) payload.model = modelRef;
-      if (nativeModelId !== undefined) payload.native_model_id = nativeModelId;
       if (quote) payload.quote = quote;
       // Always send the array (including []) so the server can honor Dashboard
       // opt-out of default_open connectors for this turn.
@@ -3069,7 +3067,6 @@ export async function sendTurn(
   reasoningEffort?: string | null,
   conversationMode?: "ask" | "plan" | "craft" | null,
   hitlPolicy?: { mode: string; tools?: string[] } | null,
-  nativeModelId?: string | null,
   quote?: QuoteReference,
 ): Promise<void> {
   const state = getOrCreate(sessionId);
@@ -3159,7 +3156,6 @@ export async function sendTurn(
     reasoningEffort,
     conversationMode,
     hitlPolicy,
-    nativeModelId,
     quote,
   );
   if (!wsOk) {

@@ -38,7 +38,6 @@ interface UseChatSendParams {
   conversationMode?: "ask" | "plan" | "craft";
   hitlPolicy?: HitlSessionPolicy;
   defaultModel?: string | null;
-  nativeModelId?: string | null;
   quoteDraft?: QuoteDraft | null;
   sendMessage: (
     text: string,
@@ -55,7 +54,6 @@ interface UseChatSendParams {
     reasoningEffort?: string | null,
     conversationMode?: "ask" | "plan" | "craft" | null,
     hitlPolicy?: HitlSessionPolicy | null,
-    nativeModelId?: string | null,
     quote?: QuoteReference,
   ) => void;
   createSession: () => { session: Session; resolvedId: Promise<string> };
@@ -78,7 +76,6 @@ export type ChatSendOverrides = {
   selectedTargetAgents?: string[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
-  nativeModelId?: string | null;
   /** Send to this thread instead of the active one (queued flush). */
   threadId?: string | null;
   /** Send as this agent instead of the active one (queued flush). */
@@ -101,7 +98,6 @@ export function useChatSend({
   conversationMode = "craft",
   hitlPolicy,
   defaultModel,
-  nativeModelId,
   quoteDraft,
   sendMessage,
   createSession,
@@ -174,10 +170,6 @@ export function useChatSend({
           ? overrides.modelRef
           : resolveTurnModelRef(modelSelection, defaultModel);
 
-      const nativeSelection =
-        overrides?.nativeModelId !== undefined
-          ? overrides.nativeModelId
-          : nativeModelId;
       const runSend = (tid: string, hadMessages: boolean) => {
         maybeRenameNewThread(tid, hadMessages);
         const args: Parameters<UseChatSendParams["sendMessage"]> = [
@@ -196,8 +188,7 @@ export function useChatSend({
           mode,
           policy,
         ];
-        if (quote) args.push(nativeSelection, quote.reference);
-        else if (nativeSelection !== undefined) args.push(nativeSelection);
+        if (quote) args.push(quote.reference);
         sendMessage(...args);
       };
 
@@ -261,9 +252,7 @@ export function useChatSend({
           mode,
           policy,
         ];
-        if (quote) pendingArgs.push(nativeSelection, quote.reference);
-        else if (nativeSelection !== undefined)
-          pendingArgs.push(nativeSelection);
+        if (quote) pendingArgs.push(quote.reference);
         chatStore.sendTurn(...pendingArgs);
         navigate(`/chat/${agent}/${tid}`, { replace: true });
       });
@@ -287,7 +276,6 @@ export function useChatSend({
       conversationMode,
       hitlPolicy,
       defaultModel,
-      nativeModelId,
       quoteDraft,
       t,
     ],

@@ -87,8 +87,6 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
         allowed = method == "POST" and bool(scopes & {"chat", "notifications"})
     elif path == "/api/mobile-access/self/revoke":
         allowed = method == "POST"
-    elif re.fullmatch(r"/api/agents/[^/]+/native-cli/models", path):
-        allowed = method == "GET" and "chat" in scopes
     elif path.startswith("/api/slash/"):
         allowed = read and "chat" in scopes
     elif path.startswith("/api/i18n/"):

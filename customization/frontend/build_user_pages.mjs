@@ -38,10 +38,8 @@ const sourceShims=new Map([
  ['context/AgentContext.tsx','AgentContext'],['hooks/useCurrentUser.ts','useCurrentUser'],
  ['utils/antdMessage.ts','antdMessage'],['layouts/PageShell.tsx','PageShell'],['i18n.ts','i18n'],
 ].map(([name,shim])=>[path.join(root,'dashboard/src',name),shim]));
-const nativeHelper=transformSync(fs.readFileSync(path.join(root,'dashboard/src/pages/Chat/utils/nativeCliPresentation.ts'),'utf8'),{loader:'ts',format:'esm',target:'es2022'}).code;
-fs.writeFileSync(path.join(root,'customization/packages/octop/dashboard/assets/native-cli-presentation.js'),nativeHelper);
 const report=await build({
- stdin:{contents:'import{useNotificationPresence}from"./pages/MobileAccess/useNotificationPresence";export function NotificationPresence(){useNotificationPresence();return null;}export{default as NativeCli}from"./pages/NativeCli";export{default as TaskQueue}from"./pages/TaskQueue";export{default as MobileAccess}from"./pages/MobileAccess";export{default as AccountConnections}from"./pages/AccountConnections";export{default as ConversationLibrary}from"./pages/ConversationLibrary";',resolveDir:path.join(root,'dashboard/src'),sourcefile:'user-features.entry.tsx',loader:'tsx'},
+ stdin:{contents:'import{useNotificationPresence}from"./pages/MobileAccess/useNotificationPresence";export function NotificationPresence(){useNotificationPresence();return null;}export{default as TaskQueue}from"./pages/TaskQueue";export{default as MobileAccess}from"./pages/MobileAccess";export{default as AccountConnections}from"./pages/AccountConnections";export{default as ConversationLibrary}from"./pages/ConversationLibrary";',resolveDir:path.join(root,'dashboard/src'),sourcefile:'user-features.entry.tsx',loader:'tsx'},
  outfile:path.join(root,'customization/packages/octop/dashboard/assets/user-features.pages.js'),
  bundle:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',minify:true,metafile:true,
  define:{'process.env.NODE_ENV':'"production"','import.meta.env.BASE_URL':'""','import.meta.env.MODE':'"production"','import.meta.env.DEV':'false','import.meta.env.PROD':'true','BASE_URL':'""'},

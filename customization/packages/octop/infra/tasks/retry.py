@@ -9,7 +9,6 @@ from langchain_core.messages import ToolMessage
 from langgraph.graph import END
 
 from octop.i18n import tr
-from octop.infra.agents.native_cli.reset import reset_native_session
 from octop.infra.db.repos.tasks import TaskRow
 from octop.infra.db.services import RepoBundle
 from octop.infra.errors import ErrorCode, OctopError
@@ -83,21 +82,14 @@ async def reset_for_retry(agents: Any, repos: RepoBundle, row: TaskRow, *, local
     thread = await asyncio.to_thread(repos.thread_repo.get, row.thread_id)
     if thread is None or thread.user_id != row.user_id or thread.agent_id != row.agent_id:
         raise OctopError(ErrorCode.FORBIDDEN, tr("tasks.errors.thread_not_owned", locale))
-    resolver = getattr(agents, "native_execution_ref", None)
-    native = await asyncio.to_thread(resolver, row.agent_id) if callable(resolver) else None
     target = row.agent_id
-    if isinstance(native, str) and native.startswith("native_cli_"):
-        target = await reset_native_session(
-            agents, agent_id=row.agent_id, user_id=row.user_id, thread_id=row.thread_id
-        )
-    else:
-        agent = await asyncio.to_thread(repos.agent_repo.get, row.agent_id)
-        primary = getattr(getattr(agents, "teams", None), "primary_for_team", None)
-        if agent is not None and agent.kind == "team" and callable(primary):
-            real = await asyncio.to_thread(primary, row.agent_id)
-            if real is None or real.user_id != row.user_id:
-                raise OctopError(ErrorCode.FORBIDDEN, tr("tasks.errors.agent_not_owned", locale))
-            target = str(real.agent_id)
+    agent = await asyncio.to_thread(repos.agent_repo.get, row.agent_id)
+    primary = getattr(getattr(agents, "teams", None), "primary_for_team", None)
+    if agent is not None and agent.kind == "team" and callable(primary):
+        real = await asyncio.to_thread(primary, row.agent_id)
+        if real is None or real.user_id != row.user_id:
+            raise OctopError(ErrorCode.FORBIDDEN, tr("tasks.errors.agent_not_owned", locale))
+        target = str(real.agent_id)
     for agent_id in dict.fromkeys([target, row.agent_id]):
         await agents.start(agent_id)
         harness = agents.get_agent(agent_id)
