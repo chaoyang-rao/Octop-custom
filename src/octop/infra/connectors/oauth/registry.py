@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from typing import Any
 
 from octop.infra.connectors.catalog import get_catalog_entry, get_mcp_oauth_remote
+from octop.infra.connectors.crypto import decrypt_credentials, encrypt_credentials
 from octop.infra.connectors.custom_mcp import CUSTOM_MCP_KIND
 from octop.infra.connectors.oauth.discovery import discover_oauth_from_mcp_url
 from octop.infra.connectors.oauth.mcp import (
@@ -48,14 +50,29 @@ def oauth_supported_kinds() -> frozenset[str]:
     return mcp_oauth_kinds() | _AUTH_CODE_PASSTHROUGH_KINDS
 
 
-def save_oauth_ctx(settings_repo: Any, state_id: str, ctx: dict[str, Any]) -> None:
-    settings_repo.set(f"{OAUTH_CTX_PREFIX}{state_id}", json.dumps(ctx))
+def save_oauth_ctx(
+    settings_repo: Any, state_id: str, ctx: dict[str, Any], *, secret_repo: Any | None = None
+) -> None:
+    if secret_repo is not None:
+        blob = encrypt_credentials(secret_repo, ctx)
+        value = "encrypted:" + base64.b64encode(blob).decode("ascii")
+    else:
+        value = json.dumps(ctx)
+    settings_repo.set(f"{OAUTH_CTX_PREFIX}{state_id}", value)
 
 
-def load_oauth_ctx(settings_repo: Any, state_id: str) -> dict[str, Any]:
+def load_oauth_ctx(
+    settings_repo: Any, state_id: str, *, secret_repo: Any | None = None
+) -> dict[str, Any]:
     raw = settings_repo.get(f"{OAUTH_CTX_PREFIX}{state_id}")
     if not raw:
         return {}
+    if raw.startswith("encrypted:"):
+        if secret_repo is None:
+            raise ValueError("encrypted OAuth context requires its credential store")
+        return decrypt_credentials(
+            secret_repo, base64.b64decode(raw.removeprefix("encrypted:"), validate=True)
+        )
     data = json.loads(raw)
     return data if isinstance(data, dict) else {}
 
@@ -135,9 +152,12 @@ async def _start_mcp_oauth_from_discovery(
     server_name: str | None = None,
     mcp_url: str | None = None,
     scope: str | None = None,
+    registered_client: dict[str, Any] | None = None,
 ) -> tuple[str, str, dict[str, Any]]:
     verifier, challenge = new_pkce_pair()
-    reg = await register_dynamic_client(metadata, issuer=issuer, redirect_uri=redirect_uri)
+    reg = registered_client or await register_dynamic_client(
+        metadata, issuer=issuer, redirect_uri=redirect_uri
+    )
     client_id = str(reg["client_id"])
     client_secret = str(reg.get("client_secret") or "") or None
     url = build_authorize_url(
@@ -172,6 +192,7 @@ async def start_oauth(
     redirect_uri: str,
     state: str,
     settings_repo: Any,
+    registered_client: dict[str, Any] | None = None,
 ) -> tuple[str, str, dict[str, Any]]:
     """Return authorize_url, code_verifier, ctx for a catalog connector kind."""
     del settings_repo
@@ -184,7 +205,9 @@ async def start_oauth(
         # MCP resources may delegate OAuth to a different authorization server.
         # Discover it rather than treating the API hostname as the issuer.
         found = await discover_oauth_from_mcp_url(entry.mcp_url or "")
-        if not found.get("available"):
+        if not found.get("available") and not (
+            registered_client and found.get("metadata") and found.get("issuer")
+        ):
             raise ValueError(str(found.get("error") or "OAuth discovery failed"))
         issuer = str(found["issuer"])
         resource = str(found.get("resource") or "").strip() or resource
@@ -201,7 +224,10 @@ async def start_oauth(
         issuer=issuer,
         resource=resource,
         metadata=metadata,
-        scope=_scopes_for_kind(kind, metadata),
+        scope=(str(registered_client.get("scope") or "").strip() or None)
+        if registered_client
+        else _scopes_for_kind(kind, metadata),
+        registered_client=registered_client,
     )
 
 
@@ -212,6 +238,7 @@ async def start_oauth_for_target(
     state: str,
     settings_repo: Any,
     mcp_url: str | None = None,
+    registered_client: dict[str, Any] | None = None,
 ) -> tuple[str, str, dict[str, Any]]:
     """Unified OAuth start for catalog connectors and custom MCP servers."""
     target_type = str(target.get("type") or "").strip()
@@ -224,6 +251,7 @@ async def start_oauth_for_target(
             redirect_uri=redirect_uri,
             state=state,
             settings_repo=settings_repo,
+            registered_client=registered_client,
         )
     if target_type == "custom_mcp":
         server_name = str(target.get("server_name") or "").strip()
@@ -326,8 +354,13 @@ async def exchange_oauth_code(
     code_verifier: str,
     settings_repo: Any,
     state_id: str,
+    secret_repo: Any | None = None,
 ) -> dict[str, Any]:
-    ctx = load_oauth_ctx(settings_repo, state_id)
+    ctx = (
+        load_oauth_ctx(settings_repo, state_id, secret_repo=secret_repo)
+        if secret_repo is not None
+        else load_oauth_ctx(settings_repo, state_id)
+    )
     flow = ctx.get("flow")
 
     if flow == "custom_mcp":

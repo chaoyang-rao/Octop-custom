@@ -1,0 +1,1698 @@
+{
+  "schema_version": 1,
+  "packages": {
+    "codex_acp": {
+      "label": "Codex ACP",
+      "runner_name": "managed_codex",
+      "repository": "https://github.com/zed-industries/codex-acp",
+      "license": "Apache-2.0",
+      "versions": {
+        "0.15.0": {
+          "release_url": "https://github.com/zed-industries/codex-acp/releases/tag/v0.15.0",
+          "license_url": "https://raw.githubusercontent.com/zed-industries/codex-acp/v0.15.0/LICENSE",
+          "license_sha256": "752daf2fb234ca4a1fa372c073fe127f44b7b90fd2529ae44273a64f9d53da7a",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-aarch64-apple-darwin.tar.gz",
+              "sha256": "356b1faf3aa0feb15781d5c8a86c46e1ab623a2bf4908b251acb35df9af2fb79",
+              "size": 63762999,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "windows-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-aarch64-pc-windows-msvc.zip",
+              "sha256": "e7034bfcb5997667564d8466b4b0251210d44a8ffa67362e6fac11c575432ac6",
+              "size": 54890549,
+              "archive": "zip",
+              "binary": "codex-acp.exe"
+            },
+            "linux-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-aarch64-unknown-linux-gnu.tar.gz",
+              "sha256": "154bbb0e9d8549c6bc89b7c8d75fb745a3baace18a755bfd69cbc8c177458ba0",
+              "size": 72266358,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "linux-musl-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-aarch64-unknown-linux-musl.tar.gz",
+              "sha256": "d8723b322527cf93f73a4a455a811867930869c9c0d8c22e40c9af6f33fe9e49",
+              "size": 74227939,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-x86_64-apple-darwin.tar.gz",
+              "sha256": "ffbd10e9a5f19fc4a22469b2dfeea6f8860286b50d2c00c906db06d7a03bb145",
+              "size": 68170006,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "windows-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-x86_64-pc-windows-msvc.zip",
+              "sha256": "371c01777782b62658ac88e98b52b43db3e91477dfb1bc0518ae879068ec8b77",
+              "size": 58891200,
+              "archive": "zip",
+              "binary": "codex-acp.exe"
+            },
+            "linux-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-x86_64-unknown-linux-gnu.tar.gz",
+              "sha256": "71dcf628a618a82f3b7f3b7383182cdf33dd41c1cbecaf7e3c833f36e44155d1",
+              "size": 71876781,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "linux-musl-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.15.0/codex-acp-0.15.0-x86_64-unknown-linux-musl.tar.gz",
+              "sha256": "35e0ac32fb5901c1ca430c34419c0782d76b6553b431936b237c3a04029d7ff3",
+              "size": 76410836,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            }
+          }
+        },
+        "0.16.0": {
+          "release_url": "https://github.com/zed-industries/codex-acp/releases/tag/v0.16.0",
+          "license_url": "https://raw.githubusercontent.com/zed-industries/codex-acp/v0.16.0/LICENSE",
+          "license_sha256": "752daf2fb234ca4a1fa372c073fe127f44b7b90fd2529ae44273a64f9d53da7a",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-aarch64-apple-darwin.tar.gz",
+              "sha256": "377f1137945b54d8e689cb600767f6dcfe6e548e01c1f29018862c009c692c8d",
+              "size": 65686149,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "windows-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-aarch64-pc-windows-msvc.zip",
+              "sha256": "1640fac9ff4893a9aed895ad3e8d529a7b8cdad4f65ff85d3b5c69323857e7b4",
+              "size": 56880558,
+              "archive": "zip",
+              "binary": "codex-acp.exe"
+            },
+            "linux-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-aarch64-unknown-linux-gnu.tar.gz",
+              "sha256": "cb72820f53c91a63982a804bd6ab251bde51bc9371d8e638946f02d7d78580b5",
+              "size": 74559030,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "linux-musl-arm64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-aarch64-unknown-linux-musl.tar.gz",
+              "sha256": "ed84dd4ad213d4cedbb303bea648ccb5552175522395217836eee0bf4f90ca92",
+              "size": 76519874,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-x86_64-apple-darwin.tar.gz",
+              "sha256": "212fafcf971c75cd4f5060be2d5951bc322f71c49028dbd2531931494c33c784",
+              "size": 70219771,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "windows-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-x86_64-pc-windows-msvc.zip",
+              "sha256": "8f290b2956c9276c1748199641b87005e2236b04a22c23050473a2c7fad59cd7",
+              "size": 61013328,
+              "archive": "zip",
+              "binary": "codex-acp.exe"
+            },
+            "linux-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-x86_64-unknown-linux-gnu.tar.gz",
+              "sha256": "0a9ad6c31ec9b2b87dccb7e9da3faf5d387e74470d24dbced75a160ed7b22d06",
+              "size": 74262216,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            },
+            "linux-musl-amd64": {
+              "url": "https://github.com/zed-industries/codex-acp/releases/download/v0.16.0/codex-acp-0.16.0-x86_64-unknown-linux-musl.tar.gz",
+              "sha256": "2e123b97871846fa2e01e835a921f0d7a373a6fc91e76a556dc7cf7eb3910587",
+              "size": 78683516,
+              "archive": "tar.gz",
+              "binary": "codex-acp"
+            }
+          }
+        }
+      }
+    },
+    "opencode": {
+      "label": "OpenCode",
+      "license": "MIT",
+      "repository": "https://github.com/anomalyco/opencode",
+      "runner_name": "managed_opencode",
+      "runner_args": [
+        "acp"
+      ],
+      "runner_env": {
+        "OPENCODE_DISABLE_AUTOUPDATE": "true"
+      },
+      "versions": {
+        "1.19.4": {
+          "release_url": "https://github.com/anomalyco/opencode/releases/tag/v1.19.4",
+          "license_url": "https://raw.githubusercontent.com/anomalyco/opencode/v1.19.5/LICENSE",
+          "license_sha256": "625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-darwin-arm64.zip",
+              "size": 64291659,
+              "sha256": "c400a2f8c8ab7e99478a7f4dd1a466b57bf33888e520d85c55780a5464c4b689",
+              "archive": "zip",
+              "binary": "opencode"
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-darwin-x64-baseline.zip",
+              "size": 69113303,
+              "sha256": "7ad6170131ed5b8dab9ebd82f5ad5581d0051f8d50754f88460515ad61e1f37e",
+              "archive": "zip",
+              "binary": "opencode"
+            },
+            "linux-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-linux-arm64.tar.gz",
+              "size": 78526339,
+              "sha256": "8568230ccd847dc93e95b9f6894379077d3e014a16b48040743573e77c23e85f",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "linux-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-linux-x64-baseline.tar.gz",
+              "size": 79667571,
+              "sha256": "1697ef40558d378bd2f72efa8fafe1bed1f0e664f09247b9357556b95dbc7cbc",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "windows-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-windows-arm64.zip",
+              "size": 75791921,
+              "sha256": "36e696fd1d275b469ab02a1ccc00d161bfdcc0a4ffa93c2b7a4e57399f3ff347",
+              "archive": "zip",
+              "binary": "opencode.exe"
+            },
+            "windows-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-windows-x64-baseline.zip",
+              "size": 81744966,
+              "sha256": "21cac96abb146b0f6e770680ea7855fc4f354c7966aab39f5be9859b0df1deac",
+              "archive": "zip",
+              "binary": "opencode.exe"
+            },
+            "linux-musl-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-linux-arm64-musl.tar.gz",
+              "size": 78269653,
+              "sha256": "aa32a91f62cfddfa4615ba4deffc2b13696e77cbee83551824e3f16e6770b37e",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "linux-musl-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.4/opencode-linux-x64-baseline-musl.tar.gz",
+              "size": 79693320,
+              "sha256": "592fcff7847fab2eecda4b5357f66032ea2b413b9e93ce92dab03ee7b40a722c",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            }
+          }
+        },
+        "1.19.5": {
+          "release_url": "https://github.com/anomalyco/opencode/releases/tag/v1.19.5",
+          "license_url": "https://raw.githubusercontent.com/anomalyco/opencode/v1.19.5/LICENSE",
+          "license_sha256": "625f0f619133f89bbbb2abe37369613dfa1885eba1e50d02170deb62bb42cb6b",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-darwin-arm64.zip",
+              "size": 64278924,
+              "sha256": "c1c9e62521192192ef4c3ed1355ada2144055bddb61682217e997b03c55203c1",
+              "archive": "zip",
+              "binary": "opencode"
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-darwin-x64-baseline.zip",
+              "size": 69100890,
+              "sha256": "e1235374cb7e712cdc15e21ba915a029a5d22312b460606d0783754739706775",
+              "archive": "zip",
+              "binary": "opencode"
+            },
+            "linux-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-linux-arm64.tar.gz",
+              "size": 78513091,
+              "sha256": "fae5be262d693b7c5e562856cc473e59e741772936db0c0600ac0d5ed5bd088b",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "linux-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-linux-x64-baseline.tar.gz",
+              "size": 79651821,
+              "sha256": "17c200fd4b2289954cc01552559f9b6d03ec157b2ddfb5eb54144f491656333d",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "windows-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-windows-arm64.zip",
+              "size": 75773358,
+              "sha256": "5d49139bd917511ff35a3c06065c9f47918346668f05ea020e778286f302fbb7",
+              "archive": "zip",
+              "binary": "opencode.exe"
+            },
+            "windows-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-windows-x64-baseline.zip",
+              "size": 81738223,
+              "sha256": "e4dac5cd38a182a24e7b3e18853f01d08cdb137e50b3bd1397c1a89e54d28c63",
+              "archive": "zip",
+              "binary": "opencode.exe"
+            },
+            "linux-musl-arm64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-linux-arm64-musl.tar.gz",
+              "size": 78255927,
+              "sha256": "3522eccafd30d84a2d770b72a56d4877c576b9072b36a5a9ea0fa30ed82b896e",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            },
+            "linux-musl-amd64": {
+              "url": "https://github.com/anomalyco/opencode/releases/download/v1.19.5/opencode-linux-x64-baseline-musl.tar.gz",
+              "size": 79682889,
+              "sha256": "e796ccff81070b527b2aea144741928e56bdbc6650cd90fb5564d5c114f0e08b",
+              "archive": "tar.gz",
+              "binary": "opencode"
+            }
+          }
+        }
+      }
+    },
+    "pi": {
+      "label": "Pi + community ACP adapter",
+      "license": "MIT + Apache-2.0 dependencies",
+      "repository": "https://github.com/earendil-works/pi",
+      "runner_name": "managed_pi",
+      "versions": {
+        "1.3.0": {
+          "npm_lock": "pi-adapter.json",
+          "npm_lock_sha256": "c7bae63eb35b3824bd00da6fcc04e65437bc47876df9985a04aad42841dedc16",
+          "lock_target": "app",
+          "release_url": "https://github.com/earendil-works/pi/releases/tag/v1.3.0",
+          "license_url": "https://raw.githubusercontent.com/earendil-works/pi/v1.4.0/LICENSE",
+          "license_sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-darwin-arm64.tar.gz",
+              "size": 31071837,
+              "sha256": "1f9ae61cdeae04dd68caf1a1e8ab8ec9b292062f6ccb3252e0a9cbe93b5b16f1",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-darwin-x64.tar.gz",
+              "size": 33530366,
+              "sha256": "9ff562e2e439f50971b1f6bd9b62b30946600d9e9baa4ea19635cf630a553066",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "linux-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-linux-arm64.tar.gz",
+              "size": 42712567,
+              "sha256": "7fd2ea14fca390ebf9f47438baaef07c4b3d13db7cc8e459831118391b7ea65b",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "linux-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-linux-x64.tar.gz",
+              "size": 42617111,
+              "sha256": "24f5be328b66d4da36876296989501974f43ab8434fbb57c35c523a3ea505ded",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "windows-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-windows-arm64.zip",
+              "size": 43739046,
+              "sha256": "a349536d76bd83842f7b28db73a6ab89c68015731110aba299e57233539a0ded",
+              "archive": "zip",
+              "target": "pi",
+              "binary": "pi.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "windows-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.3.0/pi-windows-x64.zip",
+              "size": 45105409,
+              "sha256": "daf0ef45fd08f13dbb64c62d559e332c2d3d3087f8ae022ec5a1b9b655b59894",
+              "archive": "zip",
+              "target": "pi",
+              "binary": "pi.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            }
+          }
+        },
+        "1.4.0": {
+          "npm_lock": "pi-adapter.json",
+          "npm_lock_sha256": "c7bae63eb35b3824bd00da6fcc04e65437bc47876df9985a04aad42841dedc16",
+          "lock_target": "app",
+          "release_url": "https://github.com/earendil-works/pi/releases/tag/v1.4.0",
+          "license_url": "https://raw.githubusercontent.com/earendil-works/pi/v1.4.0/LICENSE",
+          "license_sha256": "0457f5bcec3b3b211605dfb5d1a49042fd638f3686a410fe099c24a25af13c48",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-darwin-arm64.tar.gz",
+              "size": 31098931,
+              "sha256": "79d9979d76a2a5adb7c28e27e9b44629928ccd0dc9fbb6ae7217860bd5e8be5d",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "darwin-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-darwin-x64.tar.gz",
+              "size": 33558360,
+              "sha256": "1bdefc9e1074c1de458ea9f2e43e6013ce49cd05326009b3de144037036585e2",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "linux-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-linux-arm64.tar.gz",
+              "size": 42745801,
+              "sha256": "fa5829c7ef83ffeaebba015715c8306220f89b2aa8a00154efbba98dd5440156",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "linux-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-linux-x64.tar.gz",
+              "size": 42645744,
+              "sha256": "f2e4e4329603223d03260cdb8bd5033dbdc1f73ba58ab8939db2e56546e115d2",
+              "archive": "tar.gz",
+              "target": "pi",
+              "binary": "pi",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "windows-arm64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-windows-arm64.zip",
+              "size": 43770747,
+              "sha256": "17ab17ee0e9088545c7dfa56d29490c45bd915425610b0db0cd937632f2df714",
+              "archive": "zip",
+              "target": "pi",
+              "binary": "pi.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            },
+            "windows-amd64": {
+              "url": "https://github.com/earendil-works/pi/releases/download/v1.4.0/pi-windows-x64.zip",
+              "size": 45136547,
+              "sha256": "0f7256ea8bdac3af20012b94fdc1252a31cc6dc0d2f9b9eb539555d22e3e321b",
+              "archive": "zip",
+              "target": "pi",
+              "binary": "pi.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              },
+              "script": "app/node_modules/pi-acp/dist/index.js",
+              "provide_on_path": true
+            }
+          }
+        }
+      }
+    },
+    "cline": {
+      "label": "Cline",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/cline/cline",
+      "runner_name": "managed_cline",
+      "runner_args": [
+        "--acp"
+      ],
+      "versions": {
+        "3.0.73": {
+          "release_url": "https://www.npmjs.com/package/cline/v/3.0.73",
+          "license_url": "https://raw.githubusercontent.com/cline/cline/v4.1.26/LICENSE",
+          "license_sha256": "f704446a5f1271608805598b557e4288cf8580477ea038c9c3d8b361f693f6b8",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-darwin-arm64/-/cli-darwin-arm64-3.0.73.tgz",
+              "size": 33810336,
+              "integrity": "sha512-wFik5XgHL/JNJA599aI2tUDx/UTzFMVqqC5k2V+XD1IC7pDt0yFN0cK10h6rgyEFAxRzujBTrxhq+4buuwXtYg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-darwin-x64/-/cli-darwin-x64-3.0.73.tgz",
+              "size": 36328372,
+              "integrity": "sha512-jVZH0jJeHaXITkwYU14L/lWRnm+cn77YyAhnRE+Xd4Ies5KTr6J6Rt9SjBzgY4yDUs7IJPdhyFYzAijSNhMaHg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.73.tgz",
+              "size": 50585057,
+              "integrity": "sha512-r9Yda9kveXhxTqI3pwQNk7wsAE6PoHD6W7+2e28x+1jd7RDVYc1d7kkJ0amtb7mjZTQIRHe1koUOBC9/5obRng==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.73.tgz",
+              "size": 50817241,
+              "integrity": "sha512-K+T94s0kPHLoMSANOJJ7KHb/etzYXZGQUbarKDKUPoZsvy4+oD1MAqYnZlfbKFM8tpnRQWouFngD9TB3mFqqeA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-windows-arm64/-/cli-windows-arm64-3.0.73.tgz",
+              "size": 44117964,
+              "integrity": "sha512-m6jojHCCYTA5gY9T8vOm55Do6yaREMnNtc1c7uvs/n1crVTUNWu/7AJ/yFwQ9svazXFEdEKWB9CbEYLUdGXSmQ==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline.exe"
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-windows-x64/-/cli-windows-x64-3.0.73.tgz",
+              "size": 47664377,
+              "integrity": "sha512-tV9aojQDpEXBRGHAhnBhXFuIpFZXx9eDPm/PADNAwJb8sUdqJX0YPPkaOKe1Sj1NmyyYTBeSYk91W44g6Yif6w==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline.exe"
+            }
+          }
+        },
+        "3.0.74": {
+          "release_url": "https://www.npmjs.com/package/cline/v/3.0.74",
+          "license_url": "https://raw.githubusercontent.com/cline/cline/v4.1.26/LICENSE",
+          "license_sha256": "f704446a5f1271608805598b557e4288cf8580477ea038c9c3d8b361f693f6b8",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-darwin-arm64/-/cli-darwin-arm64-3.0.74.tgz",
+              "size": 38261579,
+              "integrity": "sha512-jwEoR9PgJj1RYd02ehJlQFFZ0hXcZYmtiS5Wi9dqid7osmqJRyeAmxYwBzW9vM9BJwiKT3HNjk7TIwyJULMkrw==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-darwin-x64/-/cli-darwin-x64-3.0.74.tgz",
+              "size": 40541641,
+              "integrity": "sha512-Y70yrGFlvartf0w8xYM97XIq/Aaj/epR2UumNLAUrb/2ayssK1EbGaf4DIvoM/qG8uW4OObfLFxIMz4UyxSjUw==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-linux-arm64/-/cli-linux-arm64-3.0.74.tgz",
+              "size": 54812128,
+              "integrity": "sha512-upcm2jrziAsYbQJ3kDWciXs0LgpIl6sPi1AqCEDBFAyoRrGczbbuMmJN5YPqcH0aTp1EqP6dxedf1agpeXeHzA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-linux-x64/-/cli-linux-x64-3.0.74.tgz",
+              "size": 55037574,
+              "integrity": "sha512-Em6BmcqAnwV/UXjdaQY7abeECNzq9O1NjQ7N5a/dOQQpVQlP1S04qmP/xOxgWBh0eS5Mln3z6y3m++DBcYYn3Q==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline"
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@cline/cli-windows-arm64/-/cli-windows-arm64-3.0.74.tgz",
+              "size": 48338930,
+              "integrity": "sha512-hKgYRXyVdaOHtwRXe00ueG7d3t72xlnIIJQeZi2UFy7HEnNhodrmsvhGlOTDJvsPRBnk3fFjXgRqA3E2+7apmA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline.exe"
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@cline/cli-windows-x64/-/cli-windows-x64-3.0.74.tgz",
+              "size": 51888285,
+              "integrity": "sha512-JmCN8x3rI+LVODloLhhWW1zoOy2glqRcUKojWff6PP+vQwneP9OVSWfKnOplh0X2+YMSHFR85AwE4sY7XUjfPA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/cline.exe"
+            }
+          }
+        }
+      }
+    },
+    "grok": {
+      "label": "Grok",
+      "license": "Apache-2.0",
+      "repository": "https://docs.x.ai/build/overview",
+      "runner_name": "managed_grok",
+      "runner_args": [
+        "--no-auto-update",
+        "agent",
+        "stdio"
+      ],
+      "versions": {
+        "1.0.69": {
+          "release_url": "https://www.npmjs.com/package/@xai-official/grok/v/1.0.69",
+          "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+          "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-darwin-arm64/-/grok-darwin-arm64-1.0.69.tgz",
+              "size": 49880678,
+              "integrity": "sha512-ge0OCXcQjToxvI8rUpzUqnvpPEnrQWKrx3j32iwMWtE0ehexfPABUYqSMdmZ/jCEI/Xtxo4NF6R+GAmaE7m8Hg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-darwin-x64/-/grok-darwin-x64-1.0.69.tgz",
+              "size": 56237995,
+              "integrity": "sha512-3+YA6mnyG0g964KRs1hc/e9Ezp8hU89i5jG4a85vO4xMq+lmKBqtZWiQ/xyJ8IplzPRjLUcZo9Xb7PvXpJwx5A==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-linux-arm64/-/grok-linux-arm64-1.0.69.tgz",
+              "size": 50353185,
+              "integrity": "sha512-LVwRjcxCiODX+MjzLdg23btGDuABu3Owx0VIIJ4gcRDFFNxPETOPWJ2eJyo7Z1HXMmldtKfvrWMmD9619CAv1Q==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-linux-x64/-/grok-linux-x64-1.0.69.tgz",
+              "size": 55138995,
+              "integrity": "sha512-Q3Cn2d9Vex9O65Vbi1XljkVg0uXlXA1MPPLGsymcCIp7Ux4PiKqdOQrXmyFkuAAlv8G41KKGzvR5Xm5mprugNA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-win32-arm64/-/grok-win32-arm64-1.0.69.tgz",
+              "size": 46848576,
+              "integrity": "sha512-L4qXgXwjqzk/5A6JvCqLZbERLM92GI1pA109MgDPIOQ2NzlHL510Dd08BxrKdPDnTISCM5AuZs9W9fCDKMlIPQ==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.exe.br",
+              "brotli_output": "package/bin/grok.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-win32-x64/-/grok-win32-x64-1.0.69.tgz",
+              "size": 50583303,
+              "integrity": "sha512-okaBH7xLY9Yx+eMWqKoyc5Bq8MnKRrK1c9jBkNYOOy1e3zQYb4X2SO7rtPXyd3dGeqbZcBPoinjoGgvoOfbcbw==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.exe.br",
+              "brotli_output": "package/bin/grok.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        },
+        "1.0.70": {
+          "release_url": "https://www.npmjs.com/package/@xai-official/grok/v/1.0.70",
+          "license_url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+          "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-darwin-arm64/-/grok-darwin-arm64-1.0.70.tgz",
+              "size": 49911569,
+              "integrity": "sha512-TvzZ4b6YwpiK7UybJGJ4AXxAD7fz8Y912Q0tsY6VkoDFRgpxIUWBdbp6Ax8ICJn1REf7qnsLcRRuyiaOTwJbmg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-darwin-x64/-/grok-darwin-x64-1.0.70.tgz",
+              "size": 56474253,
+              "integrity": "sha512-DmLdw/UWbJsfEFXNq/moq974RICGTwD85tNlt9e8eGXw14B3WJ7XLklGvro4O7POGkotmJVw0pN1J+Ro2GoQFg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-linux-arm64/-/grok-linux-arm64-1.0.70.tgz",
+              "size": 50533753,
+              "integrity": "sha512-rH0TfWOT/Ca/sBMtAJJ+GJ9UyZlr/TkTqIHq8FL7o+ZTzJMBWvCv40JC4T/XuwEZ3WMmxOHGiPap7H9B4SbDSw==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-linux-x64/-/grok-linux-x64-1.0.70.tgz",
+              "size": 55485055,
+              "integrity": "sha512-rElshycz/6SgPSkiFGtKHA4vSVOI8qQ6d0jFeu4I92hXCMfvxgMiOvNSzuBhm2P8Jd+4rNGAty2zW0VwmgHSeA==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.br",
+              "brotli_output": "package/bin/grok",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-win32-arm64/-/grok-win32-arm64-1.0.70.tgz",
+              "size": 46795535,
+              "integrity": "sha512-3W8ZmZ+MoqKfsqjAdm9ldbT7NfiTGOdAIEkOPyzEyyI9/qb4a13B11EL3ffqtiNPbadGWjYvwHsMirYZI8WHzg==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.exe.br",
+              "brotli_output": "package/bin/grok.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@xai-official/grok-win32-x64/-/grok-win32-x64-1.0.70.tgz",
+              "size": 50678046,
+              "integrity": "sha512-CZLdwfihazTIX/jgSqm3kBQxCeIjHJxMSq8w2VIhLP3I+zcAFYgj7Viy4YJAK8cLt4lhICoRLhGGb8Lq/zYMYw==",
+              "sha256": "",
+              "archive": "tar.gz",
+              "entry": "package/bin/grok.exe.br",
+              "brotli_output": "package/bin/grok.exe",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "claude": {
+      "label": "Claude Agent ACP",
+      "license": "Apache-2.0 adapter; Claude SDK commercial terms",
+      "repository": "https://github.com/agentclientprotocol/claude-agent-acp",
+      "runner_name": "managed_claude",
+      "runner_args": [],
+      "versions": {
+        "0.99.0": {
+          "npm_lock": "claude.json",
+          "npm_lock_sha256": "8fb6bb36911de45911c80315e571ee9626650dd8f84e3bf8e4c054211d68b9f3",
+          "lock_target": "app",
+          "release_url": "https://github.com/agentclientprotocol/claude-agent-acp/releases/tag/v0.99.0",
+          "license_url": "https://raw.githubusercontent.com/agentclientprotocol/claude-agent-acp/v0.99.1/LICENSE",
+          "license_sha256": "6ed4f049cce59e05197d585bdf8a39980b45d546d6ea718ee344555f3a867c3a",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.0.tgz",
+              "size": 569853,
+              "sha256": "",
+              "integrity": "sha512-xT6Ajub9fa9LeMpQU6a+/nHEqI5lefvgWAP8liiD1EZBv3vTXKEnKq5mRpKCu2089CHpFXu7Y/PEHCH5iPWfPw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        },
+        "0.99.1": {
+          "npm_lock": "claude.json",
+          "npm_lock_sha256": "8fb6bb36911de45911c80315e571ee9626650dd8f84e3bf8e4c054211d68b9f3",
+          "lock_target": "app",
+          "release_url": "https://github.com/agentclientprotocol/claude-agent-acp/releases/tag/v0.99.1",
+          "license_url": "https://raw.githubusercontent.com/agentclientprotocol/claude-agent-acp/v0.99.1/LICENSE",
+          "license_sha256": "6ed4f049cce59e05197d585bdf8a39980b45d546d6ea718ee344555f3a867c3a",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@agentclientprotocol/claude-agent-acp/-/claude-agent-acp-0.99.1.tgz",
+              "size": 572193,
+              "sha256": "",
+              "integrity": "sha512-tK5lNtoI85IS0K8PVKYK86t/ARgCS1AjEw+u6QSNmdu0tbhyeB6FTNzFnGNIgsL/3xYwrQUMFDC6osT1aIPReQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/dist/index.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        }
+      },
+      "runner_env": {
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1"
+      }
+    },
+    "gemini": {
+      "label": "Gemini CLI",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/google-gemini/gemini-cli",
+      "runner_name": "managed_gemini",
+      "runner_args": [
+        "--experimental-acp"
+      ],
+      "versions": {
+        "0.65.0": {
+          "npm_lock": "gemini.json",
+          "npm_lock_sha256": "eefd59ae6393bfb756ae82b227756eed27b91aa1c96d15390142fe061e143c37",
+          "lock_target": "app",
+          "release_url": "https://github.com/google-gemini/gemini-cli/releases/tag/v0.65.0",
+          "license_url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/v0.66.0/LICENSE",
+          "license_sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.65.0.tgz",
+              "size": 20872982,
+              "sha256": "",
+              "integrity": "sha512-B+flaYBNqX2zO71I5/gu7ZsnI38NlpOl654HWz+bK8I/P5sGILQsbkTOQ5a9V+w1Q6QO3wf9PlqtuMsl7XxpNQ==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        },
+        "0.66.0": {
+          "npm_lock": "gemini.json",
+          "npm_lock_sha256": "eefd59ae6393bfb756ae82b227756eed27b91aa1c96d15390142fe061e143c37",
+          "lock_target": "app",
+          "release_url": "https://github.com/google-gemini/gemini-cli/releases/tag/v0.66.0",
+          "license_url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/v0.66.0/LICENSE",
+          "license_sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-arm64.tar.gz",
+                "size": 53068959,
+                "sha256": "aa9549349e47dffaa42dcf95d6e06ade8c4bdafc980979883b88767670df385a",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "darwin-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-darwin-x64.tar.gz",
+                "size": 54383415,
+                "sha256": "d5e336d588c45be0c37dbd52cc29895593009ca4997a77a1fd02815131ed0e52",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-darwin-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-arm64.tar.gz",
+                "size": 58030966,
+                "sha256": "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-arm64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "linux-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-linux-x64.tar.gz",
+                "size": 58299872,
+                "sha256": "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+                "archive": "tar.gz",
+                "strip_prefix": "node-v24.22.2-linux-x64",
+                "target": "runtime",
+                "entry": "bin/node",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-arm64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-arm64.zip",
+                "size": 33789289,
+                "sha256": "f47968c213105077f64c6510f007632c0ca2574802a0b5067c327c49abe1c468",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-arm64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            },
+            "windows-amd64": {
+              "url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.66.0.tgz",
+              "size": 20889095,
+              "sha256": "",
+              "integrity": "sha512-EAtsJ9/JxiphHlduzvhoCkb7I0LdOxyugB5NpUtVqKVGZIWjV3JmurvK89ZrvMbV3kwk5SdWINz1M5ZN/2K/Lw==",
+              "archive": "tar.gz",
+              "target": "app",
+              "strip_prefix": "package",
+              "entry": "app/bundle/gemini.js",
+              "runtime": {
+                "url": "https://nodejs.org/dist/v24.22.2/node-v24.22.2-win-x64.zip",
+                "size": 37754834,
+                "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2",
+                "archive": "zip",
+                "strip_prefix": "node-v24.22.2-win-x64",
+                "target": "runtime",
+                "entry": "node.exe",
+                "skip_internal_links": true,
+                "checks": {
+                  "LICENSE": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cursor": {
+      "label": "Cursor",
+      "license": "Proprietary (direct vendor download)",
+      "repository": "https://cursor.com/docs/cli/acp",
+      "runner_name": "managed_cursor",
+      "runner_args": [
+        "acp"
+      ],
+      "profile_files": {
+        "cli-config.json": {
+          "version": 1,
+          "editor": {
+            "vimMode": false
+          },
+          "permissions": {
+            "allow": [],
+            "deny": []
+          },
+          "approvalMode": "allowlist",
+          "channel": "static"
+        }
+      },
+      "versions": {
+        "2026.10.22-27dcf5f": {
+          "release_url": "https://cursor.com/docs/cli/overview",
+          "license_url": "https://cursor.com/terms-of-service",
+          "license_sha256": "9bdb938d2604eb63eefca978277153b886a6b736528161ea79bfeb9061c9e114",
+          "platforms": {
+            "darwin-arm64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/darwin/arm64/agent-cli-package.tar.gz",
+              "size": 180412627,
+              "sha256": "2f5b0a3dd5fb951cecffac813867d8a08d810e59837d59fd5f12d69b922398d7",
+              "archive": "tar.gz",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node"
+            },
+            "darwin-amd64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/darwin/x64/agent-cli-package.tar.gz",
+              "size": 188039979,
+              "sha256": "7a3cfbf0fcfb979b6213feb5f9fd10fbc7cd4e51ab28c3b572bb935e0b114961",
+              "archive": "tar.gz",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node"
+            },
+            "linux-arm64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/arm64/agent-cli-package.tar.gz",
+              "size": 182799294,
+              "sha256": "22a36df9720830668ccd4d707e5190204ab9c8a0efb2f068cc914895f804d3ec",
+              "archive": "tar.gz",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node"
+            },
+            "linux-amd64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/linux/x64/agent-cli-package.tar.gz",
+              "size": 184859176,
+              "sha256": "85296944e4600a83c4b764f578d1502bf9c416db200d33a593e8f3ecabfdc294",
+              "archive": "tar.gz",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node"
+            },
+            "windows-arm64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/windows/arm64/agent-cli-package.zip",
+              "size": 77626713,
+              "sha256": "91028414a667646437dafb5e0c579db39b71f1a42d0ed057688cb530570db014",
+              "archive": "zip",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node.exe"
+            },
+            "windows-amd64": {
+              "url": "https://downloads.cursor.com/lab/2026.10.22-27dcf5f/windows/x64/agent-cli-package.zip",
+              "size": 80207693,
+              "sha256": "864a8f6a22f8c5ebedef8e0ceba529eae9a59b3d7f6fccb75e43e0f5efc3c147",
+              "archive": "zip",
+              "entry": "dist-package/index.js",
+              "launch_command": "dist-package/node.exe"
+            }
+          }
+        }
+      }
+    }
+  },
+  "reviewed_at": "2026-10-31",
+  "node_runtime": {
+    "version": "24.22.2",
+    "source": "https://nodejs.org/dist/v24.22.2/SHASUMS256.txt",
+    "license_url": "https://raw.githubusercontent.com/nodejs/node/v24.22.2/LICENSE",
+    "license_sha256": "5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace"
+  }
+}

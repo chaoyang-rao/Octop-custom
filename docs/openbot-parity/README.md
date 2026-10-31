@@ -2,7 +2,7 @@
 
 参照版本固定为 [OpenBot 1cd8906](https://github.com/nightly-labs/openbot/tree/1cd89066662bda7daf641a93af5e464c5cbc8b9a)。用户已选择依据公开功能和官方接口独立实现，覆盖全部用户功能（含移动及远程），运营后台单列。原项目采用非商业许可，本目录没有引入其实现代码、图标、技能文本或原文说明。
 
-[机器可读覆盖表](coverage.json) 记录每项范围、现有代码、待补能力及验证状态。`present_needs_validation` 只是发现现有实现；`implemented_pending_validation` 只是已接线，均不代表验收完成。只有实际验证后的项才使用 `verified`。需要服务商账号、商店签名或推送资源的部分单独记录，不能用演示或名称占位代替。
+[运营后台单列](operations.md)。[机器可读覆盖表](coverage.json) 记录每项范围、现有代码、待补能力及验证状态。`present_needs_validation` 只是发现现有实现；`implemented_pending_validation` 只是已接线，均不代表验收完成。只有实际验证后的项才使用 `verified`。需要服务商账号、商店签名或推送资源的部分单独记录，不能用演示或名称占位代替。
 
 应用目录包含公开版本的 30 组服务名称；对应连接参数优先依据服务商当前官方文档重建，使用 Octop 的账号隔离、凭据加密和 MCP/OAuth 机制。更新时须同时检查端点、认证方式、可用平台及真实工具发现。连接器配置和工具调用需由用户实际授权后验证。
 

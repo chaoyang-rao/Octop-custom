@@ -56,6 +56,8 @@ export interface ChatAttachment {
 
 /** Skills, connectors, knowledge bases, experts, and selected model attached at send time. */
 export interface UserComposerContext {
+  modelDisplayName?: string;
+  quote?: import("../../../api/modules/conversations").QuotedMessage;
   skills?: string[];
   connectors?: string[];
   knowledgeBaseIds?: string[];

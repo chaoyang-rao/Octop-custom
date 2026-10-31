@@ -31,6 +31,7 @@ from octop.infra.agents.teams.team_manager import (
 from octop.infra.agents.teams.team_manager import (
     stamp_team_host_chunk as _maybe_stamp_team_host,
 )
+from octop.infra.connectors.accounts.actor import actor_stream
 from octop.infra.errors import OctopError
 from octop.infra.gateway.cli.events import message_event_to_cli_chunks
 from octop.infra.gateway.hitl.coordinator import (
@@ -75,6 +76,7 @@ from octop.infra.gateway.slash.catalog import HITL_APPROVAL_COMMANDS, spec_for
 from octop.infra.gateway.slash.ctx import SlashCtx, build_slash_ctx
 from octop.infra.gateway.slash.parser import parse_slash
 from octop.infra.gateway.slash.runner import try_handle_slash
+from octop.infra.gateway.threads import ThreadRegistry
 from octop.infra.history.projection import (
     TurnHistoryTracker,
     message_inputs,
@@ -96,7 +98,6 @@ if TYPE_CHECKING:
     from octop.infra.db.repos.connectors import ConnectorRepo
     from octop.infra.db.repos.users import UserRepo
     from octop.infra.gateway.slash.dispatcher import SlashDispatcher
-    from octop.infra.gateway.threads import ThreadRegistry
 
 logger = logging.getLogger(__name__)
 install_harness_hitl_compat()
@@ -557,6 +558,10 @@ class GlobalProcessor:
         - When a model is passed and the turn needs vision, upgrade to a vision ref.
         """
         providers = self._agent_manager.providers
+        native_resolver = getattr(self._agent_manager, "native_execution_ref", None)
+        native_model = native_resolver(agent_id) if callable(native_resolver) else None
+        if isinstance(native_model, str) and native_model.startswith("native_cli_"):
+            return _ResolvedModelRoute(native_model, automatic=False)
         thread_model = self._agent_manager.get_thread_model(agent_id, thread_id)
         thread_row = self._thread_registry.get_thread(thread_id)
         model_ref = self._model_ref_from_meta(
@@ -802,6 +807,10 @@ class GlobalProcessor:
             needs_multimodal=content_blocks_need_vision(content),
         )
         model_ref = model_route.model_ref
+        if model_ref and model_ref.startswith("native_cli_"):
+            from octop.infra.agents.native_cli.media import native_attachment_content
+
+            content = await native_attachment_content(msg, content, media_backend)
         mcp_servers = await self._resolve_turn_mcp_servers(
             agent_id=agent_id,
             user_id=user_id,
@@ -868,23 +877,26 @@ class GlobalProcessor:
         history_tracker = await self._begin_history(agent_id, thread_id, request)
         projection_state = StreamProjectionState()
         try:
-            async for ev in project_stream(
-                self._agent_manager,
-                agent_id,
-                request,
-                media_backend=media_backend,
-                usage_tracker=usage_tracker,
-                history_tracker=history_tracker,
-                locale=locale,
-                projection_state=projection_state,
-                hitl_coordinator=self._hitl,
-                hitl_ctx=HitlStreamContext(
-                    thread_id=thread_id,
-                    agent_id=agent_id,
-                    user_id=user_id,
-                    session_key=session_key,
-                    channel_type=channel_type,
+            async for ev in actor_stream(
+                project_stream(
+                    self._agent_manager,
+                    agent_id,
+                    request,
+                    media_backend=media_backend,
+                    usage_tracker=usage_tracker,
+                    history_tracker=history_tracker,
+                    locale=locale,
+                    projection_state=projection_state,
+                    hitl_coordinator=self._hitl,
+                    hitl_ctx=HitlStreamContext(
+                        thread_id=thread_id,
+                        agent_id=agent_id,
+                        user_id=user_id,
+                        session_key=session_key,
+                        channel_type=channel_type,
+                    ),
                 ),
+                None,
             ):
                 yield ev
             stream_ok = True
@@ -1186,7 +1198,17 @@ class GlobalProcessor:
 
         try:
             async for chunk in iter_with_session_auto_approve(
-                self._agent_manager.stream(agent_id, request),
+                actor_stream(
+                    self._agent_manager.stream(agent_id, request),
+                    user_id
+                    if msg.channel_type
+                    in (
+                        ThreadRegistry.CHANNEL_DASHBOARD,
+                        ThreadRegistry.CHANNEL_CLI,
+                        ThreadRegistry.CHANNEL_MCP,
+                    )
+                    else None,
+                ),
                 thread_id=thread_id,
                 policies=self._hitl.session_policies,
                 resume=lambda next_decisions: self._agent_manager.resume_hitl(
@@ -1415,6 +1437,10 @@ class GlobalProcessor:
             needs_multimodal=content_blocks_need_vision(content),
         )
         model_ref = model_route.model_ref
+        if model_ref and model_ref.startswith("native_cli_"):
+            from octop.infra.agents.native_cli.media import native_attachment_content
+
+            content = await native_attachment_content(msg, content, media_backend)
         reasoning_overrides = self._resolve_reasoning_overrides(
             user_id=user_id,
             thread_id=thread_id,
@@ -1481,6 +1507,18 @@ class GlobalProcessor:
             message_kwargs=message_kwargs or None,
             reasoning_overrides=reasoning_overrides,
         )
+        if msg.channel_type in (
+            ThreadRegistry.CHANNEL_DASHBOARD,
+            ThreadRegistry.CHANNEL_CLI,
+            ThreadRegistry.CHANNEL_MCP,
+        ):
+            configurable = dict(request.get("configurable") or {})
+            configurable["octop_authenticated_user_id"] = user_id
+            request["configurable"] = configurable
+        if isinstance(meta.get("native_cli_model_id"), str):
+            configurable = dict(request.get("configurable") or {})
+            configurable["octop_native_model_id"] = meta["native_cli_model_id"]
+            request["configurable"] = configurable
         self.teams.stamp_host_runtime(request, agent_id)
         self._attach_turn_knowledge_config(
             request,
@@ -1653,7 +1691,7 @@ class GlobalProcessor:
         flaky connector does not abort the whole message turn.
         """
         from octop.infra.agents.teams import is_team_agent  # noqa: PLC0415
-        from octop.infra.errors import ErrorCode, OctopError  # noqa: PLC0415
+        from octop.infra.errors import ErrorCode, OctopError
 
         # Team hosts only dispatch — never attach MCP tools.
         if is_team_agent(self._agent_manager.get_row(agent_id)):

@@ -1,0 +1,7 @@
+{
+  "mobile_access": {
+    "push_activity": "New reply or task activity",
+    "push_needs_input": "Your input or approval is needed",
+    "push_failed": "Work did not complete and needs attention"
+  }
+}

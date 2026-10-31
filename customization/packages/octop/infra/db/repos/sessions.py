@@ -240,7 +240,8 @@ class SessionRepo:
     def increment_unread(self, session_key: str, *, delta: int = 1) -> None:
         with self._db.transaction() as conn:
             conn.execute(
-                "UPDATE sessions SET unread_count = unread_count + ? WHERE session_key = ?",
+                "UPDATE sessions SET unread_count = unread_count + ? WHERE session_key = ? "
+                "AND NOT EXISTS (SELECT 1 FROM threads t WHERE t.thread_id=sessions.thread_id AND t.archived=1)",
                 (delta, session_key),
             )
 
@@ -249,6 +250,14 @@ class SessionRepo:
             conn.execute(
                 "UPDATE sessions SET unread_count = 0 WHERE thread_id = ?",
                 (thread_id,),
+            )
+
+    def detach_archived_dashboard_thread(self, thread_id: str, user_id: int) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "DELETE FROM sessions WHERE thread_id=? AND user_id=? AND channel_type='dashboard' "
+                "AND EXISTS (SELECT 1 FROM threads t WHERE t.thread_id=sessions.thread_id AND t.archived=1)",
+                (thread_id, user_id),
             )
 
     def clear_unread_for_agent(self, agent_id: str, user_id: int) -> None:
@@ -292,6 +301,7 @@ class SessionRepo:
             rows = conn.execute(
                 f"SELECT agent_id, SUM(unread_count) AS total FROM sessions "
                 f"WHERE user_id = ? AND agent_id IN ({placeholders}) "
+                "AND NOT EXISTS (SELECT 1 FROM threads t WHERE t.thread_id=sessions.thread_id AND t.archived=1) "
                 f"GROUP BY agent_id HAVING SUM(unread_count) > 0",
                 (user_id, *agent_ids),
             ).fetchall()

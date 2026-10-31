@@ -7,8 +7,10 @@ import copy
 import json
 from typing import Any
 
+from octop.i18n import tr
 from octop.infra.agents.experts.copy import owned_expert
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.utils.locale import DEFAULT_LOCALE
 
 
 async def _busy(registry: Any, agent_id: str, user_id: int) -> bool:
@@ -42,21 +44,43 @@ async def reuse_cli_config(
     ids = list(dict.fromkeys(aid for aid in targets if aid != source_id))
     if not ids:
         raise OctopError(ErrorCode.SLASH_BAD_ARGS, "select at least one target expert")
+    source_cfg = await asyncio.to_thread(registry.get_config, source_id)
+    native_present = isinstance(source_cfg.get("native_cli"), dict)
+    native: dict[str, Any] | None = None
+    locale = DEFAULT_LOCALE
+    if native_present:
+        from octop.infra.agents.native_cli.config import NativeCLIError, NativeSpec
+
+        user_repo = getattr(getattr(registry, "_repos", None), "user_repo", None)
+        profile = await asyncio.to_thread(user_repo.get, user_id) if user_repo is not None else None
+        locale = getattr(profile, "locale", None) or DEFAULT_LOCALE
+        try:
+            native = NativeSpec.from_config(source_cfg).to_dict()
+        except NativeCLIError as exc:
+            raise OctopError(
+                ErrorCode.SLASH_BAD_ARGS, tr(f"nativeCli.errors.{exc.code}", locale)
+            ) from None
     # Validate the entire selection before changing any expert.
     for aid in ids:
-        await asyncio.to_thread(owned_expert, registry, aid, user_id)
+        target = await asyncio.to_thread(owned_expert, registry, aid, user_id)
+        if native_present and bool(getattr(target, "is_shared", False)):
+            raise OctopError(
+                ErrorCode.FORBIDDEN, tr("nativeCli.errors.reuse_private_target", locale)
+            )
         if await _busy(registry, aid, user_id):
             raise OctopError.localized(ErrorCode.AGENT_BUSY)
     # Migrates historical per-expert runner definitions once; definitions remain
     # account-scoped, so command/args/env are not duplicated into target rows.
     await asyncio.to_thread(registry.acp_settings.load_runners, user_id)
-    source_cfg = await asyncio.to_thread(registry.get_config, source_id)
     acp = copy.deepcopy(source_cfg.get("acp") or {})
     acp.pop("runners", None)
     source_disabled = "acp_runner" in (source_cfg.get("tools_disabled") or [])
     for aid in ids:
         cfg = await asyncio.to_thread(registry.get_config, aid)
         cfg["acp"] = copy.deepcopy(acp)
+        if native is not None:
+            # References to account runners only: no login, installs or sessions.
+            cfg["native_cli"] = copy.deepcopy(native)
         disabled = set(cfg.get("tools_disabled") or [])
         if source_disabled:
             disabled.add("acp_runner")

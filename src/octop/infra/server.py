@@ -42,8 +42,11 @@ if TYPE_CHECKING:
     from octop.infra.auth.ldap.service import LdapAuthService
     from octop.infra.auth.ldap.throttle import LdapBindThrottle
     from octop.infra.auth.sso.service import SsoService
+    from octop.infra.conversations.service import ConversationService
+    from octop.infra.conversations.transfer import ConversationTransfer
     from octop.infra.db.services import SharedServices
     from octop.infra.history.trajectory.service import TrajectoryService
+    from octop.infra.tasks.manager import TaskManager
 
 logger = logging.getLogger(__name__)
 
@@ -292,6 +295,7 @@ class AppRuntime:
     trajectory_service: TrajectoryService | None = None
     history_archive: Any | None = None
     bridge_manager: Any | None = None
+    task_manager: TaskManager | None = None
 
     def replace_services(self, services: SharedServices, config: OctopConfig) -> None:
         """Retarget all runtime singletons onto a new SharedServices / config.
@@ -304,6 +308,8 @@ class AppRuntime:
         self.agent_registry.replace_persistence(services.repos, config)
         self.gateway.replace_repos(services.repos)
         self.cron_manager.replace_repos(services.repos)
+        if self.task_manager is not None:
+            self.task_manager.replace_repos(services.repos)
         self.proactive_scheduler.replace_persistence(
             config_repo=services.repos.proactive_care_config_repo,
             session_repo=services.repos.session_repo,
@@ -332,6 +338,49 @@ class OctopServer:
         self._ldap_service: LdapAuthService | None = None
         self._ldap_bind_throttle: LdapBindThrottle | None = None
         self._ldap_bind_throttle_services: SharedServices | None = None
+        self._conversation_service: ConversationService | None = None
+        self._conversation_transfer: ConversationTransfer | None = None
+
+    @property
+    def task_manager(self) -> TaskManager | None:
+        return self.app_runtime.task_manager if self.app_runtime is not None else None
+
+    @property
+    def conversation_service(self) -> ConversationService:
+        """Owned conversation controls, bound to the current runtime and repos."""
+        from octop.infra.conversations.service import (
+            ConversationService as ConversationServiceCls,  # noqa: PLC0415
+        )
+
+        runtime = self.app_runtime
+        if runtime is None or self.services is None:
+            raise RuntimeError("Conversation service requires a started server")
+        service = self._conversation_service
+        if service is None or service.repos is not self.services.repos:
+            service = ConversationServiceCls(
+                repos=self.services.repos,
+                agents=runtime.agent_registry,
+                gateway=runtime.gateway,
+                archive=runtime.history_archive,
+                task_manager=runtime.task_manager,
+            )
+            self._conversation_service = service
+            self._conversation_transfer = None
+        return service
+
+    @property
+    def conversation_transfer(self) -> ConversationTransfer:
+        """Reviewed import/export of owned experts and their history."""
+        from octop.infra.conversations.transfer import (
+            ConversationTransfer as ConversationTransferCls,  # noqa: PLC0415
+        )
+
+        service = self.conversation_service
+        transfer = self._conversation_transfer
+        if transfer is None or transfer.service is not service:
+            transfer = ConversationTransferCls(service)
+            self._conversation_transfer = transfer
+        return transfer
 
     # Backward compat: expose user_manager directly
     @property
@@ -635,6 +684,11 @@ class OctopServer:
             token_signer=_sign_user_token,
         )
 
+        from octop.infra.tasks.manager import TaskManager
+
+        task_manager = TaskManager(
+            repos=services.repos, gateway=gateway, agent_manager=registry, config=config
+        )
         self.app_runtime = AppRuntime(
             agent_registry=registry,
             gateway=gateway,
@@ -644,7 +698,14 @@ class OctopServer:
             trajectory_service=trajectory_service,
             history_archive=history_archive,
             bridge_manager=bridge_mgr,
+            task_manager=task_manager,
         )
+        from octop.infra.mobile_access.push import push_for
+
+        gateway.ws_hub.set_user_frame_observer(push_for(self).emit)
+        gateway.set_dashboard_task_admission(task_manager.admit_turn)
+        gateway.processor.hitl_coordinator.set_task_binding_resolver(task_manager.task_binding)
+        await task_manager.start()
         from octop.infra.knowledge.gate import (  # noqa: PLC0415
             warn_if_local_embedding_deps_missing,
         )
@@ -747,6 +808,11 @@ class OctopServer:
             await agently_auth.close()
             if self.app_runtime is not None:
                 rt = self.app_runtime
+                if rt.task_manager is not None:
+                    await rt.task_manager.stop()
+                mobile_push = getattr(self, "_mobile_push_service", None)
+                if mobile_push is not None:
+                    await mobile_push.stop()
                 await rt.proactive_scheduler.shutdown()
                 await rt.cron_manager.shutdown()
                 await rt.gateway.shutdown()

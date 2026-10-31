@@ -7,6 +7,7 @@ export interface UploadResponse {
   media_type: string;
   url: string;
   access_url: string;
+  upload_receipt?: string;
 }
 
 /**

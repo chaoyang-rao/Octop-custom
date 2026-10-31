@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 from octop_gateway.channel import ChannelCredentialsError
 from octop_gateway.channels import ChannelKind
 from octop_gateway.manager import ChannelManager
-from octop_gateway.models import ChannelSubject
+from octop_gateway.models import ChannelSubject, InboundMessage
 
 from octop.i18n import channel_probe_incomplete, channel_runtime_reason, tr
 from octop.infra.db.repos.channels import ChannelRow
@@ -153,6 +153,13 @@ class Gateway:
     @property
     def cli_hub(self) -> CliHub:
         return self._cli_hub
+
+    def set_dashboard_task_admission(
+        self, admission: Callable[[InboundMessage], Awaitable[bool]]
+    ) -> None:
+        if self._ws_channel is None:
+            raise RuntimeError("gateway not booted")
+        self._ws_channel.set_task_admission(admission)
 
     @property
     def cli_channel_id(self) -> str:
@@ -512,6 +519,8 @@ class Gateway:
         session: SessionRow,
         agent_id: str,
         text: str,
+        *,
+        notify: bool | None = None,
     ) -> None:
         """Fan out a toast payload to the owner's dashboard notification sockets."""
         if not text.strip():
@@ -527,6 +536,7 @@ class Gateway:
                 "thread_id": session.thread_id,
                 "text": text,
                 "agent_name": agent_name,
+                **({"notify": notify} if notify is not None else {}),
             },
         )
 

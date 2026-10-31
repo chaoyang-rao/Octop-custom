@@ -97,7 +97,7 @@ class ProjectApiTests(unittest.TestCase):
         run_migrations(self.db)
         run_migrations(self.db)
         with self.db.connect() as c:
-            self.assertEqual(c.execute("SELECT version FROM _schema_version").fetchone()[0], 22)
+            self.assertEqual(c.execute("SELECT version FROM _schema_version").fetchone()[0], 23)
             self.assertEqual(c.execute("SELECT count(*) FROM threads").fetchone()[0], 1)
             self.assertEqual(c.execute("SELECT count(*) FROM thread_messages").fetchone()[0], 1)
         self.assertIsNone(self.threads.get(tid).project_path)

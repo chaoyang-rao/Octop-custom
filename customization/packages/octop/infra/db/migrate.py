@@ -1662,6 +1662,30 @@ def _ensure_thread_projects_schema(db: DatabasePool) -> None:
         )
 
 
+def _ensure_tasks_schema(db: DatabasePool) -> None:
+    """Repair imports whose watermark skipped the task-table migration."""
+    suffix = ".pg.sql" if db.dialect == "postgresql" else ".sql"
+    sql = (_MIGRATIONS_DIR / ("023_tasks_workflows" + suffix)).read_text(encoding="utf-8")
+    sql = sql.replace("UPDATE _schema_version SET version = 23;", "")
+    sql = sql.replace("ALTER TABLE threads ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;", "")
+    with db.connect() as conn:
+        if db.dialect == "postgresql":
+            for statement in _split_pg_sql(sql):
+                conn.execute(statement)
+        else:
+            conn.executescript(sql)
+
+    for name, ddl in (
+        ("next_run_at", "INTEGER"),
+        ("last_run_at", "INTEGER"),
+        ("schedule_paused", "INTEGER NOT NULL DEFAULT 0"),
+    ):
+        _ensure_column(db, "task_workflows", name, ddl)
+    _ensure_column(db, "task_runs", "definition_json", "TEXT NOT NULL DEFAULT '{}'")
+    if _table_exists(db, "threads"):
+        _ensure_column(db, "threads", "archived", "INTEGER NOT NULL DEFAULT 0")
+
+
 def _repair_legacy_schema(db: DatabasePool) -> None:
     """Idempotent compatibility repairs for local databases from old builds."""
     if _table_exists(db, "users"):
@@ -1960,6 +1984,11 @@ def _apply_sqlite_migration(db: DatabasePool, version: int, path: Path) -> None:
         with db.connect() as conn:
             conn.execute("UPDATE _schema_version SET version = ?", (version,))
         return
+    if version == 22:
+        _ensure_thread_projects_schema(db)
+        with db.connect() as conn:
+            conn.execute("UPDATE _schema_version SET version = ?", (version,))
+        return
     sql = path.read_text(encoding="utf-8")
     with db.connect() as conn:
         conn.executescript(sql)
@@ -2080,15 +2109,16 @@ def run_migrations(db: DatabasePool) -> None:
     for version, path in _discover(db.dialect):
         if version <= _current_version(db):
             continue
-        if version == 22:
-            _ensure_thread_projects_schema(db)
-            with db.connect() as conn:
-                conn.execute("UPDATE _schema_version SET version = ?", (version,))
-            continue
-        # v18 touches optional ``user_invites``; use the idempotent helper for both
-        # dialects so restores from pre-invite physical schemas do not fail.
-        if version == 18:
-            _ensure_user_role_schema(db)
+        # v18 touches optional ``user_invites``; v22/v23 alter ``threads``. Use the
+        # idempotent helper for both dialects so restores from older physical
+        # schemas (or DBs without ``threads``) do not fail.
+        if version in {18, 22, 23}:
+            if version == 18:
+                _ensure_user_role_schema(db)
+            elif version == 22:
+                _ensure_thread_projects_schema(db)
+            else:
+                _ensure_tasks_schema(db)
             with db.connect() as conn:
                 if db.dialect == "postgresql":
                     conn.execute("UPDATE _schema_version SET version = %s", (version,))
@@ -2128,6 +2158,8 @@ def run_migrations(db: DatabasePool) -> None:
     _ensure_agent_teams_schema(db)
     _ensure_thread_conversation_mode_schema(db)
     _ensure_agent_profile_columns(db)
+    _ensure_thread_projects_schema(db)
+    _ensure_tasks_schema(db)
     _ensure_sso_provider_kind_schema(db)
     _ensure_user_role_schema(db)
     _ensure_bridge_connections_schema(db)

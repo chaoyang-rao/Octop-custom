@@ -44,6 +44,8 @@ _CONTINUATION_META_KEYS = frozenset(
     {
         "session_key",
         "thread_id",
+        "task_id",
+        "task_attempt",
         "user_is_admin",
         "mcp_servers",
         "knowledge_base_ids",

@@ -92,6 +92,7 @@ are updating `catalog.json` in the same change.
 | `firecrawl` | Firecrawl | Firecrawl | knowledge | custom_fields | stdio |
 | `apple-apps` | Apple Apps | Apple Apps | office | custom_fields | stdio |
 | `paper` | Paper | Paper | office | custom_fields | stdio |
+| `slack` | Slack account | Slack 账号 | office | oauth2 | remote |
 
 ## MCP modes / MCP 模式
 

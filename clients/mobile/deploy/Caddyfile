@@ -1,0 +1,6 @@
+{$OCTOP_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy octop:8088 {
+        header_up X-Forwarded-Proto https
+    }
+}

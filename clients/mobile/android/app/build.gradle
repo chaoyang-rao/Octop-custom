@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' }
+if (file('google-services.json').exists()) { apply plugin: 'com.google.gms.google-services' }
+android {
+    namespace 'com.octop.mobile'
+    compileSdk 36
+    defaultConfig { applicationId 'com.octop.mobile'; minSdk 26; targetSdk 36; versionCode 1; versionName '1.0' }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets { test { resources.srcDirs += ['../../protocol'] } }
+    buildTypes { release { minifyEnabled false } }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.14.0'
+    implementation 'com.google.crypto.tink:tink-android:1.18.0'
+    testImplementation 'junit:junit:4.13.2'
+    implementation platform('com.google.firebase:firebase-bom:34.0.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}

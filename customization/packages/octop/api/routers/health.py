@@ -27,7 +27,7 @@ async def health(server: Any = Depends(get_server)) -> dict[str, Any]:
         "users_loaded": users,
         "agents_running": agents,
         **(
-            {"custom_release": "1.0.2.post20261029"}
+            {"custom_release": "1.0.2.post20261031"}
             if os.environ.get("OCTOP_CUSTOM_BUILD") == "1"
             else {}
         ),

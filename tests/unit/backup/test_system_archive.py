@@ -19,6 +19,11 @@ from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.utils.paths import PathLayout
 
 
+def _schema_version(pool: SqlitePool) -> int:
+    with pool.connect() as conn:
+        return int(conn.execute("SELECT version FROM _schema_version").fetchone()[0])
+
+
 @pytest.fixture
 def layout(tmp_path: Path) -> PathLayout:
     root = tmp_path / ".octop"
@@ -1178,7 +1183,7 @@ def test_restore_repairs_old_physical_schema_with_current_watermark(tmp_path: Pa
             "SELECT instance_id, shared FROM connectors WHERE instance_id = 'instance-1'"
         ).fetchone()
 
-    assert result["schema_version"] == 21
+    assert result["schema_version"] == _schema_version(target_pool)
     assert "shared" in columns
     assert connector is not None
     assert connector["shared"] == 0
@@ -1232,7 +1237,7 @@ def test_refuse_newer_schema_backup_before_database_replace(
     assert excinfo.value.code == ErrorCode.BACKUP_SCHEMA_INCOMPATIBLE
     assert excinfo.value.details == {
         "archive_schema_version": 999,
-        "runtime_schema_version": 21,
+        "runtime_schema_version": _schema_version(pool),
     }
     with pool.connect() as conn:
         assert (

@@ -39,6 +39,13 @@ class WebSocketHub:
         self._user_conns: dict[int, set[str]] = {}
         self._conn_user: dict[str, int] = {}
         self._active_turns: set[str] = set()
+        self._user_frame_observer: Callable[[int, dict[str, Any]], Awaitable[None]] | None = None
+
+    def set_user_frame_observer(
+        self, observer: Callable[[int, dict[str, Any]], Awaitable[None]] | None
+    ) -> None:
+        """Observe user notifications even when all dashboard sockets are offline."""
+        self._user_frame_observer = observer
 
     def register(
         self,
@@ -140,6 +147,11 @@ class WebSocketHub:
         await asyncio.gather(*(self.push(conn_id, outbound) for conn_id in targets))
 
     async def push_to_user(self, user_id: int, frame: dict[str, Any]) -> None:
+        if self._user_frame_observer is not None:
+            try:
+                await self._user_frame_observer(user_id, frame)
+            except Exception:
+                logger.warning("user notification observer failed", exc_info=False)
         conns = self._user_conns.get(user_id)
         if not conns:
             logger.debug("ws hub: no subscriber for user %s", user_id)

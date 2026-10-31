@@ -61,6 +61,12 @@ import type { TokenUsage } from "../../api/types";
 import type { ChatAttachment } from "./hooks/useChat";
 import MessageList from "./components/MessageList";
 import ChatInput, { type ChatInputHandle } from "./components/ChatInput";
+import {
+  ConversationAnnotations,
+  QuotedReplyDraft,
+} from "../../components/ChatConversationActions";
+import type { QuoteDraft } from "../../api/modules/conversations";
+import { nativeCliForChat } from "./utils/nativeCliPresentation";
 import WelcomeScreen from "./components/WelcomeScreen";
 import AgentNotReadyScreen from "./components/AgentNotReadyScreen";
 import ModelConfigEmpty from "./components/ModelConfigEmpty";
@@ -213,6 +219,15 @@ function ChatPageInner() {
     activeAgent !== null && activeAgent.config?.enable_trajectory !== false;
   const sharedExpertViewer = isSharedExpertViewer(activeAgent ?? {});
   const isTeamChat = isTeamAgent(activeAgent);
+  const nativeCli = nativeCliForChat(
+    activeAgent,
+    agents,
+    user?.role === "admin",
+  );
+  const [nativeModelId, setNativeModelId] = useState<string | null>(null);
+  const [quoteDraft, setQuoteDraft] = useState<QuoteDraft | null>(null);
+  useEffect(() => setQuoteDraft(null), [activeThreadId, resolvedAgentId]);
+  useEffect(() => setNativeModelId(null), [resolvedAgentId, threadId]);
   const [agentProfileOpen, setAgentProfileOpen] = useState(false);
   const [profileAgentId, setProfileAgentId] = useState<string | null>(null);
   const profileAgent = useMemo(() => {
@@ -713,6 +728,8 @@ function ChatPageInner() {
     sessions,
     messagesLength: messages.length,
     selectedModel,
+    nativeModelId: nativeCli ? nativeModelId : undefined,
+    quoteDraft,
     selectedConnectors,
     selectedKnowledgeBaseIds,
     reasoningMode,
@@ -763,6 +780,10 @@ function ChatPageInner() {
           ? findPendingAsk(chatStore.getSnapshot(targetThreadId).messages)
           : pendingAsk;
       if (ask) {
+        if (quoteDraft && overrides?.quote === undefined) {
+          antMessage.info(t("conversationLibrary.finishApprovalBeforeQuote"));
+          return;
+        }
         const trimmed = text.trim();
         if (attachments && attachments.length > 0) {
           antMessage.warning(t("chat.ask.useCardForAttachments"));
@@ -785,7 +806,8 @@ function ChatPageInner() {
         antMessage.warning(t("chat.hitl.finishPendingFirst"));
         return;
       }
-      handleSend(text, attachments, overrides);
+      const accepted = handleSend(text, attachments, overrides);
+      if (accepted && overrides?.quote === undefined) setQuoteDraft(null);
     },
     [
       interceptUserMessage,
@@ -793,6 +815,7 @@ function ChatPageInner() {
       pendingAsk,
       hasPendingHitlPause,
       activeThreadId,
+      quoteDraft,
       resumeHitl,
       t,
     ],
@@ -810,6 +833,8 @@ function ChatPageInner() {
       const ok = handleSend(item.text, item.attachments, {
         composerContext: item.composerContext,
         modelRef: item.modelRef,
+        nativeModelId: item.nativeModelId,
+        quote: item.quote ?? null,
         selectedModel: item.composerContext?.model ?? item.modelRef ?? null,
         selectedConnectors: item.composerContext?.connectors,
         selectedKnowledgeBaseIds: item.composerContext?.knowledgeBaseIds,
@@ -869,11 +894,16 @@ function ChatPageInner() {
       const result = chatStore.sendSteerWhileBusy(key, item.text, {
         expectedTurnId: turnId || undefined,
         attachments: item.attachments,
+        quote: item.quote?.reference,
+        composerContext: item.composerContext,
       });
       if (result === "empty") return;
       removeQueued(id);
       if (result === "no_socket") {
-        wrappedHandleSend(item.text, item.attachments);
+        wrappedHandleSend(item.text, item.attachments, {
+          nativeModelId: item.nativeModelId,
+          quote: item.quote ?? null,
+        });
       }
     },
     [
@@ -1524,7 +1554,10 @@ function ChatPageInner() {
                   noAgents={noAgents}
                   loading={agentsLoading}
                 />
-              ) : showWelcome && modelsReady && availableModels.length === 0 ? (
+              ) : showWelcome &&
+                modelsReady &&
+                availableModels.length === 0 &&
+                !nativeCli ? (
                 <ModelConfigEmpty canConfigure={canConfigureModels} />
               ) : showWelcome ? (
                 <WelcomeScreen
@@ -1546,37 +1579,45 @@ function ChatPageInner() {
                   }}
                   isTeam={isTeamChat}
                 >
-                  <MessageList
-                    messages={messages}
+                  <ConversationAnnotations
+                    threadId={activeThreadId}
                     agentId={resolvedAgentId}
-                    composerLookups={composerLookups}
-                    loading={awaitingThreadHistory}
-                    historyHasMore={historyHasMore}
-                    historyLoadingMore={historyLoadingMore}
-                    historyRefreshing={historyRefreshing}
-                    onLoadMoreHistory={loadMoreHistory}
-                    onRefreshHistory={refreshHistory}
-                    isStreaming={isStreaming}
-                    liveSpeakers={liveSpeakers}
-                    thinkingStartedAt={thinkingStartedAt}
-                    sessionKey={activeThreadId ?? undefined}
-                    onRegenerate={handleRegenerate}
-                    onDisableStreamUsage={handleDisableStreamUsage}
-                    onEditUserMessage={handleEditUserMessage}
-                    onWithdrawSteer={handleWithdrawSteer}
-                    onForkAssistantMessage={handleForkAssistantMessage}
-                    forkDisabled={forkDisabled}
-                    forkDisabledHint={forkDisabledHint}
-                    onAcpPermissionSelect={handleAcpPermissionSelect}
-                    onHitlDecision={handleHitlDecision}
-                    onTurnRailVisibilityChange={setTurnRailVisible}
-                    onOpenBrowser={hasBrowserTool ? openBrowserTab : undefined}
-                    onEditFile={
-                      !sharedExpertViewer && panelFilePaths.length > 0
-                        ? openFileList
-                        : undefined
-                    }
-                  />
+                    onQuote={setQuoteDraft}
+                  >
+                    <MessageList
+                      messages={messages}
+                      agentId={resolvedAgentId}
+                      composerLookups={composerLookups}
+                      loading={awaitingThreadHistory}
+                      historyHasMore={historyHasMore}
+                      historyLoadingMore={historyLoadingMore}
+                      historyRefreshing={historyRefreshing}
+                      onLoadMoreHistory={loadMoreHistory}
+                      onRefreshHistory={refreshHistory}
+                      isStreaming={isStreaming}
+                      liveSpeakers={liveSpeakers}
+                      thinkingStartedAt={thinkingStartedAt}
+                      sessionKey={activeThreadId ?? undefined}
+                      onRegenerate={handleRegenerate}
+                      onDisableStreamUsage={handleDisableStreamUsage}
+                      onEditUserMessage={handleEditUserMessage}
+                      onWithdrawSteer={handleWithdrawSteer}
+                      onForkAssistantMessage={handleForkAssistantMessage}
+                      forkDisabled={forkDisabled}
+                      forkDisabledHint={forkDisabledHint}
+                      onAcpPermissionSelect={handleAcpPermissionSelect}
+                      onHitlDecision={handleHitlDecision}
+                      onTurnRailVisibilityChange={setTurnRailVisible}
+                      onOpenBrowser={
+                        hasBrowserTool ? openBrowserTab : undefined
+                      }
+                      onEditFile={
+                        !sharedExpertViewer && panelFilePaths.length > 0
+                          ? openFileList
+                          : undefined
+                      }
+                    />
+                  </ConversationAnnotations>
                 </ChatAgentProfileProvider>
               )}
             </div>
@@ -1797,7 +1838,10 @@ function ChatPageInner() {
                 </div>
               </div>
             ) : null}
-            {!showWelcome && modelsReady && availableModels.length === 0 ? (
+            {!showWelcome &&
+            modelsReady &&
+            availableModels.length === 0 &&
+            !nativeCli ? (
               <div className={styles.modelConfigDock}>
                 <div className={styles.modelConfigDockInner}>
                   <Alert
@@ -1824,13 +1868,33 @@ function ChatPageInner() {
                 </div>
               </div>
             ) : null}
+            {quoteDraft && (
+              <QuotedReplyDraft
+                draft={quoteDraft}
+                onClear={() => setQuoteDraft(null)}
+              />
+            )}
             <ChatInput
               ref={chatInputRef}
               onSend={wrappedHandleSend}
-              onQueue={enqueueQueued}
+              onQueue={(item) => {
+                const result = enqueueQueued({
+                  ...item,
+                  quote: quoteDraft ?? undefined,
+                  composerContext: quoteDraft
+                    ? { ...item.composerContext, quote: quoteDraft.resolved }
+                    : item.composerContext,
+                });
+                if (result === "ok") setQuoteDraft(null);
+                return result;
+              }}
               queuedItems={displayQueuedItems}
               onRemoveQueued={removeQueued}
-              onReclaimQueued={reclaimQueued}
+              onReclaimQueued={(id) => {
+                const item = reclaimQueued(id);
+                if (item) setQuoteDraft(item.quote ?? null);
+                return item;
+              }}
               onSteerQueued={handleSteerQueued}
               onCancel={cancelStream}
               onNewChat={handleNewChat}
@@ -1842,6 +1906,9 @@ function ChatPageInner() {
               onComposerCleared={() => {
                 prefillInputRef.current = "";
               }}
+              nativeCli={nativeCli}
+              nativeModelId={nativeModelId}
+              onNativeModelChange={setNativeModelId}
               availableModels={availableModels}
               selectedModel={selectedModel}
               onModelChange={setSelectedModel}

@@ -1,0 +1,41 @@
+services:
+  octop:
+    build:
+      context: ../../..
+      dockerfile: clients/mobile/deploy/Dockerfile
+    image: octop-custom-mobile:local
+    restart: unless-stopped
+    environment:
+      OCTOP_CUSTOM_BUILD: "1"
+      OCTOP_HOME: /data/octop
+      OCTOP_BIND_HOST: 0.0.0.0
+      OCTOP_PORT: "8088"
+      # Only Caddy is exposed; both containers share this dedicated network.
+      FORWARDED_ALLOW_IPS: "*"
+    volumes:
+      - octop_data:/data/octop
+    expose:
+      - "8088"
+    networks: [octop_remote]
+  caddy:
+    image: caddy:2.11.7
+    restart: unless-stopped
+    depends_on: [octop]
+    environment:
+      OCTOP_DOMAIN: ${OCTOP_DOMAIN:?Set OCTOP_DOMAIN to your DNS name}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [octop_remote]
+networks:
+  octop_remote:
+    driver: bridge
+volumes:
+  octop_data:
+  caddy_data:
+  caddy_config:

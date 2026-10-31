@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Octop</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.octop.mobile.activity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>octop-mobile</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>在你选择拍照上传附件时使用相机。 / Attach a photo when you choose.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>连接你自己配对的 Octop 服务器。 / Connect to your paired Octop server.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>在你点击语音输入时识别对话内容。 / Voice input starts only when requested.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>在你选择图片附件时访问照片。 / Attach photos when you choose.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>识别你主动输入的语音。 / Recognize speech when you request voice input.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>OctopShareAppGroup</key>
+	<string>$(OCTOP_SHARE_GROUP)</string>
+	<key>OctopShareKeychainGroup</key>
+	<string>$(AppIdentifierPrefix)com.octop.mobile.share-credentials</string>
+	<key>OctopSharedKeychainGroup</key>
+	<string>$(AppIdentifierPrefix)com.octop.mobile.notification-keys</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

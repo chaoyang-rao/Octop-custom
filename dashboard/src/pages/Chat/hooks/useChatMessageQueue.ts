@@ -2,23 +2,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { generateId } from "../../../utils/messageParser";
 import type { ChatAttachment, UserComposerContext } from "./sseHelpers";
 import * as chatStore from "./chatStore";
+import type { QuoteDraft } from "../../../api/modules/conversations";
 
 export const CHAT_QUEUE_MAX_ITEMS = 10;
 
 export type QueuedChatItem = {
+  quote?: QuoteDraft;
   id: string;
   text: string;
   attachments?: ChatAttachment[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
+  nativeModelId?: string | null;
   createdAt: number;
 };
 
 export type EnqueueChatItemInput = {
+  quote?: QuoteDraft;
   text: string;
   attachments?: ChatAttachment[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
+  nativeModelId?: string | null;
 };
 
 export type ChatQueueFlushContext = {
@@ -157,6 +162,16 @@ export function useChatMessageQueue({
           ? { ...input.composerContext }
           : undefined,
         modelRef: input.modelRef ?? null,
+        nativeModelId: input.nativeModelId,
+        quote: input.quote
+          ? {
+              reference: {
+                ...input.quote.reference,
+                message: { ...input.quote.reference.message },
+              },
+              resolved: { ...input.quote.resolved },
+            }
+          : undefined,
         createdAt: Date.now(),
       };
       writeQueues({ ...queuesRef.current, [key]: [...latest, item] });

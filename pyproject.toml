@@ -13,6 +13,7 @@ authors = [{name = "octop contributors"}]
 dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.27",
+    "httpx[http2]>=0.27",
     "pydantic>=2.6,<2.14",
     "langchain-core>=1.4.8",
     "click>=8.1",

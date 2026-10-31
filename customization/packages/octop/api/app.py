@@ -136,6 +136,9 @@ def build_app(server: OctopServer) -> FastAPI:
     install_bridge_proxy(app, server)
     install_jwt_auth(app, server)
     install_setup_lockdown(app, server)
+    from octop.api.middleware.mobile_device import MobileDeviceAccessMiddleware
+
+    app.add_middleware(MobileDeviceAccessMiddleware, server=server)
 
     if server.app_runtime is not None and server.app_runtime.bridge_manager is not None:
         from octop.api.bridge_peer import prepare_peer_dashboard_turn
@@ -157,6 +160,7 @@ def build_app(server: OctopServer) -> FastAPI:
         return PlainTextResponse(body)
 
     from octop.api.routers import (
+        account_connections,
         acp,
         admin,
         agent_files,
@@ -173,6 +177,7 @@ def build_app(server: OctopServer) -> FastAPI:
         channels,
         chat,
         connectors,
+        conversations,
         cron,
         desktop,
         envs,
@@ -188,6 +193,8 @@ def build_app(server: OctopServer) -> FastAPI:
         memory_portable,
         memory_storage,
         mobile,
+        mobile_access,
+        native_cli,
         ollama_models,
         onnx_models,
         plugins,
@@ -197,10 +204,12 @@ def build_app(server: OctopServer) -> FastAPI:
         search,
         settings,
         setup,
+        skill_library,
         skill_packages,
         skills,
         slash,
         subagents,
+        tasks,
         teams,
         terminal,
         update,
@@ -239,10 +248,16 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(agents.router, "/api/agents", ["agents"]),
             _RouterMount(agent_tools.router, "/api", ["agents"]),
             _RouterMount(acp.router, "/api", ["agents"]),
+            _RouterMount(native_cli.router, "/api", ["agents"]),
+            _RouterMount(native_cli.model_router, "/api", ["chat"]),
             _RouterMount(agent_mcp.router, "/api", ["agent-mcp"]),
             _RouterMount(chat.router, "/api", ["chat"]),
+            _RouterMount(conversations.router, "/api", ["chat"]),
             _RouterMount(slash.router, "/api", ["slash"]),
             _RouterMount(connectors.router, "/api", ["connectors"]),
+            _RouterMount(account_connections.router, "/api", ["connectors"]),
+            _RouterMount(mobile_access.router, "/api/mobile-access", ["auth"]),
+            _RouterMount(tasks.router, "/api", ["cron"]),
             _RouterMount(bridge.router, "/api", ["bridge"]),
             _RouterMount(knowledge_bases.router, "/api", ["knowledge"]),
             _RouterMount(internal_mcp.router, "/api", ["internal-mcp"]),
@@ -283,6 +298,7 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(usage.router, "/api", ["usage"]),
             _RouterMount(usage.admin_router, "/api/admin", ["admin"]),
             _RouterMount(skill_packages.router, "/api", ["skill-packages"]),
+            _RouterMount(skill_library.router, "/api/skill-library", ["skill-packages"]),
             _RouterMount(skills.router, "/api", ["skills"]),
             _RouterMount(subagents.router, "/api", ["subagents"]),
             _RouterMount(terminal.router, "/api", ["terminal"]),

@@ -1727,6 +1727,35 @@
       "supported_platforms": [
         "darwin"
       ]
+    },
+    {
+      "kind": "slack",
+      "name": {
+        "en": "Slack account",
+        "zh": "Slack 账号"
+      },
+      "description": {
+        "en": "Use Slack workspace search, conversations, files and actions through your own registered OAuth app.",
+        "zh": "通过自有 OAuth 应用接入 Slack 搜索、会话、文件与操作工具。"
+      },
+      "auth_kind": "oauth2",
+      "doc_url": "https://docs.slack.dev/ai/slack-mcp-server/",
+      "icon": "plug",
+      "color": "#611F69",
+      "phase": "available",
+      "mcp_mode": "remote",
+      "category": "office",
+      "remote_transport": "streamable_http",
+      "oauth_issuer": "https://mcp.slack.com",
+      "mcp_url": "https://mcp.slack.com/mcp",
+      "oauth_resource": "https://mcp.slack.com",
+      "auth_hint": {
+        "en": "Register your own internal or Marketplace Slack app and configure its client ID and secret under Account connections. Slack does not support dynamic registration. Workspace admin approval and the required scopes may be needed.",
+        "zh": "请在账号连接设置中登记自有 Slack 内部应用或市场应用的 Client ID 和 Secret。Slack 不支持动态注册；还需工作区管理员批准及相应权限。"
+      },
+      "mcp_config": {
+        "url": "https://mcp.slack.com/mcp"
+      }
     }
   ]
 }

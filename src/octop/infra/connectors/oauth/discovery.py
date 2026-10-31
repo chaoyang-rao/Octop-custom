@@ -205,6 +205,8 @@ async def _discover_oauth_from_mcp_url_uncached(url: str) -> dict[str, Any]:
             "error": "authorization server does not support dynamic client registration",
             "issuer": issuer,
             "resource": resource,
+            "metadata": metadata,
+            "registration_required": True,
         }
 
     scopes_raw = metadata.get("scopes_supported")

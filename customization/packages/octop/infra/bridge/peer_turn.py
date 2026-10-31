@@ -9,10 +9,12 @@ from typing import Any, Protocol
 USER_TURN_WS_KEYS = frozenset(
     {
         "text",
+        "quote",
         "session_key",
         "thread_id",
         "model",
         "default_model",
+        "native_model_id",
         "reasoning_mode",
         "reasoning_effort",
         "conversation_mode",

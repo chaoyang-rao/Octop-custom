@@ -76,6 +76,23 @@ class ACPSettingsStore:
         self._save_raw_runners(user_id, filtered)
         return self.load_runners(user_id)
 
+    def save_managed_runner(self, user_id: int, name: str, runner: dict[str, Any]) -> None:
+        """Patch one managed alias without normalizing or removing other settings."""
+        if not name.startswith("managed_"):
+            raise ValueError("managed runner namespace required")
+        raw = self._settings.get(_settings_key(user_id))
+        document = json.loads(raw) if raw else {"runners": {}}
+        if not isinstance(document, dict):
+            raise ValueError("invalid runner settings")
+        if "runners" in document:
+            runners = document["runners"]
+            if not isinstance(runners, dict):
+                raise ValueError("invalid runner settings")
+        else:
+            runners = document
+        runners[name] = dict(runner)
+        self._settings.set(_settings_key(user_id), json.dumps(document, ensure_ascii=False))
+
     def _save_raw_runners(self, user_id: int, runners: dict[str, Any]) -> None:
         self._settings.set(
             _settings_key(user_id), json.dumps({"runners": runners}, ensure_ascii=False)

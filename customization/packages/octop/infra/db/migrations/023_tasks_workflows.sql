@@ -1,0 +1,121 @@
+-- Durable user tasks and independently implemented workflow runs.
+CREATE TABLE IF NOT EXISTS task_workflows (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  workflow_id TEXT NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  definition_json TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  webhook_hash TEXT,
+  next_run_at INTEGER,
+  last_run_at INTEGER,
+  schedule_paused INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS task_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id TEXT NOT NULL UNIQUE,
+  workflow_id TEXT REFERENCES task_workflows(workflow_id) ON DELETE SET NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  source TEXT NOT NULL,
+  definition_json TEXT NOT NULL DEFAULT '{}',
+  trigger_key TEXT,
+  created_at INTEGER NOT NULL,
+  UNIQUE(workflow_id, trigger_key)
+);
+CREATE TABLE IF NOT EXISTS agent_tasks (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id TEXT NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  agent_id TEXT NOT NULL REFERENCES agents(agent_id) ON DELETE CASCADE,
+  thread_id TEXT REFERENCES threads(thread_id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  options_json TEXT NOT NULL DEFAULT '{}',
+  state TEXT NOT NULL DEFAULT 'queued' CHECK (state IN ('queued','paused','running','waiting','completed','failed','cancelled','interrupted')),
+  run_id TEXT REFERENCES task_runs(run_id) ON DELETE CASCADE,
+  step_key TEXT,
+  dependency_ids TEXT NOT NULL DEFAULT '[]',
+  result TEXT NOT NULL DEFAULT '',
+  error_code TEXT,
+  archived INTEGER NOT NULL DEFAULT 0,
+  attempt INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  started_at INTEGER,
+  finished_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_queue ON agent_tasks(state, archived, id);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_owner ON agent_tasks(user_id, archived, id);
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_run ON agent_tasks(run_id);
+CREATE TABLE IF NOT EXISTS task_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id TEXT NOT NULL REFERENCES agent_tasks(task_id) ON DELETE CASCADE,
+  action TEXT NOT NULL,
+  state TEXT NOT NULL,
+  actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS task_queue_controls (
+  agent_id TEXT NOT NULL REFERENCES agents(agent_id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  paused INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(agent_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS task_upload_receipts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  receipt_id TEXT NOT NULL UNIQUE,
+  token_hash TEXT NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  agent_id TEXT NOT NULL REFERENCES agents(agent_id) ON DELETE CASCADE,
+  workspace_path TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  byte_size INTEGER NOT NULL,
+  sha256 TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+-- Conversation controls and previewed, insert-only user-data imports share unreleased v23.
+ALTER TABLE threads ADD COLUMN archived INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS conversation_reactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reaction_id TEXT NOT NULL UNIQUE,
+  thread_id TEXT NOT NULL REFERENCES threads(thread_id) ON DELETE CASCADE,
+  message_key TEXT NOT NULL,
+  message_digest TEXT NOT NULL,
+  message_role TEXT NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  emoji TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  UNIQUE(thread_id,message_key,user_id,emoji)
+);
+CREATE INDEX IF NOT EXISTS idx_conversation_reactions_thread ON conversation_reactions(thread_id);
+CREATE TABLE IF NOT EXISTS conversation_origins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  origin_id TEXT NOT NULL UNIQUE,
+  thread_id TEXT NOT NULL UNIQUE REFERENCES threads(thread_id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source TEXT NOT NULL,
+  external_id TEXT NOT NULL,
+  source_archive_sha256 TEXT,
+  source_title TEXT,
+  source_thread_id TEXT,
+  imported_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_conversation_origins_user ON conversation_origins(user_id,source,external_id);
+CREATE TABLE IF NOT EXISTS conversation_import_previews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  preview_id TEXT NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  source_sha256 TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'preview',
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+
+UPDATE _schema_version SET version = 23;

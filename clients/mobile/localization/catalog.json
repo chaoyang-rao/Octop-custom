@@ -1,0 +1,654 @@
+{
+  "strings": {
+    "native_working": {
+      "zh": "正在工作",
+      "en": "Working"
+    },
+    "native_approval_needed": {
+      "zh": "等待批准",
+      "en": "Approval needed"
+    },
+    "native_failed_or_interrupted": {
+      "zh": "执行失败或中断",
+      "en": "Failed or interrupted"
+    },
+    "native_paused": {
+      "zh": "已暂停",
+      "en": "Paused"
+    },
+    "native_complete": {
+      "zh": "已完成",
+      "en": "Complete"
+    },
+    "native_servers": {
+      "zh": "服务器",
+      "en": "Servers"
+    },
+    "native_enable_notifications": {
+      "zh": "启用通知",
+      "en": "Enable notifications"
+    },
+    "native_notification_preferences": {
+      "zh": "通知偏好",
+      "en": "Notification preferences"
+    },
+    "native_live_activities": {
+      "zh": "实时活动",
+      "en": "Live Activities"
+    },
+    "native_revoke_this_device": {
+      "zh": "撤销此设备",
+      "en": "Revoke this device"
+    },
+    "native_connect_a_server": {
+      "zh": "连接服务器",
+      "en": "Connect a server"
+    },
+    "native_request_pairing": {
+      "zh": "生成配对码",
+      "en": "Request pairing"
+    },
+    "native_approve_this_device_from_an_already_signed_in_comput": {
+      "zh": "手机先生成配对码，再在已登录的电脑端“移动与远程访问”核对设备并批准。",
+      "en": "Approve this device from an already signed-in computer."
+    },
+    "native_enter_on_your_computer": {
+      "zh": "在电脑端输入",
+      "en": "Enter on your computer"
+    },
+    "native_waiting_for_approval": {
+      "zh": "等待批准",
+      "en": "Waiting for approval"
+    },
+    "native_cancel": {
+      "zh": "取消",
+      "en": "Cancel"
+    },
+    "native_paired_servers": {
+      "zh": "已配对服务器",
+      "en": "Paired servers"
+    },
+    "native_revoke": {
+      "zh": "撤销",
+      "en": "Revoke"
+    },
+    "native_ok": {
+      "zh": "好",
+      "en": "OK"
+    },
+    "native_pairing_code_expired": {
+      "zh": "配对码已过期",
+      "en": "Pairing code expired"
+    },
+    "native_revoke_on_the_desktop_if_the_server_is_unavailable": {
+      "zh": "服务器未确认撤销；请在桌面设备列表撤销",
+      "en": "Revoke on the desktop if the server is unavailable"
+    },
+    "native_re_pair_this_device": {
+      "zh": "设备访问已失效，请重新配对",
+      "en": "Re-pair this device"
+    },
+    "native_could_not_enable_notifications": {
+      "zh": "无法启用通知",
+      "en": "Could not enable notifications"
+    },
+    "native_re_pair_this_device_7d841c": {
+      "zh": "请重新配对",
+      "en": "Re-pair this device"
+    },
+    "native_push_registration_failed": {
+      "zh": "通知令牌登记失败",
+      "en": "Push registration failed"
+    },
+    "native_could_not_start_live_activity": {
+      "zh": "无法显示实时活动",
+      "en": "Could not start Live Activity"
+    },
+    "native_check_app_signing_and_apns": {
+      "zh": "推送未就绪，请检查应用签名与 APNS",
+      "en": "Check app signing and APNS"
+    },
+    "native_notification_level": {
+      "zh": "提醒范围",
+      "en": "Notification level"
+    },
+    "native_notify": {
+      "zh": "提醒",
+      "en": "Notify"
+    },
+    "native_all": {
+      "zh": "全部",
+      "en": "All"
+    },
+    "native_needs_me": {
+      "zh": "仅需我处理（含失败）",
+      "en": "Needs me"
+    },
+    "native_none": {
+      "zh": "不提醒",
+      "en": "None"
+    },
+    "native_mute": {
+      "zh": "静音",
+      "en": "Mute"
+    },
+    "native_unmute": {
+      "zh": "取消静音",
+      "en": "Unmute"
+    },
+    "native_15_minutes": {
+      "zh": "15 分钟",
+      "en": "15 minutes"
+    },
+    "native_1_hour": {
+      "zh": "1 小时",
+      "en": "1 hour"
+    },
+    "native_8_hours": {
+      "zh": "8 小时",
+      "en": "8 hours"
+    },
+    "native_until_unmuted": {
+      "zh": "持续静音",
+      "en": "Until unmuted"
+    },
+    "native_notification_sound": {
+      "zh": "播放通知声音",
+      "en": "Notification sound"
+    },
+    "native_show_filtered_previews": {
+      "zh": "显示脱敏摘要",
+      "en": "Show filtered previews"
+    },
+    "native_previews_are_off_by_default_and_never_include_tool_a": {
+      "zh": "默认关闭。开启后仅在本机解密并显示简短脱敏摘要；Apple/Google 接收通用提示和密文。检测到凭据、代码或链接时保留通用提示，不含工具参数和思考内容。",
+      "en": "Off by default. Filtered summaries are encrypted through Apple/Google and decrypted on this device. Credentials, code and links fall back to a generic alert; tool arguments and hidden analysis are excluded."
+    },
+    "native_expert_notifications": {
+      "zh": "专家提醒",
+      "en": "Expert notifications"
+    },
+    "native_notifications": {
+      "zh": "通知偏好",
+      "en": "Notifications"
+    },
+    "native_save": {
+      "zh": "保存",
+      "en": "Save"
+    },
+    "native_enable_previews": {
+      "zh": "启用预览？",
+      "en": "Enable previews?"
+    },
+    "native_enable": {
+      "zh": "启用",
+      "en": "Enable"
+    },
+    "native_filtered_text_is_sent_to_your_push_provider_only_aft": {
+      "zh": "默认关闭。开启后仅在本机解密并显示简短脱敏摘要；Apple/Google 接收通用提示和密文。检测到凭据、代码或链接时保留通用提示，不含工具参数和思考内容。",
+      "en": "Off by default. Filtered summaries are encrypted through Apple/Google and decrypted on this device. Credentials, code and links fall back to a generic alert; tool arguments and hidden analysis are excluded."
+    },
+    "native_not_muted": {
+      "zh": "未静音",
+      "en": "Not muted"
+    },
+    "native_muted_until_changed": {
+      "zh": "持续静音",
+      "en": "Muted until changed"
+    },
+    "native_muted_until": {
+      "zh": "静音至 ",
+      "en": "Muted until "
+    },
+    "native_could_not_read_preferences": {
+      "zh": "读取通知偏好失败",
+      "en": "Could not read preferences"
+    },
+    "native_could_not_save_preferences": {
+      "zh": "保存失败",
+      "en": "Could not save preferences"
+    },
+    "native_could_not_save_the_device_credential": {
+      "zh": "无法安全保存设备凭据",
+      "en": "Could not save the device credential"
+    },
+    "native_enter_the_server_https_address": {
+      "zh": "请输入服务器 HTTPS 地址",
+      "en": "Enter the server HTTPS address"
+    },
+    "native_invalid_server_path": {
+      "zh": "无效的服务器路径",
+      "en": "Invalid server path"
+    },
+    "native_device_authorization_expired": {
+      "zh": "设备授权失效，请重新配对",
+      "en": "Device authorization expired"
+    },
+    "native_server_request_failed_0": {
+      "zh": "服务器请求失败 ({0})",
+      "en": "Server request failed ({0})"
+    },
+    "native_select_your_server": {
+      "zh": "请重新选择服务器",
+      "en": "Select your server"
+    },
+    "native_octop_mobile_and_remote_access": {
+      "zh": "Octop · 移动与远程访问",
+      "en": "Octop · Mobile and remote access"
+    },
+    "native_approve_this_phone_from_an_already_signed_in_compute": {
+      "zh": "在已登录电脑的“移动与远程访问”页面核对设备并批准。",
+      "en": "Approve this phone from an already signed-in computer."
+    },
+    "native_could_not_load_servers": {
+      "zh": "读取服务器失败",
+      "en": "Could not load servers"
+    },
+    "native_waiting_for_approval_31da20": {
+      "zh": "等待电脑端批准",
+      "en": "Waiting for approval"
+    },
+    "native_server_identity_mismatch": {
+      "zh": "服务器身份不一致",
+      "en": "Server identity mismatch"
+    },
+    "native_pair_this_device_again": {
+      "zh": "请重新配对",
+      "en": "Pair this device again"
+    },
+    "native_update_android_system_webview": {
+      "zh": "请更新 Android System WebView",
+      "en": "Update Android System WebView"
+    },
+    "native_notifications_2ca143": {
+      "zh": "通知",
+      "en": "Notifications"
+    },
+    "native_preferences": {
+      "zh": "偏好",
+      "en": "Preferences"
+    },
+    "native_re_pair_this_device_8570d1": {
+      "zh": "访问已失效，请重新配对",
+      "en": "Re-pair this device"
+    },
+    "native_could_not_connect_re_pair_this_device": {
+      "zh": "连接失败，请重新配对",
+      "en": "Could not connect; re-pair this device"
+    },
+    "native_grant_notifications_on_the_computer_first": {
+      "zh": "请先在电脑端授予通知能力",
+      "en": "Grant notifications on the computer first"
+    },
+    "native_configure_your_firebase_project_for_background_push": {
+      "zh": "未配置 Firebase 项目，前台仍可接收状态",
+      "en": "Configure your Firebase project for background push"
+    },
+    "native_notification_registration_submitted": {
+      "zh": "通知登记已提交",
+      "en": "Notification registration submitted"
+    },
+    "native_notification_registration_failed": {
+      "zh": "通知登记失败",
+      "en": "Notification registration failed"
+    },
+    "native_firebase_project_is_not_configured": {
+      "zh": "未配置 Firebase 项目",
+      "en": "Firebase project is not configured"
+    },
+    "native_revoke_this_device_ceeb31": {
+      "zh": "撤销这台设备？",
+      "en": "Revoke this device?"
+    },
+    "native_chat_history_is_retained": {
+      "zh": "服务器确认撤销后移除本地凭据，聊天记录保留。",
+      "en": "Chat history is retained."
+    },
+    "native_revoke_on_the_desktop_if_unavailable": {
+      "zh": "未确认撤销，请在电脑端撤销",
+      "en": "Revoke on the desktop if unavailable"
+    },
+    "native_finish_the_current_download": {
+      "zh": "请先完成当前下载",
+      "en": "Finish the current download"
+    },
+    "native_saved": {
+      "zh": "已保存",
+      "en": "Saved"
+    },
+    "native_download_failed_10_mb_maximum": {
+      "zh": "下载失败（最大10 MB）",
+      "en": "Download failed (10 MB maximum)"
+    },
+    "native_new_activity": {
+      "zh": "有新活动",
+      "en": "New activity"
+    },
+    "native_could_not_read_notification_choices": {
+      "zh": "读取通知偏好失败",
+      "en": "Could not read notification choices"
+    },
+    "native_keep": {
+      "zh": "保持现有静音设置",
+      "en": "Keep"
+    },
+    "native_until_changed": {
+      "zh": "持续静音",
+      "en": "Until changed"
+    },
+    "native_play_notification_sound": {
+      "zh": "播放通知声音",
+      "en": "Play notification sound"
+    },
+    "native_filtered_text_is_sent_to_your_push_provider_only_aft_c127a9": {
+      "zh": "默认关闭。开启后仅在本机解密并显示简短脱敏摘要；Apple/Google 接收通用提示和密文。检测到凭据、代码或链接时保留通用提示，不含工具参数和思考内容。",
+      "en": "Off by default. Filtered summaries are encrypted through Apple/Google and decrypted on this device. Credentials, code and links fall back to a generic alert; tool arguments and hidden analysis are excluded."
+    },
+    "native_could_not_save_choices": {
+      "zh": "保存失败",
+      "en": "Could not save choices"
+    },
+    "native_check_choices": {
+      "zh": "请检查设置",
+      "en": "Check choices"
+    },
+    "native_server_request_failed": {
+      "zh": "服务器请求失败 (",
+      "en": "Server request failed ("
+    },
+    "native_language": {
+      "zh": "原生界面语言",
+      "en": "Native interface language"
+    },
+    "native_follow_account": {
+      "zh": "跟随账号，登录前跟随系统",
+      "en": "Follow account, system before sign-in"
+    },
+    "native_profile_loading": {
+      "zh": "正在连接服务器",
+      "en": "Connecting to server"
+    },
+    "native_generic_network_error": {
+      "zh": "无法连接服务器，请检查网络和地址",
+      "en": "Could not connect. Check networking and the address"
+    },
+    "native_could_not_read_shared_content_10_files_10_mb_total": {
+      "zh": "无法读取分享内容（最多10个文件、总计10 MB）",
+      "en": "Could not read shared content (10 files, 10 MB total)"
+    },
+    "native_close": {
+      "zh": "关闭",
+      "en": "Close"
+    },
+    "native_shared_drafts": {
+      "zh": "分享草稿",
+      "en": "Shared drafts"
+    },
+    "native_upload_failed_draft_retained": {
+      "zh": "上传失败，草稿保留",
+      "en": "Upload failed; draft retained"
+    },
+    "native_open_octop_and_pair_a_server_first": {
+      "zh": "请先打开 Octop 配对服务器",
+      "en": "Open Octop and pair a server first"
+    },
+    "native_server": {
+      "zh": "服务器",
+      "en": "Server"
+    },
+    "native_expert": {
+      "zh": "专家",
+      "en": "Expert"
+    },
+    "native_sharing_uses_a_separate_background_conversation_and_": {
+      "zh": "分享使用独立后台会话；原对话草稿保留。只有点击发送才调用模型。",
+      "en": "Sharing uses a separate background conversation and preserves your current draft."
+    },
+    "native_without_task_permission_save_an_encrypted_draft_for_": {
+      "zh": "没有后台任务权限时可保存加密草稿，之后在 Octop 处理。",
+      "en": "Without task permission, save an encrypted draft for later."
+    },
+    "native_share_to_octop": {
+      "zh": "分享到 Octop",
+      "en": "Share to Octop"
+    },
+    "native_save_draft": {
+      "zh": "保存草稿",
+      "en": "Save draft"
+    },
+    "native_send_background_task": {
+      "zh": "发送后台任务",
+      "en": "Send background task"
+    },
+    "native_check_the_task_list_before_sending_again": {
+      "zh": "先在 Octop 任务列表核对结果，请勿重复发送。",
+      "en": "Check the task list before sending again."
+    },
+    "native_could_not_load_experts_local_drafts_remain_available": {
+      "zh": "读取专家失败，仍可保存本地草稿",
+      "en": "Could not load experts; local drafts remain available"
+    },
+    "native_encrypted_draft_saved_for_octop": {
+      "zh": "加密草稿已保存，打开 Octop 后继续处理",
+      "en": "Encrypted draft saved for Octop"
+    },
+    "native_check_app_signing_and_the_shared_container": {
+      "zh": "共享存储不可用，请检查应用签名与 App Group",
+      "en": "Check app signing and the shared container"
+    },
+    "native_analyze_the_shared_attachments": {
+      "zh": "请分析分享的附件",
+      "en": "Analyze the shared attachments"
+    },
+    "native_queued_view_the_result_in_octop": {
+      "zh": "已进入后台任务，可在 Octop 查看结果",
+      "en": "Queued; view the result in Octop"
+    },
+    "native_outcome_unknown_draft_retained_check_tasks_before_re": {
+      "zh": "发送结果未确认，草稿已保留；先检查任务列表，勿重复提交。",
+      "en": "Outcome unknown; draft retained. Check tasks before resending."
+    },
+    "native_could_not_send_draft_retained": {
+      "zh": "发送未完成，草稿已保留",
+      "en": "Could not send; draft retained"
+    },
+    "native_could_not_read_shared_content": {
+      "zh": "无法读取分享内容（最多10个文件、10 MB）",
+      "en": "Could not read shared content"
+    },
+    "native_shared_files": {
+      "zh": "分享文件",
+      "en": "Shared files"
+    },
+    "native_pair_a_server_first": {
+      "zh": "请先配对服务器",
+      "en": "Pair a server first"
+    },
+    "native_separate_background_conversation_your_current_draft_": {
+      "zh": "分享使用独立后台会话，现有草稿保留；无任务权限可保存草稿。",
+      "en": "Separate background conversation; your current draft is retained."
+    },
+    "native_could_not_load_experts_save_a_local_draft": {
+      "zh": "读取专家失败，仍可保存草稿",
+      "en": "Could not load experts; save a local draft"
+    },
+    "native_encrypted_draft_saved": {
+      "zh": "加密草稿已保存",
+      "en": "Encrypted draft saved"
+    },
+    "native_could_not_save_draft": {
+      "zh": "保存失败",
+      "en": "Could not save draft"
+    },
+    "native_queued_view_in_octop": {
+      "zh": "已进入后台任务，可在 Octop 查看",
+      "en": "Queued; view in Octop"
+    },
+    "native_outcome_unknown_check_tasks_before_retry": {
+      "zh": "发送结果未确认，请先检查任务列表，勿重复提交",
+      "en": "Outcome unknown; check tasks before retry"
+    },
+    "native_not_sent_draft_retained": {
+      "zh": "未发送，草稿已保留",
+      "en": "Not sent; draft retained"
+    },
+    "native_could_not_open_share_sheet": {
+      "zh": "无法打开分享",
+      "en": "Could not open share sheet"
+    },
+    "native_review_cancel": {
+      "zh": "查看取消操作",
+      "en": "Review cancellation"
+    },
+    "native_task_attempt": {
+      "zh": "执行批次：{0}",
+      "en": "Task attempt: {0}"
+    },
+    "native_cancel_review_notice": {
+      "zh": "仅取消这里显示的执行批次。审批请打开会话查看真实操作后决定。",
+      "en": "Cancel only the task attempt shown here. Review approvals in the conversation."
+    },
+    "native_confirm_cancel": {
+      "zh": "确认取消此执行批次",
+      "en": "Confirm cancellation"
+    },
+    "native_action_stale": {
+      "zh": "操作已过期或任务已变化，请打开任务列表核对。",
+      "en": "This action expired or the task changed. Check the task list."
+    },
+    "native_task_cancelled": {
+      "zh": "此执行批次已取消。",
+      "en": "This task attempt was cancelled."
+    },
+    "native_action_unknown": {
+      "zh": "请核对任务状态。若响应丢失，不要重复确认旧操作。",
+      "en": "Check the task state. A lost response must not cause automatic retries."
+    },
+    "native_muted_timezone_unavailable": {
+      "zh": "已静音，服务器时区暂不可用",
+      "en": "Muted; server timezone is unavailable"
+    }
+  },
+  "literals": {
+    "正在工作 · Working": "native_working",
+    "等待批准 · Approval needed": "native_approval_needed",
+    "执行失败或中断 · Failed or interrupted": "native_failed_or_interrupted",
+    "已暂停 · Paused": "native_paused",
+    "已完成 · Complete": "native_complete",
+    "服务器 / Servers": "native_servers",
+    "启用通知 / Enable notifications": "native_enable_notifications",
+    "通知偏好 / Notification preferences": "native_notification_preferences",
+    "实时活动 / Live Activities": "native_live_activities",
+    "撤销此设备 / Revoke this device": "native_revoke_this_device",
+    "连接服务器 / Connect a server": "native_connect_a_server",
+    "生成配对码 / Request pairing": "native_request_pairing",
+    "手机先生成配对码，再在已登录的电脑端“移动与远程访问”核对设备并批准。 / Approve this device from an already signed-in computer.": "native_approve_this_device_from_an_already_signed_in_comput",
+    "在电脑端输入 / Enter on your computer": "native_enter_on_your_computer",
+    "等待批准 / Waiting for approval": "native_waiting_for_approval",
+    "取消 / Cancel": "native_cancel",
+    "已配对服务器 / Paired servers": "native_paired_servers",
+    "撤销 / Revoke": "native_revoke",
+    "好 / OK": "native_ok",
+    "配对码已过期 / Pairing code expired": "native_pairing_code_expired",
+    "服务器未确认撤销；请在桌面设备列表撤销 / Revoke on the desktop if the server is unavailable": "native_revoke_on_the_desktop_if_the_server_is_unavailable",
+    "设备访问已失效，请重新配对 / Re-pair this device": "native_re_pair_this_device",
+    "无法启用通知 / Could not enable notifications": "native_could_not_enable_notifications",
+    "请重新配对 / Re-pair this device": "native_re_pair_this_device_7d841c",
+    "通知令牌登记失败 / Push registration failed": "native_push_registration_failed",
+    "无法显示实时活动 / Could not start Live Activity": "native_could_not_start_live_activity",
+    "推送未就绪，请检查应用签名与 APNS / Check app signing and APNS": "native_check_app_signing_and_apns",
+    "提醒范围 / Notification level": "native_notification_level",
+    "提醒 / Notify": "native_notify",
+    "全部 / All": "native_all",
+    "仅需我处理（含失败）/ Needs me": "native_needs_me",
+    "不提醒 / None": "native_none",
+    "静音 / Mute": "native_mute",
+    "取消静音 / Unmute": "native_unmute",
+    "15 分钟 / 15 minutes": "native_15_minutes",
+    "1 小时 / 1 hour": "native_1_hour",
+    "8 小时 / 8 hours": "native_8_hours",
+    "持续静音 / Until unmuted": "native_until_unmuted",
+    "播放通知声音 / Notification sound": "native_notification_sound",
+    "显示脱敏摘要 / Show filtered previews": "native_show_filtered_previews",
+    "默认只显示活动提示。预览会向 Apple/Google 推送服务提交简短的过滤后摘要；检测到凭据、代码或链接时使用通用提示，不发送工具参数或思考内容。 / Previews are off by default and never include tool arguments or hidden analysis.": "native_previews_are_off_by_default_and_never_include_tool_a",
+    "专家提醒 / Expert notifications": "native_expert_notifications",
+    "通知偏好 / Notifications": "native_notifications",
+    "保存 / Save": "native_save",
+    "启用预览？ / Enable previews?": "native_enable_previews",
+    "启用 / Enable": "native_enable",
+    "只有你明确开启后才发送短摘要。推送服务会收到过滤后的文字；敏感或不适合预览的内容将退回通用提示。 / Filtered text is sent to your push provider only after this choice.": "native_filtered_text_is_sent_to_your_push_provider_only_aft",
+    "未静音 / Not muted": "native_not_muted",
+    "持续静音 / Muted until changed": "native_muted_until_changed",
+    "静音至 / Muted until ": "native_muted_until",
+    "读取通知偏好失败 / Could not read preferences": "native_could_not_read_preferences",
+    "保存失败 / Could not save preferences": "native_could_not_save_preferences",
+    "无法安全保存设备凭据 / Could not save the device credential": "native_could_not_save_the_device_credential",
+    "请输入服务器 HTTPS 地址 / Enter the server HTTPS address": "native_enter_the_server_https_address",
+    "无效的服务器路径 / Invalid server path": "native_invalid_server_path",
+    "设备授权失效，请重新配对 / Device authorization expired": "native_device_authorization_expired",
+    "服务器请求失败 / Server request failed (\\(code))": "native_server_request_failed_0",
+    "请重新选择服务器 / Select your server": "native_select_your_server",
+    "Octop · 移动与远程访问": "native_octop_mobile_and_remote_access",
+    "在已登录电脑的“移动与远程访问”页面核对设备并批准。 / Approve this phone from an already signed-in computer.": "native_approve_this_phone_from_an_already_signed_in_compute",
+    "读取服务器失败 / Could not load servers": "native_could_not_load_servers",
+    "等待电脑端批准 / Waiting for approval": "native_waiting_for_approval_31da20",
+    "服务器身份不一致 / Server identity mismatch": "native_server_identity_mismatch",
+    "请重新配对 / Pair this device again": "native_pair_this_device_again",
+    "请更新 Android System WebView / Update Android System WebView": "native_update_android_system_webview",
+    "通知 / Notifications": "native_notifications_2ca143",
+    "偏好 / Preferences": "native_preferences",
+    "访问已失效，请重新配对 / Re-pair this device": "native_re_pair_this_device_8570d1",
+    "连接失败，请重新配对 / Could not connect; re-pair this device": "native_could_not_connect_re_pair_this_device",
+    "请先在电脑端授予通知能力 / Grant notifications on the computer first": "native_grant_notifications_on_the_computer_first",
+    "未配置 Firebase 项目，前台仍可接收状态 / Configure your Firebase project for background push": "native_configure_your_firebase_project_for_background_push",
+    "通知登记已提交 / Notification registration submitted": "native_notification_registration_submitted",
+    "通知登记失败 / Notification registration failed": "native_notification_registration_failed",
+    "未配置 Firebase 项目 / Firebase project is not configured": "native_firebase_project_is_not_configured",
+    "撤销这台设备？ / Revoke this device?": "native_revoke_this_device_ceeb31",
+    "服务器确认撤销后移除本地凭据，聊天记录保留。 / Chat history is retained.": "native_chat_history_is_retained",
+    "未确认撤销，请在电脑端撤销 / Revoke on the desktop if unavailable": "native_revoke_on_the_desktop_if_unavailable",
+    "请先完成当前下载 / Finish the current download": "native_finish_the_current_download",
+    "已保存 / Saved": "native_saved",
+    "下载失败（最大10 MB）/ Download failed (10 MB maximum)": "native_download_failed_10_mb_maximum",
+    "有新活动 / New activity": "native_new_activity",
+    "读取通知偏好失败 / Could not read notification choices": "native_could_not_read_notification_choices",
+    "保持现有静音设置 / Keep": "native_keep",
+    "持续静音 / Until changed": "native_until_changed",
+    "播放通知声音 / Play notification sound": "native_play_notification_sound",
+    "只有明确开启后才向 Apple/Google 推送服务提交简短过滤后的摘要。凭据、代码、链接与工具参数不进入预览。 / Filtered text is sent to your push provider only after this choice.": "native_filtered_text_is_sent_to_your_push_provider_only_aft_c127a9",
+    "保存失败 / Could not save choices": "native_could_not_save_choices",
+    "请检查设置 / Check choices": "native_check_choices",
+    "服务器请求失败 / Server request failed (": "native_server_request_failed",
+    "无法读取分享内容（最多10个文件、总计10 MB）/ Could not read shared content (10 files, 10 MB total)": "native_could_not_read_shared_content_10_files_10_mb_total",
+    "关闭 / Close": "native_close",
+    "分享草稿 / Shared drafts": "native_shared_drafts",
+    "上传失败，草稿保留 / Upload failed; draft retained": "native_upload_failed_draft_retained",
+    "请先打开 Octop 配对服务器 / Open Octop and pair a server first": "native_open_octop_and_pair_a_server_first",
+    "服务器 / Server": "native_server",
+    "专家 / Expert": "native_expert",
+    "分享使用独立后台会话；原对话草稿保留。只有点击发送才调用模型。 / Sharing uses a separate background conversation and preserves your current draft.": "native_sharing_uses_a_separate_background_conversation_and_",
+    "没有后台任务权限时可保存加密草稿，之后在 Octop 处理。 / Without task permission, save an encrypted draft for later.": "native_without_task_permission_save_an_encrypted_draft_for_",
+    "分享到 Octop / Share to Octop": "native_share_to_octop",
+    "保存草稿 / Save draft": "native_save_draft",
+    "发送后台任务 / Send background task": "native_send_background_task",
+    "先在 Octop 任务列表核对结果，请勿重复发送。 / Check the task list before sending again.": "native_check_the_task_list_before_sending_again",
+    "读取专家失败，仍可保存本地草稿 / Could not load experts; local drafts remain available": "native_could_not_load_experts_local_drafts_remain_available",
+    "加密草稿已保存，打开 Octop 后继续处理 / Encrypted draft saved for Octop": "native_encrypted_draft_saved_for_octop",
+    "共享存储不可用，请检查应用签名与 App Group / Check app signing and the shared container": "native_check_app_signing_and_the_shared_container",
+    "请分析分享的附件 / Analyze the shared attachments": "native_analyze_the_shared_attachments",
+    "已进入后台任务，可在 Octop 查看结果 / Queued; view the result in Octop": "native_queued_view_the_result_in_octop",
+    "发送结果未确认，草稿已保留；先检查任务列表，勿重复提交。 / Outcome unknown; draft retained. Check tasks before resending.": "native_outcome_unknown_draft_retained_check_tasks_before_re",
+    "发送未完成，草稿已保留 / Could not send; draft retained": "native_could_not_send_draft_retained",
+    "无法读取分享内容（最多10个文件、10 MB）/ Could not read shared content": "native_could_not_read_shared_content",
+    "分享文件 / Shared files": "native_shared_files",
+    "请先配对服务器 / Pair a server first": "native_pair_a_server_first",
+    "分享使用独立后台会话，现有草稿保留；无任务权限可保存草稿。 / Separate background conversation; your current draft is retained.": "native_separate_background_conversation_your_current_draft_",
+    "读取专家失败，仍可保存草稿 / Could not load experts; save a local draft": "native_could_not_load_experts_save_a_local_draft",
+    "加密草稿已保存 / Encrypted draft saved": "native_encrypted_draft_saved",
+    "保存失败 / Could not save draft": "native_could_not_save_draft",
+    "已进入后台任务，可在 Octop 查看 / Queued; view in Octop": "native_queued_view_in_octop",
+    "发送结果未确认，请先检查任务列表，勿重复提交 / Outcome unknown; check tasks before retry": "native_outcome_unknown_check_tasks_before_retry",
+    "未发送，草稿已保留 / Not sent; draft retained": "native_not_sent_draft_retained",
+    "无法打开分享 / Could not open share sheet": "native_could_not_open_share_sheet"
+  }
+}

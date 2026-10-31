@@ -315,7 +315,8 @@ def build_harness_request(
         }
         if agent_id is not None:
             req["agent_id"] = agent_id
-        configurable: dict[str, Any] = {}
+        # Supplied by the server's ingress/job resolver, never by message text.
+        configurable: dict[str, Any] = {"octop_execution_user_id": user_id}
         if auto_route:
             configurable["octop_auto_route"] = True
         if session_key is not None:
@@ -351,7 +352,7 @@ def build_harness_request(
     }
     if agent_id is not None:
         req["agent_id"] = agent_id
-    configurable = {}
+    configurable = {"octop_execution_user_id": user_id}
     if auto_route:
         configurable["octop_auto_route"] = True
     if session_key is not None:

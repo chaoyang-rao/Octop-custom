@@ -168,4 +168,5 @@ def test_write_failure_deletes_new_package(
         )
 
     assert store.repo.list_all() == []
-    assert list(store.root.iterdir()) == []
+    # ``.skill-library`` is the shared revision archive, not a package folder.
+    assert [p for p in store.root.iterdir() if not p.name.startswith(".")] == []

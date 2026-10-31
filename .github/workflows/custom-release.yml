@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "v1.0.2-custom.20261029.1"
+        default: "v1.0.2-custom.20261031.1"
         required: true
         type: string
       publish_release:
@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.2.post20261029"
-  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261029.1' }}
+  CUSTOM_VERSION: "1.0.2.post20261031"
+  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261031.1' }}
 
 jobs:
   quality:
@@ -120,6 +120,9 @@ jobs:
           path: .cache/custom-release
           key: octop-upstream-1.0.2-${{ matrix.plat }}
 
+      - name: Verify locked portable HTTP/2 dependencies
+        run: python scripts/custom/verify_http2_vendor.py
+
       - name: Assemble the complete customized portable runtime
         run: python scripts/custom/build_portable.py --platform "${{ matrix.plat }}" --output dist
 
@@ -168,6 +171,9 @@ jobs:
           site.addsitedir(sys.argv[1])
           sys.path.insert(0, sys.argv[1])
           import octop, octop_harness, octop_gateway, fastapi
+          from octop.infra.utils.runtime_http2 import ensure_http2
+          ensure_http2()
+          import h2, hpack, hyperframe
           assert sys.version_info[:2] == (3, 12), sys.version
           expected = {'darwin-arm64': {'arm64'}, 'darwin-amd64': {'x86_64'}, 'windows-amd64': {'amd64', 'x86_64'}}
           assert platform.machine().lower() in expected[sys.argv[2]], platform.machine()

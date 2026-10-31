@@ -1,0 +1,12 @@
+**/build/
+**/.gradle/
+**/local.properties
+**/xcuserdata/
+**/DerivedData/
+**/google-services.json
+**/GoogleService-Info.plist
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/*service-account*.json
+deploy/.env

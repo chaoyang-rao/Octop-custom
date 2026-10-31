@@ -33,7 +33,8 @@ export function hasUserComposerTags(context?: UserComposerContext): boolean {
       context.connectors?.length ||
       context.knowledgeBaseIds?.length ||
       context.targetAgents?.length ||
-      context.model,
+      context.model ||
+      context.modelDisplayName,
   );
 }
 
@@ -115,12 +116,12 @@ export default function UserMessageComposerTags({
       });
     }
 
-    if (context.model) {
+    if (context.model || context.modelDisplayName) {
       items.push({
         key: `model-${context.model}`,
         variant: "model",
         icon: <Cpu size={11} strokeWidth={2.2} aria-hidden />,
-        label: modelShortLabel(context.model),
+        label: context.modelDisplayName || modelShortLabel(context.model || ""),
       });
     }
 

@@ -8,6 +8,7 @@ import {
   Link2,
   Database,
   Cpu,
+  Library,
   Users as UsersIcon,
   Activity,
   Share2,
@@ -66,18 +67,23 @@ export interface NavSection {
 /** Every nav item key the sidebar can show. Keep in sync with `SIDEBAR_NAV_KEYS` in `octop.infra.users.preferences`. */
 export const SIDEBAR_NAV_KEYS = [
   "chat",
+  "conversations",
   "experts",
   "tasks",
+  "task-queue",
   "token-usage",
   "personalization",
   "channels",
   "connectors",
+  "account-connections",
+  "mobile-access",
   "skill-packages",
   "knowledge-bases",
   "bridge",
   "workbench",
   "remote-desktop",
   "acp",
+  "native-cli",
   "admin-users",
   "models",
   "admin-storage",
@@ -126,12 +132,15 @@ export const SIDEBAR_GROUPED_NAV_KEYS = [
   "personalization",
   "channels",
   "connectors",
+  "account-connections",
+  "mobile-access",
   "skill-packages",
   "knowledge-bases",
   "bridge",
   "workbench",
   "remote-desktop",
   "acp",
+  "native-cli",
   "admin-users",
   "models",
   "admin-storage",
@@ -158,6 +167,12 @@ export function buildNavSections(
       icon: <MessageSquareText size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.chat",
     },
+    {
+      key: "conversations",
+      path: "/conversations",
+      icon: <Library size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.conversations",
+    },
   ];
   if (navAllowed(user, "experts")) {
     topItems.push({
@@ -173,6 +188,14 @@ export function buildNavSections(
       path: "/tasks",
       icon: <Timer size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.tasks",
+    });
+  }
+  if (navAllowed(user, "tasks")) {
+    topItems.push({
+      key: "task-queue",
+      path: "/task-queue",
+      icon: <Timer size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.taskQueue",
     });
   }
   if (navAllowed(user, "token-usage")) {
@@ -210,6 +233,20 @@ export function buildNavSections(
       labelKey: "nav.connectors",
     });
   }
+  if (navAllowed(user, "connectors")) {
+    settingsItems.push({
+      key: "account-connections",
+      path: "/account-connections",
+      icon: <Link2 size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.accountConnections",
+    });
+  }
+  settingsItems.push({
+    key: "mobile-access",
+    path: "/mobile-access",
+    icon: <Share2 size={iconSize} strokeWidth={iconStroke} />,
+    labelKey: "nav.mobileAccess",
+  });
   if (navAllowed(user, "skill-packages")) {
     settingsItems.push({
       key: "skill-packages",
@@ -270,6 +307,12 @@ export function buildNavSections(
       path: "/acp",
       icon: <Share2 size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.acp",
+    });
+    controlItems.push({
+      key: "native-cli",
+      path: "/native-cli",
+      icon: <Cpu size={iconSize} strokeWidth={iconStroke} />,
+      labelKey: "nav.nativeCli",
     });
   }
   if (controlItems.length > 0) {

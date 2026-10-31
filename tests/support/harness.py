@@ -29,6 +29,24 @@ def _sync_fake_skill_dirs(agent: FakeHarnessAgent, config: Any) -> None:
     agent.config.skill_package_roots = roots or None
 
 
+class _HarnessManagerMock(MagicMock):
+    """MagicMock whose ``shared_factory`` mirrors the real manager's property.
+
+    Production ``AgentManager.boot()`` replaces ``_shared_factory`` with a
+    ``NativeRoutingFactory``. The real ``HarnessAgentManager.shared_factory``
+    reads that attribute; a plain MagicMock would keep returning the stale
+    ``shared_factory`` attribute and every agent start would look unconfigured.
+    """
+
+    @property
+    def shared_factory(self) -> Any:
+        return self.__dict__.get("_shared_factory")
+
+    @shared_factory.setter
+    def shared_factory(self, value: Any) -> None:
+        self.__dict__["_shared_factory"] = value
+
+
 def _wire_add_provider(mock_manager: MagicMock) -> None:
     def _add_provider(provider: Any) -> None:
         mock_manager._providers.append(provider)
@@ -138,7 +156,7 @@ def build_harness_manager_mock(
     async def _aremove(agent_id: str) -> None:
         _remove(agent_id)
 
-    mock_manager = MagicMock()
+    mock_manager = _HarnessManagerMock()
     mock_manager.aclose = AsyncMock()
     mock_manager.create_agent.side_effect = _create
     mock_manager.acreate_agent = AsyncMock(side_effect=_acreate)

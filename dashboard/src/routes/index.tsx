@@ -3,7 +3,15 @@ import { Navigate, useLocation } from "react-router-dom";
 
 // Lazy-loaded pages — Common
 const ExpertsPage = lazy(() => import("../pages/Experts"));
+const ConversationLibraryPage = lazy(
+  () => import("../pages/ConversationLibrary"),
+);
 const CronJobsPage = lazy(() => import("../pages/Control/CronJobs"));
+const TaskQueuePage = lazy(() => import("../pages/TaskQueue"));
+const AccountConnectionsPage = lazy(
+  () => import("../pages/AccountConnections"),
+);
+const MobileAccessPage = lazy(() => import("../pages/MobileAccess"));
 const ConnectorsPage = lazy(() => import("../pages/Agent/Connectors"));
 const SkillPackagesPage = lazy(() => import("../pages/SkillPackages"));
 const KnowledgeBasesPage = lazy(() => import("../pages/KnowledgeBases"));
@@ -12,6 +20,7 @@ const PersonalizationPage = lazy(
   () => import("../pages/Agent/Personalization"),
 );
 const ACPPage = lazy(() => import("../pages/Agent/ACP"));
+const NativeCliPage = lazy(() => import("../pages/NativeCli"));
 const TokenUsagePage = lazy(() => import("../pages/Control/TokenUsage"));
 
 // Lazy-loaded pages — Control
@@ -49,8 +58,12 @@ export interface RouteConfig {
 export const pathToKey: Record<string, string> = {
   "/chat": "chat",
   // Common
+  "/conversations": "conversations",
   "/experts": "experts",
   "/tasks": "tasks",
+  "/task-queue": "task-queue",
+  "/account-connections": "account-connections",
+  "/mobile-access": "mobile-access",
   "/connectors": "connectors",
   "/skill-packages": "skill-packages",
   "/knowledge-bases": "knowledge-bases",
@@ -68,6 +81,7 @@ export const pathToKey: Record<string, string> = {
   "/agent-config": "agent-config",
   // Control
   "/acp": "acp",
+  "/native-cli": "native-cli",
   "/channels": "channels",
   "/workbench": "workbench",
   "/workbench/terminal": "workbench",
@@ -150,8 +164,12 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/chat/:agentId/:threadId", element: null, useWrapper: true },
 
   // Common
+  { path: "/conversations", element: <ConversationLibraryPage /> },
   { path: "/experts", element: <ExpertsPage /> },
   { path: "/tasks", element: <CronJobsPage /> },
+  { path: "/task-queue", element: <TaskQueuePage /> },
+  { path: "/account-connections", element: <AccountConnectionsPage /> },
+  { path: "/mobile-access", element: <MobileAccessPage /> },
   { path: "/connectors", element: <ConnectorsPage /> },
   { path: "/skill-packages", element: <SkillPackagesPage /> },
   { path: "/knowledge-bases", element: <KnowledgeBasesPage /> },
@@ -169,6 +187,7 @@ export const routeConfigs: RouteConfig[] = [
 
   // Control (RequirePermission via pathPermissionKeys in MainLayout)
   { path: "/acp", element: <ACPPage /> },
+  { path: "/native-cli", element: <NativeCliPage /> },
   {
     path: "/channels",
     element: <RedirectPreserveSearch to="/personalization/channels" />,

@@ -64,6 +64,15 @@ async def upload_attachment(
     user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, str]:
+    from octop.infra.mobile_access.access import CURRENT_MOBILE_REQUEST, MobileUser
+
+    if isinstance(user, MobileUser) and user.device_kind == "share":
+        from octop.infra.mobile_access.shares import prepare_share_upload
+
+        # The narrow credential can start only its owned target after Send.
+        context = CURRENT_MOBILE_REQUEST.get()
+        token = context.token if context is not None else None
+        await prepare_share_upload(server, token=token or "", agent_id=agent_id)
     ws = await require_running_workspace(agent_id, user=user, as_user=as_user, server=server)
     max_bytes = (
         int(server.services.config.max_upload_bytes) if server.services is not None else None
@@ -80,4 +89,18 @@ async def upload_attachment(
         data=data,
         max_bytes=max_bytes,
     )
-    return _attachment_payload(agent_id, stored)
+    from octop.infra.tasks.attachments import issue_upload_receipt
+
+    payload = _attachment_payload(agent_id, stored)
+    receipt = await issue_upload_receipt(
+        server.services.repos,
+        user_id=user.id,
+        agent_id=agent_id,
+        workspace_path=stored.data_path,
+        filename=stored.filename,
+        mime_type=stored.media_type,
+        data=data,
+    )
+    if receipt is not None:
+        payload["upload_receipt"] = receipt
+    return payload

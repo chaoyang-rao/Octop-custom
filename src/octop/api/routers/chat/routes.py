@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -25,6 +26,7 @@ from octop.infra.agents.experts.catalog import (
 from octop.infra.agents.settings.profile import welcome_from_row
 from octop.infra.agents.teams import is_team_agent
 from octop.infra.agents.teams.welcome import team_host_welcome_payload
+from octop.infra.connectors.accounts.actor import actor_stream
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.hitl.coordinator import (
     HitlChannelCoordinator,
@@ -35,6 +37,9 @@ from octop.infra.gateway.hitl.format import normalize_hitl_request
 from octop.infra.gateway.hitl.store import HitlPendingRecord
 from octop.infra.utils.llm_text import ainvoke_text
 from octop.infra.utils.locale import resolve_request_locale
+
+if TYPE_CHECKING:
+    from octop.infra.tasks.resume import TaskResumeLease
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -118,6 +123,45 @@ async def iter_dashboard_hitl_resume_sse(
     channel_type: str,
     locale: str,
     is_disconnected: Callable[[], Awaitable[bool]],
+    resume_lease: TaskResumeLease | None = None,
+) -> AsyncIterator[str]:
+    try:
+        if resume_lease is not None:
+            await resume_lease.enter()
+        async for frame in _iter_dashboard_hitl_resume_sse(
+            server=server,
+            processor=processor,
+            hitl_coordinator=hitl_coordinator,
+            agent_id=agent_id,
+            thread_id=thread_id,
+            user_id=user_id,
+            decisions=decisions,
+            pending=pending,
+            session_key=session_key,
+            channel_type=channel_type,
+            locale=locale,
+            is_disconnected=is_disconnected,
+        ):
+            yield frame
+    finally:
+        if resume_lease is not None:
+            resume_lease.close()
+
+
+async def _iter_dashboard_hitl_resume_sse(
+    *,
+    server: Any,
+    processor: Any,
+    hitl_coordinator: HitlChannelCoordinator,
+    agent_id: str,
+    thread_id: str,
+    user_id: int,
+    decisions: list[dict[str, Any]],
+    pending: HitlPendingRecord | None,
+    session_key: str,
+    channel_type: str,
+    locale: str,
+    is_disconnected: Callable[[], Awaitable[bool]],
 ) -> AsyncIterator[str]:
     """Stream dashboard HITL resume chunks and persist any nested ``hitl_required``.
 
@@ -160,6 +204,16 @@ async def iter_dashboard_hitl_resume_sse(
     )
     disconnected = False
     followup_pause = False
+    resume_output = ""
+    resume_failed = False
+    resume_finished = False
+    continuation: asyncio.Future[dict[str, Any]] | None = None
+    task_manager = getattr(server, "task_manager", None)
+    attempts = (
+        await task_manager.resume_attempts(agent_id=agent_id, user_id=user_id, thread_id=thread_id)
+        if task_manager is not None
+        else None
+    )
     # Clear the in-memory pause before the (possibly long) resume stream so
     # history reload cannot reinject the same card while the turn continues.
     if pending is not None:
@@ -168,12 +222,20 @@ async def iter_dashboard_hitl_resume_sse(
             "rejected" if rejected else "approved",
         )
     try:
-        async for chunk in processor.iter_hitl_resume_chunks(
-            agent_id=agent_id,
-            thread_id=thread_id,
-            user_id=user_id,
-            decisions=decisions,
+        async for chunk in actor_stream(
+            processor.iter_hitl_resume_chunks(
+                agent_id=agent_id,
+                thread_id=thread_id,
+                user_id=user_id,
+                decisions=decisions,
+            ),
+            user_id,
         ):
+            if isinstance(chunk, dict):
+                if chunk.get("type") == "token" and isinstance(chunk.get("content"), str):
+                    resume_output = (resume_output + chunk["content"])[-128000:]
+                elif chunk.get("type") == "error":
+                    resume_failed = True
             if not disconnected:
                 disconnected = await is_disconnected()
             if isinstance(chunk, dict) and chunk.get("type") == "hitl_required":
@@ -190,6 +252,7 @@ async def iter_dashboard_hitl_resume_sse(
         # turn that expires that card. Keep the queue until a resume finishes
         # without another pause. A plain ``done`` would also make the
         # dashboard flush locally queued messages and reload history.
+        resume_finished = True
         if followup_pause:
             if not disconnected:
                 yield format_sse("chunk", {"type": "done", "hitl_paused": True})
@@ -202,7 +265,7 @@ async def iter_dashboard_hitl_resume_sse(
         from octop.infra.gateway.ws.ws_channel import resume_parked_steers  # noqa: PLC0415
 
         try:
-            await resume_parked_steers(
+            continuation = await resume_parked_steers(
                 server,
                 agent_id=agent_id,
                 thread_id=thread_id,
@@ -211,16 +274,32 @@ async def iter_dashboard_hitl_resume_sse(
                 user_id=user_id,
             )
         except Exception:
+            resume_failed = True
             logging.getLogger(__name__).exception("steer resume drain failed thread=%s", thread_id)
     except Exception as exc:
         # Resume failed after we cleared the pause for reinject safety — do not
         # leave the record looking like a successful approve/reject.
         if pending is not None:
             hitl_coordinator.store.mark_resolved(pending.pending_id, "expired")
+        resume_failed = True
         yield format_sse(
             "chunk",
             {"type": "error", "message": format_stream_error(exc, locale)},
         )
+
+    finally:
+        task_manager = getattr(server, "task_manager", None)
+        if task_manager is not None:
+            await task_manager.complete_waiting_turn(
+                agent_id=agent_id,
+                user_id=user_id,
+                thread_id=thread_id,
+                failed=resume_failed or not resume_finished,
+                paused=followup_pause,
+                output=resume_output,
+                continuation=continuation,
+                attempts=attempts,
+            )
 
 
 def _dashboard_hitl_stream_context(
@@ -286,6 +365,18 @@ async def resume_hitl(
     if body.hitl_policy is not None:
         hitl_coordinator.session_policies.set(body.thread_id, body.hitl_policy.model_dump())
 
+    task_manager = getattr(server, "task_manager", None)
+    resume_lease = (
+        await task_manager.bind_resume(
+            agent_id=agent_id,
+            user_id=user.id,
+            thread_id=body.thread_id,
+            pending=pending,
+        )
+        if task_manager is not None
+        else None
+    )
+
     async def gen() -> AsyncIterator[str]:
         async for frame in iter_dashboard_hitl_resume_sse(
             server=server,
@@ -300,6 +391,7 @@ async def resume_hitl(
             channel_type=channel_type,
             locale=resolve_request_locale(request),
             is_disconnected=request.is_disconnected,
+            resume_lease=resume_lease,
         ):
             yield frame
 

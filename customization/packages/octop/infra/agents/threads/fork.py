@@ -190,6 +190,8 @@ async def fork_dashboard_thread(
     locale: str = "en",
     thread_message_repo: Any | None = None,
     history_archive: Any | None = None,
+    independent_session_key: str | None = None,
+    activate: bool = True,
 ) -> dict[str, Any]:
     """Create a dashboard thread seeded through the selected assistant reply."""
     from langchain_core.messages import message_to_dict, messages_from_dict  # noqa: PLC0415
@@ -212,6 +214,16 @@ async def fork_dashboard_thread(
         messages = messages_from_dict(await archive.all_messages(source.thread_id, read_legacy))
     else:
         messages = await load_checkpoint_messages(harness, source.thread_id)
+        if not messages and thread_message_repo is not None:
+            # Explicitly branching an imported record seeds only its normalized
+            # human/assistant messages, not any foreign system/tool execution.
+            rows = await asyncio.to_thread(
+                thread_message_repo.range_rows, source.thread_id, 0, _FORK_HISTORY_LIMIT
+            )
+            if rows:
+                import json  # noqa: PLC0415
+
+                messages = messages_from_dict([json.loads(row.message_json) for row in rows])
     idx = find_assistant_fork_index(
         messages,
         message_id=message_id,
@@ -233,7 +245,9 @@ async def fork_dashboard_thread(
         if not versioned:
             thread_message_repo.append_if_ready(source.thread_id, projection_inputs)
 
-    session_key = ThreadRegistry.dashboard_key(agent_id=source.agent_id, user_id=user_id)
+    session_key = independent_session_key or ThreadRegistry.dashboard_key(
+        agent_id=source.agent_id, user_id=user_id
+    )
     dest_id = thread_registry.create_thread(
         agent_id=source.agent_id,
         user_id=user_id,
@@ -274,11 +288,12 @@ async def fork_dashboard_thread(
         reasoning_mode=source.reasoning_mode,
         reasoning_effort=source.reasoning_effort,
     )
-    await thread_registry.rebind(
-        session_key=session_key,
-        thread_id=dest_id,
-        agent_id=source.agent_id,
-    )
+    if activate:
+        await thread_registry.rebind(
+            session_key=session_key,
+            thread_id=dest_id,
+            agent_id=source.agent_id,
+        )
     row = thread_registry.get_thread(dest_id)
     return {
         "thread_id": dest_id,

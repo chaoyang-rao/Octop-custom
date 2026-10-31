@@ -23,6 +23,7 @@ import {
   type ContentBlock,
 } from "../../../utils/messageParser";
 import { normalizeComposerContext } from "../utils/chatMessages";
+import type { QuoteReference } from "../../../api/modules/conversations";
 import { resolveMessageTimestampMs } from "../../../utils/formatMessageTime";
 import { inferKindFromNameAndMime } from "../utils/chatAttachments";
 import {
@@ -398,7 +399,15 @@ function convertCallEntries(entries: CallEntry[]): ChatMessage[] {
         fromMeta.length > 0 ? fromMeta : undefined,
         extractAttachments(entry.content),
       ) ?? undefined;
-    const contentBlocks = extractContentBlocks(entry.content);
+    const displayText =
+      entry.role === "user"
+        ? (entry.metadata as Record<string, unknown> | null | undefined)
+            ?.display_text
+        : undefined;
+    const contentBlocks =
+      typeof displayText === "string"
+        ? [{ type: "text" as const, content: displayText }]
+        : extractContentBlocks(entry.content);
     const textContent =
       contentBlocks
         ?.filter((block) => block.type === "text")
@@ -897,6 +906,8 @@ export function useChat(
       reasoningEffort?: string | null,
       conversationMode?: "ask" | "plan" | "craft" | null,
       hitlPolicy?: HitlSessionPolicy | null,
+      nativeModelId?: string | null,
+      quote?: QuoteReference,
     ) => {
       const key = storeKey || stableSessionId;
 
@@ -915,7 +926,7 @@ export function useChat(
       const threadIdForApi =
         storeKey ||
         (stableSessionId !== "__empty__" ? stableSessionId : undefined);
-      chatStore.sendTurn(
+      const args: Parameters<typeof chatStore.sendTurn> = [
         key,
         text,
         agentId,
@@ -931,7 +942,10 @@ export function useChat(
         reasoningEffort,
         conversationMode,
         hitlPolicy,
-      );
+      ];
+      if (quote) args.push(nativeModelId, quote);
+      else if (nativeModelId !== undefined) args.push(nativeModelId);
+      chatStore.sendTurn(...args);
     },
     [stableSessionId],
   );

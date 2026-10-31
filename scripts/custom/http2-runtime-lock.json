@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "purpose": "Pure Python HTTP/2 dependencies for APNS in the preserved portable runtime. Licenses are retained in the bundled dist-info directories.",
+  "packages": [
+    {
+      "name": "h2",
+      "version": "4.4.1",
+      "license": "MIT",
+      "wheel_url": "https://files.pythonhosted.org/packages/7e/22/e85faf23bd72a92d1921e37d674ca56eb298a3c8be31fdecef0ff2b3aaac/h2-4.4.1-py3-none-any.whl",
+      "wheel_sha256": "0e25f1462b23c9cb82d9eb02e28bc706dac2a68cb457c6a0d74d63c8a2a5d0e6",
+      "size": 62636,
+      "files": {
+        "h2/__init__.py": "1baaac023c2da4d25451ad290ea0909519ca9eeef92b9dc13cfc61f338252bae",
+        "h2/_typing.py": "a82c4f398c0b2e3d6feb190ccff82f1ab02815c499c4cbcd660a620648a292f2",
+        "h2/config.py": "67ec2be6b162cdc076f964d5582b86b5ef32fbc71e6f9076fab95c5742f9b6e5",
+        "h2/connection.py": "8283e14ad0875ecdd5d94fbd4c4111e3c08d298ef80ae6b3ff223c1ce1aa8e09",
+        "h2/errors.py": "4be4dd61a25f3ff8709458f6b90189190e12e3fc96894ffd138e1a3f174009b1",
+        "h2/events.py": "ae36193d2ffac6f8cc9c06a4ed51db607c93aa5f206e314327952495c5df9bb1",
+        "h2/exceptions.py": "dc49b798b310047c58a4e2a868f74a0861469fc03dadef4006d51d2a56376d93",
+        "h2/frame_buffer.py": "37febf771e38929065f7c270f555cdcceb386a1253e94dca481736bce08f6b47",
+        "h2/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "h2/settings.py": "f356a3a890f7ec16eca6c14f53cb2083433db9eaa73eb2bf424044a8ec0ba356",
+        "h2/stream.py": "a52bed21bc71d78f7f004c44dec70450844d9c781b6e4d9f0236c3733065034a",
+        "h2/utilities.py": "6250a082e47953214db7fba7ca3259f4afcdf538bb3a9800404bbf6975dcf13d",
+        "h2/windows.py": "26958d843bfec782798c85d25a9d0834792af482203cfdbbc6bf455d8bdacc51",
+        "h2-4.4.1.dist-info/licenses/LICENSE": "7a65a5af0cbabf1c16251c7c6b2b7cb46d16a7222e79975b9b61fcd66a2e3f28",
+        "h2-4.4.1.dist-info/METADATA": "b17f68f6127946c3b748ea5728a9b172589ede2b9cebfa353dd5f05263096c7f",
+        "h2-4.4.1.dist-info/WHEEL": "2b6eb4118ce7cd7b09601406aa623c553c4476265836f0d9c16f5c061f7efcc0",
+        "h2-4.4.1.dist-info/top_level.txt": "1e2ba5c7c2b12368c550cd5d1bbf8265e4643b78f9d0c07008b1b7e95aeafa42",
+        "h2-4.4.1.dist-info/RECORD": "d0b5d6a5f2fd0d00b9a652cb70e544e3a415d8c508b0ae4a84b26bf8149b4a8c"
+      }
+    },
+    {
+      "name": "hpack",
+      "version": "4.2.0",
+      "license": "MIT",
+      "wheel_url": "https://files.pythonhosted.org/packages/71/b4/4a9fcfb2aef6ba44d9073ecd301443aa00b3dac95de5619f2a7de7ec8a91/hpack-4.2.0-py3-none-any.whl",
+      "wheel_sha256": "858ac0b02280fa582b5080d68db0899c62a80375e0e5413a74970c5e518b6986",
+      "size": 34246,
+      "files": {
+        "hpack/__init__.py": "8d7e285593c15d356e93f6b7c6856a51bb93e2cd6f95e7d74a091e5587b71471",
+        "hpack/exceptions.py": "5eacbcbe2aaf28a1c1c90ec8a3c169f873e50cfdd3ed133d6a994f4b176bf632",
+        "hpack/hpack.py": "4ab14aab1a856cee45aea3169854167b16dac9ef9ec4cef1ed1d5da82439769d",
+        "hpack/huffman.py": "cc3b91b4ec8511d29bf7f199acdb40a274c452ca882eb2b6b2d4a1e702e919ee",
+        "hpack/huffman_constants.py": "e0f84e31e97998dd1ab24151ae7e2756927f09339484ed6a6c544eeaefc87f63",
+        "hpack/huffman_table.py": "12452e981b596483c227a950ecb1bf6f07c38f58991225cce0035c5e34f5cd4b",
+        "hpack/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hpack/struct.py": "06a10e4b74f996ae341257efec6ec24385f6a7209a93ce6657367f5c8cb1a083",
+        "hpack/table.py": "500937f5f52433fafc76704a3832ffa86afdff044e9ca4150761033f60032642",
+        "hpack-4.2.0.dist-info/licenses/LICENSE": "763a9342a04df62046c9dc748a5287934eb0a5331c6863b3ca0aee20e18cb4ed",
+        "hpack-4.2.0.dist-info/METADATA": "d2408cbb7b7d2f4bd041a96a850300da45e1bf79b1a380148a5fc29dcd55255f",
+        "hpack-4.2.0.dist-info/WHEEL": "69e6228a0d35958183cc1812f07c565ce837b95eb51bd8a33acba9fa4f68d6c9",
+        "hpack-4.2.0.dist-info/top_level.txt": "9f2ad92db428fb49c2ea8b7760eff5d3da645224ed2b5334c1425f2c7b9071e1",
+        "hpack-4.2.0.dist-info/RECORD": "15ed3c3218b193fb48783057fa6fb37acf340b0f8927b18bbf0964f284a2a823"
+      }
+    },
+    {
+      "name": "hyperframe",
+      "version": "6.1.0",
+      "license": "MIT",
+      "wheel_url": "https://files.pythonhosted.org/packages/48/30/47d0bf6072f7252e6521f3447ccfa40b421b6824517f82854703d0f5a98b/hyperframe-6.1.0-py3-none-any.whl",
+      "wheel_sha256": "b03380493a519fce58ea5af42e4a42317bf9bd425596f7a0835ffce80f1a42e5",
+      "size": 13007,
+      "files": {
+        "hyperframe/__init__.py": "43f3017642040964cbbe4b0e5e0e67607517f2303c861a10b2e8fa394436e252",
+        "hyperframe/exceptions.py": "0d92eb670e72ecc2c13119310b1aea7f9121cfc0681369fb32955aa780f9bdc2",
+        "hyperframe/flags.py": "f65be969e297adf61ebb18fc5deab6d440f8d0e0d38a9a376577835225f95992",
+        "hyperframe/frame.py": "6ac62192190eaf5bd10777ee6581351c88532050f424d3965b067cbde7735b15",
+        "hyperframe/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "hyperframe-6.1.0.dist-info/LICENSE": "763a9342a04df62046c9dc748a5287934eb0a5331c6863b3ca0aee20e18cb4ed",
+        "hyperframe-6.1.0.dist-info/METADATA": "a29f5792b9459b47658804988520009156ef8c2dea66022c2969a145065bad69",
+        "hyperframe-6.1.0.dist-info/WHEEL": "227f454cdc5e3fad0a9d3906c3bc24ea624f61dfdd4128c46665dd05d30223ef",
+        "hyperframe-6.1.0.dist-info/top_level.txt": "6885d6371cca17f8f013c972586e4f6aa9f944fecf0c161e82eada89afa81c91",
+        "hyperframe-6.1.0.dist-info/RECORD": "5821a7cf3ccf0244a2feaf6c48086d9df142e886efab2562be6817f0176f763f"
+      }
+    }
+  ]
+}

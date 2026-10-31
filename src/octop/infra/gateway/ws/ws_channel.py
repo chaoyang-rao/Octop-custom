@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from octop_gateway.channel import BaseChannel, MessageProcessor
@@ -52,6 +54,10 @@ class WebSocketChannel(BaseChannel):
         super().__init__(processor, channel_id=channel_id, debounce_seconds=0.0)
         self._hub = hub
         self._steer = steer or SteerCoordinator()
+        self._task_admission: Callable[[InboundMessage], Awaitable[bool]] | None = None
+
+    def set_task_admission(self, admission: Callable[[InboundMessage], Awaitable[bool]]) -> None:
+        self._task_admission = admission
 
     def _default_constraints(self) -> ChannelConstraints:
         return ChannelConstraints(
@@ -65,6 +71,32 @@ class WebSocketChannel(BaseChannel):
 
     async def stop(self) -> None:
         return
+
+    async def _notify_user(
+        self,
+        message: InboundMessage,
+        event_type: str,
+        thread_id: str,
+        *,
+        status: str | None = None,
+    ) -> None:
+        if (message.metadata or {}).get("task_id"):
+            return
+        subject = message.channel_subject
+        try:
+            user_id = int(subject.subject_id) if subject else 0
+        except ValueError:
+            return
+        if user_id > 0:
+            await self._hub.push_to_user(
+                user_id,
+                {
+                    "type": event_type,
+                    "thread_id": thread_id,
+                    "agent_id": message.tenant_id,
+                    **({"status": status} if status else {}),
+                },
+            )
 
     def parse_inbound(self, raw_payload: Any) -> InboundMessage:
         if isinstance(raw_payload, InboundMessage):
@@ -97,6 +129,48 @@ class WebSocketChannel(BaseChannel):
         return False
 
     async def handle_inbound(self, raw_payload: Any) -> None:
+        message = self.parse_inbound(raw_payload)
+        future = (message.metadata or {}).get("_octop_turn_completion")
+        completion: dict[str, Any] | None = (
+            {"failed": True, "paused": False, "output": ""}
+            if isinstance(future, asyncio.Future)
+            else None
+        )
+        try:
+            if isinstance(future, asyncio.Future) and future.cancelled():
+                return
+            if (
+                (message.metadata or {}).get("task_id")
+                and self._task_admission is not None
+                and not await self._task_admission(message)
+            ):
+                return
+            if isinstance(future, asyncio.Future):
+                if future.cancelled():
+                    return
+                inner = asyncio.create_task(self._handle_stream_inbound(message, completion))
+
+                def cancel_inner(done: asyncio.Future[Any]) -> None:
+                    if done.cancelled():
+                        inner.cancel()
+
+                future.add_done_callback(cancel_inner)
+                try:
+                    await inner
+                except asyncio.CancelledError:
+                    if not future.cancelled():
+                        raise
+                finally:
+                    future.remove_done_callback(cancel_inner)
+            else:
+                await self._handle_stream_inbound(message, completion)
+        finally:
+            if isinstance(future, asyncio.Future) and not future.done():
+                future.set_result(completion)
+
+    async def _handle_stream_inbound(
+        self, raw_payload: Any, completion: dict[str, Any] | None = None
+    ) -> None:
         """Stream harness chunks to all thread subscribers (no delta batching).
 
         After each harness stream completes, drain pending steers and continue
@@ -166,6 +240,7 @@ class WebSocketChannel(BaseChannel):
         failed = False
         stream = None
         try:
+            await self._notify_user(message, "turn.started", thread_id)
             await self._hub.push_to_thread(
                 thread_id,
                 {
@@ -221,10 +296,15 @@ class WebSocketChannel(BaseChannel):
                     if chunk_type == "error":
                         failed = True
                         break
+                    if completion is not None and chunk_type == "token":
+                        content = chunk.get("content")
+                        if isinstance(content, str):
+                            completion["output"] = (completion["output"] + content)[-128000:]
                     if chunk_type == "hitl_required":
                         # Graph is interrupted; the WS turn ends but resume flows
                         # through the HITL SSE route — never continue into it.
                         self._steer.set_phase(thread_id, "hitl_paused")
+                        await self._notify_user(message, "approval.required", thread_id)
                         continue
                     if chunk_type == "tool_result":
                         saw_tool_result = True
@@ -331,6 +411,8 @@ class WebSocketChannel(BaseChannel):
                 # survives the approval pause (drains after SSE resume) — the
                 # dashboard keeps its chips instead of clearing them.
                 hitl_parked = self._steer.is_hitl_paused(thread_id)
+                if completion is not None:
+                    completion.update(failed=failed, paused=hitl_parked)
                 await self._hub.push_to_thread(
                     thread_id,
                     {
@@ -341,6 +423,13 @@ class WebSocketChannel(BaseChannel):
                         **({"hitl_paused": True} if hitl_parked else {}),
                     },
                 )
+                if not hitl_parked:
+                    await self._notify_user(
+                        message,
+                        "turn.ended",
+                        thread_id,
+                        status="failed" if failed else "completed",
+                    )
             except Exception:
                 logger.exception("websocket failed to deliver turn.ended thread=%s", thread_id)
 
@@ -501,7 +590,7 @@ async def resume_parked_steers(
     session_key: str,
     channel_type: str,
     user_id: int,
-) -> None:
+) -> asyncio.Future[dict[str, Any]] | None:
     """After an HITL approval resumes, drain steers parked across the pause.
 
     The queue survives the interrupt and drains at the first
@@ -515,26 +604,28 @@ async def resume_parked_steers(
     hub = getattr(gateway, "ws_hub", None)
     channel_manager = getattr(gateway, "channel_manager", None)
     if steer is None or hub is None or channel_manager is None:
-        return
+        return None
     expired = steer.sweep_expired(thread_id)
     if expired is not None:
         await _push_discarded(hub, thread_id, expired)
-        return
+        return None
     staged = steer.stage_hitl_pending(thread_id)
     if staged is None:
-        return
+        return None
     bundle, seq = staged
     queues = getattr(channel_manager, "_queues", None)
     if not isinstance(queues, dict) or WS_CHANNEL_ID not in queues:
         steer.release_staged_hitl(thread_id)
         logger.error("steer resume has no dashboard queue thread=%s", thread_id)
-        return
+        return None
     meta = steer.continuation_metadata(thread_id)
     meta["thread_id"] = thread_id
     meta["session_key"] = session_key
     # Subscribers already on the thread receive the turn. This id only
     # satisfies the inbound guard; it is not a hub connection.
     meta["ws_connection_id"] = f"hitl-resume:{thread_id}"
+    completion_future: asyncio.Future[dict[str, Any]] = asyncio.get_running_loop().create_future()
+    meta["_octop_turn_completion"] = completion_future
     content = _content_from_steer(bundle.text, bundle.content_blocks)
     attachments = inbound_attachments_from_parts(content)
     if attachments:
@@ -546,8 +637,8 @@ async def resume_parked_steers(
         len(bundle.client_pending_ids),
     )
     try:
-        channel_manager.enqueue(
-            WS_CHANNEL_ID,
+        # Internal continuations must not be silently dropped on a full queue.
+        await queues[WS_CHANNEL_ID].put(
             InboundMessage(
                 channel_id=WS_CHANNEL_ID,
                 channel_type=channel_type or "dashboard",
@@ -561,7 +652,7 @@ async def resume_parked_steers(
     except Exception:
         steer.release_staged_hitl(thread_id)
         logger.exception("steer resume continuation enqueue failed thread=%s", thread_id)
-        return
+        return None
     steer.commit_staged_hitl(thread_id)
     try:
         await hub.push_to_thread(thread_id, _steer_user_frame(thread_id, bundle))
@@ -579,6 +670,7 @@ async def resume_parked_steers(
         )
     except Exception:
         logger.exception("steer resume drain frames failed thread=%s", thread_id)
+    return completion_future
 
 
 __all__ = ["WS_CHANNEL_ID", "WebSocketChannel", "resume_parked_steers"]

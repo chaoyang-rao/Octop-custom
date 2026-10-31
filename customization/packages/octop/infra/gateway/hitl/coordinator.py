@@ -223,6 +223,12 @@ class HitlChannelCoordinator:
     ) -> None:
         self._store = store or HitlPendingStore()
         self.session_policies = session_policies or HitlSessionPolicyStore()
+        self._task_binding_resolver: Callable[[str, int, str], tuple[str, int] | None] | None = None
+
+    def set_task_binding_resolver(
+        self, resolver: Callable[[str, int, str], tuple[str, int] | None]
+    ) -> None:
+        self._task_binding_resolver = resolver
 
     @property
     def store(self) -> HitlPendingStore:
@@ -235,7 +241,7 @@ class HitlChannelCoordinator:
         ctx: HitlStreamContext,
         resume_agent_id: str | None = None,
     ) -> HitlPendingRecord:
-        return self._store.register(
+        record = self._store.register(
             thread_id=ctx.thread_id,
             agent_id=ctx.agent_id,
             user_id=ctx.user_id,
@@ -245,6 +251,11 @@ class HitlChannelCoordinator:
             review_configs=parse_review_configs(raw_request),
             resume_agent_id=resume_agent_id,
         )
+        if record.task_id is None and self._task_binding_resolver is not None:
+            binding = self._task_binding_resolver(ctx.agent_id, ctx.user_id, ctx.thread_id)
+            if binding is not None:
+                record.task_id, record.task_attempt = binding
+        return record
 
     @staticmethod
     def build_decisions(

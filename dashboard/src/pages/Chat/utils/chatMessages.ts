@@ -15,6 +15,11 @@ export function normalizeComposerContext(
   const raw = value as Record<string, unknown>;
   const ctx: UserComposerContext = {};
   let has = false;
+  const displayName = raw.model_display_name ?? raw.modelDisplayName;
+  if (typeof displayName === "string" && displayName.trim()) {
+    ctx.modelDisplayName = displayName.trim().slice(0, 400);
+    has = true;
+  }
 
   if (Array.isArray(raw.skills) && raw.skills.length > 0) {
     ctx.skills = raw.skills.map((s) => String(s));
@@ -47,6 +52,31 @@ export function normalizeComposerContext(
   if (typeof raw.reasoningEffort === "string" && raw.reasoningEffort.trim()) {
     ctx.reasoningEffort = raw.reasoningEffort.trim();
     has = true;
+  }
+  if (raw.quote && typeof raw.quote === "object" && !Array.isArray(raw.quote)) {
+    const quote = raw.quote as Record<string, unknown>;
+    if (
+      typeof quote.source_thread_id === "string" &&
+      typeof quote.source_agent_id === "string" &&
+      typeof quote.message_key === "string" &&
+      typeof quote.content === "string" &&
+      (quote.role === "user" || quote.role === "assistant")
+    ) {
+      ctx.quote = {
+        source_thread_id: quote.source_thread_id,
+        source_agent_id: quote.source_agent_id,
+        message_key: quote.message_key,
+        role: quote.role,
+        content: quote.content.slice(0, 8000),
+        speaker_agent_id:
+          typeof quote.speaker_agent_id === "string"
+            ? quote.speaker_agent_id
+            : null,
+        speaker_name:
+          typeof quote.speaker_name === "string" ? quote.speaker_name : null,
+      };
+      has = true;
+    }
   }
 
   return has ? ctx : undefined;

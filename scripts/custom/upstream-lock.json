@@ -1,6 +1,6 @@
 {
   "upstream_version": "1.0.2",
-  "custom_version": "1.0.2.post20261029",
+  "custom_version": "1.0.2.post20261031",
   "upstream_commit": "dd9dce470844c25d59effb50615bb3c667ea25cd",
   "upstream_repository": "https://github.com/TencentCloud/Octop",
   "license": "MIT",

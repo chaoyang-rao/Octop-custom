@@ -53,6 +53,8 @@ class HitlPendingRecord:
     # Resume still targets the member agent and ``room~member`` thread.
     resume_agent_id: str | None = None
     resume_thread_id: str | None = None
+    task_id: str | None = None
+    task_attempt: int | None = None
 
 
 @dataclass

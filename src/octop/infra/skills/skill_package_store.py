@@ -159,6 +159,17 @@ class SkillPackageStore:
         slug: str,
         files: list[tuple[str, bytes]],
     ) -> None:
+        from octop.infra.skills.revisions import library_lock
+
+        with library_lock(self.root, pack_id, slug):
+            self._write_skill(pack_id, slug, files)
+
+    def _write_skill(
+        self,
+        pack_id: str,
+        slug: str,
+        files: list[tuple[str, bytes]],
+    ) -> None:
         try:
             safe_slug = validate_skill_slug(slug)
             normalized_files = normalize_skill_files(files)
@@ -166,6 +177,12 @@ class SkillPackageStore:
             raise OctopError(ErrorCode.SLASH_BAD_ARGS, str(exc)) from exc
         skill_dir = self.package_skills_dir(pack_id) / safe_slug
 
+        from octop.infra.skills.revisions import archive_package_write
+        from octop.infra.skills.skill_packages import read_skill_directory
+
+        if (skill_dir / "SKILL.md").is_file():
+            archive_package_write(self.root, pack_id, safe_slug, read_skill_directory(skill_dir))
+        archive_package_write(self.root, pack_id, safe_slug, list(normalized_files))
         shutil.rmtree(skill_dir, ignore_errors=True)
         skill_dir.mkdir(parents=True, exist_ok=True)
         for relative_path, content in normalized_files:
@@ -184,6 +201,11 @@ class SkillPackageStore:
         except SkillPackageError as exc:
             raise OctopError(ErrorCode.SLASH_BAD_ARGS, str(exc)) from exc
         skill_dir = self.package_skills_dir(pack_id) / safe_slug
+        from octop.infra.skills.revisions import archive_package_write
+        from octop.infra.skills.skill_packages import read_skill_directory
+
+        if (skill_dir / "SKILL.md").is_file():
+            archive_package_write(self.root, pack_id, safe_slug, read_skill_directory(skill_dir))
         shutil.rmtree(skill_dir, ignore_errors=True)
         self._update_skill_count(pack_id)
 

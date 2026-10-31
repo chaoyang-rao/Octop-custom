@@ -47,6 +47,9 @@ class ThreadRow:
     conversation_mode: str | None = None
     pending_plan_path: str | None = None
     hitl_policy: str | None = None
+    project_path: str | None = None
+    project_name: str | None = None
+    archived: bool = False
 
     @classmethod
     def from_row(cls, r: DbRow) -> ThreadRow:
@@ -66,6 +69,16 @@ class ThreadRow:
             hitl_policy = r["hitl_policy"]
         except (KeyError, IndexError):
             hitl_policy = None
+        project = {}
+        for key in ("project_path", "project_name"):
+            try:
+                project[key] = r[key]
+            except (KeyError, IndexError):
+                project[key] = None
+        try:
+            archived = bool(r["archived"])
+        except (KeyError, IndexError):
+            archived = False
         return cls(
             id=r["id"],
             thread_id=r["thread_id"],
@@ -84,6 +97,9 @@ class ThreadRow:
             conversation_mode=str(conversation_mode) if conversation_mode else None,
             pending_plan_path=str(pending_plan_path) if pending_plan_path else None,
             hitl_policy=str(hitl_policy) if hitl_policy else None,
+            project_path=str(project["project_path"]) if project["project_path"] else None,
+            project_name=str(project["project_name"]) if project["project_name"] else None,
+            archived=archived,
         )
 
 
@@ -214,7 +230,7 @@ class ThreadRepo:
         # instead of sinking below every previously active chat.
         with self._db.connect() as conn:
             rows = conn.execute(
-                "SELECT * FROM threads WHERE agent_id = ? "
+                "SELECT * FROM threads WHERE agent_id = ? AND archived=0 "
                 "ORDER BY pinned DESC, "
                 "CASE WHEN last_active > 0 THEN last_active ELSE created_at END DESC, "
                 "thread_id DESC LIMIT ?",
@@ -227,7 +243,7 @@ class ThreadRepo:
     ) -> list[ThreadRow]:
         with self._db.connect() as conn:
             rows = conn.execute(
-                "SELECT * FROM threads WHERE agent_id = ? AND user_id = ? "
+                "SELECT * FROM threads WHERE agent_id = ? AND user_id = ? AND archived=0 "
                 "ORDER BY pinned DESC, "
                 "CASE WHEN last_active > 0 THEN last_active ELSE created_at END DESC, "
                 "thread_id DESC LIMIT ?",
@@ -238,7 +254,7 @@ class ThreadRepo:
     def list_by_session(self, *, session_key: str, limit: int = 50) -> list[ThreadRow]:
         with self._db.connect() as conn:
             rows = conn.execute(
-                "SELECT * FROM threads WHERE session_key = ? "
+                "SELECT * FROM threads WHERE session_key = ? AND archived=0 "
                 "ORDER BY "
                 "CASE WHEN last_active > 0 THEN last_active ELSE created_at END DESC, "
                 "thread_id DESC LIMIT ?",
@@ -367,3 +383,29 @@ class ThreadRepo:
         params.extend([limit, offset])
         with self._db.connect() as conn:
             return map_rows(conn.execute(sql, tuple(params)).fetchall(), ThreadRow)
+
+    def set_archived(self, thread_id: str, *, user_id: int, archived: bool) -> bool:
+        with self._db.connect() as conn:
+            result = conn.execute(
+                "UPDATE threads SET archived=? WHERE thread_id=? AND user_id=?",
+                (int(archived), thread_id, user_id),
+            )
+        return bool(result.rowcount)
+
+    def inherit_project(self, source_id: str, target_id: str, *, user_id: int) -> None:
+        with self._db.transaction() as conn:
+            source = conn.execute(
+                "SELECT project_path,project_name,agent_id FROM threads WHERE thread_id=? AND user_id=?",
+                (source_id, user_id),
+            ).fetchone()
+            if source:
+                conn.execute(
+                    "UPDATE threads SET project_path=?,project_name=? WHERE thread_id=? AND user_id=? AND agent_id=?",
+                    (
+                        source["project_path"],
+                        source["project_name"],
+                        target_id,
+                        user_id,
+                        source["agent_id"],
+                    ),
+                )

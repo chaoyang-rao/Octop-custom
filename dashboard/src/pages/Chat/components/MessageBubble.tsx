@@ -81,6 +81,10 @@ import { useChatToolDock } from "../ChatToolDockContext";
 import { useToolUiDockButtonStyle } from "../hooks/useToolUiDockButtonStyle";
 import type { ParsedToolOutput } from "../../../plugins/toolRenderers/types";
 import type { ToolRendererRegistration } from "../../../plugins/toolRenderers/types";
+import {
+  ScopedMessageActions,
+  QuotedReplyExcerpt,
+} from "../../../components/ChatConversationActions";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -830,6 +834,9 @@ function MessageBubble({
         />
       ) : null}
       <div className={styles.bubbleContent}>
+        {isUser && message.composerContext?.quote && (
+          <QuotedReplyExcerpt quote={message.composerContext.quote} />
+        )}
         {isUser ? (
           <div className={styles.userMsgRow}>
             <div className={styles.userMsgColumn}>
@@ -1058,6 +1065,13 @@ function MessageBubble({
                   onEditUserMessage ||
                   message.steerPending) && (
                   <div className={styles.userMsgActions} role="group">
+                    {message.content && !message.steerPending && (
+                      <ScopedMessageActions
+                        messageId={message.id}
+                        role="user"
+                        content={message.content}
+                      />
+                    )}
                     {message.content ? (
                       <CopyButton text={message.content} />
                     ) : null}
@@ -1095,6 +1109,13 @@ function MessageBubble({
                   }`}
                 >
                   {formatMessageTime(message.timestamp, serverTimezone)}
+                  {!isUser && !isStreaming && message.content && (
+                    <ScopedMessageActions
+                      messageId={message.id}
+                      role="assistant"
+                      content={message.content}
+                    />
+                  )}
                   {!isUser && !isStreaming && speechText && (
                     <>
                       <CopyButton text={textContent} />

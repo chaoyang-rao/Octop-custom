@@ -18,6 +18,7 @@ from octop.api.common.public_base import resolve_public_base
 from octop.api.deps import current_user, get_server, require_permission
 from octop.i18n import tr
 from octop.infra.auth.sso.redirect_after import sanitize_redirect_after
+from octop.infra.connectors.accounts.oauth_clients import load_registered_oauth_client
 from octop.infra.connectors.builder import (
     mcp_server_name,
     normalize_weiyun_mcp_token,
@@ -26,6 +27,7 @@ from octop.infra.connectors.builder import (
 from octop.infra.connectors.catalog import (
     catalog_entry_to_dict,
     get_catalog_entry,
+    get_mcp_oauth_remote,
     list_catalog,
 )
 from octop.infra.connectors.custom_mcp import (
@@ -250,12 +252,21 @@ async def _begin_oauth_flow(
         mcp_url = _resolve_custom_mcp_url(_connector_service(server), user.id, server_name)
 
     try:
+        registered_client = None
+        if target_type == "catalog" and get_mcp_oauth_remote(str(target.get("kind") or "")):
+            registered_client = load_registered_oauth_client(
+                settings_repo=server.services.settings_repo,
+                secret_repo=server.services.secret_repo,
+                user_id=user.id,
+                kind=str(target["kind"]),
+            )
         authorize_url, verifier, ctx = await start_oauth_for_target(
             target=target,
             redirect_uri=redirect_uri,
             state=state,
             settings_repo=server.services.settings_repo,
             mcp_url=mcp_url,
+            registered_client=registered_client,
         )
     except ValueError as exc:
         raise OctopError(ErrorCode.CONNECTOR_INVALID_CREDENTIALS, str(exc)) from exc
@@ -271,7 +282,12 @@ async def _begin_oauth_flow(
         code_verifier=verifier,
         redirect_after=redirect_after,
     )
-    save_oauth_ctx(server.services.settings_repo, state_id, ctx)
+    save_oauth_ctx(
+        server.services.settings_repo,
+        state_id,
+        ctx,
+        secret_repo=server.services.secret_repo,
+    )
     return {"authorize_url": authorize_url, "state_id": state_id}
 
 
@@ -1482,8 +1498,13 @@ async def oauth_callback(
             code_verifier=row.code_verifier,
             settings_repo=server.services.settings_repo,
             state_id=row.state_id,
+            secret_repo=server.services.secret_repo,
         )
-        ctx = load_oauth_ctx(server.services.settings_repo, row.state_id)
+        ctx = load_oauth_ctx(
+            server.services.settings_repo,
+            row.state_id,
+            secret_repo=server.services.secret_repo,
+        )
         if ctx.get("client_id"):
             tokens["oauth_client_id"] = ctx["client_id"]
         if ctx.get("client_secret"):

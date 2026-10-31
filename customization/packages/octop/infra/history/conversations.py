@@ -40,6 +40,9 @@ def visible_message(row: Any) -> dict[str, Any]:
             if isinstance(block, dict) and block.get("type") == "text"
         )
     role = {"human": "user", "ai": "assistant"}.get(row.role, row.role)
+    kwargs = data.get("additional_kwargs") or {}
+    if role == "user" and isinstance(kwargs.get("octop_display_text"), str):
+        content = kwargs["octop_display_text"]
     return {
         "seq": row.seq,
         "message_id": row.message_id,
@@ -48,6 +51,8 @@ def visible_message(row: Any) -> dict[str, Any]:
         "speaker_agent_id": (data.get("additional_kwargs") or {}).get("speaker_agent_id"),
         "created_at": row.created_at,
         "attachments": attachments,
+        "has_tool_calls": bool(data.get("tool_calls")),
+        "quote": (kwargs.get("octop_composer_context") or {}).get("quote"),
     }
 
 

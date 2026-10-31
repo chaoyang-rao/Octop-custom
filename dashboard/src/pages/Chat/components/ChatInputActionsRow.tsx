@@ -1,3 +1,5 @@
+import { NativeModelPicker } from "../../NativeCli/NativeModelPicker";
+import type { NativeCliPresentation } from "../utils/nativeCliPresentation";
 import "./ComposerToolGlyphs.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -153,6 +155,9 @@ interface ChatInputActionsRowProps {
   availableModels?: ResolvedModel[];
   selectedModel?: string | null;
   defaultModel?: string | null;
+  nativeCli?: NativeCliPresentation;
+  nativeModelId?: string | null;
+  onNativeModelChange?: (value: string | null) => void;
   onModelChange?: (model: string | null) => void;
   reasoningMode?: "auto" | "enabled" | "disabled";
   reasoningEffort?: string | null;
@@ -220,6 +225,9 @@ export default function ChatInputActionsRow({
   availableModels,
   selectedModel,
   defaultModel,
+  nativeCli,
+  nativeModelId,
+  onNativeModelChange,
   onModelChange,
   reasoningMode = "auto",
   reasoningEffort = null,
@@ -343,7 +351,10 @@ export default function ChatInputActionsRow({
   }, [isMobile]);
 
   const showModelPicker = Boolean(
-    availableModels && availableModels.length > 0 && onModelChange,
+    !nativeCli &&
+      availableModels &&
+      availableModels.length > 0 &&
+      onModelChange,
   );
   useEffect(() => {
     if (disabled || !showModelPicker) setModelShortcutOpen(false);
@@ -1141,52 +1152,62 @@ export default function ChatInputActionsRow({
       }`}
     >
       <div className={styles.secondaryActions}>{renderSecondaryActions()}</div>
-      {showModelPicker && (
-        <Popover
-          trigger="click"
-          placement="topLeft"
-          arrow={false}
-          destroyOnHidden
-          open={modelShortcutOpen}
-          overlayClassName={`${styles.modelPopover} octop-model-shortcut-popover`}
-          content={
-            <div role="dialog" aria-label={t("chat.selectModel", "Model")}>
-              {modelMenu}
-            </div>
-          }
-          onOpenChange={(open) => {
-            if (disabled) return;
-            setModelShortcutOpen(open);
-            if (open) {
-              setOverflowPopoverOpen(false);
-              closeCompactPicker();
+      {nativeCli ? (
+        <NativeModelPicker
+          agentId={agentId || nativeCli.agentId}
+          threadId={threadId}
+          value={nativeModelId}
+          onChange={(value) => onNativeModelChange?.(value)}
+          disabled={disabled || !nativeCli.canSelectModel}
+        />
+      ) : (
+        showModelPicker && (
+          <Popover
+            trigger="click"
+            placement="topLeft"
+            arrow={false}
+            destroyOnHidden
+            open={modelShortcutOpen}
+            overlayClassName={`${styles.modelPopover} octop-model-shortcut-popover`}
+            content={
+              <div role="dialog" aria-label={t("chat.selectModel", "Model")}>
+                {modelMenu}
+              </div>
             }
-          }}
-        >
-          <Tooltip title={modelShortcutTitle} mouseEnterDelay={0.4}>
-            <button
-              type="button"
-              className="octop-model-shortcut"
-              data-testid="composer-model-shortcut"
-              data-compact={useCompactControls}
-              disabled={disabled}
-              aria-haspopup="dialog"
-              aria-expanded={modelShortcutOpen}
-              aria-label={`${t(
-                "chat.selectModel",
-                "Model",
-              )}: ${modelShortcutTitle}`}
-            >
-              <Cpu size={16} aria-hidden />
-              <span>{modelShortcutLabel}</span>
-              <ChevronRight
-                size={12}
-                className="octop-model-shortcut-chevron"
-                aria-hidden
-              />
-            </button>
-          </Tooltip>
-        </Popover>
+            onOpenChange={(open) => {
+              if (disabled) return;
+              setModelShortcutOpen(open);
+              if (open) {
+                setOverflowPopoverOpen(false);
+                closeCompactPicker();
+              }
+            }}
+          >
+            <Tooltip title={modelShortcutTitle} mouseEnterDelay={0.4}>
+              <button
+                type="button"
+                className="octop-model-shortcut"
+                data-testid="composer-model-shortcut"
+                data-compact={useCompactControls}
+                disabled={disabled}
+                aria-haspopup="dialog"
+                aria-expanded={modelShortcutOpen}
+                aria-label={`${t(
+                  "chat.selectModel",
+                  "Model",
+                )}: ${modelShortcutTitle}`}
+              >
+                <Cpu size={16} aria-hidden />
+                <span>{modelShortcutLabel}</span>
+                <ChevronRight
+                  size={12}
+                  className="octop-model-shortcut-chevron"
+                  aria-hidden
+                />
+              </button>
+            </Tooltip>
+          </Popover>
+        )
       )}
       {conversationMode !== "craft" ? (
         <p className={styles.modeHint} data-testid="conversation-mode-hint">

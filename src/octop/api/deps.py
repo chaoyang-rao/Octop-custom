@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, cast
@@ -41,6 +42,9 @@ _JWT_EXEMPT_PREFIXES = (
 _JWT_EXEMPT_EXACT = (
     "/api/health",
     "/api/auth/login",
+    "/api/mobile-access/identity",
+    "/api/mobile-access/pairings/request",
+    "/api/mobile-access/pairings/exchange",
     "/api/auth/captcha",
     "/api/auth/oidc/status",
     "/api/auth/oidc/start",
@@ -63,7 +67,15 @@ def is_jwt_exempt_path(path: str) -> bool:
 
 
 def is_jwt_exempt_request(request: Request) -> bool:
-    return is_jwt_exempt_path(request.url.path)
+    path = request.url.path
+    # These routes validate their own narrowly scoped capability credentials.
+    if request.method == "POST" and re.fullmatch(r"/api/task-hooks/[0-9A-HJKMNP-TV-Z]{26}", path):
+        return True
+    if request.method in {"GET", "HEAD"} and re.fullmatch(
+        r"/api/task-calendar/[A-Za-z0-9_-]{43}\.ics", path
+    ):
+        return True
+    return is_jwt_exempt_path(path)
 
 
 def get_server(request: Request) -> OctopServer:
@@ -109,6 +121,10 @@ def _decode(server: OctopServer, token: str) -> dict[str, Any]:
 
 
 def resolve_user_from_token(server: OctopServer, token: str) -> User:
+    from octop.infra.mobile_access.access import is_mobile_token, resolve_mobile_user
+
+    if is_mobile_token(token):
+        return resolve_mobile_user(server, token)
     payload = _decode(server, token)
     assert server.user_manager is not None
     user = server.user_manager.get_by_id(int(payload["sub"]))
@@ -123,6 +139,10 @@ def maybe_sliding_renew_token(server: OctopServer, token: str, user: User) -> st
     Threshold is one-third of ``access_token_ttl_seconds`` remaining. Active clients
     that pick up ``ACCESS_TOKEN_RESPONSE_HEADER`` stay signed in without re-login.
     """
+    from octop.infra.mobile_access.access import is_mobile_token
+
+    if is_mobile_token(token):
+        return None
     assert server.services is not None
     payload = _decode(server, token)
     ttl = int(server.services.config.access_token_ttl_seconds)

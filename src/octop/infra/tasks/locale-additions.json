@@ -1,0 +1,88 @@
+{
+  "zh": {
+    "tasks": {
+      "errors": {
+        "agent_not_owned": "只能为自己拥有的专家创建或分配任务。",
+        "thread_not_owned": "所选会话不存在，或不属于当前账号和专家。",
+        "not_found": "任务或工作流不存在。",
+        "model_unavailable": "所选模型当前不可用。",
+        "invalid_transition": "任务状态已经变化，或当前不支持此操作，请刷新后重试。",
+        "webhook_auth": "工作流触发令牌无效或已撤销。",
+        "webhook_rate": "工作流触发过于频繁，请稍后重试。",
+        "workflow_disabled": "该工作流已停用。",
+        "payload_large": "触发数据不能超过 32 KiB。",
+        "bad_payload": "触发数据必须为有效 JSON 对象。",
+        "bad_idempotency_key": "幂等标识格式无效。",
+        "invalid_name": "工作流名称不能为空。",
+        "permission_removed": "任务账号已停用或不再具有自动化权限。",
+        "selection_unavailable": "任务选中的技能或连接器当前不可用。",
+        "invalid_schedule": "定时规则无效，请使用 cron、interval 或 date 时间规则。",
+        "calendar_auth": "日历订阅链接无效或已撤销。",
+        "agent_disabled": "专家尚未启用，请先启动专家。",
+        "retry_unsupported": "此会话的运行状态暂不能安全重置，请保留历史并在新会话中重试。",
+        "recovery_requires_retry": "此会话含中断的任务。请在任务页明确重试，或新建会话。",
+        "attachment_invalid": "附件必须引用当前专家 inbound 中的上传文件。",
+        "attachment_missing": "上传附件不存在，请重新上传。",
+        "attachment_count": "每个任务最多10个附件。",
+        "attachment_limit": "单附件最多25 MiB，附件总计最多100 MiB。",
+        "attachment_changed": "附件内容或大小已变化，请重新上传后创建任务。",
+        "attachment_receipt": "任务附件必须是当前账号为此专家上传的文件，请重新上传后再发送。"
+      },
+      "notifications": {
+        "completed": "任务“{title}”已完成。",
+        "failed": "任务“{title}”执行失败，请打开会话查看。",
+        "waiting": "任务“{title}”等待你的审批。"
+      },
+      "validation": {
+        "blank": "内容不能为空。",
+        "step_key": "步骤标识须以字母开头，仅包含字母、数字、下划线或连字符。",
+        "duplicate_key": "步骤标识不能重复。",
+        "dependencies": "依赖包含循环或不存在的步骤。"
+      },
+      "retry_abandoned": "上一任务尝试已放弃。此工具调用未获本次授权，不得继续或复用旧审批。"
+    }
+  },
+  "en": {
+    "tasks": {
+      "errors": {
+        "agent_not_owned": "Tasks can only use experts owned by your account.",
+        "thread_not_owned": "The conversation does not belong to this account and expert.",
+        "not_found": "Task or workflow not found.",
+        "model_unavailable": "The selected model is not available.",
+        "invalid_transition": "The task changed or this action is not valid. Refresh and retry.",
+        "webhook_auth": "The workflow trigger token is invalid or revoked.",
+        "webhook_rate": "Too many workflow triggers. Try again later.",
+        "workflow_disabled": "This workflow is disabled.",
+        "payload_large": "Trigger data must not exceed 32 KiB.",
+        "bad_payload": "Trigger data must be a valid JSON object.",
+        "bad_idempotency_key": "Invalid idempotency key.",
+        "invalid_name": "The workflow name must not be blank.",
+        "permission_removed": "The task account is disabled or no longer has automation access.",
+        "selection_unavailable": "A selected skill or connector is no longer available.",
+        "invalid_schedule": "Invalid schedule. Use a cron, interval or date time trigger.",
+        "calendar_auth": "This calendar subscription is invalid or revoked.",
+        "agent_disabled": "This expert is disabled. Start it before queuing tasks.",
+        "retry_unsupported": "This conversation cannot be safely reset. Keep its history and retry in a new conversation.",
+        "recovery_requires_retry": "This conversation has an interrupted task. Retry it from Tasks or create a new conversation.",
+        "attachment_invalid": "Attachments must reference uploaded files in this expert workspace inbound directory.",
+        "attachment_missing": "The uploaded attachment is missing. Upload it again.",
+        "attachment_count": "Each task supports up to 10 attachments.",
+        "attachment_limit": "Attachments are limited to 25 MiB each and 100 MiB total.",
+        "attachment_changed": "Attachment contents or size changed. Upload it again before creating a task.",
+        "attachment_receipt": "Task attachments require an upload receipt for this account and expert. Upload the file again before sending."
+      },
+      "notifications": {
+        "completed": "Task \"{title}\" completed.",
+        "failed": "Task \"{title}\" failed. Open its conversation for details.",
+        "waiting": "Task \"{title}\" needs your approval."
+      },
+      "validation": {
+        "blank": "Value must not be blank.",
+        "step_key": "Step keys must start with a letter and contain only letters, digits, underscores or hyphens.",
+        "duplicate_key": "Step keys must be unique.",
+        "dependencies": "Dependencies contain a cycle or an unknown step."
+      },
+      "retry_abandoned": "The prior task attempt was abandoned. This tool call must not execute or reuse an old approval."
+    }
+  }
+}

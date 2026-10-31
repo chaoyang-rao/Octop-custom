@@ -1,0 +1,7 @@
+{
+  "mobile_access": {
+    "push_activity": "有新回复或任务状态更新",
+    "push_needs_input": "需要你的输入或批准",
+    "push_failed": "任务未完成，需要你处理"
+  }
+}

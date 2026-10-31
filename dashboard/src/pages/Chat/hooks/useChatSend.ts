@@ -19,6 +19,10 @@ import {
   resolveTurnModelRef,
 } from "../utils/chatMessages";
 import { parseSkillSlugsInText } from "../utils/skillSlash";
+import type {
+  QuoteDraft,
+  QuoteReference,
+} from "../../../api/modules/conversations";
 
 interface UseChatSendParams {
   resolvedAgentId: string | null | undefined;
@@ -34,6 +38,8 @@ interface UseChatSendParams {
   conversationMode?: "ask" | "plan" | "craft";
   hitlPolicy?: HitlSessionPolicy;
   defaultModel?: string | null;
+  nativeModelId?: string | null;
+  quoteDraft?: QuoteDraft | null;
   sendMessage: (
     text: string,
     sessionKey: string,
@@ -49,6 +55,8 @@ interface UseChatSendParams {
     reasoningEffort?: string | null,
     conversationMode?: "ask" | "plan" | "craft" | null,
     hitlPolicy?: HitlSessionPolicy | null,
+    nativeModelId?: string | null,
+    quote?: QuoteReference,
   ) => void;
   createSession: () => { session: Session; resolvedId: Promise<string> };
   renameSession: (id: string, name: string) => void;
@@ -63,12 +71,14 @@ function deriveThreadTitle(msg: string): string {
 
 /** Optional composer snapshot used when flushing a queued message. */
 export type ChatSendOverrides = {
+  quote?: QuoteDraft | null;
   selectedModel?: string | null;
   selectedConnectors?: string[];
   selectedKnowledgeBaseIds?: string[];
   selectedTargetAgents?: string[];
   composerContext?: UserComposerContext;
   modelRef?: string | null;
+  nativeModelId?: string | null;
   /** Send to this thread instead of the active one (queued flush). */
   threadId?: string | null;
   /** Send as this agent instead of the active one (queued flush). */
@@ -91,6 +101,8 @@ export function useChatSend({
   conversationMode = "craft",
   hitlPolicy,
   defaultModel,
+  nativeModelId,
+  quoteDraft,
   sendMessage,
   createSession,
   renameSession,
@@ -138,7 +150,9 @@ export function useChatSend({
           ? overrides.selectedModel
           : selectedModel;
 
-      const composerContext =
+      const quote =
+        overrides?.quote !== undefined ? overrides.quote : quoteDraft;
+      const baseComposerContext =
         overrides?.composerContext ??
         buildComposerContext({
           skills: restricted ? [] : parseSkillSlugsInText(trimmed),
@@ -151,15 +165,22 @@ export function useChatSend({
           reasoningEffort:
             overrides?.composerContext?.reasoningEffort ?? reasoningEffort,
         });
+      const composerContext = quote
+        ? { ...baseComposerContext, quote: quote.resolved }
+        : baseComposerContext;
 
       const modelOverride =
         overrides?.modelRef !== undefined
           ? overrides.modelRef
           : resolveTurnModelRef(modelSelection, defaultModel);
 
+      const nativeSelection =
+        overrides?.nativeModelId !== undefined
+          ? overrides.nativeModelId
+          : nativeModelId;
       const runSend = (tid: string, hadMessages: boolean) => {
         maybeRenameNewThread(tid, hadMessages);
-        sendMessage(
+        const args: Parameters<UseChatSendParams["sendMessage"]> = [
           trimmed,
           "",
           agent,
@@ -174,7 +195,10 @@ export function useChatSend({
           composerContext?.reasoningEffort ?? reasoningEffort,
           mode,
           policy,
-        );
+        ];
+        if (quote) args.push(nativeSelection, quote.reference);
+        else if (nativeSelection !== undefined) args.push(nativeSelection);
+        sendMessage(...args);
       };
 
       const targetThreadId =
@@ -220,7 +244,7 @@ export function useChatSend({
         // created thread has no title yet — rename it straight away.
         if (!hadMessages) renameSession(tid, deriveThreadTitle(trimmed));
         if (policy) syncSessionHitlPolicy(tid, policy);
-        chatStore.sendTurn(
+        const pendingArgs: Parameters<typeof chatStore.sendTurn> = [
           tid,
           trimmed,
           agent,
@@ -236,7 +260,11 @@ export function useChatSend({
           composerContext?.reasoningEffort ?? reasoningEffort,
           mode,
           policy,
-        );
+        ];
+        if (quote) pendingArgs.push(nativeSelection, quote.reference);
+        else if (nativeSelection !== undefined)
+          pendingArgs.push(nativeSelection);
+        chatStore.sendTurn(...pendingArgs);
         navigate(`/chat/${agent}/${tid}`, { replace: true });
       });
       return true;
@@ -259,6 +287,8 @@ export function useChatSend({
       conversationMode,
       hitlPolicy,
       defaultModel,
+      nativeModelId,
+      quoteDraft,
       t,
     ],
   );

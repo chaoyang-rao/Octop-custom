@@ -1,0 +1,7 @@
+# Replace the DNS name with your actual domain. Caddy runs beside Octop on this Mac/server.
+octop.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8088 {
+        header_up X-Forwarded-Proto https
+    }
+}

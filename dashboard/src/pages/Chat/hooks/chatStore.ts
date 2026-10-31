@@ -11,6 +11,7 @@ import { getApiUrl } from "../../../api/config";
 import { getAuthToken } from "../../../api/request";
 import type { TokenUsage } from "../../../api/types";
 import { buildDashboardChatWsUrl } from "../../../api/modules/wsChat";
+import type { QuoteReference } from "../../../api/modules/conversations";
 import { rewritePeerSpeakerId } from "../../../utils/remoteExpert";
 import { generateId } from "../../../utils/messageParser";
 import {
@@ -1325,7 +1326,7 @@ function handleHarnessChunk(
             : "";
         state.pendingPlanPath = pending || null;
       }
-      if (Boolean(chunk.team_wrapup)) {
+      if (chunk.team_wrapup) {
         finalizeWrapupMessages(state, speaker);
         clearSpeakerLive(state, speaker);
         // Wrap-up means members already finished — drop stale live bits
@@ -2808,6 +2809,8 @@ async function sendTurnWebSocket(
   reasoningEffort?: string | null,
   conversationMode?: "ask" | "plan" | "craft" | null,
   hitlPolicy?: { mode: string; tools?: string[] } | null,
+  nativeModelId?: string | null,
+  quote?: QuoteReference,
 ): Promise<boolean> {
   const state = getOrCreate(sessionId);
   const resolvedThreadId = (threadId || sessionId).trim();
@@ -2872,6 +2875,8 @@ async function sendTurnWebSocket(
       };
       if (threadId) payload.thread_id = threadId;
       if (modelRef) payload.model = modelRef;
+      if (nativeModelId !== undefined) payload.native_model_id = nativeModelId;
+      if (quote) payload.quote = quote;
       // Always send the array (including []) so the server can honor Dashboard
       // opt-out of default_open connectors for this turn.
       if (mcpServers !== undefined && mcpServers !== null) {
@@ -3064,6 +3069,8 @@ export async function sendTurn(
   reasoningEffort?: string | null,
   conversationMode?: "ask" | "plan" | "craft" | null,
   hitlPolicy?: { mode: string; tools?: string[] } | null,
+  nativeModelId?: string | null,
+  quote?: QuoteReference,
 ): Promise<void> {
   const state = getOrCreate(sessionId);
   rememberRoomAgent(state, agentId);
@@ -3152,6 +3159,8 @@ export async function sendTurn(
     reasoningEffort,
     conversationMode,
     hitlPolicy,
+    nativeModelId,
+    quote,
   );
   if (!wsOk) {
     state.messages = [
@@ -3444,6 +3453,7 @@ function appendOptimisticSteerMessage(
   clientPendingId: string,
   text: string,
   attachments?: ChatAttachment[],
+  composerContext?: import("./sseHelpers").UserComposerContext,
 ): void {
   const id = optimisticSteerMessageId(clientPendingId);
   if (state.messages.some((m) => m.id === id)) return;
@@ -3453,6 +3463,7 @@ function appendOptimisticSteerMessage(
       id,
       role: "user",
       content: text,
+      composerContext,
       attachments:
         attachments && attachments.length > 0 ? attachments : undefined,
       steerPending: true,
@@ -3766,6 +3777,8 @@ export function sendSteerWhileBusy(
     expectedTurnId?: string;
     clientPendingId?: string;
     attachments?: ChatAttachment[];
+    quote?: QuoteReference;
+    composerContext?: import("./sseHelpers").UserComposerContext;
   },
 ): "ok" | "empty" | "no_socket" {
   const trimmed = text.trim();
@@ -3789,6 +3802,7 @@ export function sendSteerWhileBusy(
         ...(turnId ? { expected_turn_id: turnId } : {}),
         client_pending_id: cpid,
         messages: [{ role: "user", content: messageContent }],
+        ...(opts.quote ? { quote: opts.quote } : {}),
       }),
     );
   } catch {
@@ -3799,7 +3813,13 @@ export function sendSteerWhileBusy(
   // rejected. The caller drops the chip on success; this entry tracks the
   // optimistic row until its server fact arrives.
   const state = getOrCreate(sessionId);
-  appendOptimisticSteerMessage(state, cpid, trimmed, attachments);
+  appendOptimisticSteerMessage(
+    state,
+    cpid,
+    trimmed,
+    attachments,
+    opts.composerContext,
+  );
   if (!state.pendingSteers.some((s) => s.clientPendingId === cpid)) {
     const previewSource = trimmed || attachments?.[0]?.filename || "";
     state.pendingSteers = [

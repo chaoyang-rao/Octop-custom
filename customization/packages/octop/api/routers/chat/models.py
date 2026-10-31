@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from octop.infra.conversations.models import QuoteReference
+
 # Decision types understood by langchain's HumanInTheLoopMiddleware.
 _DECISION_TYPES: frozenset[str] = frozenset({"approve", "edit", "reject", "respond"})
 # One decision per interrupted tool call; the model cannot fan out further.
@@ -26,6 +28,10 @@ class ChatTurnBody(BaseModel):
     messages: list[dict[str, Any]] = Field(
         default_factory=list,
         description="OpenAI-style message list for the turn.",
+    )
+    quote: QuoteReference | None = Field(
+        default=None,
+        description="Owned source message to quote as user data; the server resolves actual history and ignores client-invented content.",
     )
     thread_id: str | None = Field(
         default=None,
@@ -52,6 +58,11 @@ class ChatTurnBody(BaseModel):
         description="Model ref override, e.g. `openai/gpt-4o`. Uses the agent default when omitted.",
     )
     reasoning_mode: Literal["auto", "enabled", "disabled"] | None = None
+    native_model_id: str | None = Field(
+        default=None,
+        max_length=200,
+        description="Conversation-local advertised native CLI model ID; empty uses CLI default. Does not change runner or permissions.",
+    )
     reasoning_effort: str | None = None
     conversation_mode: Literal["ask", "plan", "craft"] | None = Field(
         default=None,
@@ -92,6 +103,7 @@ class ChatTurnBody(BaseModel):
             messages = [{"role": "user", "content": text}] if text else []
         model = payload.get("model") or payload.get("default_model")
         return cls(
+            quote=payload.get("quote"),
             messages=messages,
             thread_id=str(payload["thread_id"]) if payload.get("thread_id") else None,
             session_key=str(payload["session_key"]) if payload.get("session_key") else None,
@@ -107,6 +119,7 @@ class ChatTurnBody(BaseModel):
             default_model=str(model).strip()
             if isinstance(model, str) and str(model).strip()
             else None,
+            native_model_id=payload.get("native_model_id"),
             reasoning_mode=payload.get("reasoning_mode")
             if payload.get("reasoning_mode") in ("auto", "enabled", "disabled")
             else None,
@@ -144,11 +157,13 @@ class UserTurnWsFrame(BaseModel):
     """Inbound WebSocket frame from the dashboard."""
 
     type: Literal["user_turn", "ping"] = "user_turn"
+    quote: QuoteReference | None = None
     text: str | None = None
     session_key: str | None = None
     thread_id: str | None = None
     model: str | None = None
     default_model: str | None = None
+    native_model_id: str | None = Field(default=None, max_length=200)
     reasoning_mode: Literal["auto", "enabled", "disabled"] | None = None
     reasoning_effort: str | None = None
     conversation_mode: Literal["ask", "plan", "craft"] | None = None

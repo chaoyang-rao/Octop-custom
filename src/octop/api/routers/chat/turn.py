@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -55,6 +56,7 @@ class PreparedDashboardTurn:
     inbound_content: list[ContentPart]
     composer_context: dict[str, Any] | None
     inbound_attachments: list[dict[str, str]]
+    native_model_id: str | None = None
 
 
 async def resolve_thread_id(
@@ -233,6 +235,17 @@ async def prepare_dashboard_turn(
     """Validate MCP/skills, resolve thread, return data for gateway enqueue."""
     row = require_agent_row(agent_id, user=user, as_user=None, server=server)
     default_model = (row.default_model or "").strip() or None
+    native_resolver = getattr(server.app_runtime.agent_registry, "native_execution_ref", None)
+    native_value = (
+        await asyncio.to_thread(native_resolver, agent_id) if callable(native_resolver) else None
+    )
+    native_model = (
+        native_value
+        if isinstance(native_value, str) and native_value.startswith("native_cli_")
+        else None
+    )
+    if native_model:
+        default_model = native_model
 
     mcp_servers = await validate_chat_mcp_servers(server, user_id=user.id, names=turn.mcp_servers)
     skills = await validate_chat_skills(
@@ -263,9 +276,10 @@ async def prepare_dashboard_turn(
         thread_id=turn.thread_id,
         session_key=turn.session_key,
     )
-    model_ref = (turn.default_model or "").strip() or None
+    model_ref = native_model or (turn.default_model or "").strip() or None
     if (
         model_ref is not None
+        and native_model is None
         and not server.app_runtime.agent_registry.providers.is_model_ref_usable(model_ref)
     ):
         raise OctopError(
@@ -289,6 +303,30 @@ async def prepare_dashboard_turn(
         model_ref=model_ref,
         default_model=default_model,
     )
+    if native_model:
+        metadata_resolver = getattr(
+            server.app_runtime.agent_registry, "native_execution_metadata", None
+        )
+        native_metadata = (
+            await asyncio.to_thread(metadata_resolver, agent_id)
+            if callable(metadata_resolver)
+            else None
+        )
+        if isinstance(native_metadata, dict):
+            composer_ctx = {**(composer_ctx or {}), **native_metadata}
+        from octop.infra.agents.native_cli.model_selection import prepare_model_choice
+
+        native_model_id, selected_metadata = await prepare_model_choice(
+            server.app_runtime.agent_registry,
+            agent_id=agent_id,
+            user_id=user.id,
+            thread_id=thread_id,
+            selected=turn.native_model_id,
+            locale=getattr(user, "locale", None) or "en",
+        )
+        composer_ctx = {**(composer_ctx or {}), **selected_metadata}
+    else:
+        native_model_id = None
     inbound_content = content_parts_from_dashboard_turn(turn)
     inbound_attachments = inbound_attachments_from_parts(inbound_content)
     return PreparedDashboardTurn(
@@ -300,6 +338,7 @@ async def prepare_dashboard_turn(
         inbound_content=inbound_content,
         composer_context=composer_ctx,
         inbound_attachments=inbound_attachments,
+        native_model_id=native_model_id,
     )
 
 
@@ -328,6 +367,8 @@ def build_dashboard_inbound(
         metadata["skills"] = prepared.skills
     if prepared.model_ref:
         metadata["model"] = prepared.model_ref
+    if prepared.native_model_id is not None:
+        metadata["native_cli_model_id"] = prepared.native_model_id
     if turn.reasoning_mode is not None:
         metadata["reasoning_mode"] = turn.reasoning_mode
     if turn.reasoning_effort:

@@ -107,7 +107,7 @@ async def register_dynamic_client(
     r.raise_for_status()
     data = r.json()
     if not isinstance(data, dict) or not data.get("client_id"):
-        raise ValueError(f"dynamic client registration failed: {data!r}")
+        raise ValueError("dynamic client registration failed: invalid registration response")
     return data
 
 
@@ -137,13 +137,8 @@ def build_authorize_url(
 
 
 def _http_error_detail(resp: Any) -> str:
-    text = ""
-    try:
-        text = str(getattr(resp, "text", "") or "")[:300]
-    except Exception:
-        text = ""
-    status = getattr(resp, "status_code", "?")
-    return f"HTTP {status}" + (f": {text}" if text else "")
+    # OAuth error bodies can echo client credentials or tokens.
+    return f"HTTP {getattr(resp, 'status_code', '?')}"
 
 
 async def exchange_authorization_code(
@@ -186,7 +181,7 @@ async def exchange_authorization_code(
         raise ValueError(f"token exchange failed ({_http_error_detail(r)})") from exc
     body = r.json()
     if not isinstance(body, dict) or not body.get("access_token"):
-        raise ValueError(f"token exchange failed: {body!r}")
+        raise ValueError("token exchange failed: invalid token response")
     return _normalize_tokens(body)
 
 
@@ -226,7 +221,7 @@ async def refresh_access_token(
         raise ValueError(f"token refresh failed ({_http_error_detail(r)})") from exc
     body = r.json()
     if not isinstance(body, dict) or not body.get("access_token"):
-        raise ValueError(f"token refresh failed: {body!r}")
+        raise ValueError("token refresh failed: invalid token response")
     return _normalize_tokens(body, fallback_refresh=refresh_token)
 
 
