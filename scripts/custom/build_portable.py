@@ -2,7 +2,7 @@
 """Overlay the complete tracked custom packages onto verified official portables.
 
 Only Python's standard library is needed. Never reads an installed ~/.octop.
-The original archive's runtime, dependencies, permissions and symlinks survive.
+Original runtime entries survive, with explicit locked PyPI compatibility overlays.
 """
 
 from __future__ import annotations
@@ -21,6 +21,9 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
+
+from runtime_dependencies import RuntimeDependencyOverlay
+from runtime_dependencies import prepare as prepare_runtime_dependencies
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LOCK_PATH = Path(__file__).with_name("upstream-lock.json")
@@ -222,7 +225,7 @@ def readme(platform: str, lock: dict[str, Any]) -> bytes:
         f"基于官方 {lock['upstream_version']}，源码许可证 MIT。\n\n"
         "请完整解压到可写目录后启动，不要直接在 ZIP 内运行。\n"
         "macOS：终端运行 bash start.sh；Windows：双击 start.bat。\n"
-        "启动脚本、Python 解释器和各平台原生依赖保留官方版本。\n"
+        "启动脚本和 Python 解释器保留官方版本；平台补充依赖使用校验过的官方 PyPI wheel。\n"
         "定制代码包含在 packages/octop、octop_harness、octop_gateway。\n"
         "本包不包含用户数据库、工作区、登录态、密钥或个人配置。\n"
         "便携版默认数据在解压目录 data/；读取原数据需显式传 --home 指向原目录。\n"
@@ -230,6 +233,7 @@ def readme(platform: str, lock: dict[str, Any]) -> bytes:
         "复现构建（源码仓库，Python 3.12+，无需安装依赖）：\n"
         f"python scripts/custom/build_portable.py --platform {platform} --output dist\n"
         "官方输入文件的固定版本、大小和 SHA256：scripts/custom/upstream-lock.json\n"
+        "平台依赖版本与兼容性说明：scripts/custom/runtime-dependencies.json，详见发行清单。\n"
         "定制文件的逐文件 SHA256：custom-release-manifest.json\n"
         "恢复时使用同版本源码中的 customization/packages，与清单逐文件核验；\n"
         "请先备份本机用户数据，不要用官方在线更新替换此定制包。\n"
@@ -244,12 +248,20 @@ def build_archive(
     lock: dict[str, Any],
     git_commit: str,
     git_dirty: bool = False,
+    *,
+    dependency_overlay: RuntimeDependencyOverlay | None = None,
 ) -> dict[str, Any]:
     asset = lock["assets"][platform]
     verify_source(source_zip, asset)
     files = collect_overlay(overlay_root)
     hashes = {name: sha256_file(path) for name, path in files.items()}
+    dependencies = dependency_overlay or RuntimeDependencyOverlay()
     root = f"Octop-{platform}"
+    dependency_hashes = {
+        name: hashlib.sha256(data).hexdigest() for name, data in dependencies.files.items()
+    }
+    if set(files) & set(dependencies.files):
+        raise ValueError("Runtime dependencies collide with the custom source packages")
     manifest = {
         "schema_version": 1,
         "upstream_version": lock["upstream_version"],
@@ -260,6 +272,8 @@ def build_archive(
         "platform": platform,
         "upstream_archive_sha256": asset["sha256"],
         "package_file_sha256": hashes,
+        "runtime_dependencies": dependencies.provenance,
+        "runtime_dependency_file_sha256": dependency_hashes,
     }
     manifest_data = json_bytes(manifest)
     marker = {
@@ -294,6 +308,8 @@ def build_archive(
                     relative = info.filename[len(root) + 1 :]
                     if relative.startswith(package_prefixes):
                         continue
+                    if dependencies.replaces(relative):
+                        continue
                     if relative in replacement:
                         output.writestr(copy.copy(info), replacement.pop(relative))
                         continue
@@ -304,6 +320,12 @@ def build_archive(
                     output.writestr(f"{root}/{name}", data)
                 for name, path in files.items():
                     output.write(path, f"{root}/{name}")
+                for name, data in dependencies.files.items():
+                    entry = zipfile.ZipInfo(f"{root}/{name}")
+                    entry.create_system = 3
+                    entry.external_attr = (stat.S_IFREG | dependencies.file_modes.get(name, 0o644)) << 16
+                    entry.compress_type = zipfile.ZIP_DEFLATED
+                    output.writestr(entry, data)
         with zipfile.ZipFile(temporary) as output:
             validate_archive(output, platform, lock["custom_version"])
             output_names = set(output.namelist())
@@ -314,7 +336,14 @@ def build_archive(
             }
             if actual_overlay != set(files):
                 raise ValueError("Custom package file set mismatch after ZIP build")
-            for name, expected in hashes.items():
+            actual_dependencies = {
+                name[len(root) + 1 :]
+                for name in output_names
+                if dependencies.replaces(name[len(root) + 1 :]) and not name.endswith("/")
+            }
+            if actual_dependencies != set(dependencies.files):
+                raise ValueError("Runtime dependency file set mismatch after ZIP build")
+            for name, expected in (hashes | dependency_hashes).items():
                 with output.open(f"{root}/{name}") as stream:
                     actual = hashlib.file_digest(stream, "sha256").hexdigest()
                 if actual != expected:
@@ -338,10 +367,12 @@ def build_archive(
         "git_commit": git_commit,
         "git_dirty": git_dirty,
         "upstream_archive_sha256": asset["sha256"],
+        "runtime_dependencies": dependencies.provenance,
         "verification": {
             "zip_crc": "passed",
             "runtime_architecture": platform,
             "overlay_files_verified": len(hashes),
+            "runtime_dependency_files_verified": len(dependency_hashes),
             "preserved_original_entries": len(retained),
             "manifest_sha256": marker["manifest_sha256"],
         },
@@ -372,6 +403,9 @@ def main() -> None:
             print(source.resolve())
             return
         destination = args.output / f"Octop-portable-{args.platform}-{lock['custom_version']}.zip"
+        dependencies = prepare_runtime_dependencies(
+            args.platform, REPO_ROOT / ".cache/runtime-dependency-wheels"
+        )
         print(f"Building custom {args.platform} portable...", flush=True)
         report = build_archive(
             source,
@@ -381,6 +415,7 @@ def main() -> None:
             lock,
             git_revision(REPO_ROOT),
             git_is_dirty(REPO_ROOT),
+            dependency_overlay=dependencies,
         )
         print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
     except (OSError, ValueError, KeyError, zipfile.BadZipFile, subprocess.SubprocessError) as error:

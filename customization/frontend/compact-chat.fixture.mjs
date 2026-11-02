@@ -10,11 +10,12 @@ import {
 
 const require = createRequire(new URL("../../dashboard/package.json", import.meta.url));
 const postcss = require("postcss");
-const asset = (name) => new URL("../packages/octop/dashboard/assets/" + name, import.meta.url);
-const chatChunk = readFileSync(asset("index.G9_xhF8C.avatars-v4.js"), "utf8");
-const originalCss = readFileSync(asset("index.Ds_DN6_-.avatars-v4.css"), "utf8");
-const markdownCss = readFileSync(asset("index.BsfH4C6q.avatars-v4.css"), "utf8");
-const compactCss = readFileSync(asset("compact-chat.css"), "utf8");
+const sourceAsset = (name) => new URL("../baselines/projects-v2/octop/dashboard/assets/" + name, import.meta.url);
+const frozenAsset = (name) => new URL("../baselines/avatars-v60/octop/dashboard/assets/" + name, import.meta.url);
+const chatChunk = readFileSync(sourceAsset("index.G9_xhF8C.projects-v2.js"), "utf8");
+const originalCss = readFileSync(sourceAsset("index.Ds_DN6_-.projects-v2.css"), "utf8");
+const markdownCss = readFileSync(sourceAsset("index.BsfH4C6q.projects-v2.css"), "utf8");
+const compactCss = readFileSync(frozenAsset("compact-chat.css"), "utf8");
 const compactTree = postcss.parse(compactCss);
 const sourceTree = postcss.parse(originalCss + "\n" + markdownCss);
 const combinedTree = postcss.parse(originalCss + "\n" + markdownCss + "\n" + compactCss);

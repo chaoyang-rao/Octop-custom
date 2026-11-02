@@ -1,5 +1,5 @@
 /** Keep a single app-wide status refresher and a consistent pending state. */
-import { EXPERT_WORK_MESSAGES } from '../packages/octop/dashboard/assets/expert-work-status.js';
+import { EXPERT_WORK_MESSAGES } from '../baselines/avatars-v60/octop/dashboard/assets/expert-work-status.js';
 const oldPolling = 'reactExports.useEffect(()=>{const refreshBadges=()=>void refreshAgents({silent:!0});refreshBadges();const intervalId=window.setInterval(refreshBadges,1e4),onVisibility=()=>{document.visibilityState==="visible"&&refreshBadges()};return document.addEventListener("visibilitychange",onVisibility),()=>{window.clearInterval(intervalId),document.removeEventListener("visibilitychange",onVisibility)}},[refreshAgents]),';
 const oldStatus = 'function resolveSessionWorkStatus(session,liveWorkingIds){return liveWorkingIds.has(session.id)||session.turnActive?"working":session.awaitingUser?"waiting":"idle"}';
 const newStatus = 'function resolveSessionWorkStatus(session,liveWorkingIds){return session.awaitingUser?"waiting":liveWorkingIds.has(session.id)||session.turnActive?"working":"idle"}';

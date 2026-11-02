@@ -192,7 +192,7 @@ jobs:
           expected = {'darwin-arm64': {'arm64'}, 'darwin-amd64': {'x86_64'}, 'windows-amd64': {'amd64', 'x86_64'}}
           assert platform.machine().lower() in expected[sys.argv[2]], platform.machine()
           print(json.dumps({'platform': sys.argv[2], 'python': platform.python_version(), 'machine': platform.machine(),
-                            'versions': {name: importlib.metadata.version(name) for name in ['octop','octop-harness','octop-gateway']}}))
+                            'versions': {name: importlib.metadata.version(name) for name in ['octop','octop-harness','octop-gateway','cryptography','webauthn','pyOpenSSL','cffi']}}))
           """
           result = subprocess.run([str(py), "-c", smoke, str(packages), plat], env=child_env,
                                   text=True, capture_output=True)
@@ -200,6 +200,13 @@ jobs:
           print(result.stderr, file=sys.stderr)
           result.check_returncode()
           report = json.loads(result.stdout)
+          portable_manifest = json.loads((root / "custom-release-manifest.json").read_text())
+          report["runtime_dependencies"] = portable_manifest.get("runtime_dependencies", {})
+          if plat == "darwin-amd64":
+              assert report["versions"]["cryptography"] == "48.0.1"
+              assert report["versions"]["webauthn"] == "3.0.1"
+              assert report["versions"]["pyOpenSSL"] == "26.2.0"
+              assert len(report["runtime_dependencies"].get("wheels", [])) == 3
           suite = "import runpy,site,sys;p=sys.argv.pop(1);site.addsitedir(p);sys.path.insert(0,p);runpy.run_module('unittest',run_name='__main__')"
           subprocess.run([str(py), "-c", suite, str(packages), "discover", "-s",
                           str(Path("customization/tests").resolve()), "-v"], env=child_env, check=True)

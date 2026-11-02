@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "reason": "Official Octop 1.0.3b2 Intel portable bundles cryptography 46.0.3 with webauthn 3.0.1 and pyOpenSSL 26.3.0, which require cryptography >=49, but cryptography 49 removed Intel macOS support. This Intel-only downstream compatibility set retains all official WebAuthn 3.0.1 Python code and its security fixes, uses official cryptography 48.0.1 universal2 and pyOpenSSL 26.2.0 wheels, and explicitly adjusts only WebAuthn dependency METADATA and RECORD to the tested exact versions. No Octop dependency requirements are weakened.",
+  "sources": [
+    "https://cryptography.io/en/49.0.0/changelog/",
+    "https://pypi.org/pypi/cryptography/49.0.0/json",
+    "https://github.com/duo-labs/py_webauthn/releases/tag/v3.0.1",
+    "https://github.com/duo-labs/py_webauthn/releases/tag/v3.0.0",
+    "https://github.com/pyca/pyopenssl/blob/main/CHANGELOG.rst"
+  ],
+  "platforms": {
+    "darwin-amd64": [
+      {
+        "name": "cryptography",
+        "version": "48.0.1",
+        "filename": "cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+        "url": "https://files.pythonhosted.org/packages/1b/bc/ee4137cbbe105652c0ee4252792b78fc8e7afa4b8e61d9d5dc05a7f45731/cryptography-48.0.1-cp311-abi3-macosx_10_9_universal2.whl",
+        "size": 8008324,
+        "sha256": "3e4a1a3232eef2e6c732827d5722db29a0cc8b27af2a4d865b094cf954be9ca1",
+        "tag": "cp311-abi3-macosx_10_9_universal2",
+        "modules": [
+          "cryptography"
+        ],
+        "metadata_url": "https://pypi.org/pypi/cryptography/48.0.1/json",
+        "requires_dist": [
+          "cffi>=2.0.0; platform_python_implementation != \"PyPy\"",
+          "typing-extensions>=4.13.2; python_full_version < \"3.11\"",
+          "bcrypt>=3.1.5; extra == \"ssh\""
+        ]
+      },
+      {
+        "name": "pyOpenSSL",
+        "version": "26.2.0",
+        "filename": "pyopenssl-26.2.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/73/b8/a0e2790ae249d6f38c9f66de7a211621a7ab2650217bcd04e1262f578a56/pyopenssl-26.2.0-py3-none-any.whl",
+        "size": 55823,
+        "sha256": "4f9d971bc5298b8bc1fab282803da04bf000c755d4ad9d99b52de2569ca19a70",
+        "tag": "py3-none-any",
+        "modules": [
+          "OpenSSL"
+        ],
+        "metadata_url": "https://pypi.org/pypi/pyOpenSSL/26.2.0/json",
+        "requires_dist": [
+          "cryptography<49,>=46.0.0",
+          "typing-extensions>=4.9; python_version < \"3.13\" and python_version >= \"3.8\"",
+          "pytest-rerunfailures; extra == \"test\"",
+          "pretend; extra == \"test\"",
+          "pytest>=3.0.1; extra == \"test\"",
+          "sphinx!=5.2.0,!=5.2.0.post0,!=7.2.5; extra == \"docs\"",
+          "sphinx_rtd_theme; extra == \"docs\""
+        ]
+      },
+      {
+        "name": "webauthn",
+        "version": "3.0.1",
+        "filename": "webauthn-3.0.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/ea/5e/cc651030a1d43010234247ab4361aac17276f62b185975100ba62aa00cf7/webauthn-3.0.1-py3-none-any.whl",
+        "size": 73910,
+        "sha256": "9927b2f530773bd1d7f8194cd643a2e634a20995ea31f2d8f7a3e70b11c93e31",
+        "tag": "py3-none-any",
+        "modules": [
+          "webauthn"
+        ],
+        "metadata_url": "https://pypi.org/pypi/webauthn/3.0.1/json",
+        "requires_dist": [
+          "pyasn1>=0.6.2",
+          "pyasn1-modules>=0.4.2",
+          "cbor2>=6.1.2",
+          "cryptography>=49.0.0",
+          "pyOpenSSL>=26.3.0"
+        ],
+        "requires_dist_overrides": {
+          "cryptography>=49.0.0": [
+            "cryptography==48.0.1"
+          ],
+          "pyOpenSSL>=26.3.0": [
+            "pyOpenSSL==26.2.0"
+          ]
+        }
+      }
+    ]
+  },
+  "compatibility_scope": {
+    "platform": "darwin-amd64",
+    "python": "CPython 3.12",
+    "minimum_binary_macos": "10.13.0",
+    "validated": "Octop passkey registration, passwordless authentication and replay rejection for ES256, RS256 and EDDSA; EDDSA-first default; duplicate-CBOR and invalid-attestation-format rejection; ML-DSA-44/65/87 signature verification; OpenSSL.crypto certificate-chain paths.",
+    "limits": "This app-specific downstream compatibility result does not assert that cryptography 48.0.1 or pyOpenSSL 26.2.0 has all generic behavior of 49.0.0 or 26.3.0. In particular, the new SSL.Connection.set_session same-context guard is absent in 26.2.0; Octop uses stdlib ssl for TLS network connections and OpenSSL.crypto for certificate operations, not that session API.",
+    "unchanged_platforms": [
+      "darwin-arm64",
+      "windows-amd64"
+    ],
+    "retained_upstream_dependencies": {
+      "cffi": "2.0.0",
+      "pycparser": "3.0",
+      "pyasn1": "0.6.3",
+      "pyasn1_modules": "0.4.2",
+      "cbor2": "6.1.5",
+      "typing_extensions": "4.15.0"
+    }
+  }
+}
