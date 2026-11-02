@@ -10,8 +10,12 @@ const start = patched.indexOf('function ChatInputActionsRow(');
 const end = patched.indexOf('function previewText(', start);
 const oldStart = original.indexOf('function ChatInputActionsRow(');
 const oldEnd = original.indexOf('function previewText(', oldStart);
-assert.equal(patched.slice(0, start), original.slice(0, oldStart));
-assert.equal(patched.slice(end), original.slice(oldEnd));
+const inlineChip = 'showModelChip=selectedModelValue.length>0&&!!onModelChange';
+assert.equal(patched.slice(0, start).replace('showModelChip=!1', inlineChip), original.slice(0, oldStart),
+  'Only the preview-bar model chip flag may change before the composer row');
+const slotRow = 'jsxRuntimeExports.jsx("div",{id:"octop-model-slot","data-testid":"composer-model-slot",className:"octop-model-slot"}),';
+assert.equal(patched.slice(end).replace(slotRow, ''), original.slice(oldEnd),
+  'Only the model row inserted under the composer box may change after the composer row');
 const menu = source => source.slice(source.indexOf('modelMenu=jsxRuntimeExports'), source.indexOf(',shortcutMenu=', source.indexOf('modelMenu=jsxRuntimeExports')));
 assert.equal(menu(patched), menu(original), 'The authoritative model selector and callbacks must remain byte-identical');
 assert.throws(() => patchComposerModelShortcut(patched), /already patched/);
@@ -30,6 +34,8 @@ const element = (type, props, key) => ({ type, props: { ...props, key } });
 let values, cursor, effects;
 const changed = [], submitted = [], navigated = [];
 const deps = {
+  document: { getElementById: () => null },
+  reactDomExports: { createPortal: (node, target) => ({ type: 'portal', props: { node, target } }) },
   reactExports: {
     useState(initial) {
       const index = cursor++;

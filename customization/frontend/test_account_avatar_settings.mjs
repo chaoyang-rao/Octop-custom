@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { createAccountAvatar } from '../packages/octop/dashboard/assets/account-avatar.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const mainFile = path.join(root, '../packages/octop/dashboard/assets/index.BsYGCvv_.avatars-v5.js');
+const mainFile = path.join(root, '../baselines/projects-v2/octop/dashboard/assets/index.BsYGCvv_.projects-v2.js');
 const run = spawnSync('python3', ['-c',
   'from pathlib import Path; import runpy,sys; p=runpy.run_path(sys.argv[1]); print(p["patch_account_avatar_settings"](Path(sys.argv[2]).read_text()),end="")',
   path.join(root, 'account-avatar-settings-patch.py'), mainFile], { encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 });

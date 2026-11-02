@@ -29,6 +29,7 @@ const icons = Object.fromEntries(source.match(/import \{([^{}]*)\} from "lucide-
 const dependencies = {
   react: React,
   'react/jsx-runtime': require('react/jsx-runtime'),
+  'react-dom': require('react-dom'),
   'react-i18next': { useTranslation: () => ({ t }) },
   'react-router-dom': { useNavigate: () => path => navigation.push(path) },
   'lucide-react': icons,
@@ -60,6 +61,7 @@ const models = [
 ];
 let active;
 async function mount(overrides = {}) {
+  const slot = document.createElement('div'); slot.id = 'octop-model-slot'; document.body.append(slot);
   const container = document.createElement('div'); document.body.append(container);
   const root = createRoot(container);
   const changed = [], sent = [];
@@ -70,11 +72,12 @@ async function mount(overrides = {}) {
     slashPickerGroups: null, slashMenuItems: [], onSlashShortcutSelect() {}, ...overrides };
   const view = {
     container, changed, sent, props,
-    button() { return container.querySelector('[data-testid="composer-model-shortcut"]'); },
-    menu() { return container.querySelector('[role="dialog"][aria-label="Model"]'); },
+    slot,
+    button() { return document.querySelector('[data-testid="composer-model-shortcut"]'); },
+    menu() { return document.querySelector('[role="dialog"][aria-label="Model"]'); },
     async click(node) { assert.ok(node); await act(async () => node.click()); },
     async render(next) { Object.assign(props, next); await act(async () => root.render(h(Component, props))); },
-    async destroy() { await act(async () => root.unmount()); container.remove(); },
+    async destroy() { await act(async () => root.unmount()); container.remove(); slot.remove(); },
   };
   active = view; await view.render({}); return view;
 }
@@ -84,6 +87,11 @@ async function test(name, task) {
   finally { if (active) { await active.destroy(); active = null; } }
 }
 try {
+  await test('source TSX keeps the selector in its own row under the composer', async () => {
+    const v = await mount();
+    assert.equal(v.button().closest('#octop-model-slot'), v.slot);
+    assert.equal(v.container.querySelector('[data-testid="composer-model-shortcut"]'), null);
+  });
   await test('source TSX displays actual default without changing the Auto override', async () => {
     const v = await mount();
     assert.equal(v.button().textContent, 'Compact Model');

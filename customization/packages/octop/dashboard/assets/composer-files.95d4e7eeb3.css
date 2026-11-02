@@ -1,0 +1,114 @@
+.octop-composer-files {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.octop-composer-files-btn:not(.octop-composer-files-btn--hosted) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fn-text-secondary, #666);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.octop-composer-files-btn:not(.octop-composer-files-btn--hosted):hover,
+.octop-composer-files-btn:not(.octop-composer-files-btn--hosted)[aria-expanded="true"] {
+  background: var(--fn-bg-hover, rgba(0, 0, 0, 0.05));
+  color: var(--fn-text-primary, #111);
+}
+.octop-composer-files-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  max-width: min(300px, calc(100vw - 32px));
+  max-height: 320px;
+  padding: 8px;
+  border: 1px solid var(--fn-border-secondary, rgba(0, 0, 0, 0.08));
+  border-radius: 12px;
+  background: var(--fn-bg-elevated, #fff);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+.octop-composer-files-head {
+  padding: 4px 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fn-text-tertiary, #888);
+}
+.octop-composer-files-hint {
+  padding: 16px 8px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--fn-text-tertiary, #888);
+}
+.octop-composer-files-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  min-height: 0;
+}
+.octop-composer-files-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.octop-composer-files-item:hover {
+  background: var(--fn-bg-hover, rgba(0, 0, 0, 0.05));
+}
+.octop-composer-files-item:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+.octop-composer-files-name {
+  font-size: 13px;
+  color: var(--fn-text-primary, #111);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.octop-composer-files-meta {
+  font-size: 11px;
+  color: var(--fn-text-tertiary, #888);
+}
+
+/* Floating column next to the message area */
+.octop-composer-files--float .octop-composer-files-panel {
+  right: calc(100% + 10px);
+  bottom: 0;
+}
+
+/* Hosted inside the app's own floating button styles. */
+.octop-composer-files-btn--hosted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.octop-composer-files-section {
+  border-top: 1px solid var(--fn-border-secondary, rgba(0, 0, 0, 0.08));
+  margin-top: 6px;
+  padding-top: 6px;
+}

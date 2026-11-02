@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { createDockCollapseUi } from '../packages/octop/dashboard/assets/dock-collapse.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const sourcePath = path.join(root, '../packages/octop/dashboard/assets/index.BsYGCvv_.avatars-v3.js');
+const sourcePath = path.join(root, '../baselines/projects-v2/octop/dashboard/assets/index.BsYGCvv_.projects-v2.js');
 const original = fs.readFileSync(sourcePath, 'utf8');
 const result = spawnSync('python3', ['-c',
   'from pathlib import Path; import runpy,sys; p=runpy.run_path(sys.argv[1]); print(p["patch_dock_collapse"](Path(sys.argv[2]).read_text()),end="")',

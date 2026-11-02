@@ -47,6 +47,11 @@ jobs:
       - run: npm ci --prefix dashboard
       - name: Verify the customized project picker and preserved UI behavior
         run: |
+          python customization/frontend/test_prune_assets.py
+          python customization/frontend/test_avatar_account_patch.py
+          python customization/frontend/prune_assets.py
+          node customization/frontend/test_dock_collapse.mjs
+          node customization/frontend/test_composer_files.mjs
           node customization/frontend/test_application_connectors_patch.mjs
           node customization/frontend/test_expert_reuse.mjs
           node customization/frontend/test_primary_team.mjs

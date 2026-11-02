@@ -440,8 +440,8 @@ export default function Sidebar({
 
   const isRailCollapsed = collapsed && !isMobile;
   const wordmarkSrc = isDark
-    ? "/logo_horizontal_white.png"
-    : "/logo_horizontal_dark.png";
+    ? "/logo_horizontal_white_mono.png"
+    : "/logo_horizontal_dark_mono.png";
 
   const selectMinimalPane = useCallback(
     (pane: MinimalNavPane, opts?: { expand?: boolean }) => {
@@ -509,7 +509,13 @@ export default function Sidebar({
   const brandInner = (
     <>
       <img
-        src={isRailCollapsed ? "/pwa-192.png" : wordmarkSrc}
+        src={
+          isRailCollapsed
+            ? isDark
+              ? "/logo_mark_white.png"
+              : "/logo_mark_dark.png"
+            : wordmarkSrc
+        }
         alt="Octop"
         style={{
           height: isRailCollapsed ? 32 : isMobile ? 38 : 36,

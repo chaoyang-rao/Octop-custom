@@ -69,7 +69,7 @@ body {
 }
 
 .index-module__actionsRow__-BkcX .index-module__sendBtn__jFtPt {
-  border-radius: 8px;
+  border-radius: 50%;
 }
 
 /* Attribute sizing preserves spinner transforms and exact 50% icon scaling. */
@@ -121,4 +121,10 @@ body {
   .index-module__textarea__lUFuW {
     transition: none;
   }
+}
+
+/* 圆形发送按钮，内部图标再缩小一圈 */
+.index-module__actionsRow__-BkcX .index-module__sendBtn__jFtPt > svg[width][height] {
+  width: 7px;
+  height: 7px;
 }

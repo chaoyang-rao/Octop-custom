@@ -118,6 +118,63 @@ async def test_repo_summary_by_model(env: Any) -> None:
     assert "(unknown)" in by_key
 
 
+async def test_repo_summary_by_project(env: Any) -> None:
+    """Token usage groups by the project folder recorded on the thread."""
+    _c, srv, _admin_auth, _alice_auth, ctx = env
+    repo = srv.services.usage_repo
+    now = int(time.time())
+    _seed_usage_agents(srv, ["agt-p"], user_id=ctx["alice_id"])
+    with srv.services.db.connect() as conn:
+        for thread_id, path, name in (
+            ("th-alpha", "/work/alpha", "Alpha"),
+            ("th-beta", "/work/beta", ""),
+            ("th-none", None, None),
+        ):
+            conn.execute(
+                "INSERT OR IGNORE INTO threads (thread_id, agent_id, user_id, channel_type, session_key, "
+                "project_path, project_name, last_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (thread_id, "agt-p", ctx["alice_id"], "web", thread_id, path, name, now, now),
+            )
+    repo.record(
+        agent_id="agt-p",
+        user_id=ctx["alice_id"],
+        thread_id="th-alpha",
+        input_tokens=10,
+        output_tokens=5,
+    )
+    repo.record(
+        agent_id="agt-p",
+        user_id=ctx["alice_id"],
+        thread_id="th-alpha",
+        input_tokens=20,
+        output_tokens=10,
+    )
+    repo.record(
+        agent_id="agt-p",
+        user_id=ctx["alice_id"],
+        thread_id="th-beta",
+        input_tokens=4,
+        output_tokens=1,
+    )
+    repo.record(
+        agent_id="agt-p",
+        user_id=ctx["alice_id"],
+        thread_id="th-none",
+        input_tokens=6,
+        output_tokens=3,
+    )
+
+    result = repo.summary(user_id=ctx["alice_id"], window="last_30d", granularity="by_project")
+    by_key = {b["key"]: b for b in result["buckets"]}
+    assert by_key["/work/alpha"]["total_tokens"] == 45
+    assert by_key["/work/alpha"]["label"] == "Alpha"
+    assert by_key["/work/alpha"]["turns"] == 2
+    assert by_key["/work/beta"]["total_tokens"] == 5
+    assert by_key["/work/beta"]["label"] == "/work/beta"
+    assert by_key[""]["total_tokens"] == 9
+    assert sum(b["total_tokens"] for b in result["buckets"]) == result["total_tokens"] == 59
+
+
 # --- /api/usage/summary -----------------------------------------------------
 
 

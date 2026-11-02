@@ -1,20 +1,21 @@
-"""Verify pure avatar/account patches against the existing v3 graph, without writing it."""
+"""Verify pure avatar/account patches against the saved build baseline, without writing it."""
 from pathlib import Path
 import shutil
 import subprocess
 import unittest
 
+from avatar_core_patch import patch_main, patch_messages
 from avatar_account_patch import patch_avatar_account_main, patch_avatar_account_messages
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "packages" / "octop" / "dashboard" / "assets"
+ASSETS = ROOT / "baselines" / "projects-v2" / "octop" / "dashboard" / "assets"
 
 
 class AvatarAccountPatchTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.main = (ASSETS / "index.BsYGCvv_.avatars-v3.js").read_text()
-        cls.messages = (ASSETS / "index.Bexwf9h5.avatars-v3.js").read_text()
+        cls.main = patch_main((ASSETS / "index.BsYGCvv_.projects-v2.js").read_text())
+        cls.messages = patch_messages((ASSETS / "index.Bexwf9h5.projects-v2.js").read_text())
 
     def test_only_generated_expert_branches_receive_frame_marker(self):
         patched = patch_avatar_account_main(self.main)

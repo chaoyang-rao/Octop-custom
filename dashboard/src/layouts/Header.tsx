@@ -22,8 +22,8 @@ interface HeaderProps {
 export default function Header({ onToggle, isMobile }: HeaderProps) {
   const { isDark } = useTheme();
   const mobileLogoSrc = isDark
-    ? "/logo_horizontal_white.png"
-    : "/logo_horizontal_dark.png";
+    ? "/logo_horizontal_white_mono.png"
+    : "/logo_horizontal_dark_mono.png";
 
   if (!isMobile) return null;
 

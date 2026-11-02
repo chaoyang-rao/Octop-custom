@@ -87,7 +87,7 @@ interface UsageSummary {
   buckets: UsageBucket[];
 }
 
-type ViewMode = "summary" | "by_day" | "by_agent" | "by_model";
+type ViewMode = "summary" | "by_day" | "by_agent" | "by_model" | "by_project";
 type DimGranularity = Exclude<ViewMode, "summary">;
 
 const CHART_COLORS = [
@@ -283,6 +283,7 @@ function bucketColumnTitle(
 ): string {
   if (granularity === "by_day") return t("tokenUsage.date");
   if (granularity === "by_agent") return t("tokenUsage.expert");
+  if (granularity === "by_project") return t("tokenUsage.project");
   return t("tokenUsage.model");
 }
 
@@ -560,12 +561,14 @@ function SummaryView({
   totals,
   byExpert,
   byModel,
+  byProject,
   byDay,
   isMobile,
 }: {
   totals: UsageSummary;
   byExpert: UsageBucket[];
   byModel: UsageBucket[];
+  byProject: UsageBucket[];
   byDay: UsageBucket[];
   isMobile: boolean;
 }) {
@@ -581,6 +584,7 @@ function SummaryView({
 
   const expertPie = useMemo(() => toPieData(byExpert), [byExpert]);
   const modelPie = useMemo(() => toPieData(byModel), [byModel]);
+  const projectPie = useMemo(() => toPieData(byProject), [byProject]);
   const dayBars = useMemo(() => [...byDay].reverse().slice(-14), [byDay]);
 
   return (
@@ -593,7 +597,7 @@ function SummaryView({
       <div
         className={styles.pieGrid}
         style={{
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(4, minmax(0, 1fr))",
         }}
       >
         <DonutCard
@@ -613,6 +617,11 @@ function SummaryView({
         <DonutCard
           title={t("tokenUsage.modelBreakdown")}
           data={modelPie}
+          emptyText={t("tokenUsage.noRecordsInRange")}
+        />
+        <DonutCard
+          title={t("tokenUsage.projectBreakdown")}
+          data={projectPie}
           emptyText={t("tokenUsage.noRecordsInRange")}
         />
       </div>
@@ -697,6 +706,8 @@ function DimensionView({
             title={
               granularity === "by_agent"
                 ? t("tokenUsage.expertBreakdown")
+                : granularity === "by_project"
+                ? t("tokenUsage.projectBreakdown")
                 : t("tokenUsage.modelBreakdown")
             }
             data={pieData}
@@ -846,6 +857,7 @@ export default function TokenUsagePage() {
   const [dimBuckets, setDimBuckets] = useState<UsageBucket[]>([]);
   const [summaryExpert, setSummaryExpert] = useState<UsageBucket[]>([]);
   const [summaryModel, setSummaryModel] = useState<UsageBucket[]>([]);
+  const [summaryProject, setSummaryProject] = useState<UsageBucket[]>([]);
   const [summaryDay, setSummaryDay] = useState<UsageBucket[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -931,6 +943,7 @@ export default function TokenUsagePage() {
       { value: "by_day", label: t("tokenUsage.byDay") },
       { value: "by_agent", label: t("tokenUsage.byExpert") },
       { value: "by_model", label: t("tokenUsage.byModel") },
+      { value: "by_project", label: t("tokenUsage.byProject") },
     ],
     [t],
   );
@@ -961,15 +974,17 @@ export default function TokenUsagePage() {
     setError(null);
     try {
       if (view === "summary") {
-        const [expertRes, modelRes, dayRes] = await Promise.all([
+        const [expertRes, modelRes, dayRes, projectRes] = await Promise.all([
           fetchSummary(windowKey, "by_agent", agentFilter, adminUserFilter),
           fetchSummary(windowKey, "by_model", agentFilter, adminUserFilter),
           fetchSummary(windowKey, "by_day", agentFilter, adminUserFilter),
+          fetchSummary(windowKey, "by_project", agentFilter, adminUserFilter),
         ]);
         setTotals(expertRes);
         setSummaryExpert(resolveAgentLabels(expertRes.buckets, agentNameById));
         setSummaryModel(modelRes.buckets);
         setSummaryDay(dayRes.buckets);
+        setSummaryProject(projectRes.buckets);
         setDimBuckets([]);
       } else {
         const res = await fetchSummary(
@@ -1108,6 +1123,7 @@ export default function TokenUsagePage() {
                 totals={totals}
                 byExpert={summaryExpert}
                 byModel={summaryModel}
+                byProject={summaryProject}
                 byDay={summaryDay}
                 isMobile={isMobile}
               />

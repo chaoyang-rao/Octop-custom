@@ -85,6 +85,7 @@ from octop.infra.skills.workspace_catalog import (
 )
 from octop.infra.utils.locale import Locale
 from octop.infra.utils.turn_failure import turn_model_scope
+from octop_harness.middleware.tool_failbreak import tool_failbreak_scope
 from octop.infra.utils.ulid import new_short_id
 
 if TYPE_CHECKING:
@@ -2045,6 +2046,7 @@ class AgentManager:
             with (
                 hitl_thread_scope(thread_id_from_request(req)),
                 turn_model_scope(self._stream_model_label(agent_id, req, thread_id)),
+                tool_failbreak_scope(),
             ):
                 _, actor = current_vault_actor()
                 async for chunk in actor_stream(
@@ -2096,6 +2098,7 @@ class AgentManager:
             with (
                 hitl_thread_scope(thread_id_from_request(req)),
                 turn_model_scope(self._stream_model_label(agent_id, req, thread_id)),
+                tool_failbreak_scope(),
             ):
                 _, actor = current_vault_actor()
                 with authenticated_vault_actor(actor):
@@ -2144,6 +2147,7 @@ class AgentManager:
             with (
                 hitl_thread_scope(thread_id),
                 turn_model_scope(self._stream_model_label(agent_id, {}, thread_id)),
+                tool_failbreak_scope(),
             ):
                 _, actor = current_vault_actor()
                 async for chunk in actor_stream(

@@ -1,0 +1,17 @@
+/* The "明细" card (chartCard sets overflow: visible) lets its inner table spill
+   outside the frame. Clip the card itself and let the body scroll in place. */
+.octop-token-detail {
+  overflow: hidden !important;
+  min-width: 0;
+}
+.octop-token-detail .octop-card-body,
+.octop-token-detail .ant-card-body {
+  overflow: auto !important;
+  min-width: 0;
+  min-height: 0;
+}
+.octop-token-detail .ant-table-wrapper,
+.octop-token-detail .octop-ant-table-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}

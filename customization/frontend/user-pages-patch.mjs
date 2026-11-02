@@ -6,7 +6,7 @@ function once(source, from, to) {
  return source.replace(from,to);
 }
 export function patchUserPagesMain(source){
- const declarations='NotificationPresenceExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.NotificationPresence}))),TaskQueueExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.TaskQueue}))),AccountConnectionsExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.AccountConnections}))),MobileAccessExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.MobileAccess}))),ConversationsExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.ConversationLibrary})));\n';
+ const declarations='const NotificationPresenceExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.NotificationPresence}))),TaskQueueExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.TaskQueue}))),AccountConnectionsExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.AccountConnections}))),MobileAccessExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.MobileAccess}))),ConversationsExtension=reactExports.lazy(()=>import("./user-features.pages.js").then(m=>({default:m.ConversationLibrary})));\n';
  source=declarations+source;
  source=once(source,'SIDEBAR_NAV_KEYS=["chat","experts","tasks",','SIDEBAR_NAV_KEYS=["chat","conversations","experts","tasks","task-queue","account-connections","mobile-access",');
  source=once(source,'SIDEBAR_GROUPED_NAV_KEYS=["personalization",','SIDEBAR_GROUPED_NAV_KEYS=["account-connections","mobile-access","personalization",');

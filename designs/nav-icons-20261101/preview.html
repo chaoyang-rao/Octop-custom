@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>侧边栏图标 · 三套方案</title>
+<style>
+  :root{color-scheme:light;--bg:#f6f7f9;--panel:#fff;--ink:#1f2430;--muted:#7a8296;--line:#e5e7ee;--accent:#4f6bdd}
+  html[data-theme="dark"]{color-scheme:dark;--bg:#14161c;--panel:#1b1e26;--ink:#e8eaf0;--muted:#8a93a6;--line:#2a2e39;--accent:#8ea2ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+  header{position:sticky;top:0;z-index:2;display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px 28px;background:var(--panel);border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:16px;font-weight:650;letter-spacing:.2px}
+  .hint{color:var(--muted);font-size:12px}
+  .switch{display:flex;gap:6px}
+  .switch button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:5px 12px;font:inherit;cursor:pointer}
+  .switch button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  main{padding:24px 28px 60px;display:flex;flex-direction:column;gap:22px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+  .sec-head h2{margin:0;font-size:15px;font-weight:650}
+  .sec-head p{margin:0;color:var(--muted);font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .tile:hover{border-color:var(--accent)}
+  .sizes{display:flex;align-items:center;gap:12px;height:34px}
+  .name{font-size:12px;color:var(--muted);text-align:center}
+  .side{display:flex;gap:20px;flex-wrap:wrap}
+  .side .col{flex:1 1 280px;min-width:260px;border:1px solid var(--line);border-radius:12px;padding:10px}
+  .row{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:8px;color:var(--muted)}
+  .row.active{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+  .row span{font-size:13px}
+  svg{display:block}
+  /* 方案 A：圆润线描 */
+  [data-style="a"] .p{stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:1}
+  [data-style="a"] .s{stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+  /* 方案 B：厚实双色 */
+  [data-style="b"] .p{stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:1}
+  [data-style="b"] .s{stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;opacity:.34}
+  [data-style="b"] circle.s{fill:currentColor;stroke:none}
+  /* 方案 C：精工细线 */
+  [data-style="c"] .p{stroke-width:1.35;stroke-linecap:butt;stroke-linejoin:miter;opacity:1}
+  [data-style="c"] .s{stroke-width:1.35;stroke-linecap:butt;stroke-linejoin:miter;opacity:.72}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>侧边栏图标 · 三套方案</h1>
+    <div class="hint">23 个导航项 · 24 网格 · 单一 currentColor（选中/深色自动跟随）</div>
+  </div>
+  <div class="switch" id="theme">
+    <button data-theme-value="light" aria-pressed="true">浅色</button>
+    <button data-theme-value="dark" aria-pressed="false">深色</button>
+  </div>
+</header>
+<main id="root"></main>
+<script>
+const G = {
+  chat:[['p','M4.2 7a2.8 2.8 0 0 1 2.8-2.8h10a2.8 2.8 0 0 1 2.8 2.8v6.6a2.8 2.8 0 0 1-2.8 2.8H10.4L6.6 19.6V16.2A2.8 2.8 0 0 1 4.2 13.6z'],['c',8.4,10.4,1,'s'],['c',12,10.4,1,'s'],['c',15.6,10.4,1,'s']],
+  conversations:[['r',3.2,4.2,12.6,8.6,2.4],['r',8.2,10.4,12.6,8.6,2.4,'s'],['l',11.2,15,16.2,15,'s']],
+  experts:[['c',12,8,3],['p','M5.4 19.2c0-3.4 3-6.1 6.6-6.1s6.6 2.7 6.6 6.1'],['p','M19 3.4l.9 2 2 .9-2 .9-.9 2-.9-2-2-.9 2-.9z','s']],
+  tasks:[['r',4.6,4.2,14.8,16.6,2.6],['r',9,2.6,6,2.6,1.2],['p','M8.4 11.6l1.9 1.9 3.9-3.9'],['l',8.4,17,15.6,17,'s']],
+  'task-queue':[['c',10,12,6],['p','M10 9.2V12l2.1 1.3'],['l',17.4,7.2,21,7.2,'s'],['l',17.4,12,21,12,'s'],['l',17.4,16.8,21,16.8,'s']],
+  'token-usage':[['r',4,13,3.4,7,1],['r',10.3,9,3.4,11,1],['r',16.6,4.6,3.4,15.4,1,'s']],
+  personalization:[['p','M11 3.2l1.8 4.2 4.2 1.8-4.2 1.8L11 15.2 9.2 11 5 9.2 9.2 7.4z'],['c',17.2,16.4,2.3,'s']],
+  channels:[['c',12,12,1.7],['p','M7.6 8.4a6.2 6.2 0 0 1 8.8 0','s'],['p','M5 5.6a10.4 10.4 0 0 1 14 0','s'],['p','M12 14v3.4']],
+  connectors:[['p','M10.6 13.4a3.6 3.6 0 0 1 0-5.1l1.9-1.9a3.6 3.6 0 0 1 5.1 5.1l-1 1'],['p','M13.4 10.6a3.6 3.6 0 0 1 0 5.1l-1.9 1.9a3.6 3.6 0 0 1-5.1-5.1l1-1','s']],
+  'account-connections':[['c',9.2,8,2.8],['p','M3.8 18.6c0-2.9 2.4-5.2 5.4-5.2 1.6 0 3 .7 4 1.9'],['p','M15.4 17.6a2.6 2.6 0 0 1 3.7-3.7l1 1a2.6 2.6 0 0 1-3.7 3.7','s']],
+  'mobile-access':[['r',7.6,2.8,8.8,18.4,2.6],['l',10.8,18.6,13.2,18.6],['p','M17.8 7.4a6.4 6.4 0 0 1 0 9','s'],['p','M20.4 5a10 10 0 0 1 0 14','s']],
+  'skill-packages':[['p','M12 2.8l8.2 4.6v9.2L12 21.2l-8.2-4.6V7.4z'],['p','M3.8 7.4l8.2 4.6 8.2-4.6','s'],['p','M12 12v9.2','s']],
+  'knowledge-bases':[['p','M4.4 5.2h6.2a2.6 2.6 0 0 1 2.6 2.6v12H7a2.6 2.6 0 0 1-2.6-2.6z'],['p','M13.2 7.8a2.6 2.6 0 0 1 2.6-2.6h3.8v14.6h-6.4','s']],
+  bridge:[['p','M3 18.6v-4.4a9 9 0 0 1 18 0v4.4'],['l',3,14.2,21,14.2,'s'],['l',7.4,14.2,7.4,18.6,'s'],['l',16.6,14.2,16.6,18.6,'s']],
+  workbench:[['r',3.4,4,17.2,16,2.6],['l',3.4,9.6,20.6,9.6,'s'],['l',9.6,9.6,9.6,20,'s']],
+  'remote-desktop':[['r',2.8,4.4,18.4,12,2.2],['l',12,16.4,12,19.8],['l',8.2,20.8,15.8,20.8],['p','M15.6 11.4l-4.6 1.6 1.6-4.6 1 1z','s']],
+  acp:[['c',6.4,7,2.1],['c',17.6,7,2.1],['c',12,17.6,2.1],['l',8.2,8.1,10.3,15.6,'s'],['l',15.8,8.1,13.7,15.6,'s']],
+  'admin-users':[['c',9,8,3],['p','M3.2 19.4c0-3.2 2.6-5.8 5.8-5.8s5.8 2.6 5.8 5.8'],['c',17,9,2.4,'s'],['p','M15.6 13.9c2.6.2 4.6 2.4 4.6 5','s']],
+  models:[['r',7,7,10,10,2.2],['r',10.2,10.2,3.6,3.6,1],['l',10,3.4,10,7,'s'],['l',14,3.4,14,7,'s'],['l',10,17,10,20.6,'s'],['l',14,17,14,20.6,'s'],['l',3.4,10,7,10,'s'],['l',3.4,14,7,14,'s'],['l',17,10,20.6,10,'s'],['l',17,14,20.6,14,'s']],
+  'admin-storage':[['r',3.4,4.4,17.2,6.2,2],['r',3.4,13.4,17.2,6.2,2],['c',7,7.5,.9,'s'],['c',7,16.5,.9,'s'],['l',11,7.5,17,7.5,'s'],['l',11,16.5,17,16.5,'s']],
+  'admin-plugins':[['l',9,3.2,9,6.2],['l',15,3.2,15,6.2],['r',6.4,6.2,11.2,8.6,2.4],['l',12,14.8,12,21.6],['l',8.6,21.6,15.4,21.6,'s']],
+  'admin-security':[['p','M12 2.8l7.4 3.1v6.3c0 4.7-3.1 8.2-7.4 9.6-4.3-1.4-7.4-4.9-7.4-9.6V5.9z'],['p','M8.8 12.2l2.4 2.4 4.4-4.4','s']],
+  'admin-advanced':[['l',3.6,7.4,20.4,7.4],['l',3.6,16.6,20.4,16.6],['c',9,7.4,2.2,'s'],['c',15.6,16.6,2.2,'s']],
+};
+const LABELS = {
+  chat:'对话', conversations:'会话库', experts:'专家', tasks:'任务', 'task-queue':'任务队列',
+  'token-usage':'Token 用量', personalization:'个性化', channels:'渠道', connectors:'连接器',
+  'account-connections':'账号连接', 'mobile-access':'移动访问', 'skill-packages':'技能包',
+  'knowledge-bases':'知识库', bridge:'桥接', workbench:'工作台', 'remote-desktop':'远程桌面',
+  acp:'ACP', 'admin-users':'用户管理', models:'模型', 'admin-storage':'存储',
+  'admin-plugins':'插件', 'admin-security':'安全', 'admin-advanced':'高级设置',
+};
+const SECTIONS = [
+  ['a','方案 A · 圆润线描','1.9px 描边 · 圆头端点 · 次要笔画 50% —— 最接近现在的清爽风格，视觉更柔和'],
+  ['b','方案 B · 厚实双色','2.6px 描边 · 圆头 · 次要笔画 34% 且圆点实心 —— 更有分量，小尺寸也清楚'],
+  ['c','方案 C · 精工细线','1.35px 描边 · 方头/直角 · 次要笔画 72% —— 更克制、更“工具感”，适合信息密集'],
+];
+
+// rect glyphs: ['r',x,y,w,h,rx,(tone)] — rebuild cleanly
+function glyph(key, style, size){
+  const shapes = G[key].map(part => {
+    const [t, ...rest] = part;
+    const tone = rest.length && rest[rest.length-1] === 's' ? 's' : 'p';
+    const args = tone === 's' ? rest.slice(0,-1) : rest;
+    if (t === 'p') return `<path class="${tone}" d="${args[0]}"/>`;
+    if (t === 'l') return `<line class="${tone}" x1="${args[0]}" y1="${args[1]}" x2="${args[2]}" y2="${args[3]}"/>`;
+    if (t === 'c') return `<circle class="${tone}" cx="${args[0]}" cy="${args[1]}" r="${args[2]}"/>`;
+    if (t === 'r') return `<rect class="${tone}" x="${args[0]}" y="${args[1]}" width="${args[2]}" height="${args[3]}" rx="${args[4]}"/>`;
+    return '';
+  }).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" data-style="${style}" aria-hidden="true">${shapes}</svg>`;
+}
+
+const root = document.getElementById('root');
+root.innerHTML = SECTIONS.map(([style, title, desc]) => `
+  <section data-style="${style}">
+    <div class="sec-head"><h2>${title}</h2><p>${desc}</p></div>
+    <div class="grid">
+      ${Object.keys(G).map(key => `
+        <div class="tile">
+          <div class="sizes">${[16,20,24,32].map(s => glyph(key, style, s)).join('')}</div>
+          <div class="name">${LABELS[key]}</div>
+        </div>`).join('')}
+    </div>
+    <div class="sec-head" style="margin:18px 0 10px"><h2 style="font-size:13px">侧边栏上下文</h2><p>行高 40 · 16px 图标 · 选中态取当前主题品牌色</p></div>
+    <div class="side">
+      ${[0,1].map(variant => `
+        <div class="col" data-style="${style}">
+          ${['chat','conversations','experts','tasks','token-usage','knowledge-bases','workbench','admin-security'].map((k,i) => `
+            <div class="row ${i===variant? 'active':''}">${glyph(k, style, 16)}<span>${LABELS[k]}</span></div>`).join('')}
+        </div>`).join('')}
+    </div>
+  </section>`).join('');
+
+document.getElementById('theme').addEventListener('click', event => {
+  const value = event.target.dataset.themeValue;
+  if (!value) return;
+  document.documentElement.dataset.theme = value;
+  for (const button of document.querySelectorAll('#theme button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.themeValue === value));
+  }
+});
+</script>
+</body>
+</html>

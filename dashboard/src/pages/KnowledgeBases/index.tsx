@@ -1,4 +1,5 @@
 import {
+  createRef,
   useCallback,
   useEffect,
   useMemo,
@@ -2410,6 +2411,78 @@ export default function KnowledgeBasesPage() {
                           onClick={openCreateTextDocument}
                         >
                           {t("knowledgeBases.createFile")}
+                        </Button>
+                      ) : null}
+                      {canWriteSelected ? (
+                        <Button
+                          onClick={() => {
+                            const urlRef = createRef<InputRef>();
+                            modal.confirm({
+                              title: t("knowledgeBases.importUrlTitle"),
+                              width: 520,
+                              content: (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <Input
+                                    ref={urlRef}
+                                    allowClear
+                                    autoFocus
+                                    placeholder={t(
+                                      "knowledgeBases.importUrlPlaceholder",
+                                    )}
+                                  />
+                                  <span
+                                    style={{
+                                      fontSize: 12,
+                                      color: "var(--fn-text-tertiary)",
+                                    }}
+                                  >
+                                    {t("knowledgeBases.importUrlHelp")}
+                                  </span>
+                                </div>
+                              ),
+                              okText: t("knowledgeBases.importUrl"),
+                              onOk: async () => {
+                                const url = (
+                                  urlRef.current?.input?.value || ""
+                                ).trim();
+                                if (!url) {
+                                  message.warning(
+                                    t("knowledgeBases.importUrlEmpty"),
+                                  );
+                                  return Promise.reject();
+                                }
+                                try {
+                                  await knowledgeBasesApi.importDocumentUrl(
+                                    selected.id,
+                                    url,
+                                  );
+                                  message.success(
+                                    t("knowledgeBases.importUrlDone"),
+                                  );
+                                  await loadDetail(selected.id, {
+                                    silent: true,
+                                  });
+                                } catch (error) {
+                                  message.error(
+                                    apiErrorMessage(
+                                      error,
+                                      t("knowledgeBases.importUrlFailed"),
+                                      t,
+                                    ),
+                                  );
+                                  return Promise.reject();
+                                }
+                              },
+                            });
+                          }}
+                        >
+                          {t("knowledgeBases.importUrl")}
                         </Button>
                       ) : null}
                       {canWriteSelected ? (

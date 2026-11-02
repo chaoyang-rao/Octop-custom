@@ -264,6 +264,12 @@ export const knowledgeBasesApi = {
       },
     ),
 
+  importDocumentUrl: (id: string, url: string) =>
+    request<KnowledgeDocument>(`/knowledge-bases/${id}/documents/import-url`, {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    }),
+
   uploadDocument: (
     id: string,
     file: File,

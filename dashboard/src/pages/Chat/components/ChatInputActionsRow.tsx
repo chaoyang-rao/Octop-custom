@@ -2,6 +2,7 @@ import "./ComposerToolGlyphs.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   Send,
   Square,
@@ -17,7 +18,6 @@ import {
   CircleDot,
   Play,
   Loader2,
-  Cpu,
   Brain,
   GraduationCap,
   BookOpen,
@@ -25,6 +25,7 @@ import {
   Plus,
   Check,
   ChevronLeft,
+  Cpu,
   ChevronRight,
   Route,
   Info,
@@ -72,7 +73,6 @@ import "./ChatInputModelShortcut.css";
 /** Picker opened from the composer plus menu. */
 type CompactPickerKey =
   | "mode"
-  | "model"
   | "connector"
   | "knowledge"
   | "skill"
@@ -271,6 +271,13 @@ export default function ChatInputActionsRow({
     null,
   );
   const [modelShortcutOpen, setModelShortcutOpen] = useState(false);
+  const [modelSlotEl, setModelSlotEl] = useState<HTMLElement | null>(null);
+
+  // The model selector lives in its own row under the composer box; the row is
+  // rendered by ChatInput, so the pill is portalled into it when available.
+  useEffect(() => {
+    setModelSlotEl(document.getElementById("octop-model-slot"));
+  }, []);
 
   // Press-and-hold dictation: start on pointerdown, finish on release or when
   // the pointer slides off the button (also covers touch cancel).
@@ -416,7 +423,7 @@ export default function ChatInputActionsRow({
 
   const openCompactPicker = (key: CompactPickerKey) => {
     setReasoningModelRef(null);
-    if (key !== "model") setModelQuery("");
+    setModelQuery("");
     setCompactPicker((prev) => (prev === key ? null : key));
   };
 
@@ -432,7 +439,6 @@ export default function ChatInputActionsRow({
 
   const compactPickerTitle: Record<CompactPickerKey, string> = {
     mode: t("chat.conversationMode.picker"),
-    model: t("chat.selectModel", "Model"),
     connector: t("connectors.chatPicker"),
     knowledge: t("chat.knowledgePicker"),
     skill: t("chat.skillPicker"),
@@ -774,28 +780,6 @@ export default function ChatInputActionsRow({
           </span>
         </button>
       )}
-      {showModelPicker && (
-        <button
-          type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "model" ? styles.mobileOverflowItemActive : ""
-          }`}
-          onClick={() => openCompactPicker("model")}
-        >
-          <span className={styles.mobileOverflowItemMain}>
-            <Cpu size={16} />
-            <span>{t("chat.selectModel", "Model")}</span>
-          </span>
-          <span className={styles.mobileOverflowItemMeta}>
-            <Tooltip title={selectedModelTriggerLabel} mouseEnterDelay={0.4}>
-              <span className={styles.mobileOverflowItemMetaLabel}>
-                {selectedModelTriggerLabel}
-              </span>
-            </Tooltip>
-            <ChevronRight size={16} />
-          </span>
-        </button>
-      )}
       {showConnectorPicker && (
         <button
           type="button"
@@ -907,8 +891,6 @@ export default function ChatInputActionsRow({
             }}
           />
         );
-      case "model":
-        return modelMenu;
       case "connector":
         return (
           <ConnectorPickerPopover
@@ -1132,6 +1114,53 @@ export default function ChatInputActionsRow({
     );
   };
 
+  const modelShortcutButton = showModelPicker ? (
+    <Popover
+      trigger="click"
+      placement="topLeft"
+      arrow={false}
+      destroyOnHidden
+      open={modelShortcutOpen}
+      overlayClassName={`${styles.modelPopover} octop-model-shortcut-popover`}
+      content={
+        <div role="dialog" aria-label={t("chat.selectModel", "Model")}>
+          {modelMenu}
+        </div>
+      }
+      onOpenChange={(open) => {
+        if (disabled) return;
+        setModelShortcutOpen(open);
+        if (open) {
+          setOverflowPopoverOpen(false);
+          closeCompactPicker();
+        }
+      }}
+    >
+      <Tooltip title={modelShortcutTitle} mouseEnterDelay={0.4}>
+        <button
+          type="button"
+          className="octop-model-shortcut"
+          data-testid="composer-model-shortcut"
+          data-compact={useCompactControls}
+          disabled={disabled}
+          aria-haspopup="dialog"
+          aria-expanded={modelShortcutOpen}
+          aria-label={`${t(
+            "chat.selectModel",
+            "Model",
+          )}: ${modelShortcutTitle}`}
+        >
+          <span>{modelShortcutLabel}</span>
+          <ChevronRight
+            size={12}
+            className="octop-model-shortcut-chevron"
+            aria-hidden
+          />
+        </button>
+      </Tooltip>
+    </Popover>
+  ) : null;
+
   return (
     <div
       ref={actionsRowRef}
@@ -1140,54 +1169,16 @@ export default function ChatInputActionsRow({
         isMobile ? ` ${styles.actionsRowCompact}` : ""
       }`}
     >
+      <div
+        id="octop-model-slot"
+        data-testid="composer-model-slot"
+        className="octop-model-slot"
+      />
       <div className={styles.secondaryActions}>{renderSecondaryActions()}</div>
-      {showModelPicker && (
-        <Popover
-          trigger="click"
-          placement="topLeft"
-          arrow={false}
-          destroyOnHidden
-          open={modelShortcutOpen}
-          overlayClassName={`${styles.modelPopover} octop-model-shortcut-popover`}
-          content={
-            <div role="dialog" aria-label={t("chat.selectModel", "Model")}>
-              {modelMenu}
-            </div>
-          }
-          onOpenChange={(open) => {
-            if (disabled) return;
-            setModelShortcutOpen(open);
-            if (open) {
-              setOverflowPopoverOpen(false);
-              closeCompactPicker();
-            }
-          }}
-        >
-          <Tooltip title={modelShortcutTitle} mouseEnterDelay={0.4}>
-            <button
-              type="button"
-              className="octop-model-shortcut"
-              data-testid="composer-model-shortcut"
-              data-compact={useCompactControls}
-              disabled={disabled}
-              aria-haspopup="dialog"
-              aria-expanded={modelShortcutOpen}
-              aria-label={`${t(
-                "chat.selectModel",
-                "Model",
-              )}: ${modelShortcutTitle}`}
-            >
-              <Cpu size={16} aria-hidden />
-              <span>{modelShortcutLabel}</span>
-              <ChevronRight
-                size={12}
-                className="octop-model-shortcut-chevron"
-                aria-hidden
-              />
-            </button>
-          </Tooltip>
-        </Popover>
-      )}
+      {modelShortcutButton &&
+        (modelSlotEl
+          ? createPortal(modelShortcutButton, modelSlotEl)
+          : modelShortcutButton)}
       {conversationMode !== "craft" ? (
         <p className={styles.modeHint} data-testid="conversation-mode-hint">
           <ModeIcon size={14} aria-hidden />
@@ -1369,7 +1360,7 @@ export default function ChatInputActionsRow({
                 type="button"
                 aria-label={t("chat.queue.action")}
               >
-                <Send size={18} />
+                <Send size={16} />
               </button>
             </Tooltip>
           ) : (
@@ -1398,7 +1389,7 @@ export default function ChatInputActionsRow({
                 type="button"
                 aria-label={t("chat.stop", "Stop")}
               >
-                <Square size={18} />
+                <Square size={16} />
               </button>
             </Tooltip>
           )
@@ -1410,7 +1401,7 @@ export default function ChatInputActionsRow({
             title={t("chat.send", "Send")}
             type="button"
           >
-            <Send size={18} />
+            <Send size={16} />
           </button>
         )}
       </div>

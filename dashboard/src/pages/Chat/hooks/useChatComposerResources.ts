@@ -45,6 +45,25 @@ import {
   type HitlSessionPolicy,
 } from "../utils/hitlSessionPolicy";
 
+const TEAM_MODEL_KEY = (agentId: string) => `octop.teamModel.${agentId}`;
+
+function readTeamModel(agentId: string): string | null {
+  try {
+    return window.localStorage.getItem(TEAM_MODEL_KEY(agentId));
+  } catch {
+    return null;
+  }
+}
+
+function writeTeamModel(agentId: string, model: string | null): void {
+  try {
+    if (model) window.localStorage.setItem(TEAM_MODEL_KEY(agentId), model);
+    else window.localStorage.removeItem(TEAM_MODEL_KEY(agentId));
+  } catch {
+    /* storage can be unavailable; the in-memory selection still applies */
+  }
+}
+
 export function useChatComposerResources(
   resolvedAgentId: string | null | undefined,
   activeThreadId?: string | null,
@@ -146,7 +165,13 @@ export function useChatComposerResources(
     setSelectedModel(
       local
         ? local.model
-        : stickyModel || expertDefaultModel || preferredModel || null,
+        : stickyModel ||
+            expertDefaultModel ||
+            preferredModel ||
+            (teamHost && resolvedAgentId
+              ? readTeamModel(resolvedAgentId)
+              : null) ||
+            null,
     );
   }, [
     resolvedAgentId,
@@ -155,6 +180,7 @@ export function useChatComposerResources(
     expertDefaultModel,
     preferredModel,
     conversationOverrides,
+    teamHost,
   ]);
 
   useEffect(() => {
@@ -459,6 +485,8 @@ export function useChatComposerResources(
   const handleModelChange = useCallback(
     (model: string | null) => {
       setSelectedModel(model);
+      // Team rooms create fresh threads, so keep the choice per agent too.
+      if (teamHost && resolvedAgentId) writeTeamModel(resolvedAgentId, model);
       const defaults = model ? modelReasoning[model] : undefined;
       const capability = availableModels.find(
         (item) => `${item.provider_name}/${item.model}` === model,

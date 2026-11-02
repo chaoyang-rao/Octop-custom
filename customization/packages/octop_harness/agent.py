@@ -1480,6 +1480,13 @@ class HarnessAgent:
                 )
             )
 
+        # Truncate bulky tool results and stop consecutive-failure loops (e.g.
+        # edit_file "String not found" retried for minutes). Runs outside
+        # FilesystemGuard so its softened error ToolMessages are counted too.
+        from octop_harness.middleware.tool_failbreak import ToolFailbreakMiddleware
+
+        chain.append(ToolFailbreakMiddleware())
+
         # Filesystem tool boundary: always soften outside-root ValueError; apply
         # deny rules only when permissions are set on an execution backend.
         from octop_harness.middleware.filesystem_guard import FilesystemGuardMiddleware

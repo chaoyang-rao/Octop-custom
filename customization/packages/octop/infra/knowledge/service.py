@@ -5,11 +5,13 @@ Visibility is owner or instance-wide ``shared``.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, cast
 
 from octop.config import DEFAULT_MAX_UPLOAD_MB, upload_mb_to_bytes
 from octop.infra.db.repos.knowledge import KnowledgeBaseRow, KnowledgeDocumentRow
+from octop.infra.knowledge.fetch import OnlineDocument, fetch_online_document
 from octop.infra.knowledge.files import (
     delete_document_file,
     delete_knowledge_base_files,
@@ -62,6 +64,13 @@ _ALLOWED_CONTENT_TYPES = set(_EXT_TO_CONTENT_TYPE.values())
 _TEXT_CONTENT_TYPES = {"text/plain", "text/markdown"}
 _TEXT_FORMAT_TO_EXT = {"md": ".md", "txt": ".txt"}
 _TEXT_FORMAT_TO_CONTENT_TYPE = {"md": "text/markdown", "txt": "text/plain"}
+
+
+def online_document_filename(title: str) -> str:
+    """Derive a safe ``.md`` filename from a fetched document title."""
+    cleaned = re.sub(r'[\\/:*?"<>|\r\n\t]+', " ", title or "").strip(" .")
+    cleaned = " ".join(cleaned.split())[:80].strip(" .")
+    return f"{cleaned or '在线文档'}.md"
 
 
 def _resolve_content_type(filename: str, content_type: str) -> str:
@@ -391,6 +400,28 @@ class KnowledgeService:
             self._repo.delete_document(document.id)
             raise
         return cast(KnowledgeDocumentRow, document)
+
+    def import_online_document(
+        self,
+        kb_id: str,
+        *,
+        actor_user_id: int,
+        url: str,
+        is_admin: bool = False,
+        path: str | None = None,
+    ) -> KnowledgeDocumentRow:
+        """Fetch an online document (Feishu first) and store it as markdown."""
+        document: OnlineDocument = fetch_online_document(url)
+        filename = online_document_filename(document.title)
+        return self.upload_document(
+            kb_id,
+            actor_user_id=actor_user_id,
+            filename=filename,
+            content_type="text/markdown",
+            content=document.markdown.encode("utf-8"),
+            is_admin=is_admin,
+            path=path or filename,
+        )
 
     def delete_document(
         self, kb_id: str, doc_id: str, *, actor_user_id: int, is_admin: bool = False

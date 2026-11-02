@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import suppress
 from dataclasses import asdict
+from functools import partial
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
@@ -36,6 +38,7 @@ from octop.infra.agents.providers.onnx_service import (
     status_payload,
 )
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.knowledge.fetch import OnlineDocumentError
 from octop.infra.knowledge.files import document_path
 from octop.infra.knowledge.gate import (
     assert_knowledge_usable,
@@ -114,6 +117,18 @@ class CreateTextDocumentBody(BaseModel):
         default=None,
         max_length=500,
         description="Optional parent folder path (without filename).",
+    )
+
+
+class ImportUrlBody(BaseModel):
+    url: str = Field(
+        ...,
+        description="飞书云文档链接（/docx/、/wiki/ 等）或任意 http(s) 网页链接。",
+        max_length=2048,
+    )
+    path: str | None = Field(
+        default=None,
+        description="可选：入库文件名或相对路径，默认使用在线文档标题。",
     )
 
 
@@ -203,6 +218,13 @@ def _map_knowledge_error(
 ) -> OctopError:
     if isinstance(exc, OctopError):
         return exc
+    if isinstance(exc, OnlineDocumentError):
+        return OctopError.localized(
+            ErrorCode.KNOWLEDGE_IMPORT_FAILED,
+            locale,
+            details={"cause": str(exc)},
+            cause=str(exc),
+        )
     if isinstance(exc, (LookupError, FileNotFoundError)):
         return OctopError.localized(ErrorCode.KNOWLEDGE_NOT_FOUND, locale)
     if isinstance(exc, PermissionError):
@@ -754,6 +776,39 @@ async def upload_document(
             content=content,
             is_admin=_is_admin(user),
             path=path or upload.filename or "",
+        )
+        assert server.services is not None
+        enqueue_index_document(server.services, kb_id, document.id)
+        return _row_payload(document)
+    except Exception as exc:
+        raise _map_knowledge_error(exc, locale=locale, server=server) from exc
+
+
+@router.post(
+    "/{kb_id}/documents/import-url",
+    status_code=status.HTTP_201_CREATED,
+    summary="Import a document from an online URL (Feishu docs first)",
+)
+async def import_url_document(
+    kb_id: str,
+    body: ImportUrlBody,
+    request: Request,
+    server: OctopServer = Depends(get_server),
+    user: User = Depends(require_permission("knowledge_bases")),
+) -> dict[str, Any]:
+    locale = resolve_request_locale(request)
+    try:
+        _require_usable(server, request)
+        document = await asyncio.get_running_loop().run_in_executor(
+            None,
+            partial(
+                _knowledge_service(server).import_online_document,
+                kb_id,
+                actor_user_id=user.id,
+                url=body.url,
+                is_admin=_is_admin(user),
+                path=body.path,
+            ),
         )
         assert server.services is not None
         enqueue_index_document(server.services, kb_id, document.id)

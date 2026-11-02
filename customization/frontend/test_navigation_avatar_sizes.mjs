@@ -84,29 +84,24 @@ for (const name of ['agentCardAvatar', 'agentRowAvatar', 'minimalAgentIconSlot']
 assert.ok(css.includes(`.${relevantClasses.minimalAgentHeader}{display:flex;align-items:center;gap:6px;width:100%;min-height:56px;`));
 assert.ok(css.includes(`.${relevantClasses.minimalAgentAvatar}{position:absolute;top:0;right:0;bottom:0;left:0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;overflow:visible;`));
 
-// v3 changed navigation size; v4 changes the Dock/account renderers while
-// keeping those sizes. Compare the shared graph to the correct prior release.
-const previousRelease = release.release === 'avatars-v3' ? 'avatars-v2' : 'avatars-v3';
+// Compare with the retained build baseline, not another packaged release.
+const baseline = path.join(root, '../baselines/projects-v2/octop/dashboard/assets');
 const changed = [];
-for (const name of release.assets) {
-  const previousName = name.replace(`.${release.release}.`, `.${previousRelease}.`);
-  if (!fs.existsSync(path.join(assets, previousName))) {
-    assert.ok(release.additional_assets?.includes(name), `Unexpected extra graph asset ${name}`);
-    continue;
-  }
-  const previous = fs.readFileSync(path.join(assets, previousName), 'utf8');
-  const current = fs.readFileSync(path.join(assets, name), 'utf8').replaceAll(`.${release.release}.`, `.${previousRelease}.`);
+for (const name of fs.readdirSync(baseline).filter(name => /\.projects-v2\.(js|css)$/.test(name))) {
+  const currentName = name.replace('.projects-v2.', `.${release.release}.`);
+  assert.ok(release.assets.includes(currentName), `Missing baseline graph asset ${currentName}`);
+  const previous = fs.readFileSync(path.join(baseline, name), 'utf8');
+  const current = fs.readFileSync(path.join(assets, currentName), 'utf8').replaceAll(`.${release.release}.`, '.projects-v2.');
   if (previous !== current) changed.push(name);
 }
-const expectedChanged = release.release === 'avatars-v3'
-  ? ['index.BsYGCvv_.avatars-v3.js', 'index.Ds_DN6_-.avatars-v3.css']
-  : [`index.BsYGCvv_.${release.release}.js`, `index.Bexwf9h5.${release.release}.js`];
-if (Number(release.release.split('-v')[1]) >= 5) expectedChanged.push(`index.G9_xhF8C.${release.release}.js`);
-if (Number(release.release.split('-v')[1]) >= 10) expectedChanged.push(`expert-avatars.${release.release}.js`);
-if (Number(release.release.split('-v')[1]) >= 11) expectedChanged.push(`project-folders.${release.release}.js`, `project-folders.${release.release}.css`);
-if (Number(release.release.split('-v')[1]) >= 14) expectedChanged.push(`en.CaWe8dRV.${release.release}.js`, `zh.D-7HvP3m.${release.release}.js`);
-if (Number(release.release.split('-v')[1]) >= 15) expectedChanged.push(`EditAgentDrawer.w674TDCV.${release.release}.js`);
-if (Number(release.release.split('-v')[1]) >= 16) expectedChanged.push(`index.Bxr_iAco.${release.release}.js`, `expert-avatar-integration.${release.release}.js`);
-if (Number(release.release.split("-v")[1]) >= 20) expectedChanged.push(`AgentPluginsPanel.BJlhPlDN.${release.release}.js`, `index.C1lMbskB.${release.release}.js`);
+const expectedChanged = [
+  'AgentPluginsPanel.BJlhPlDN.projects-v2.js', 'EditAgentDrawer.w674TDCV.projects-v2.js',
+  'en.CaWe8dRV.projects-v2.js', 'zh.D-7HvP3m.projects-v2.js',
+  'index.Bexwf9h5.projects-v2.js', 'index.BsYGCvv_.projects-v2.js',
+  'index.Bxr_iAco.projects-v2.js', 'index.C1lMbskB.projects-v2.js',
+  'index.DH7bXiZ0.projects-v2.js', 'index.Ds_DN6_-.projects-v2.css',
+  'index.G9_xhF8C.projects-v2.js', 'index.GTq9IEDq.projects-v2.js',
+  'project-folders.projects-v2.js', 'project-folders.projects-v2.css',
+];
 assert.deepEqual(changed.sort(), expectedChanged.sort());
 console.log('PASS all three tabs retain 48px slots and images; compact header 56px; scoped module changes only');

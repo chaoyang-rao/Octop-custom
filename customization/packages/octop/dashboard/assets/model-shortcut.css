@@ -9,3 +9,4 @@
 .octop-model-shortcut:disabled{opacity:.45;cursor:not-allowed}
 .octop-model-shortcut-popover{max-width:calc(100vw - 24px)}
 @media(max-width:767px){.octop-model-shortcut[data-compact=true]{max-width:clamp(28px,calc(100vw - 272px),96px)}.octop-model-shortcut-popover [role=dialog]{max-width:calc(100vw - 36px)}}
+.octop-model-slot{display:flex;align-items:center;min-width:0;flex:0 1 auto;margin-right:6px}.octop-model-slot:empty{display:none}.octop-model-slot .octop-model-shortcut{order:0;margin-left:0;padding-left:0;padding-right:2px}

@@ -10,13 +10,14 @@ import {
   Select,
   Space,
   Table,
+  Typography,
   Tabs,
   Tag,
-  Typography,
   Upload,
 } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import PageShell from "../../layouts/PageShell";
 import { useAgent } from "../../context/AgentContext";
 import {
   conversationsApi,
@@ -179,32 +180,32 @@ export default function ConversationLibrary() {
     label: agent.name,
   }));
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
+    <PageShell
+      title={t("conversationLibrary.title")}
+      subtitle={t("conversationLibrary.subtitle")}
+      actions={
+        <>
+          <Button
+            onClick={() => {
+              setFiles(false);
+              setImportOpen(true);
+            }}
+          >
+            {t("conversationLibrary.import")}
+          </Button>
+          <Button
+            onClick={() => {
+              setExportIds(owned.map((agent) => agent.agent_id));
+              setFiles(false);
+              setExportOpen(true);
+            }}
+          >
+            {t("conversationLibrary.export")}
+          </Button>
+        </>
+      }
+    >
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        <Space wrap style={{ justifyContent: "space-between", width: "100%" }}>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            {t("conversationLibrary.title")}
-          </Typography.Title>
-          <Space>
-            <Button
-              onClick={() => {
-                setFiles(false);
-                setImportOpen(true);
-              }}
-            >
-              {t("conversationLibrary.import")}
-            </Button>
-            <Button
-              onClick={() => {
-                setExportIds(owned.map((agent) => agent.agent_id));
-                setFiles(false);
-                setExportOpen(true);
-              }}
-            >
-              {t("conversationLibrary.export")}
-            </Button>
-          </Space>
-        </Space>
         <Tabs
           activeKey={archived ? "archived" : "active"}
           onChange={(key) => {
@@ -248,6 +249,7 @@ export default function ConversationLibrary() {
           dataSource={rows}
           pagination={false}
           size="small"
+          scroll={{ x: 720 }}
           columns={[
             {
               title: t("conversationLibrary.conversation"),
@@ -560,6 +562,6 @@ export default function ConversationLibrary() {
           </Checkbox>
         </Space>
       </Modal>
-    </div>
+    </PageShell>
   );
 }
