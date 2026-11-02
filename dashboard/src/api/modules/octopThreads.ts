@@ -1,4 +1,5 @@
 import type { HitlPendingPayload, HitlSessionPolicy } from "../types/hitl";
+import type { ThreadProjectContext } from "./projectFolders";
 import { request } from "../request";
 
 /** Workspace file produced in a thread; ``agent_id`` is the producer. */
@@ -42,7 +43,7 @@ export function normalizeThreadArtifacts(
   return out;
 }
 
-export interface OctopThread {
+export interface OctopThread extends ThreadProjectContext {
   thread_id: string;
   title: string | null;
   channel_type: string;
@@ -69,7 +70,7 @@ export interface OctopThread {
   awaiting_user?: boolean;
 }
 
-export interface OctopThreadHistory {
+export interface OctopThreadHistory extends ThreadProjectContext {
   thread_id: string;
   messages: Array<{
     role: string;
@@ -166,10 +167,10 @@ export const octopThreadsApi = {
       `/agents/${encodeURIComponent(agentId)}/threads?limit=${limit}`,
     ),
 
-  create: (agentId: string) =>
+  create: (agentId: string, project?: ThreadProjectContext) =>
     request<{ thread_id: string; session_key: string }>(
       `/agents/${encodeURIComponent(agentId)}/threads`,
-      { method: "POST" },
+      { method: "POST", ...(project ? { body: JSON.stringify(project) } : {}) },
     ),
 
   historyMigrationStatus: (agentId: string) =>

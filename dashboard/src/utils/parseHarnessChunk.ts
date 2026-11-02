@@ -97,6 +97,8 @@ export interface DoneChunk {
   hitl_paused?: boolean;
   conversation_mode?: "ask" | "plan" | "craft";
   pending_plan_path?: string | null;
+  /** Server wall time for this turn, milliseconds. */
+  duration_ms?: number;
 }
 
 export interface ErrorChunk {
@@ -293,6 +295,12 @@ function parseHarnessChunkBase(line: string): HarnessChunk | null {
             ? obj.pending_plan_path
             : obj.pending_plan_path === null
             ? null
+            : undefined,
+        duration_ms:
+          typeof obj.duration_ms === "number" &&
+          Number.isFinite(obj.duration_ms) &&
+          obj.duration_ms >= 0
+            ? obj.duration_ms
             : undefined,
       };
     case "error":

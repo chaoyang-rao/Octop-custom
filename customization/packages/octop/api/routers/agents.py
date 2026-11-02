@@ -10,11 +10,14 @@ from typing import Any, Literal, cast
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from octop.infra.utils.locale import resolve_request_locale
 
-from octop.api.common.agent import assert_agent_access_row, assert_agent_owner
-from octop.api.common.agent_runtime import runtime_field_updates
+from octop.api.common.agent import (
+    apply_agent_audience,
+    assert_agent_access_row,
+    assert_agent_owner,
+)
 from octop.api.common.agent_avatar import AgentAvatarFields, avatar_config_from_body
+from octop.api.common.agent_runtime import runtime_field_updates
 from octop.api.common.validators import assert_user_backend_root_dirs
 from octop.api.common.workspace import require_agent_workspace
 from octop.api.deps import current_user, get_server
@@ -25,7 +28,10 @@ from octop.infra.agents.experts.avatar import (
     read_workspace_avatar,
     write_workspace_avatar,
 )
-from octop.infra.agents.settings.geometric_avatar import avatar_response, merge_avatar_config, is_generated_avatar_icon_url
+from octop.infra.agents.settings.geometric_avatar import (
+    avatar_response,
+    is_generated_avatar_icon_url,
+)
 from octop.infra.agents.settings.profile import (
     id_list_from_row,
     parse_config_json,
@@ -39,7 +45,9 @@ from octop.infra.agents.settings.runtime_limits import (
 )
 from octop.infra.agents.work_status import attach_expert_work_status
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.users.groups import RESOURCE_EXPERT, GroupAccess
 from octop.infra.users.permissions import user_has_permission
+from octop.infra.utils.locale import resolve_request_locale
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +64,8 @@ class AgentCreateBody(AgentAvatarFields):
     icon: str | None = None
     template_name: str | None = None
     is_shared: bool = False
+    visibility: Literal["owner", "all", "groups"] | None = None
+    group_ids: list[str] | None = None
     color: str | None = None
     icon_name: str | None = None
     icon_url: str | None = None
@@ -105,6 +115,8 @@ class AgentPatchBody(AgentAvatarFields):
     icon: str | None = None
     template_name: str | None = None
     is_shared: bool | None = None
+    visibility: Literal["owner", "all", "groups"] | None = None
+    group_ids: list[str] | None = None
     color: str | None = None
     icon_name: str | None = None
     icon_url: str | None = None
@@ -209,11 +221,15 @@ def _row_dict(
         "icon": row.icon,
         "template_name": row.template_name,
         "icon_name": row.icon_name or cfg.get("icon_name"),
-        **avatar_response(cfg, display_agent_icon_url(
-            agent_id=row.agent_id,
-            stored=_agent_icon_url(row, cfg),
-            updated_at=getattr(row, "updated_at", None),
-        ), identity=row.agent_id),
+        **avatar_response(
+            cfg,
+            display_agent_icon_url(
+                agent_id=row.agent_id,
+                stored=_agent_icon_url(row, cfg),
+                updated_at=getattr(row, "updated_at", None),
+            ),
+            identity=row.agent_id,
+        ),
         "color": row.color or cfg.get("color"),
         "skill_package_ids": packages,
         "knowledge_base_ids": id_list_from_row(row, "knowledge_base_ids"),
@@ -262,7 +278,18 @@ def _row_dict(
     if bootstrap_pending is not None:
         payload["bootstrap_pending"] = bootstrap_pending
     if getattr(row, "kind", None) == "team":
-        payload.update(icon_url="/experts/avatars/team-host.svg", avatar_shape=None, avatar_color=None)
+        payload.update(
+            icon_url="/experts/avatars/team-host.svg", avatar_shape=None, avatar_color=None
+        )
+    repos = getattr(getattr(server, "services", None), "repos", None)
+    if repos is not None:
+        payload.update(
+            GroupAccess(repos).visibility(
+                RESOURCE_EXPERT,
+                row.agent_id,
+                shared=payload["is_shared"],
+            )
+        )
     return payload
 
 
@@ -318,7 +345,10 @@ async def list_agents(
         )
 
     owned = registry.list_agents(user.id)
-    shared = server.services.agent_repo.list_shared(exclude_user_id=user.id)
+    shared = server.services.agent_repo.list_shared(
+        exclude_user_id=user.id,
+        viewer_user_id=None if user.is_admin else user.id,
+    )
     rows = list({row.agent_id: row for row in [*shared, *owned]}.values())
     shared_owner_username_by_id: dict[int, str] = {}
     for row in shared:
@@ -394,7 +424,17 @@ async def create_agent(
         knowledge_base_ids=knowledge_ids,
         mcp_servers=mcp_servers,
     )
+    if body.visibility is not None:
+        GroupAccess(server.services.repos).validate_visibility(body.visibility, body.group_ids)
     row = await server.app_runtime.agent_registry.create(spec)
+    if body.visibility is not None:
+        row = await apply_agent_audience(
+            server,
+            row.agent_id,
+            visibility=body.visibility,
+            group_ids=body.group_ids,
+            shared=body.is_shared,
+        )
     return _row_dict(
         row,
         viewer_user_id=user.id,
@@ -453,12 +493,15 @@ async def mark_agent_read(
     user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> None:
-    """Clear unread counts for all of the user's sessions under this agent."""
+    """Clear this user's unread counts on an agent they can open.
+
+    Shared viewers clear only their own sessions. Other users' badges stay.
+    """
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.get_row(agent_id)
     if row is None:
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
-    _assert_agent_owner(row, user)
+    assert_agent_access_row(row, user, repos=server.services.repos)
     server.services.session_repo.clear_unread_for_agent(agent_id, user.id)
 
 
@@ -473,7 +516,7 @@ async def get_agent(
     row = server.app_runtime.agent_registry.get_row(agent_id)
     if row is None:
         raise OctopError(ErrorCode.AGENT_NOT_FOUND, f"agent {agent_id!r} not found")
-    assert_agent_access_row(row, user)
+    assert_agent_access_row(row, user, repos=server.services.repos)
     return _row_dict(
         row,
         viewer_user_id=user.id,
@@ -514,6 +557,8 @@ async def patch_agent(
             "avatar_shape",
             "avatar_color",
             "is_shared",
+            "visibility",
+            "group_ids",
             "welcome_message",
             "skill_package_ids",
             "knowledge_base_ids",
@@ -521,14 +566,13 @@ async def patch_agent(
         }
     }
     avatar_changed = bool(body.model_fields_set.intersection({"avatar_shape", "avatar_color"}))
-    # Old editor tabs echo public icon_url back on unrelated saves. Generated
-    # projections must never overwrite the original uploaded-image URL.
     if is_generated_avatar_icon_url(updates.get("icon_url")):
         updates.pop("icon_url", None)
     if body.config is not None or avatar_changed:
         previous = parse_config_json(row.config_json)
-        cfg = avatar_config_from_body(body, body.config if body.config is not None else previous,
-                                      previous=previous)
+        cfg = avatar_config_from_body(
+            body, body.config if body.config is not None else previous, previous=previous
+        )
         if body.config is not None and is_generated_avatar_icon_url(cfg.get("icon_url")):
             cfg.pop("icon_url", None)
         updates["config_json"] = json.dumps(cfg, ensure_ascii=False)
@@ -536,9 +580,7 @@ async def patch_agent(
         updates["welcome_message"] = body.welcome_message
     if updates:
         if avatar_changed and body.model_fields_set.issubset({"avatar_shape", "avatar_color"}):
-            # Display-only edits do not interrupt a running conversation or reload its harness.
-            server.services.agent_repo.update_config(agent_id, **updates)
-            row = server.app_runtime.agent_registry.get_row(agent_id)
+            row = server.app_runtime.agent_registry.set_avatar_config(agent_id, cfg["avatar"])
         else:
             row = await server.app_runtime.agent_registry.update(agent_id, **updates)
     if body.skill_package_ids is not None:
@@ -560,8 +602,14 @@ async def patch_agent(
         refreshed = server.app_runtime.agent_registry.get_row(agent_id)
         if refreshed is not None:
             row = refreshed
-    if body.is_shared is not None:
-        row = await server.app_runtime.agent_registry.set_shared(agent_id, body.is_shared)
+    if body.visibility is not None or body.is_shared is not None:
+        row = await apply_agent_audience(
+            server,
+            agent_id,
+            visibility=body.visibility,
+            group_ids=body.group_ids,
+            shared=body.is_shared,
+        )
     return _row_dict(
         row,
         viewer_user_id=user.id,
@@ -600,10 +648,15 @@ async def upload_agent_avatar(
     icon_url = agent_avatar_api_path(agent_id)
     assert server.app_runtime is not None
     row = server.app_runtime.agent_registry.set_icon_url(agent_id, icon_url)
-    return avatar_response(parse_config_json(row.config_json), display_agent_icon_url(
-        agent_id=agent_id, stored=row.icon_url, updated_at=row.updated_at,
-    ), identity=agent_id)
-
+    return avatar_response(
+        parse_config_json(row.config_json),
+        display_agent_icon_url(
+            agent_id=agent_id,
+            stored=row.icon_url,
+            updated_at=row.updated_at,
+        ),
+        identity=agent_id,
+    )
 
 
 @router.get("/{agent_id}/avatar", summary="Fetch expert avatar")

@@ -2,6 +2,7 @@
 from __future__ import annotations
 import asyncio
 import json
+import os
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -69,8 +70,16 @@ class AvatarApiTests(unittest.TestCase):
                       list_agents=lambda uid: self.repo.list_by_user(uid),
                       validate_knowledge_base_ids=lambda uid, ids: ids,
                       validate_mcp_servers=lambda uid, ids: ids)
+        from octop.infra.agents.manager import AgentManager
+        registry._repos = NS(agent_repo=self.repo)
+        registry.set_avatar_config = lambda aid, avatar: AgentManager.set_avatar_config(registry, aid, avatar)
+        from octop.infra.db.services import RepoBundle
+        from unittest.mock import patch
+        self.home_patch = patch.dict(os.environ, {"OCTOP_HOME": str(self.root)})
+        self.home_patch.start()
+        self.addCleanup(self.home_patch.stop)
         self.server = NS(app_runtime=NS(agent_registry=registry),
-                         services=NS(agent_repo=self.repo,
+                         services=NS(repos=RepoBundle.from_pool(self.db), agent_repo=self.repo,
                            user_repo=NS(get=lambda uid: NS(username=f"u{uid}")),
                            user_policy_repo=NS(get=lambda *a: None),
                            session_repo=NS(unread_totals_by_agent=lambda *a: {})))
@@ -235,7 +244,7 @@ class AvatarApiTests(unittest.TestCase):
             "rose": "#DB779A", "amber": "#DCAA46", "coral": "#E5805D",
         }
         self.assertEqual(AVATAR_COLORS, expected)
-        source = (Path(__file__).resolve().parents[1] / "packages/octop/dashboard/assets/expert-avatars.js").read_text(encoding="utf-8")
+        source = (Path(__file__).resolve().parents[2] / "dashboard/src/components/expertPortrait/avatar-library.mjs").read_text(encoding="utf-8")
         frontend = dict(re.findall(r"id:\s*['\"]([a-z]+)['\"][^\n}]*?hex:\s*['\"](#[0-9A-Fa-f]{6})['\"]", source))
         self.assertEqual({key: value.upper() for key, value in frontend.items()}, expected)
 

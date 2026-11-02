@@ -212,6 +212,7 @@ class ProjectRunnerTests(unittest.IsolatedAsyncioTestCase):
             yield
 
         agent = HarnessAgent.__new__(HarnessAgent)
+        agent._hitl_resume_configs = {}
         agent._get_protocol = lambda protocol: SimpleNamespace(resume_stream=resume_stream)
         agent._invocation = invocation
         supplied = {"thread_id": "wrong", "octop_project_path": "/trusted/project"}

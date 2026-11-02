@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createProjectFolders } from '../packages/octop/dashboard/assets/project-folders.js';
+import { createProjectFolders } from '../baselines/avatars-v60/octop/dashboard/assets/project-folders.js';
 
 // These interaction tests execute the shipped component without a DOM, using a
 // small hook harness. The live desktop checks cover dialog focus and rendering.
@@ -135,8 +135,9 @@ assert.equal(JSON.parse(add.body).project_name, '自己填写的名称');
 // Every rewritten static module edge must exist, and no new module may import
 // the old app state module after the versioned main entry has loaded.
 const root = path.dirname(fileURLToPath(import.meta.url));
-const release = JSON.parse(fs.readFileSync(path.join(root, 'asset-release.json')));
-const assets = path.join(root, '../packages/octop/dashboard/assets');
+// Validate the archived active v60 graph, rather than the superseded v3 graph.
+const release = JSON.parse(fs.readFileSync(path.join(root, 'avatar-asset-release.json')));
+const assets = path.join(root, '../baselines/avatars-v60/octop/dashboard/assets');
 for (const name of release.assets.filter(name => name.endsWith('.js'))) {
   const source = fs.readFileSync(path.join(assets, name), 'utf8');
   assert.ok(!source.includes('./index.BsYGCvv_.js'), `Stale main module reference: ${name}`);

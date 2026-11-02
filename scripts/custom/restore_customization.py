@@ -17,7 +17,7 @@ from email.parser import Parser
 from pathlib import Path, PurePosixPath
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BASE_VERSION = "1.0.2"
+BASE_VERSION = "1.0.3b2"
 PACKAGE_NAMES = {"octop", "octop_harness", "octop_gateway"}
 MARKER = "octop-custom-release.json"
 INSTALL_MANIFEST = "custom-restore-manifest.json"

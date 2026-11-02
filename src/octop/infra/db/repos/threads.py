@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 from octop.infra.db.pool import DatabasePool
 from octop.infra.db.repos._base import DbRow, bool_int, map_rows, now_ts
@@ -177,13 +179,15 @@ class ThreadRepo:
         session_key: str,
         title: str | None = None,
         last_active: int | None = None,
+        project_path: str | None = None,
+        project_name: str | None = None,
     ) -> None:
         ts = now_ts()
         with self._db.transaction() as conn:
             conn.execute(
                 "INSERT INTO threads(thread_id, agent_id, user_id, channel_type, "
-                "session_key, title, last_active, created_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "session_key, title, last_active, created_at, project_path, project_name) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     thread_id,
                     agent_id,
@@ -193,13 +197,123 @@ class ThreadRepo:
                     clip_thread_title(title) if title else None,
                     ts if last_active is None else last_active,
                     ts,
+                    project_path,
+                    project_name,
                 ),
             )
+            if project_path:
+                self._upsert_project(conn, agent_id, user_id, project_path, project_name)
             conn.execute(
                 "INSERT INTO thread_history_projection(thread_id, status, updated_at, error) "
                 "VALUES (?, 'ready', ?, NULL) ON CONFLICT(thread_id) DO NOTHING",
                 (thread_id, ts),
             )
+
+    @staticmethod
+    def _upsert_project(
+        conn: Any, agent_id: str, user_id: int, project_path: str, project_name: str | None
+    ) -> str:
+        existing = conn.execute(
+            "SELECT project_name FROM thread_projects WHERE agent_id = ? AND user_id = ? "
+            "AND project_path = ?",
+            (agent_id, user_id, project_path),
+        ).fetchone()
+        name = (project_name or "").strip() or (
+            str(existing["project_name"]) if existing else Path(project_path).name or project_path
+        )
+        conn.execute(
+            "INSERT INTO thread_projects(agent_id, user_id, project_path, project_name, created_at) "
+            "VALUES (?, ?, ?, ?, ?) ON CONFLICT(agent_id, user_id, project_path) "
+            "DO UPDATE SET project_name = excluded.project_name",
+            (agent_id, user_id, project_path, name, now_ts()),
+        )
+        conn.execute(
+            "UPDATE threads SET project_name = ? WHERE agent_id = ? AND user_id = ? "
+            "AND project_path = ?",
+            (name, agent_id, user_id, project_path),
+        )
+        return name
+
+    def upsert_project(
+        self, *, agent_id: str, user_id: int, project_path: str, project_name: str | None = None
+    ) -> dict[str, object]:
+        with self._db.transaction() as conn:
+            self._upsert_project(conn, agent_id, user_id, project_path, project_name)
+            row = conn.execute(
+                "SELECT project_path, project_name, created_at FROM thread_projects "
+                "WHERE agent_id = ? AND user_id = ? AND project_path = ?",
+                (agent_id, user_id, project_path),
+            ).fetchone()
+            count = conn.execute(
+                "SELECT COUNT(*) FROM threads WHERE agent_id = ? AND user_id = ? AND project_path = ?",
+                (agent_id, user_id, project_path),
+            ).fetchone()[0]
+            return {**dict(row), "thread_count": int(count)}
+
+    def list_projects(self, *, agent_id: str, user_id: int) -> list[dict[str, object]]:
+        with self._db.connect() as conn:
+            rows = conn.execute(
+                "SELECT p.project_path, p.project_name, p.created_at, COUNT(t.thread_id) AS thread_count "
+                "FROM thread_projects p LEFT JOIN threads t ON t.agent_id = p.agent_id "
+                "AND t.user_id = p.user_id AND t.project_path = p.project_path "
+                "WHERE p.agent_id = ? AND p.user_id = ? "
+                "GROUP BY p.project_path, p.project_name, p.created_at "
+                "ORDER BY p.created_at, p.project_path",
+                (agent_id, user_id),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_project_threads(
+        self, *, agent_id: str, user_id: int, project_path: str
+    ) -> list[ThreadRow]:
+        with self._db.connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM threads WHERE agent_id = ? AND user_id = ? AND project_path = ?",
+                (agent_id, user_id, project_path),
+            ).fetchall()
+        return map_rows(rows, ThreadRow)
+
+    def set_project(
+        self,
+        thread_id: str,
+        *,
+        agent_id: str,
+        user_id: int,
+        project_path: str | None,
+        project_name: str | None = None,
+    ) -> None:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "SELECT thread_id FROM threads WHERE thread_id = ? AND agent_id = ? AND user_id = ?",
+                (thread_id, agent_id, user_id),
+            ).fetchone()
+            if row is None:
+                raise ValueError("thread not owned by user and agent")
+            name = (
+                self._upsert_project(conn, agent_id, user_id, project_path, project_name)
+                if project_path
+                else None
+            )
+            conn.execute(
+                "UPDATE threads SET project_path = ?, project_name = ? "
+                "WHERE thread_id = ? AND agent_id = ? AND user_id = ?",
+                (project_path, name, thread_id, agent_id, user_id),
+            )
+
+    def delete_project(self, *, agent_id: str, user_id: int, project_path: str) -> int:
+        """Remove only grouping metadata. Never touch the referenced filesystem."""
+        with self._db.transaction() as conn:
+            cursor = conn.execute(
+                "UPDATE threads SET project_path = NULL, project_name = NULL "
+                "WHERE agent_id = ? AND user_id = ? AND project_path = ?",
+                (agent_id, user_id, project_path),
+            )
+            count = int(cursor.rowcount)
+            conn.execute(
+                "DELETE FROM thread_projects WHERE agent_id = ? AND user_id = ? AND project_path = ?",
+                (agent_id, user_id, project_path),
+            )
+        return count
 
     def get(self, thread_id: str) -> ThreadRow | None:
         with self._db.connect() as conn:
@@ -223,6 +337,22 @@ class ThreadRepo:
                 (user_id,),
             ).fetchall()
         return [(str(row["agent_id"]), str(row["thread_id"])) for row in rows]
+
+    def latest_user_activity(self, agent_id: str) -> int | None:
+        """Latest thread touch for ``agent_id``, ignoring empty threads.
+
+        ``last_active`` of 0 means the thread has no turns yet. Proactive care
+        uses this as the idle clock; the scheduler separately ignores a touch
+        that is only our own care push.
+        """
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT MAX(last_active) FROM threads WHERE agent_id = ? AND last_active > 0",
+                (agent_id,),
+            ).fetchone()
+        if row is None or row[0] is None:
+            return None
+        return int(row[0])
 
     def list_by_agent(self, *, agent_id: str, limit: int = 50) -> list[ThreadRow]:
         # last_active=0 is "no turns yet" (has_messages sentinel). Fall back to

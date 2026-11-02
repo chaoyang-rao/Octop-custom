@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const assets = path.join(root, '../packages/octop/dashboard/assets');
+const assets = path.join(root, '../baselines/avatars-v60/octop/dashboard/assets');
 const release = JSON.parse(fs.readFileSync(path.join(root, 'avatar-asset-release.json')));
 const main = fs.readFileSync(path.join(assets, release.main), 'utf8');
 const css = fs.readFileSync(path.join(assets, `index.Ds_DN6_-.${release.release}.css`), 'utf8');

@@ -90,7 +90,9 @@ def stamp_primary_chunk(chunk: Any, room: PrimaryRoom) -> Any:
         return chunk
     out = dict(chunk)
     # The room owns transport lifecycle; the expert owns authored content.
-    out.update(agent_id=room.team_id, turn_owner_agent_id=room.team_id, speaker_agent_id=room.primary_id)
+    out.update(
+        agent_id=room.team_id, turn_owner_agent_id=room.team_id, speaker_agent_id=room.primary_id
+    )
     if isinstance(out.get("messages"), list):
         out["messages"] = [stamp_message(msg, room) for msg in out["messages"]]
     data = out.get("data")

@@ -20,7 +20,9 @@ def service(tmp_path):
         conn.executescript(
             "CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE secrets(k TEXT PRIMARY KEY,v BLOB NOT NULL,created_at INTEGER NOT NULL,rotated_at INTEGER);"
         )
-    yield MobileAccessService(SettingsRepo(pool), SecretRepo(pool))
+    user = SimpleNamespace(password_version=0, mfa_version=0, disabled=False)
+    users = SimpleNamespace(get=lambda uid: user if uid == 1 else None)
+    yield MobileAccessService(SettingsRepo(pool), SecretRepo(pool), user_repo=users)
     pool.close()
 
 
@@ -82,7 +84,7 @@ async def test_tokens_are_hashed_and_exchange_result_is_encrypted(service):
 async def test_revocation_survives_restart_and_old_exchange_cannot_resurrect(service):
     request, result = await paired(service)
     await service.revoke(user_id=1, device_id=result["device_id"])
-    restarted = MobileAccessService(service._settings, service._secrets)
+    restarted = MobileAccessService(service._settings, service._secrets, user_repo=service._users)
     with pytest.raises(OctopError):
         restarted.authenticate(result["access_token"])
     with pytest.raises(OctopError):
@@ -107,7 +109,9 @@ async def test_device_never_inherits_admin_or_grants_lost_account_permissions(se
     _, result = await paired(service, ["chat", "browser"])
     owner = User(id=1, username="admin", role="admin", display_name=None)
     server = SimpleNamespace(
-        _mobile_access_service=service, user_manager=SimpleNamespace(get_by_id=lambda _: owner)
+        _mobile_access_service=service,
+        services=SimpleNamespace(user_repo=service._users),
+        user_manager=SimpleNamespace(get_by_id=lambda _: owner),
     )
     user = resolve_mobile_user(server, result["access_token"], path="/api/agents", method="GET")
     assert not user.is_admin and "providers" not in user.permissions

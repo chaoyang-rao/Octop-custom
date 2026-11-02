@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAvatarSettings, userBubblePresentation } from '../packages/octop/dashboard/assets/expert-avatar-integration.js';
+import { createAvatarSettings, userBubblePresentation } from '../baselines/avatars-v60/octop/dashboard/assets/expert-avatar-integration.js';
 
 const calls = [];
 const bubbleStyle = color => { calls.push(color); return { backgroundColor: '#19B7A2', color: '#0B101B' }; };
@@ -39,7 +39,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const manifestPath = path.join(root, 'avatar-asset-release.json');
 if (fs.existsSync(manifestPath)) {
   const release = JSON.parse(fs.readFileSync(manifestPath));
-  const assets = path.join(root, '../packages/octop/dashboard/assets');
+  const assets = path.join(root, '../baselines/avatars-v60/octop/dashboard/assets');
   assert.equal(release.assets.length, 217 + (release.additional_assets?.length ?? 4), 'Only the active baseline graph and explicitly registered helper assets are versioned');
   assert.equal(new Set(release.assets).size, release.assets.length, 'Release assets must be unique');
   for (const name of release.assets.filter(name => name.endsWith('.js'))) {

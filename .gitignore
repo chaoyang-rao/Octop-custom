@@ -132,3 +132,6 @@ scripts/lh_image_install_octop_tencentos.sh
 /customization/release-manifest.json
 /customization/avatar-release-manifest.json
 /designs/avatar-pilot-20261028/reference/
+# Local MFA E2E scratch (recovery codes, screenshots with secrets)
+.tmp-mfa/
+.tmp-mfa-e2e/

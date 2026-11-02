@@ -52,7 +52,7 @@ class PortableBuilderTests(unittest.TestCase):
     def fixture(
         self,
         platform: str = "darwin-arm64",
-        version: str = "1.0.2",
+        version: str = "1.0.3b2",
         binary: bytes | None = None,
         extra_name: str | None = None,
     ) -> dict:
@@ -92,8 +92,8 @@ class PortableBuilderTests(unittest.TestCase):
             if extra_name:
                 archive.writestr(extra_name, "invalid path")
         return {
-            "upstream_version": "1.0.2",
-            "custom_version": "1.0.2.post20261102",
+            "upstream_version": "1.0.3b2",
+            "custom_version": "1.0.3b2.post20261103",
             "upstream_commit": "upstream-commit",
             "assets": {
                 platform: {
@@ -151,7 +151,7 @@ class PortableBuilderTests(unittest.TestCase):
                 ):
                     self.assertEqual(getattr(after, attribute), getattr(before, attribute))
             version = result.read(f"{root}/VERSION.txt").decode()
-            self.assertIn("octop_version=1.0.2.post20261102", version)
+            self.assertIn("octop_version=1.0.3b2.post20261103", version)
             launch = result.read(f"{root}/launch.py")
             expected_launch = original.read(f"{root}/launch.py").replace(
                 b"def main() -> None:\n",

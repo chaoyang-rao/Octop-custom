@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import re
-from uuid import uuid4
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import Response
 
@@ -63,7 +63,11 @@ def profile_avatar_url(directory: Path, key: str, api_path: str) -> str | None:
 
 
 def write_profile_avatar(
-    directory: Path, key: str, data: bytes, *, preserve_previous: bool = False,
+    directory: Path,
+    key: str,
+    data: bytes,
+    *,
+    preserve_previous: bool = False,
 ) -> None:
     media_type = sniff_avatar_media_type(data)
     stem = _stem(key)

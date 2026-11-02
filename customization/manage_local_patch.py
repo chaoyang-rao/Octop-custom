@@ -17,6 +17,8 @@ import sqlite3
 import tempfile
 
 ROOT = Path(__file__).resolve().parent
+if json.loads((ROOT.parent / "scripts/custom/upstream-lock.json").read_text())["upstream_version"] != "1.0.2":
+    raise SystemExit("Legacy 1.0.2 installer; upgrade the portable first, then use scripts/custom/restore_customization.py")
 _baseline_config = ROOT / "baseline.json"
 BASELINE = json.loads(_baseline_config.read_text()) if _baseline_config.exists() else {
     "version": "1.0.2",

@@ -323,6 +323,8 @@ class ThreadRegistry:
         channel_chat_type: str = "dm",
         channel_metadata: dict[str, Any] | None = None,
         channel_id: str | None = None,
+        project_path: str | None = None,
+        project_name: str | None = None,
     ) -> str:
         session_key = self.make_key(
             agent_id=agent_id,
@@ -344,6 +346,8 @@ class ThreadRegistry:
                 channel_type=channel_type,
                 session_key=session_key,
                 last_active=0,
+                project_path=project_path,
+                project_name=project_name,
             )
             self._sessions.upsert(
                 session_key=session_key,
@@ -364,6 +368,7 @@ class ThreadRegistry:
         if session is None:
             msg = f"session {session_key!r} not found"
             raise ValueError(msg)
+        source = self._threads.get(session.thread_id)
         async with self._lock:
             tid = _new_thread_id()
             self._threads.insert(
@@ -373,6 +378,8 @@ class ThreadRegistry:
                 channel_type=session.channel_type,
                 session_key=session_key,
                 last_active=0,
+                project_path=source.project_path if source else None,
+                project_name=source.project_name if source else None,
             )
             self._sessions.upsert(
                 session_key=session_key,
@@ -418,6 +425,43 @@ class ThreadRegistry:
             hitl_policy=hitl_policy,
         )
 
+    def list_projects(self, *, agent_id: str, user_id: int) -> list[dict[str, object]]:
+        return self._threads.list_projects(agent_id=agent_id, user_id=user_id)
+
+    def upsert_project(
+        self, *, agent_id: str, user_id: int, project_path: str, project_name: str | None = None
+    ) -> dict[str, object]:
+        return self._threads.upsert_project(
+            agent_id=agent_id, user_id=user_id, project_path=project_path, project_name=project_name
+        )
+
+    def project_threads(self, *, agent_id: str, user_id: int, project_path: str) -> list[ThreadRow]:
+        return self._threads.list_project_threads(
+            agent_id=agent_id, user_id=user_id, project_path=project_path
+        )
+
+    def set_project(
+        self,
+        thread_id: str,
+        *,
+        agent_id: str,
+        user_id: int,
+        project_path: str | None,
+        project_name: str | None = None,
+    ) -> None:
+        self._threads.set_project(
+            thread_id,
+            agent_id=agent_id,
+            user_id=user_id,
+            project_path=project_path,
+            project_name=project_name,
+        )
+
+    def delete_project(self, *, agent_id: str, user_id: int, project_path: str) -> int:
+        return self._threads.delete_project(
+            agent_id=agent_id, user_id=user_id, project_path=project_path
+        )
+
     def touch_last_active(self, thread_id: str) -> None:
         self._threads.touch_last_active(thread_id)
 
@@ -449,6 +493,8 @@ class ThreadRegistry:
         title: str | None = None,
         last_active: int = 0,
         thread_id: str | None = None,
+        project_path: str | None = None,
+        project_name: str | None = None,
     ) -> str:
         """Insert a thread row without rebinding the active session."""
         tid = thread_id or _new_thread_id()
@@ -460,6 +506,8 @@ class ThreadRegistry:
             session_key=session_key,
             title=title,
             last_active=last_active,
+            project_path=project_path,
+            project_name=project_name,
         )
         return tid
 

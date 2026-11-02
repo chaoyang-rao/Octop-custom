@@ -255,6 +255,8 @@ async def fork_dashboard_thread(
         session_key=session_key,
         title=None,
         last_active=0,
+        project_path=source.project_path,
+        project_name=source.project_name,
     )
     try:
         await write_checkpoint_messages(harness, thread_id=dest_id, messages=prefix)
@@ -297,6 +299,8 @@ async def fork_dashboard_thread(
         "thread_id": dest_id,
         "session_key": session_key,
         "source_thread_id": source.thread_id,
+        "project_path": source.project_path,
+        "project_name": source.project_name,
         "copied_messages": copied,
         "title": row.title if row is not None else None,
         "last_active": row.last_active if row is not None else 0,

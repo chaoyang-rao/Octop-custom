@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { accountDisplayName, accountInitials, initialsFromName, createAccountAvatar }
-  from '../packages/octop/dashboard/assets/account-avatar.js';
+  from '../baselines/avatars-v60/octop/dashboard/assets/account-avatar.js';
 
 const cases = [
   ['', '我'], ['   ', '我'], [null, '我'], ['饶朝洋', '朝洋'], ['饶', '饶'],
@@ -54,7 +54,7 @@ assert.equal(AccountInitialAvatar({ user: { ...account, avatar_url: ' ', avatar_
 assert.equal(directProfileCalls, 0, 'Image/preset modes must use a React component boundary rather than calling hook functions');
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const css = fs.readFileSync(path.join(root, '../packages/octop/dashboard/assets/account-avatar.css'), 'utf8');
+const css = fs.readFileSync(path.join(root, '../baselines/avatars-v60/octop/dashboard/assets/account-avatar.css'), 'utf8');
 assert.ok(css.includes('[data-octop-geometric-avatar]{'));
 assert.ok(css.includes(':has(>svg[data-octop-geometric-avatar]:only-child)'));
 assert.ok(css.includes('background:transparent!important'));

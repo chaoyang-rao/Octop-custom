@@ -210,7 +210,9 @@ class MobilePushService:
             for target in targets:
                 provider = target["platform"]
                 config = await self._config(provider)
-                if config is None:
+                if config is None or not await asyncio.to_thread(
+                    self.access.device_is_current, user_id, target["device_id"]
+                ):
                     continue
                 try:
                     announce = self._eligible_alert(user_id, event, target)
@@ -266,6 +268,10 @@ class MobilePushService:
                 config = await self._config("apns")
                 if config:
                     for target in await self.access.activity_targets(user_id, event["thread_id"]):
+                        if not await asyncio.to_thread(
+                            self.access.device_is_current, user_id, target["device_id"]
+                        ):
+                            continue
                         try:
                             await self._send_apns(
                                 config, target["token"], event, live_activity=True, locale=locale

@@ -83,4 +83,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     current = json.loads((root / "frontend" / "avatar-asset-release.json").read_text())
-    prune_assets(root / "packages" / "octop" / "dashboard", current, apply=args.apply)
+    dashboard = root.parent / current.get("dashboard", "customization/packages/octop/dashboard")
+    prune_assets(dashboard, current, apply=args.apply)

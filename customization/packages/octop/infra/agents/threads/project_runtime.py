@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
+
+from octop.i18n import tr
+from octop.infra.utils.host_dirs import assert_safe_host_path, host_path_text
+from octop.infra.utils.locale import DEFAULT_LOCALE, Locale
 
 PROJECT_CONFIG_KEYS = ("octop_project_path", "octop_project_name")
 
 
-def thread_project_config(
-    thread_repo: Any, *, agent_id: str, thread_id: str
-) -> dict[str, str]:
+def thread_project_config(thread_repo: Any, *, agent_id: str, thread_id: str) -> dict[str, str]:
     if not thread_id:
         return {}
     row = thread_repo.get(thread_id)
@@ -23,3 +26,23 @@ def thread_project_config(
         "octop_project_path": path.strip(),
         "octop_project_name": name.strip() if isinstance(name, str) else "",
     }
+
+
+def normalize_project_path(
+    raw: str | None, *, allowed_root: str | None, locale: Locale = DEFAULT_LOCALE
+) -> str | None:
+    """Resolve an existing host folder within the account's workspace policy."""
+    if raw is None or not raw.strip():
+        return None
+    try:
+        candidate = Path(raw.strip()).expanduser()
+    except (ValueError, RuntimeError) as exc:
+        raise ValueError(tr("projects.errors.invalid_path", locale)) from exc
+    if not candidate.is_absolute():
+        raise ValueError(tr("projects.errors.absolute_required", locale))
+    path = assert_safe_host_path(
+        str(candidate), restrict_to_home=False, restrict_to_root=allowed_root
+    )
+    if not path.is_dir():
+        raise ValueError(tr("projects.errors.directory_missing", locale))
+    return host_path_text(path)

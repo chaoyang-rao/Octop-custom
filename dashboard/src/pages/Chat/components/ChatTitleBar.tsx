@@ -25,7 +25,10 @@ interface ChatTitleBarProps {
   onRename: (id: string, name: string) => void;
   onPin: (id: string, pinned: boolean) => void;
   onFork: (id: string) => void;
-  onDelete: (id: string, compact: boolean) => void | Promise<boolean | void>;
+  onDelete: (
+    id: string,
+    compact: boolean,
+  ) => void | Promise<boolean | null | void>;
   forkDisabled?: boolean;
   forkDisabledHint?: string;
   isTeam?: boolean;
@@ -98,9 +101,9 @@ export default function ChatTitleBar({
         icon: <Trash2 size={14} />,
         danger: true,
         onClick: () => {
-          confirmDeleteConversation(t, (compact) => {
-            void onDelete(session.id, compact);
-          });
+          confirmDeleteConversation(t, (compact) =>
+            onDelete(session.id, compact),
+          );
         },
       },
     ],

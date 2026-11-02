@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { collectSentLinks } from "../packages/octop/dashboard/assets/composer-files.js";
+import { collectSentLinks } from "../baselines/avatars-v60/octop/dashboard/assets/composer-files.js";
 
 const failures = [];
 const check = (name, condition) => {
@@ -17,7 +17,7 @@ check("ignores assistant", !links.some((url) => url.includes("ignored.example"))
 check("strips punctuation", links.includes("https://www.python.org/"));
 
 const asset = readFileSync(
-  new URL("../packages/octop/dashboard/assets/composer-files.js", import.meta.url),
+  new URL("../baselines/avatars-v60/octop/dashboard/assets/composer-files.js", import.meta.url),
   "utf8",
 );
 check("lists files and links", asset.includes('"chat.files.links"'));

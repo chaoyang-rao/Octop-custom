@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { createDockCollapseUi } from '../packages/octop/dashboard/assets/dock-collapse.js';
+import { createDockCollapseUi } from '../baselines/avatars-v60/octop/dashboard/assets/dock-collapse.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const sourcePath = path.join(root, '../baselines/projects-v2/octop/dashboard/assets/index.BsYGCvv_.projects-v2.js');

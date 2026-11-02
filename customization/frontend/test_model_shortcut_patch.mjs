@@ -152,7 +152,7 @@ plus.props.onOpenChange(true);
 assert.equal(picker(render()).props.open, false, 'Opening More tools dismisses the quick model popover');
 
 const sourceCss = fs.readFileSync(new URL('../../dashboard/src/pages/Chat/components/ChatInputModelShortcut.css', import.meta.url), 'utf8');
-const frozenCss = fs.readFileSync(new URL('../packages/octop/dashboard/assets/model-shortcut.css', import.meta.url), 'utf8');
+const frozenCss = fs.readFileSync(new URL('../baselines/avatars-v60/octop/dashboard/assets/model-shortcut.css', import.meta.url), 'utf8');
 const formatCss = css => format(css, { parser: 'css' });
 assert.equal(await formatCss(sourceCss), await formatCss(frozenCss), 'Source and frozen styles must remain identical after CSS formatting');
 assert.notEqual(await formatCss(sourceCss.replace(/gap:\s*3px;/, 'gap: 4px;')), await formatCss(frozenCss),

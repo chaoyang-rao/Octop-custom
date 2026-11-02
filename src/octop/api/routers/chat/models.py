@@ -179,6 +179,32 @@ class PolishBody(BaseModel):
     default_model: str | None = None
 
 
+class ThreadProjectBody(BaseModel):
+    project_path: str | None = Field(
+        default=None,
+        max_length=4096,
+        description="Existing absolute project directory; null removes only the grouping.",
+    )
+    project_name: str | None = Field(default=None, max_length=160)
+
+
+class CreateProjectBody(BaseModel):
+    project_path: str = Field(
+        ...,
+        min_length=1,
+        max_length=4096,
+        description="Existing absolute project directory within this account's workspace policy.",
+    )
+    project_name: str | None = Field(default=None, max_length=160)
+
+
+class ProjectFolderResponse(BaseModel):
+    project_path: str
+    project_name: str
+    created_at: int
+    thread_count: int
+
+
 class RebindSessionBody(BaseModel):
     thread_id: str
 
@@ -199,7 +225,7 @@ class ForkThreadBody(BaseModel):
     )
 
 
-class RenameThreadBody(BaseModel):
+class RenameThreadBody(ThreadProjectBody):
     title: str | None = None
     pinned: bool | None = None
     model_ref: str | None = None

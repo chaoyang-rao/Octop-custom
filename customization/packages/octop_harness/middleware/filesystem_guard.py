@@ -46,10 +46,15 @@ _FS_TOOL_OPS: dict[str, Literal["read", "write"]] = {
     "delete": "write",
 }
 _FS_WCMATCH_FLAGS = wcglob.BRACE | wcglob.GLOBSTAR
-_MEMORY_WRITE_TOOLS = frozenset({"write_file", "edit_file", "append_file", "delete", "delete_file", "move_file"})
+_MEMORY_CONTENT_TOOLS = frozenset({"write_file", "edit_file", "append_file"})
+_MEMORY_REMOVE_TOOLS = frozenset({"delete", "delete_file", "move_file"})
+_MEMORY_WRITE_TOOLS = _MEMORY_CONTENT_TOOLS | _MEMORY_REMOVE_TOOLS
 _MEMORY_READ_ONLY_MESSAGE = (
     "{filename} is user-maintained memory. Edit it manually in the memory dashboard. "
     "Use memory_save to remember information in octop-memory."
+)
+_MEMORY_KEEP_PATH_MESSAGE = (
+    "{filename} must stay at its workspace path. Clear it by writing empty content instead of deleting or moving it."
 )
 
 _OUTSIDE_ROOT_REMEDIATION = (
@@ -212,6 +217,68 @@ def _check_fs_permission(
     return "allow"
 
 
+_BASENAME_WIDE_GLOBS = frozenset({"*", "**", "**/*"})
+_GLOB_PATH_MESSAGE = (
+    "Error: glob pattern {pattern!r} needs an explicit path. "
+    "A relative path such as '.' is this workspace; path='/' searches from the backend root."
+)
+_GLOB_ESCAPE_MESSAGE = (
+    "Error: glob path {path!r} leaves the workspace. "
+    "Use a workspace-relative path, or path='/' to search from the backend root."
+)
+
+
+def _basename_wide_glob(pattern: str) -> bool:
+    """True when omitting ``path`` would walk every depth from the backend root."""
+    normalized = pattern.strip().replace("\\", "/")
+    return normalized in _BASENAME_WIDE_GLOBS or "/" not in normalized
+
+
+def _explicit_glob_root(path: str) -> bool:
+    """``/`` and other absolute paths choose a search root on purpose."""
+    return path.strip().replace("\\", "/").startswith("/") or is_windows_absolute_path(path)
+
+
+def _relative_glob_leaves_workspace(path: str, workspace: BackendWorkspace) -> bool:
+    try:
+        workspace_root = Path(workspace.resolve_path(".")).resolve()
+        target = Path(workspace.resolve_path(path)).resolve()
+        target.relative_to(workspace_root)
+    except (OSError, PermissionError, ValueError):
+        return True
+    return False
+
+
+def unbounded_glob_block_reason(
+    tool_name: str,
+    params: dict[str, Any],
+    *,
+    workspace: BackendWorkspace | None = None,
+) -> str | None:
+    """Require an explicit search root for basename-wide glob patterns.
+
+    A pattern without ``/`` matches the file name at every depth. With no path,
+    deepagents starts that walk at the backend root. A relative path stays in
+    the workspace; ``/`` is an explicit backend-root search. A pattern that
+    already contains ``/``, such as ``**/*.md``, is root-relative and is left
+    to the backend.
+    """
+    pattern = params.get("pattern")
+    if _tool_base_name(tool_name) != "glob" or not isinstance(pattern, str):
+        return None
+    normalized = pattern.strip()
+    if not _basename_wide_glob(normalized):
+        return None
+    path = params.get("path")
+    if not isinstance(path, str) or not path.strip():
+        return _GLOB_PATH_MESSAGE.format(pattern=normalized)
+    if _explicit_glob_root(path):
+        return None
+    if workspace is not None and _relative_glob_leaves_workspace(path, workspace):
+        return _GLOB_ESCAPE_MESSAGE.format(path=path.strip())
+    return None
+
+
 def filesystem_guard_block_reason(
     permissions: list[FilesystemPermission],
     *,
@@ -272,8 +339,11 @@ def _tool_call_meta(request: ToolCallRequest) -> tuple[str, str]:
 class FilesystemGuardMiddleware(AgentMiddleware[Any, Any]):
     """Filesystem tool boundary: user-owned memory, denies and soft failures.
 
-    When a workspace is bound, MEMORY.md / USER.md writes are blocked independently of
-    optional permission rules and shell-command guard settings.
+    When a workspace is bound and user-memory protection is on, MEMORY.md / USER.md
+    writes are blocked. Protection follows structured memory: on means the user
+    edits those files and the agent uses memory_save; off means content edits are
+    allowed. Delete and move stay blocked so the loader paths remain. This is
+    independent of optional permission rules and shell-command guard settings.
     Outside-root softening applies only to filesystem tools (``ls``,
     ``read_file``, …), not arbitrary tool ValueErrors.
     """
@@ -285,11 +355,13 @@ class FilesystemGuardMiddleware(AgentMiddleware[Any, Any]):
         root_dir: str | Path | None = None,
         workspace_dir: str | Path | None = None,
         workspace: BackendWorkspace | None = None,
+        protect_user_memory: bool = True,
     ) -> None:
         self._permissions = list(permissions or ())
         self._root_dir = root_dir
         self._workspace_dir = workspace_dir
         self._workspace = workspace
+        self._protect_user_memory = protect_user_memory
         self._rewritten_logged: set[str] = set()
 
     def _rewrite_legacy_windows_request(self, request: ToolCallRequest) -> ToolCallRequest:
@@ -354,6 +426,10 @@ class FilesystemGuardMiddleware(AgentMiddleware[Any, Any]):
                 except (OSError, ValueError, PermissionError):
                     continue
             if matched_filename is not None:
+                if not self._protect_user_memory and _tool_base_name(tool_name) in _MEMORY_CONTENT_TOOLS:
+                    return None
+                if not self._protect_user_memory:
+                    return _MEMORY_KEEP_PATH_MESSAGE.format(filename=matched_filename)
                 return _MEMORY_READ_ONLY_MESSAGE.format(filename=matched_filename)
         return None
 
@@ -361,10 +437,14 @@ class FilesystemGuardMiddleware(AgentMiddleware[Any, Any]):
         tool_name, call_id = _tool_call_meta(request)
         raw_args: Any = request.tool_call.get("args") or {}
         params: dict[str, Any] = raw_args if isinstance(raw_args, dict) else {}
-        reason = self._memory_write_block_reason(tool_name, params) or filesystem_guard_block_reason(
-            self._permissions,
-            tool_name=tool_name,
-            params=params,
+        reason = (
+            unbounded_glob_block_reason(tool_name, params, workspace=self._workspace)
+            or self._memory_write_block_reason(tool_name, params)
+            or filesystem_guard_block_reason(
+                self._permissions,
+                tool_name=tool_name,
+                params=params,
+            )
         )
         if reason is None:
             return None
@@ -435,4 +515,5 @@ __all__ = [
     "is_windows_absolute_path",
     "path_outside_root_tool_message",
     "rewrite_legacy_windows_fs_path",
+    "unbounded_glob_block_reason",
 ]

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {SHAPES,COLORS,avatarFrame,avatarUrl,parseAvatarUrl,bubbleStyle,contrast} from '../packages/octop/dashboard/assets/expert-avatars.js';
+import {SHAPES,COLORS,avatarFrame,avatarUrl,parseAvatarUrl,bubbleStyle,contrast} from '../baselines/avatars-v60/octop/dashboard/assets/expert-avatars.js';
 
 const lightColors={jade:'#19B7A2',rose:'#DB779A',amber:'#DCAA46',coral:'#E5805D'};
 const darkColors=new Set(['ink','blue','violet']);

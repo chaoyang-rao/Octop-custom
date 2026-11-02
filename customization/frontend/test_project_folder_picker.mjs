@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { createProjectFolderPicker } from '../packages/octop/dashboard/assets/project-folder-picker.js';
+import { createProjectFolderPicker } from '../baselines/avatars-v60/octop/dashboard/assets/project-folder-picker.js';
 
 // Use the same real React and jsdom dependencies as the existing dashboard.
 const require = createRequire(new URL('../../dashboard/package.json', import.meta.url));

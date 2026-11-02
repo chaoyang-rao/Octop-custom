@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "v1.0.2-custom.20261102.1"
+        default: "v1.0.3b2-custom.20261103.1"
         required: true
         type: string
       publish_release:
@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.2.post20261102"
-  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.2-custom.20261102.1' }}
+  CUSTOM_VERSION: "1.0.3b2.post20261103"
+  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.3b2-custom.20261103.1' }}
 
 jobs:
   quality:
@@ -45,7 +45,7 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: npm ci --prefix dashboard
-      - name: Verify the customized project picker and preserved UI behavior
+      - name: Verify archived 1.0.2 patch fixtures and preserved contracts
         run: |
           python customization/frontend/test_prune_assets.py
           python customization/frontend/test_avatar_account_patch.py
@@ -68,6 +68,12 @@ jobs:
           node customization/frontend/test_account_avatar.mjs
           node customization/frontend/test_account_avatar_settings.mjs
           node customization/frontend/test_bubble_palette.mjs
+      - name: Verify current source-generated program and dashboard
+        run: |
+          python scripts/custom/sync_octop_source.py --check
+          python scripts/custom/sync_dashboard.py --check
+          python -m unittest discover -s scripts/custom -p 'test_*freeze*.py'
+          python -m unittest discover -s scripts/custom -p 'test_sync_octop_source.py'
       - name: Verify member speakers, manual disclosures and expert visibility
         working-directory: dashboard
         run: >-
@@ -81,6 +87,9 @@ jobs:
           src/pages/Chat/hooks/chatStore.teamStream.test.ts
           src/pages/Chat/utils/hiddenExpertsPrefs.test.ts
           src/utils/parseHarnessChunk.test.ts
+          src/pages/Chat/components/projectFolders/index.test.tsx
+          src/components/accountAvatar/index.test.tsx
+          src/pages/Chat/hooks/useChatComposerResources.test.tsx
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
@@ -123,7 +132,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .cache/custom-release
-          key: octop-upstream-1.0.2-${{ matrix.plat }}
+          key: octop-upstream-1.0.3b2-${{ matrix.plat }}
 
       - name: Verify locked portable HTTP/2 dependencies
         run: python scripts/custom/verify_http2_vendor.py
@@ -240,6 +249,7 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import plistlib
           from pathlib import Path
           import shutil
           import subprocess
@@ -249,6 +259,9 @@ jobs:
           if os.environ["PACKAGE_EXTENSION"] == "dmg":
               subprocess.run(["hdiutil", "verify", str(package)], check=True)
               subprocess.run(["codesign", "--verify", "--deep", "--strict", "desktop/src/bin/OctopCustom.app"], check=True)
+              info = plistlib.loads(Path("desktop/src/bin/OctopCustom.app/Contents/Info.plist").read_bytes())
+              assert info["CFBundleIdentifier"] == "com.chaoyangrao.octopcustom"
+              assert info.get("NSMicrophoneUsageDescription") and info.get("NSSpeechRecognitionUsageDescription")
           else:
               assert package.read_bytes()[:2] == b"MZ", "Windows installer is not a PE file"
           shutil.copy2(package, Path("dist") / name)
@@ -321,7 +334,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom，基于官方 1.0.2，包含项目会话归类、ACP 项目目录绑定、动态表情头像、账号头像修复和全部已确认的界面调整。
+          Octop Custom，基于官方 1.0.3b2，包含项目会话归类、ACP 项目目录绑定、动态表情头像、账号头像修复和全部已确认的界面调整。
 
           Windows 使用 exe；Intel Mac 使用 darwin-amd64.dmg；M 芯片 Mac 使用 darwin-arm64.dmg。另附三个免安装 portable ZIP。SHA256SUMS.txt 可校验文件完整性。
 

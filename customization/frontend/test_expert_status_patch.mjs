@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { patchExpertStatusSource, patchExpertManagementStatus, EXPERT_ACTIVITY_REFRESH_EFFECT } from './expert-status-patch.mjs';
-import { createExpertWorkStatus, deriveExpertWorkStatus } from '../packages/octop/dashboard/assets/expert-work-status.js';
+import { createExpertWorkStatus, deriveExpertWorkStatus } from '../baselines/avatars-v60/octop/dashboard/assets/expert-work-status.js';
 
 const require = createRequire(new URL('../../dashboard/package.json', import.meta.url));
 const esbuild = require('esbuild');
@@ -99,8 +99,12 @@ const sameMemberIds = (a, b) => JSON.stringify(a || []) === JSON.stringify(b || 
 const oldEqual = new Function('sameMemberIds', originalEqual + ';return agentsSnapshotEqual;')(sameMemberIds);
 const newEqual = new Function('sameMemberIds', patchedEqual + ';return agentsSnapshotEqual;')(sameMemberIds);
 const sourceContext = read('../../dashboard/src/context/AgentContext.tsx');
+const signedInUser = Object.freeze({ id: 7, role: 'user', permissions: Object.freeze(['bridge']) });
+const permissions = compile(read('../../dashboard/src/utils/permissions.ts'), 'ts');
 const context = compile(sourceContext, 'tsx', {
   '../api/request': { setActiveAgentId() {} }, '../api/modules/agent': { agentApi: {} },
+  '../hooks/useCurrentUser': { useCurrentUser: () => signedInUser },
+  '../utils/permissions': permissions,
   '../utils/remoteExpert': { retainDisconnectedBridgeAgents: (prev, next) => next, toBridgeShadowAgentId: (connection, id) => `${connection}:${id}` },
   '../pages/Chat/hooks/chatStore': { onStreamEvent: () => () => {}, onSessionEvent: () => () => {} },
 });
@@ -172,7 +176,7 @@ for (const factory of [sourceWatcher, frozenWatcher]) {
   hidden.doc.visibilityState = 'visible'; hidden.visibility.get('visibilitychange')(); hidden.flush(); assert.equal(hidden.calls.length, 1); hidden.cleanup(); hidden.calls[0].resolve(); await Promise.resolve();
 }
 console.log('PASS source/frozen single 5s watcher: visible-only polling, debounced hints, no overlapping snapshots, trailing refresh and complete cleanup');
-const css = read('../packages/octop/dashboard/assets/expert-work-status.css');
+const css = read('../baselines/avatars-v60/octop/dashboard/assets/expert-work-status.css');
 assert.equal(css, read('../../dashboard/src/pages/Chat/components/ExpertWorkStatus.css'));
 assert.ok(css.includes('prefers-reduced-motion')); assert.ok(css.includes('animation: none !important'));
 console.log('PASS shared scoped CSS and reduced-motion state indicators');

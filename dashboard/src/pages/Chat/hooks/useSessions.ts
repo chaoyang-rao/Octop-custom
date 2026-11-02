@@ -16,6 +16,8 @@ export interface Session {
   id: string;
   name: string;
   threadId: string;
+  projectPath?: string | null;
+  projectName?: string | null;
   updatedAt: string | null;
   channelType: string;
   isActive?: boolean;
@@ -37,6 +39,8 @@ export type ThreadProbeResult = "found" | "missing" | "unknown";
 
 export function toSession(row: {
   thread_id: string;
+  project_path?: string | null;
+  project_name?: string | null;
   title: string | null;
   last_active: number;
   created_at?: number;
@@ -66,6 +70,8 @@ export function toSession(row: {
       ? row.created_at
       : 0;
   return {
+    projectPath: row.project_path ?? null,
+    projectName: row.project_name ?? null,
     id: row.thread_id,
     name: formatThreadTitle(row.title) || "New Chat",
     threadId: row.thread_id,
@@ -518,6 +524,32 @@ export function useSessions(agentId: string | null) {
 
   useEffect(() => {
     return onSessionEvent((event) => {
+      if (event.kind === "sessionRenamed") {
+        const title = formatThreadTitle(event.title);
+        if (!title) return;
+        if (event.agentId && event.agentId !== _storeAgentId) return;
+        setModuleSessions((prev) => {
+          const hasId = prev.some((session) => session.id === event.sessionId);
+          return prev.map((session) => {
+            const matches =
+              session.id === event.sessionId ||
+              (Boolean(event.agentId) &&
+                event.agentId === _storeAgentId &&
+                !hasId &&
+                session.id === "__pending__");
+            if (!matches) return session;
+            if (
+              event.provisional &&
+              session.name &&
+              session.name !== "New Chat"
+            ) {
+              return session;
+            }
+            return { ...session, name: title };
+          });
+        });
+        return;
+      }
       if (event.kind !== "sessionDeleted") return;
       const { sessionId } = event;
       setModuleSessions((prev) => prev.filter((s) => s.id !== sessionId));
@@ -579,7 +611,7 @@ export function useSessions(agentId: string | null) {
     async (id: string, compact: boolean) => {
       if (!agentId || !id) return false;
       const deleted = await deleteConversation(agentId, id, compact, t);
-      if (!deleted) return false;
+      if (deleted !== true) return deleted;
       setModuleSessions((prev) => prev.filter((s) => s.id !== id));
       chatStore.removeSession(id);
       chatStore.emitSessionEvent({ kind: "sessionDeleted", sessionId: id });

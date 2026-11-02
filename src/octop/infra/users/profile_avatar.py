@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import Response
 
@@ -58,18 +59,47 @@ def profile_avatar_url(directory: Path, key: str, api_path: str) -> str | None:
     path = _existing(directory, _stem(key))
     if path is None:
         return None
-    return f"{api_path}?v={int(path.stat().st_mtime)}"
+    return f"{api_path}?v={path.stat().st_mtime_ns}"
 
 
-def write_profile_avatar(directory: Path, key: str, data: bytes) -> None:
+def write_profile_avatar(
+    directory: Path,
+    key: str,
+    data: bytes,
+    *,
+    preserve_previous: bool = False,
+) -> None:
     media_type = sniff_avatar_media_type(data)
     stem = _stem(key)
     directory.mkdir(parents=True, exist_ok=True)
-    delete_profile_avatar(directory, stem)
+    if not preserve_previous:
+        delete_profile_avatar(directory, stem)
     destination = directory / f"{stem}.{_EXT_BY_MEDIA[media_type]}"
     temporary = destination.with_suffix(destination.suffix + ".tmp")
     temporary.write_bytes(data)
+    if preserve_previous:
+        archive_profile_avatar(directory, stem)
     temporary.replace(destination)
+
+
+def archive_profile_avatar(directory: Path, key: str) -> None:
+    """Remove only current portrait files from display, preserving private copies.
+
+    User avatar URLs are derived from the active files, so moving them out of
+    that location clears the public projection without a new database field.
+    Archives are never served by ``avatar_response`` or ``profile_avatar_url``.
+    """
+    stem = _stem(key)
+    current = [directory / f"{stem}.{ext}" for ext in _MEDIA_BY_EXT]
+    current = [path for path in current if path.is_file()]
+    if not current:
+        return
+    previous = directory / ".previous"
+    previous.mkdir(mode=0o700, exist_ok=True)
+    archived = previous / stem
+    archived.mkdir(mode=0o700, exist_ok=True)
+    for path in current:
+        path.replace(archived / f"{uuid4().hex}-{path.name}")
 
 
 def read_profile_avatar(directory: Path, key: str) -> tuple[bytes, str] | None:

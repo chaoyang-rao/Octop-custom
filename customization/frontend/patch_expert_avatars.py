@@ -14,6 +14,8 @@ import subprocess
 from avatar_core_patch import once, patch_main, patch_messages, patch_navigation_avatar_css
 
 ROOT = Path(__file__).resolve().parents[1]
+if json.loads((ROOT.parent / 'scripts/custom/upstream-lock.json').read_text())['upstream_version'] != '1.0.2':
+    raise SystemExit('Legacy 1.0.2 patcher: rebuild dashboard/ and run scripts/custom/sync_dashboard.py instead.')
 BASE = ROOT / 'baselines' / 'projects-v2' / 'octop' / 'dashboard'
 DASH = ROOT / 'packages' / 'octop' / 'dashboard'
 ASSETS = DASH / 'assets'

@@ -18,7 +18,7 @@ import {
 import { useKeepInVisualViewport } from "../../../hooks/useKeepInVisualViewport";
 import { useSlashCommands } from "../../../hooks/useSlashCommands";
 import SlashCommandMenu from "./SlashCommandMenu";
-import { agentChatApi } from "../../../api/modules/agentChat";
+import { textAssistApi } from "../../../api/modules/textAssist";
 import type { ChatAttachment } from "../hooks/useChat";
 import type { ResolvedModel } from "../../../api/types";
 import type { KnowledgeBase } from "../../../api/modules/knowledgeBases";
@@ -463,7 +463,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     }, [text, agentId, threadId]);
     const submitRef = useRef<() => void>(() => {});
 
-    const MIN_TEXTAREA_HEIGHT = isMobile ? 42 : 78;
+    const MIN_TEXTAREA_HEIGHT = isMobile ? 24 : 39;
 
     const {
       slashMenuOpen,
@@ -481,6 +481,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       mentionItems,
       filesLoading,
       filesError,
+      filesTruncated,
       runSlashCommand,
       matchSlashCommand,
       handleMentionSelect,
@@ -805,7 +806,14 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
         return;
       setPolishing(true);
       try {
-        const result = await agentChatApi.polish(agentId, draft, selectedModel);
+        const modelOverride = resolveTurnModelRef(selectedModel, defaultModel);
+        const result = await textAssistApi.assist({
+          kind: "chat.prompt",
+          text: draft,
+          agent_id: agentId,
+          // Omit model for automatic routing; pass only an explicit picker choice.
+          ...(modelOverride ? { default_model: modelOverride } : {}),
+        });
         const polished = stripThinkingTags(result.text?.trim() ?? "");
         if (!polished) {
           antMessage.error(t("chat.polish.emptyResult"));
@@ -835,6 +843,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       holdSend,
       disabled,
       selectedModel,
+      defaultModel,
       t,
     ]);
 
@@ -946,6 +955,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               subagents={availableSubagents}
               filesLoading={filesLoading}
               filesError={filesError}
+              filesTruncated={filesTruncated}
               activeIndex={mentionMenuIndex}
               onSelect={handleMentionSelect}
               onHover={setMentionMenuIndex}

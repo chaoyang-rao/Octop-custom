@@ -274,5 +274,7 @@
     "index.Bexwf9h5.avatars-v60.js",
     "index.Ds_DN6_-.avatars-v60.css"
   ],
-  "baseline_main_sha256": "974008e84fed191c9778b1098f4cacabd3a3b152f357d8930b4d7182644aa669"
+  "baseline_main_sha256": "974008e84fed191c9778b1098f4cacabd3a3b152f357d8930b4d7182644aa669",
+  "dashboard": "customization/baselines/avatars-v60/octop/dashboard",
+  "role": "legacy regression fixture; current product builds from dashboard/"
 }

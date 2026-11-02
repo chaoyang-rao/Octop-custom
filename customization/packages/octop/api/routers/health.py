@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -26,9 +27,5 @@ async def health(server: Any = Depends(get_server)) -> dict[str, Any]:
         "db": bound,
         "users_loaded": users,
         "agents_running": agents,
-        **(
-            {"custom_release": "1.0.2.post20261102"}
-            if os.environ.get("OCTOP_CUSTOM_BUILD") == "1"
-            else {}
-        ),
+        **({"custom_release": '1.0.3b2.post20261103'} if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" else {}),
     }

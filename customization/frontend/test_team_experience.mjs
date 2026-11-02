@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createRequire} from 'node:module';
-import {randomAvatar,createExpertPresentation} from '../packages/octop/dashboard/assets/expert-presentation.js';
-import {createExpertAvatars} from '../packages/octop/dashboard/assets/expert-avatars.js';
-import {createAccountAvatar} from '../packages/octop/dashboard/assets/account-avatar.js';
-import {createAvatarSettings} from '../packages/octop/dashboard/assets/expert-avatar-integration.js';
+import {randomAvatar,createExpertPresentation} from '../baselines/avatars-v60/octop/dashboard/assets/expert-presentation.js';
+import {createExpertAvatars} from '../baselines/avatars-v60/octop/dashboard/assets/expert-avatars.js';
+import {createAccountAvatar} from '../baselines/avatars-v60/octop/dashboard/assets/account-avatar.js';
+import {createAvatarSettings} from '../baselines/avatars-v60/octop/dashboard/assets/expert-avatar-integration.js';
 const require=createRequire(new URL('../../dashboard/package.json',import.meta.url));
 const {JSDOM}=require('jsdom');const dom=new JSDOM('<!doctype html><body></body>',{url:'http://localhost/'});
 for(const key of ['window','document','HTMLElement','Element','Node','MutationObserver','localStorage'])globalThis[key]=dom.window[key];
@@ -36,7 +36,7 @@ function compile(file,resolver){const module={exports:{}};const code=require('es
 function processDependency(name){if(name==='react')return React;if(name==='react/jsx-runtime')return require(name);if(name==='react-i18next')return{useTranslation:()=>({t})};if(name==='lucide-react')return{ChevronRight:Empty,Scale:Empty};if(name.endsWith('messageContent'))return{countProcessStats};if(name.endsWith('MessageBubble'))return{ToolDetailsInline:()=>h('pre',null,'tool output')};if(name.endsWith('LazyMarkdown'))return{__esModule:true,default:({content})=>h('pre',null,content)};if(name.endsWith('.less'))return{__esModule:true,default:styles};throw Error(name)}
 const SourceProcess=compile('../../dashboard/src/pages/Chat/components/AssistantProcessSummary.tsx',processDependency).default;
 const release=JSON.parse(fs.readFileSync(new URL('avatar-asset-release.json',import.meta.url)));
-const frozen=fs.readFileSync(new URL(`../packages/octop/dashboard/assets/index.Bexwf9h5.${release.release}.js`,import.meta.url),'utf8');
+const frozen=fs.readFileSync(new URL(`../baselines/avatars-v60/octop/dashboard/assets/index.Bexwf9h5.${release.release}.js`,import.meta.url),'utf8');
 const a=frozen.indexOf('function AssistantProcessSummary('),b=frozen.indexOf('const AssistantProcessSummary$1=',a);
 const FrozenProcess=new Function('deps',`with(deps){${frozen.slice(a,b)}return AssistantProcessSummary}`)({reactExports:React,jsxRuntimeExports:require('react/jsx-runtime'),useTranslation:()=>({t}),countProcessStats,resolveLiveProcessHint:()=>null,chatStyles:styles,ChevronRight:Empty,DecisionToolRow:Empty,ToolDetailsInline:()=>h('pre',null,'tool output'),LazyMarkdown:({content})=>h('pre',null,content)});
 for(const Process of [SourceProcess,FrozenProcess]){

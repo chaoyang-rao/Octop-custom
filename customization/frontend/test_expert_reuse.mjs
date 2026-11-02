@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createRequire} from 'node:module';
-import {createExpertReuseDialogs as Frozen} from '../packages/octop/dashboard/assets/expert-reuse.js';
+import {createExpertReuseDialogs as Frozen} from '../baselines/avatars-v60/octop/dashboard/assets/expert-reuse.js';
 import {createExpertReuseDialogs as Source} from '../../dashboard/src/components/expertReuse/dialogs.mjs';
 const require=createRequire(new URL('../../dashboard/package.json',import.meta.url));
 const {JSDOM}=require('jsdom'),dom=new JSDOM('<body></body>',{url:'http://localhost'});
@@ -31,7 +31,7 @@ for(const Factory of [Source,Frozen]){
  await act(()=>root.unmount());el.remove();
 }
 const release=JSON.parse(fs.readFileSync(new URL('avatar-asset-release.json',import.meta.url)));
-assert.equal(fs.readFileSync(new URL(`../packages/octop/dashboard/assets/expert-reuse.${release.release}.js`,import.meta.url),'utf8'),fs.readFileSync(new URL('../packages/octop/dashboard/assets/expert-reuse.js',import.meta.url),'utf8'));
-for(const name of [`EditAgentDrawer.w674TDCV.${release.release}.js`,`index.Bxr_iAco.${release.release}.js`])assert.ok(fs.readFileSync(new URL(`../packages/octop/dashboard/assets/${name}`,import.meta.url),'utf8').includes('AgentMoreActions,{agent'));
-for(const name of ['zh.D-7HvP3m','en.CaWe8dRV']){const module=await import(new URL(`../packages/octop/dashboard/assets/${name}.${release.release}.js`,import.meta.url));assert.ok(module.default.experts.reuse.copyTitle);assert.ok(module.default.experts.reuse.cliTitle)}
+assert.equal(fs.readFileSync(new URL(`../baselines/avatars-v60/octop/dashboard/assets/expert-reuse.${release.release}.js`,import.meta.url),'utf8'),fs.readFileSync(new URL('../baselines/avatars-v60/octop/dashboard/assets/expert-reuse.js',import.meta.url),'utf8'));
+for(const name of [`EditAgentDrawer.w674TDCV.${release.release}.js`,`index.Bxr_iAco.${release.release}.js`])assert.ok(fs.readFileSync(new URL(`../baselines/avatars-v60/octop/dashboard/assets/${name}`,import.meta.url),'utf8').includes('AgentMoreActions,{agent'));
+for(const name of ['zh.D-7HvP3m','en.CaWe8dRV']){const module=await import(new URL(`../baselines/avatars-v60/octop/dashboard/assets/${name}.${release.release}.js`,import.meta.url));assert.ok(module.default.experts.reuse.copyTitle);assert.ok(module.default.experts.reuse.cliTitle)}
 console.log('PASS real source/frozen copy and multi-target CLI dialogs: cancel, names, refresh, owned/local filtering, busy selection, narrow API payloads, both card/table wiring and bilingual labels');

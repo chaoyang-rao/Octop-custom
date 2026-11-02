@@ -1,10 +1,17 @@
 """Public avatar fields shared by agent create/update and template installers."""
+
 from __future__ import annotations
+
 from typing import Any
+
 from pydantic import model_validator
+
 from octop.api.common.agent_runtime import AgentRuntimeFields
 from octop.infra.agents.settings.geometric_avatar import (
-    AvatarColor, AvatarShape, merge_avatar_config, validate_avatar,
+    AvatarColor,
+    AvatarShape,
+    merge_avatar_config,
+    validate_avatar,
 )
 
 
@@ -13,7 +20,7 @@ class AgentAvatarFields(AgentRuntimeFields):
     avatar_color: AvatarColor | None = None
 
     @model_validator(mode="after")
-    def validate_nested_avatar(self) -> "AgentAvatarFields":
+    def validate_nested_avatar(self) -> AgentAvatarFields:
         config = getattr(self, "config", None)
         if isinstance(config, dict) and "avatar" in config:
             validate_avatar(config["avatar"])
@@ -21,7 +28,10 @@ class AgentAvatarFields(AgentRuntimeFields):
 
 
 def avatar_config_from_body(
-    body: AgentAvatarFields, config: dict[str, Any], *, previous: dict[str, Any] | None = None,
+    body: AgentAvatarFields,
+    config: dict[str, Any],
+    *,
+    previous: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     updates: dict[str, Any] = {}
     if "avatar_shape" in body.model_fields_set:

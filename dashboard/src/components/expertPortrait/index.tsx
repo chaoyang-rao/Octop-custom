@@ -7,6 +7,7 @@ import {
 import { useAgent } from "../../context/AgentContext";
 import "./avatars.css";
 import "./presentation.css";
+import "./integration.css";
 export { randomAvatar, primaryExpertForTeam } from "./presentation.mjs";
 export const avatarUi = createExpertAvatars({ React });
 export const { ExpertPortrait, TeamPortrait, HiddenRestore } =

@@ -428,23 +428,39 @@ class ThreadRegistry:
     def list_projects(self, *, agent_id: str, user_id: int) -> list[dict[str, object]]:
         return self._threads.list_projects(agent_id=agent_id, user_id=user_id)
 
-    def upsert_project(self, *, agent_id: str, user_id: int, project_path: str,
-                       project_name: str | None = None) -> dict[str, object]:
-        return self._threads.upsert_project(agent_id=agent_id, user_id=user_id,
-                                            project_path=project_path, project_name=project_name)
+    def upsert_project(
+        self, *, agent_id: str, user_id: int, project_path: str, project_name: str | None = None
+    ) -> dict[str, object]:
+        return self._threads.upsert_project(
+            agent_id=agent_id, user_id=user_id, project_path=project_path, project_name=project_name
+        )
 
     def project_threads(self, *, agent_id: str, user_id: int, project_path: str) -> list[ThreadRow]:
-        return self._threads.list_project_threads(agent_id=agent_id, user_id=user_id,
-                                                  project_path=project_path)
+        return self._threads.list_project_threads(
+            agent_id=agent_id, user_id=user_id, project_path=project_path
+        )
 
-    def set_project(self, thread_id: str, *, agent_id: str, user_id: int,
-                    project_path: str | None, project_name: str | None = None) -> None:
-        self._threads.set_project(thread_id, agent_id=agent_id, user_id=user_id,
-                                  project_path=project_path, project_name=project_name)
+    def set_project(
+        self,
+        thread_id: str,
+        *,
+        agent_id: str,
+        user_id: int,
+        project_path: str | None,
+        project_name: str | None = None,
+    ) -> None:
+        self._threads.set_project(
+            thread_id,
+            agent_id=agent_id,
+            user_id=user_id,
+            project_path=project_path,
+            project_name=project_name,
+        )
 
     def delete_project(self, *, agent_id: str, user_id: int, project_path: str) -> int:
-        return self._threads.delete_project(agent_id=agent_id, user_id=user_id,
-                                             project_path=project_path)
+        return self._threads.delete_project(
+            agent_id=agent_id, user_id=user_id, project_path=project_path
+        )
 
     def touch_last_active(self, thread_id: str) -> None:
         self._threads.touch_last_active(thread_id)

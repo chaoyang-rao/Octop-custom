@@ -43,7 +43,7 @@ def server_for(service):
     return SimpleNamespace(
         _mobile_access_service=service,
         user_manager=SimpleNamespace(get_by_id=lambda _: owner),
-        services=SimpleNamespace(secret_repo=service._secrets),
+        services=SimpleNamespace(secret_repo=service._secrets, user_repo=service._users),
         task_manager=Tasks(),
     ), owner
 

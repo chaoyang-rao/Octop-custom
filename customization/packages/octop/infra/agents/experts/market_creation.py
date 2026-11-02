@@ -295,6 +295,7 @@ async def create_agent_from_skillhub_skillset(
     }
     if options.avatar is not None:
         from octop.infra.agents.settings.geometric_avatar import validate_avatar
+
         config_extra["avatar"] = validate_avatar(options.avatar)
     if options.providers:
         config_extra["providers"] = list(options.providers)

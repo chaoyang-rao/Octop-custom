@@ -29,6 +29,7 @@ def app_server(service):
         _started=True,
         _mobile_access_service=service,
         services=SimpleNamespace(
+            user_repo=service._users,
             settings_repo=service._settings,
             secret_repo=service._secrets,
             config=SimpleNamespace(access_token_ttl_seconds=86400),
@@ -81,7 +82,7 @@ def app_server(service):
 
     jwt_auth.install(app, server)
     app.add_middleware(MobileDeviceAccessMiddleware, server=server, recheck_seconds=0.02)
-    account_token = sign_token(secret, sub=1, uname="owner", role="admin")
+    account_token = sign_token(secret, sub=1, uname="owner", role="admin", purpose="access")
     return app, server, owner, account_token
 
 
@@ -288,3 +289,50 @@ async def test_device_middleware_errors_follow_account_locale_before_header(app_
             response = await client.get("/api/models", headers=headers)
             assert response.status_code == 403
             assert response.json()["error"]["message"] == error_message("FORBIDDEN", locale)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["password_version", "mfa_version"])
+async def test_device_and_share_http_require_new_pairing_after_security_change(
+    app_server, service, field
+):
+    app, server, _, _ = app_server
+    _, device = await paired(service)
+    sibling = await service.share_grant(device["access_token"])
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="https://octop.test"
+    ) as client:
+        for token in (device["access_token"], sibling["access_token"]):
+            assert (
+                await client.get("/api/auth/me", headers={"Authorization": "Bearer " + token})
+            ).status_code == 200
+        row = server.services.user_repo.get(1)
+        setattr(row, field, getattr(row, field) + 1)
+        for token in (device["access_token"], sibling["access_token"]):
+            response = await client.get(
+                "/api/auth/me", headers={"Authorization": "Bearer " + token}
+            )
+            assert response.status_code == 401
+            assert "X-Octop-Access-Token" not in response.headers
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["password_version", "mfa_version"])
+async def test_idle_websocket_closes_after_account_security_version_changes(
+    app_server, service, field
+):
+    app, server, _, _ = app_server
+    _, device = await paired(service)
+    with (
+        TestClient(app) as client,
+        client.websocket_connect(
+            "wss://octop.test/api/notifications/ws",
+            headers={"Authorization": "Bearer " + device["access_token"]},
+        ) as socket,
+    ):
+        assert socket.receive_json()["type"] == "ready"
+        row = server.services.user_repo.get(1)
+        setattr(row, field, getattr(row, field) + 1)
+        with pytest.raises(WebSocketDisconnect) as closed:
+            socket.receive_json()
+        assert closed.value.code == 4401

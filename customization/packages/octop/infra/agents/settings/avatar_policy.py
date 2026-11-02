@@ -15,10 +15,13 @@ def created_avatar(config: dict[str, Any], occupied: list[dict[str, Any]]) -> di
     """Keep an explicit choice; otherwise prefer an unused shape/color pair."""
     selected = config.get("avatar")
     if isinstance(selected, dict) and selected.get("shape") in SHAPES:
-        return {"shape": selected["shape"], "color": selected["color"] if selected.get("color") in COLORS else secrets.choice(COLORS)}
-    used = {
-        (item.get("shape"), item.get("color")) for item in occupied if isinstance(item, dict)
-    }
+        return {
+            "shape": selected["shape"],
+            "color": selected["color"]
+            if selected.get("color") in COLORS
+            else secrets.choice(COLORS),
+        }
+    used = {(item.get("shape"), item.get("color")) for item in occupied if isinstance(item, dict)}
     choices = [(shape, color) for shape in SHAPES for color in COLORS]
     shape, color = secrets.choice([pair for pair in choices if pair not in used] or choices)
     return {"shape": shape, "color": color}

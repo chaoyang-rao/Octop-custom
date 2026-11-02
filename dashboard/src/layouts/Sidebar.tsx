@@ -25,6 +25,7 @@ import MinimalRecordsHost from "./MinimalRecordsHost";
 import SidebarCollapsedIconNav from "./SidebarCollapsedIconNav";
 import SidebarMinimalPaneToggle from "./SidebarMinimalPaneToggle";
 import { preferencesApi } from "../api/modules/preferences";
+import { publicUrl } from "../utils/publicUrl";
 import {
   COLLAPSED_WIDTH,
   EXPANDED_WIDTH,
@@ -440,8 +441,8 @@ export default function Sidebar({
 
   const isRailCollapsed = collapsed && !isMobile;
   const wordmarkSrc = isDark
-    ? "/logo_horizontal_white_mono.png"
-    : "/logo_horizontal_dark_mono.png";
+    ? publicUrl("logo_horizontal_white_mono.png")
+    : publicUrl("logo_horizontal_dark_mono.png");
 
   const selectMinimalPane = useCallback(
     (pane: MinimalNavPane, opts?: { expand?: boolean }) => {
@@ -765,6 +766,7 @@ export default function Sidebar({
         </div>
 
         <div
+          data-octop-sidebar-scroll="dock"
           style={{
             flex: 1,
             overflow:
@@ -824,6 +826,7 @@ export default function Sidebar({
       </div>
 
       <div
+        data-octop-sidebar-scroll="dock"
         style={{
           flex: 1,
           minHeight: 0,

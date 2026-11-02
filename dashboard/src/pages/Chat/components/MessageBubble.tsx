@@ -51,8 +51,9 @@ import {
   isTeamHostSpeaker as isTeamHostSpeakerId,
 } from "../../../utils/teamAgent";
 import { rewritePeerSpeakerId } from "../../../utils/remoteExpert";
+import { avatarUi } from "../../../components/expertPortrait";
 import { accountDisplayName } from "../utils/accountDisplayName";
-import { ProfileAvatar } from "../../Admin/Users/ProfileAvatar";
+import { AccountAvatar } from "../../../components/accountAvatar";
 import {
   extractAskQuestions,
   isAskHitl,
@@ -109,6 +110,18 @@ interface MessageBubbleProps {
   onRunShellCommand?: (code: string) => void;
   shellCommandDisabled?: boolean;
   shellCommandDisabledTitle?: string;
+}
+
+function formatElapsedSeconds(durationMs: number | undefined): string | null {
+  if (
+    typeof durationMs !== "number" ||
+    !Number.isFinite(durationMs) ||
+    durationMs < 0
+  ) {
+    return null;
+  }
+  const seconds = durationMs / 1000;
+  return seconds < 10 ? seconds.toFixed(1) : String(Math.round(seconds));
 }
 
 function formatTokenUsage(
@@ -655,6 +668,11 @@ function MessageBubble({
       }),
     [message.usage, t],
   );
+  const elapsedText = formatElapsedSeconds(message.durationMs);
+  const usageLine = [
+    elapsedText ? t("chatUsage.elapsed", { seconds: elapsedText }) : "",
+    ...usageParts,
+  ].filter(Boolean);
   const errorDebugTags = useMemo(
     () => formatErrorDebugTags(message.errorInfo),
     [message.errorInfo],
@@ -796,14 +814,7 @@ function MessageBubble({
   const senderAvatar = !showSender ? null : isUser ? (
     <MessageSender
       name={userName}
-      avatar={
-        <ProfileAvatar
-          url={user?.avatar_url}
-          icon={user?.avatar_icon}
-          kind="user"
-          className={styles.msgUserAvatar}
-        />
-      }
+      avatar={<AccountAvatar user={user} className={styles.msgUserAvatar} />}
     />
   ) : expert || avatarProfileId ? (
     <ExpertMessageAvatar
@@ -876,7 +887,17 @@ function MessageBubble({
                   </div>
                 </div>
               ) : (
-                <div className={styles.userText}>
+                <div
+                  className={styles.userText}
+                  {...(!isTeamRoom && activeAgent?.avatar_shape
+                    ? {
+                        "data-expert-color": activeAgent.avatar_color || "ink",
+                        style: avatarUi.bubbleStyle(
+                          activeAgent.avatar_color || "ink",
+                        ),
+                      }
+                    : {})}
+                >
                   {imageAttachments.length > 0 && (
                     <ImageGallery images={imageAttachments} agentId={agentId} />
                   )}
@@ -1048,7 +1069,7 @@ function MessageBubble({
         {isLastInGroup &&
           !hasToolData &&
           (message.timestamp > 0 ||
-            usageParts.length > 0 ||
+            usageLine.length > 0 ||
             (isUser &&
               !isEditing &&
               Boolean(
@@ -1164,8 +1185,8 @@ function MessageBubble({
                   )}
                 </div>
               )}
-              {usageParts.length > 0 && (
-                <div className={styles.msgUsage}>{usageParts.join(" / ")}</div>
+              {usageLine.length > 0 && (
+                <div className={styles.msgUsage}>{usageLine.join(" / ")}</div>
               )}
             </div>
           )}

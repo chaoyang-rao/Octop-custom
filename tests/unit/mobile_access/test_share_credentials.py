@@ -21,7 +21,9 @@ async def test_share_grant_is_stable_hashed_and_narrowed(service):
     assert session.kind == "share" and set(session.scopes) == {"chat", "files", "tasks"}
     owner = User(id=1, username="owner", role="admin", display_name=None)
     server = SimpleNamespace(
-        _mobile_access_service=service, user_manager=SimpleNamespace(get_by_id=lambda _: owner)
+        _mobile_access_service=service,
+        services=SimpleNamespace(user_repo=service._users),
+        user_manager=SimpleNamespace(get_by_id=lambda _: owner),
     )
     assert (
         resolve_mobile_user(

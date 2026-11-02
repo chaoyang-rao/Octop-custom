@@ -2,6 +2,7 @@
 
 Public expert portraits always use geometry. Account portraits are independent.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -11,8 +12,13 @@ AvatarShape = Literal["blob", "pebble", "squircle", "droplet", "cloud", "star", 
 AvatarColor = Literal["ink", "jade", "blue", "violet", "rose", "amber", "coral"]
 AVATAR_SHAPES = ("blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle")
 AVATAR_COLORS = {
-    "ink": "#252830", "jade": "#19B7A2", "blue": "#486BCD", "violet": "#825DC5",
-    "rose": "#DB779A", "amber": "#DCAA46", "coral": "#E5805D",
+    "ink": "#252830",
+    "jade": "#19B7A2",
+    "blue": "#486BCD",
+    "violet": "#825DC5",
+    "rose": "#DB779A",
+    "amber": "#DCAA46",
+    "coral": "#E5805D",
 }
 _UNSET = object()
 
@@ -48,8 +54,11 @@ def merge_avatar_option(inherited: Any, overrides: Any) -> dict[str, Any]:
 
 
 def merge_avatar_config(
-    config: dict[str, Any], *, previous: dict[str, Any] | None = None,
-    shape: Any = _UNSET, color: Any = _UNSET,
+    config: dict[str, Any],
+    *,
+    previous: dict[str, Any] | None = None,
+    shape: Any = _UNSET,
+    color: Any = _UNSET,
 ) -> dict[str, Any]:
     """Merge only avatar metadata, preserving unrelated configuration verbatim."""
     out = dict(config)
@@ -73,14 +82,24 @@ def merge_avatar_config(
     return out
 
 
-def avatar_response(config: dict[str, Any], uploaded_icon_url: str | None, *, identity: str = "") -> dict[str, Any]:
+def avatar_response(
+    config: dict[str, Any], uploaded_icon_url: str | None, *, identity: str = ""
+) -> dict[str, Any]:
     """Project the geometric URL for all old icon consumers without changing storage."""
     fields = public_avatar_fields(config)
     shape, color = fields["avatar_shape"], fields["avatar_color"] or "ink"
     if not shape:
-        digest = hashlib.sha256(str(identity or (uploaded_icon_url or "expert").split("?", 1)[0].split("#", 1)[0]).encode()).digest()
+        digest = hashlib.sha256(
+            str(
+                identity or (uploaded_icon_url or "expert").split("?", 1)[0].split("#", 1)[0]
+            ).encode()
+        ).digest()
         shape = AVATAR_SHAPES[digest[0] % len(AVATAR_SHAPES)]
-        color = fields["avatar_color"] if fields["avatar_color"] in AVATAR_COLORS else tuple(AVATAR_COLORS)[digest[1] % len(AVATAR_COLORS)]
+        color = (
+            fields["avatar_color"]
+            if fields["avatar_color"] in AVATAR_COLORS
+            else tuple(AVATAR_COLORS)[digest[1] % len(AVATAR_COLORS)]
+        )
         fields = {"avatar_shape": shape, "avatar_color": color}
     icon_url = f"/expert-avatars/v2/{shape}-{color}.svg"
     return {**fields, "icon_url": icon_url, "uploaded_icon_url": uploaded_icon_url}
@@ -91,11 +110,17 @@ def is_generated_avatar_icon_url(value: Any) -> bool:
     if not isinstance(value, str):
         return False
     path = value.strip().split("?", 1)[0].split("#", 1)[0]
-    prefix = next((candidate for candidate in ("/expert-avatars/v1/", "/expert-avatars/v2/")
-                   if path.startswith(candidate)), None)
+    prefix = next(
+        (
+            candidate
+            for candidate in ("/expert-avatars/v1/", "/expert-avatars/v2/")
+            if path.startswith(candidate)
+        ),
+        None,
+    )
     if prefix is None or not path.endswith(".svg"):
         return False
-    parts = path[len(prefix):-4].rsplit("-", 1)
+    parts = path[len(prefix) : -4].rsplit("-", 1)
     return len(parts) == 2 and parts[0] in AVATAR_SHAPES and parts[1] in AVATAR_COLORS
 
 

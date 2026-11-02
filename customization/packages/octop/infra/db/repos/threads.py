@@ -291,7 +291,8 @@ class ThreadRepo:
                 raise ValueError("thread not owned by user and agent")
             name = (
                 self._upsert_project(conn, agent_id, user_id, project_path, project_name)
-                if project_path else None
+                if project_path
+                else None
             )
             conn.execute(
                 "UPDATE threads SET project_path = ?, project_name = ? "
@@ -307,7 +308,7 @@ class ThreadRepo:
                 "WHERE agent_id = ? AND user_id = ? AND project_path = ?",
                 (agent_id, user_id, project_path),
             )
-            count = cursor.rowcount
+            count = int(cursor.rowcount)
             conn.execute(
                 "DELETE FROM thread_projects WHERE agent_id = ? AND user_id = ? AND project_path = ?",
                 (agent_id, user_id, project_path),
@@ -336,6 +337,22 @@ class ThreadRepo:
                 (user_id,),
             ).fetchall()
         return [(str(row["agent_id"]), str(row["thread_id"])) for row in rows]
+
+    def latest_user_activity(self, agent_id: str) -> int | None:
+        """Latest thread touch for ``agent_id``, ignoring empty threads.
+
+        ``last_active`` of 0 means the thread has no turns yet. Proactive care
+        uses this as the idle clock; the scheduler separately ignores a touch
+        that is only our own care push.
+        """
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT MAX(last_active) FROM threads WHERE agent_id = ? AND last_active > 0",
+                (agent_id,),
+            ).fetchone()
+        if row is None or row[0] is None:
+            return None
+        return int(row[0])
 
     def list_by_agent(self, *, agent_id: str, limit: int = 50) -> list[ThreadRow]:
         # last_active=0 is "no turns yet" (has_messages sentinel). Fall back to

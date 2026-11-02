@@ -11,6 +11,7 @@ import {
   useDesktopChrome,
 } from "./hooks/useDesktopChrome";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { routerBasename } from "./utils/publicUrl";
 import { useTranslation } from "react-i18next";
 import MainLayout from "./layouts/MainLayout";
 import LoginPage from "./pages/Login";
@@ -33,6 +34,7 @@ import "./styles/theme-vars.css";
 import "./styles/layout.css";
 import "./styles/form-override.css";
 import "./styles/spin-override.css";
+import "./styles/customizations.css";
 
 const GlobalStyle = createGlobalStyle`
 * {
@@ -67,12 +69,16 @@ function ThemedApp() {
     algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
     token: {
       borderRadius: 10,
+      fontSize: 13,
+      fontSizeSM: 12,
+      fontSizeLG: 15,
+      fontSizeXL: 19,
       ...(isMobile
         ? {
-            fontSize: 15,
-            fontSizeSM: 13,
-            fontSizeLG: 17,
-            fontSizeXL: 22,
+            fontSize: 14,
+            fontSizeSM: 12,
+            fontSizeLG: 16,
+            fontSizeXL: 21,
             controlHeight: 36,
           }
         : {}),
@@ -162,7 +168,7 @@ function App() {
     // `useTransitions` off: with router transitions on, React keeps the old
     // page mounted while a lazy route chunk downloads and never renders the
     // Suspense fallback, so a nav click looks like it did nothing.
-    <BrowserRouter useTransitions={false}>
+    <BrowserRouter basename={routerBasename()} useTransitions={false}>
       <GlobalErrorBoundary>
         <GlobalStyle />
         <ThemeProvider>

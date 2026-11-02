@@ -14,7 +14,12 @@ from octop.api.common.agent import require_agent_row
 from octop.api.common.agent_workspace import resolve_agent_workspace_dir
 from octop.api.deps import current_user, get_server
 from octop.api.routers.chat.models import (
-    CreateProjectBody, ForkThreadBody, RebindSessionBody, RenameThreadBody, ThreadProjectBody,
+    CreateProjectBody,
+    ForkThreadBody,
+    ProjectFolderResponse,
+    RebindSessionBody,
+    RenameThreadBody,
+    ThreadProjectBody,
 )
 from octop.api.routers.chat.serialize import (
     HISTORY_DEFAULT_LIMIT,
@@ -22,19 +27,23 @@ from octop.api.routers.chat.serialize import (
     _clamp_history_limit,
     _load_projected_thread_messages,
 )
+from octop.i18n import DEFAULT_LOCALE, Locale, error_message, tr
 from octop.infra.agents.security.hitl_session import parse_hitl_session_policy
 from octop.infra.agents.threads.artifact import thread_artifacts_payload
 from octop.infra.agents.threads.context_breakdown import SEGMENT_KEYS, compute_context_breakdown
 from octop.infra.agents.threads.fork import fork_dashboard_thread
+from octop.infra.agents.threads.project_runtime import normalize_project_path
 from octop.infra.agents.workspace.dir import agent_facing_workspace_dir_from_config
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.hitl.coordinator import pending_hitl_payload
 from octop.infra.gateway.threads import ThreadRegistry, thread_row_has_messages
 from octop.infra.history.service import HistoryArchive
 from octop.infra.history.trajectory.service import TrajectoryService
+from octop.infra.users.resource_policy import (
+    POLICY_WORKSPACE_ROOT_DIR,
+    effective_workspace_root_dir,
+)
 from octop.infra.utils.locale import resolve_request_locale
-from octop.infra.utils.host_dirs import assert_safe_host_path, host_path_text
-from octop.infra.users.resource_policy import POLICY_WORKSPACE_ROOT_DIR, effective_workspace_root_dir
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -101,78 +110,100 @@ def _require_thread(
     return row
 
 
-def _validated_project_path(server: Any, user_id: int, raw: str | None) -> str | None:
-    if raw is None or not raw.strip():
-        return None
-    # Reject relative input before realpath; resolving it would silently use server cwd.
-    try:
-        candidate = Path(raw.strip()).expanduser()
-    except (ValueError, RuntimeError) as exc:
-        raise HTTPException(status_code=400, detail="无效的项目目录") from exc
-    if not candidate.is_absolute():
-        raise HTTPException(status_code=400, detail="项目目录必须是绝对路径")
+async def _validated_project_path(
+    server: Any, user_id: int, raw: str | None, *, locale: Locale = DEFAULT_LOCALE
+) -> str | None:
     allowed = effective_workspace_root_dir(
         server.services.user_policy_repo.get(user_id, POLICY_WORKSPACE_ROOT_DIR)
     )
     try:
-        path = assert_safe_host_path(str(candidate), restrict_to_home=False, restrict_to_root=allowed)
-        if not path.is_dir():
-            raise ValueError("项目目录不存在或不是文件夹")
+        return await asyncio.to_thread(
+            normalize_project_path, raw, allowed_root=allowed, locale=locale
+        )
     except (ValueError, OSError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return host_path_text(path)
 
 
-def _assert_project_thread_idle(server: Any, row: Any) -> None:
+def _assert_project_thread_idle(server: Any, row: Any, *, locale: Locale = DEFAULT_LOCALE) -> None:
     gateway = server.app_runtime.gateway
     awaiting = gateway.processor.hitl_coordinator.store.pending_thread_ids(
         agent_id=row.agent_id, user_id=row.user_id
     )
     if gateway.ws_hub.is_turn_active(row.thread_id) or row.thread_id in awaiting:
-        raise HTTPException(status_code=409, detail="会话正在运行或等待审批，结束后再更改项目")
+        raise HTTPException(status_code=409, detail=tr("projects.errors.busy", locale))
 
 
-def _assign_thread_project(server: Any, row: Any, body: ThreadProjectBody) -> Any:
+async def _assign_thread_project(
+    server: Any, row: Any, body: ThreadProjectBody, *, locale: Locale = DEFAULT_LOCALE
+) -> Any:
     if "project_path" not in body.model_fields_set:
-        raise HTTPException(status_code=400, detail="必须提供 project_path，使用 null 移至未分组")
-    path = _validated_project_path(server, row.user_id, body.project_path)
-    _assert_project_thread_idle(server, row)
+        raise HTTPException(status_code=400, detail=tr("projects.errors.path_required", locale))
+    path = await _validated_project_path(server, row.user_id, body.project_path, locale=locale)
+    _assert_project_thread_idle(server, row, locale=locale)
     registry = server.app_runtime.gateway.thread_registry
-    registry.set_project(row.thread_id, agent_id=row.agent_id, user_id=row.user_id,
-                         project_path=path, project_name=body.project_name)
+    registry.set_project(
+        row.thread_id,
+        agent_id=row.agent_id,
+        user_id=row.user_id,
+        project_path=path,
+        project_name=body.project_name,
+    )
     return registry.get_thread(row.thread_id)
 
 
-@router.get("/agents/{agent_id}/projects", summary="List conversation project folders")
+@router.get(
+    "/agents/{agent_id}/projects",
+    summary="List conversation project folders",
+    response_model=list[ProjectFolderResponse],
+)
 async def list_projects(
-    agent_id: str, as_user: int | None = None,
-    user: Any = Depends(current_user), server: Any = Depends(get_server),
+    agent_id: str,
+    as_user: int | None = None,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
 ) -> list[dict[str, object]]:
     require_agent_row(agent_id, user=user, as_user=as_user, server=server)
     uid = as_user if as_user is not None else user.id
-    return server.app_runtime.gateway.thread_registry.list_projects(agent_id=agent_id, user_id=uid)
+    registry: ThreadRegistry = server.app_runtime.gateway.thread_registry
+    return registry.list_projects(agent_id=agent_id, user_id=uid)
 
 
-@router.post("/agents/{agent_id}/projects", status_code=201, summary="Add a project folder")
+@router.post(
+    "/agents/{agent_id}/projects",
+    status_code=201,
+    summary="Add a project folder",
+    response_model=ProjectFolderResponse,
+)
 async def create_project(
-    agent_id: str, body: CreateProjectBody, as_user: int | None = None,
-    user: Any = Depends(current_user), server: Any = Depends(get_server),
+    agent_id: str,
+    request: Request,
+    body: CreateProjectBody,
+    as_user: int | None = None,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
 ) -> dict[str, object]:
+    locale = resolve_request_locale(request)
     require_agent_row(agent_id, user=user, as_user=as_user, server=server)
     uid = as_user if as_user is not None else user.id
-    path = _validated_project_path(server, uid, body.project_path)
+    path = await _validated_project_path(server, uid, body.project_path, locale=locale)
     if path is None:
-        raise HTTPException(status_code=400, detail="请选择项目文件夹")
-    return server.app_runtime.gateway.thread_registry.upsert_project(
+        raise HTTPException(status_code=400, detail=tr("projects.errors.choose_folder", locale))
+    registry: ThreadRegistry = server.app_runtime.gateway.thread_registry
+    return registry.upsert_project(
         agent_id=agent_id, user_id=uid, project_path=path, project_name=body.project_name
     )
 
 
 @router.delete("/agents/{agent_id}/projects", summary="Remove a project grouping only")
 async def delete_project(
-    agent_id: str, body: CreateProjectBody, as_user: int | None = None,
-    user: Any = Depends(current_user), server: Any = Depends(get_server),
+    agent_id: str,
+    request: Request,
+    body: CreateProjectBody,
+    as_user: int | None = None,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
 ) -> dict[str, object]:
+    locale = resolve_request_locale(request)
     require_agent_row(agent_id, user=user, as_user=as_user, server=server)
     uid = as_user if as_user is not None else user.id
     registry = server.app_runtime.gateway.thread_registry
@@ -180,20 +211,31 @@ async def delete_project(
     # This path is only a database key; this endpoint performs no filesystem operations.
     path = body.project_path
     for row in registry.project_threads(agent_id=agent_id, user_id=uid, project_path=path):
-        _assert_project_thread_idle(server, row)
+        _assert_project_thread_idle(server, row, locale=locale)
     removed = registry.delete_project(agent_id=agent_id, user_id=uid, project_path=path)
     return {"removed": True, "unassigned_threads": removed}
 
 
-@router.patch("/agents/{agent_id}/threads/{thread_id}/project", summary="Move a conversation to a project")
+@router.patch(
+    "/agents/{agent_id}/threads/{thread_id}/project", summary="Move a conversation to a project"
+)
 async def set_thread_project(
-    agent_id: str, thread_id: str, body: ThreadProjectBody, as_user: int | None = None,
-    user: Any = Depends(current_user), server: Any = Depends(get_server),
+    agent_id: str,
+    request: Request,
+    thread_id: str,
+    body: ThreadProjectBody,
+    as_user: int | None = None,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    locale = resolve_request_locale(request)
     row = _require_thread(server, agent_id, thread_id, user, as_user)
-    updated = _assign_thread_project(server, row, body)
-    return {"thread_id": thread_id, "project_path": updated.project_path,
-            "project_name": updated.project_name}
+    updated = await _assign_thread_project(server, row, body, locale=locale)
+    return {
+        "thread_id": thread_id,
+        "project_path": updated.project_path,
+        "project_name": updated.project_name,
+    }
 
 
 @router.get("/agents/{agent_id}/threads", summary="List threads")
@@ -325,15 +367,19 @@ async def start_history_migration(
 @router.post("/agents/{agent_id}/threads", status_code=201, summary="New thread")
 async def create_thread(
     agent_id: str,
+    request: Request,
     body: ThreadProjectBody | None = None,
     as_user: int | None = None,
     user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Start a new conversation (/new equivalent for dashboard)."""
+    locale = resolve_request_locale(request)
     require_agent_row(agent_id, user=user, as_user=as_user, server=server)
     effective_uid = as_user if as_user is not None else user.id
-    project_path = _validated_project_path(server, effective_uid, body.project_path if body else None)
+    project_path = await _validated_project_path(
+        server, effective_uid, body.project_path if body else None, locale=locale
+    )
     sk = ThreadRegistry.dashboard_key(agent_id=agent_id, user_id=effective_uid)
     tid = await server.app_runtime.gateway.thread_registry.reset(
         agent_id=agent_id,
@@ -344,9 +390,12 @@ async def create_thread(
         project_name=body.project_name if body else None,
     )
     row = server.app_runtime.gateway.thread_registry.get_thread(tid)
-    return {"thread_id": tid, "session_key": sk,
-            "project_path": row.project_path if row else None,
-            "project_name": row.project_name if row else None}
+    return {
+        "thread_id": tid,
+        "session_key": sk,
+        "project_path": row.project_path if row else None,
+        "project_name": row.project_name if row else None,
+    }
 
 
 def _parse_csv_query(raw: str | None) -> list[str] | None:
@@ -632,6 +681,7 @@ async def export_history(
 @router.patch("/agents/{agent_id}/threads/{thread_id}", summary="Update thread")
 async def patch_thread(
     agent_id: str,
+    request: Request,
     thread_id: str,
     body: RenameThreadBody,
     as_user: int | None = None,
@@ -639,9 +689,10 @@ async def patch_thread(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Update sidebar metadata or sticky composer settings for a thread."""
+    locale = resolve_request_locale(request)
     row = _require_thread(server, agent_id, thread_id, user, as_user)
     if "project_path" in body.model_fields_set:
-        row = _assign_thread_project(server, row, body)
+        row = await _assign_thread_project(server, row, body, locale=locale)
     composer_fields = {
         "model_ref",
         "reasoning_mode",
@@ -687,6 +738,14 @@ async def patch_thread(
                 ErrorCode.SLASH_BAD_ARGS,
                 "model_ref must reference an enabled model",
             )
+        if (
+            model_ref is not None
+            and not server.app_runtime.agent_registry.model_ref_allowed_for_user(
+                user.id,
+                model_ref,
+            )
+        ):
+            raise OctopError(ErrorCode.RESOURCE_NOT_ALLOWED, "resource is not visible to this user")
     if "reasoning_mode" in body.model_fields_set:
         reasoning_mode = body.reasoning_mode
     if "reasoning_effort" in body.model_fields_set:
@@ -743,12 +802,21 @@ async def delete_thread(
 
     ``compact=true`` rebuilds the SQLite file before the response returns,
     so the file can shrink immediately. The expert pauses while that runs.
-    ``compact=false`` only deletes the rows and compacts later, once the
-    expert is idle. Omitting ``compact`` keeps the previous empty 204.
+    ``compact=false`` only deletes the rows. It does not vacuum. Idle
+    maintenance reclaims the free space later, once the freelist is large
+    enough. Omitting ``compact`` keeps the previous empty 204.
     """
     _require_thread(server, agent_id, thread_id, user, as_user)
+    if server.app_runtime.gateway.ws_hub.is_turn_active(thread_id):
+        raise OctopError(
+            ErrorCode.THREAD_TURN_ACTIVE,
+            error_message(ErrorCode.THREAD_TURN_ACTIVE.value, "en"),
+        )
     registry = server.app_runtime.agent_registry
-    await registry.delete_thread_checkpoint(agent_id, thread_id)
+    if compact is False:
+        await registry.delete_thread_checkpoint(agent_id, thread_id, reclaim=False)
+    else:
+        await registry.delete_thread_checkpoint(agent_id, thread_id)
     server.app_runtime.gateway.thread_registry.delete_thread(thread_id)
     runtime = getattr(server, "app_runtime", None)
     trajectory = getattr(runtime, "trajectory_service", None) if runtime is not None else None
@@ -766,9 +834,4 @@ async def delete_thread(
         if callable(compact_now):
             compacted = bool(await compact_now(agent_id))
         scheduled = not compacted
-    else:
-        schedule = getattr(registry, "schedule_store_reclaim", None)
-        if callable(schedule):
-            schedule(agent_id)
-            scheduled = True
     return JSONResponse({"compacted": compacted, "scheduled": scheduled})

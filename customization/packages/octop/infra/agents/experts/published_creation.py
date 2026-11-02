@@ -35,8 +35,13 @@ from octop.infra.agents.experts.publish import (
     resolve_published_expert_slug,
 )
 from octop.infra.agents.manager import AgentCreateSpec
+from octop.infra.agents.settings.geometric_avatar import (
+    avatar_response,
+    merge_avatar_option,
+    public_avatar_fields,
+    validate_avatar,
+)
 from octop.infra.agents.settings.profile import parse_config_json
-from octop.infra.agents.settings.geometric_avatar import avatar_response, public_avatar_fields, validate_avatar, merge_avatar_option
 from octop.infra.db.repos.published_experts import PublishedExpertRow
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.history.trajectory.settings import apply_enable_trajectory
@@ -161,9 +166,14 @@ def _snapshot_meta(
         welcome_message_en=welcome_message_en,
         quick_prompts=quick_prompts,
         task_examples=task_examples,
-        avatar={key.removeprefix("avatar_"): value for key, value in
-                public_avatar_fields(parse_config_json(getattr(source, "config_json", None))).items()}
-        if "avatar" in parse_config_json(getattr(source, "config_json", None)) else None,
+        avatar={
+            key.removeprefix("avatar_"): value
+            for key, value in public_avatar_fields(
+                parse_config_json(getattr(source, "config_json", None))
+            ).items()
+        }
+        if "avatar" in parse_config_json(getattr(source, "config_json", None))
+        else None,
     )
 
 

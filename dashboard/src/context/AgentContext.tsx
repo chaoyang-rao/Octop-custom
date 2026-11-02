@@ -10,6 +10,8 @@ import type { ReactNode } from "react";
 import { setActiveAgentId } from "../api/request";
 import { agentApi as legacyAgentApi } from "../api/modules/agent";
 import { onSessionEvent, onStreamEvent } from "../pages/Chat/hooks/chatStore";
+import { useCurrentUser } from "../hooks/useCurrentUser";
+import { userCan } from "../utils/permissions";
 import {
   retainDisconnectedBridgeAgents,
   toBridgeShadowAgentId,
@@ -36,6 +38,9 @@ export interface OctopAgent {
   owner_username?: string | null;
   /** Whether the owner has shared this expert with other users. */
   is_shared?: boolean;
+  /** Who may use a shared expert: owner, all logged-in users, or user groups. */
+  visibility?: "owner" | "all" | "groups";
+  group_ids?: string[];
   /** Whether the current user owns this expert. */
   is_owner?: boolean;
   name: string;
@@ -53,6 +58,9 @@ export interface OctopAgent {
   icon: string | null;
   icon_name: string | null;
   icon_url: string | null;
+  avatar_shape?: string | null;
+  avatar_color?: string | null;
+  uploaded_icon_url?: string | null;
   color: string | null;
   max_iters?: number | null;
   max_input_length?: number | null;
@@ -180,6 +188,9 @@ export function agentsSnapshotEqual(
         a.icon === b.icon &&
         a.icon_name === b.icon_name &&
         a.icon_url === b.icon_url &&
+        a.avatar_shape === b.avatar_shape &&
+        a.avatar_color === b.avatar_color &&
+        a.uploaded_icon_url === b.uploaded_icon_url &&
         a.color === b.color &&
         a.kind === b.kind &&
         a.bridge === b.bridge &&
@@ -312,6 +323,8 @@ interface ListAgentsResponse {
 interface FetchAgentsResult {
   agents: OctopAgent[];
   liveConnectionIds: Set<string>;
+  /** Connections whose remote agent list returned successfully. */
+  resolvedConnectionIds: Set<string>;
 }
 
 /**
@@ -319,7 +332,7 @@ interface FetchAgentsResult {
  * falls back to a direct request if the legacy module hasn't been
  * regenerated yet.
  */
-async function fetchAgents(): Promise<FetchAgentsResult> {
+async function fetchAgents(includeBridge: boolean): Promise<FetchAgentsResult> {
   const candidate = legacyAgentApi as Partial<ListAgentsResponse> &
     Record<string, unknown>;
   let local: OctopAgent[] = [];
@@ -330,24 +343,30 @@ async function fetchAgents(): Promise<FetchAgentsResult> {
     const { request } = await import("../api/request");
     local = await request<OctopAgent[]>("/agents");
   }
-  const { remote, liveConnectionIds } = await fetchBridgeShadowAgents();
-  if (remote.length === 0) {
-    return { agents: local, liveConnectionIds };
-  }
+  const { remote, liveConnectionIds, resolvedConnectionIds } = includeBridge
+    ? await fetchBridgeShadowAgents()
+    : {
+        remote: [] as OctopAgent[],
+        liveConnectionIds: new Set<string>(),
+        resolvedConnectionIds: new Set<string>(),
+      };
   const localIds = new Set(local.map((a) => a.agent_id));
   return {
     agents: [...local, ...remote.filter((a) => !localIds.has(a.agent_id))],
     liveConnectionIds,
+    resolvedConnectionIds,
   };
 }
 
 async function fetchBridgeShadowAgents(): Promise<{
   remote: OctopAgent[];
   liveConnectionIds: Set<string>;
+  resolvedConnectionIds: Set<string>;
 }> {
   const empty = {
     remote: [] as OctopAgent[],
     liveConnectionIds: new Set<string>(),
+    resolvedConnectionIds: new Set<string>(),
   };
   try {
     const { bridgeApi } = await import("../api/modules/bridge");
@@ -357,21 +376,23 @@ async function fetchBridgeShadowAgents(): Promise<{
     );
     const connected = connections.filter((c) => c.status === "connected");
     if (connected.length === 0) {
-      return { remote: [], liveConnectionIds };
+      return { ...empty, liveConnectionIds };
     }
+    const resolvedConnectionIds = new Set<string>();
     const batches = await Promise.all(
       connected.map(async (conn) => {
         try {
           const agents = await bridgeApi.listAgents(conn.connection_id);
+          resolvedConnectionIds.add(conn.connection_id);
           return agents.map((agent) => mapBridgeAgent(agent, conn));
         } catch {
           return [] as OctopAgent[];
         }
       }),
     );
-    return { remote: batches.flat(), liveConnectionIds };
+    return { remote: batches.flat(), liveConnectionIds, resolvedConnectionIds };
   } catch {
-    // Non-admin users or cloud-collab-unavailable installs — ignore.
+    // Bridge list failed (network or a stale permission). Keep local experts.
     return empty;
   }
 }
@@ -385,14 +406,23 @@ function stringIdList(value: unknown): string[] | undefined {
   return ids;
 }
 
-/** Peer public config the local composer reads (mode). Other keys stay on the peer. */
+/**
+ * Peer public config the local UI reads. Composer mode and the storage
+ * backend stay; everything else remains on the peer.
+ */
 function bridgeShadowConfig(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const mode = (value as Record<string, unknown>).conversation_mode;
+  const src = value as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  const mode = src.conversation_mode;
   if (mode === "ask" || mode === "plan" || mode === "craft") {
-    return { conversation_mode: mode };
+    out.conversation_mode = mode;
   }
-  return {};
+  const backend = src.backend;
+  if (backend && typeof backend === "object" && !Array.isArray(backend)) {
+    out.backend = backend;
+  }
+  return out;
 }
 
 export function mapBridgeAgent(
@@ -426,9 +456,16 @@ export function mapBridgeAgent(
     icon_name?: string | null;
     inbound?: boolean;
     has_password?: boolean;
+    /** False when this user only received the link. Missing means owned. */
+    is_owner?: boolean;
+    owner_username?: string | null;
+    owner_display_name?: string | null;
   },
 ): OctopAgent {
   const agentId = String(agent.agent_id || agent.id || "");
+  const sharedLinkViewer = conn.is_owner === false;
+  const linkOwnedByViewer = !sharedLinkViewer;
+  const peerOwns = agent.is_owner !== false;
   const memberIds = Array.isArray(agent.member_ids)
     ? agent.member_ids
         .map((id) =>
@@ -449,7 +486,7 @@ export function mapBridgeAgent(
     default_model: defaultModel || null,
     system_prompt: null,
     template_name: null,
-    state: "running",
+    state: agent.state?.trim() || "stopped",
     ...bridgeWorkFields(agent),
     last_error: null,
     icon: null,
@@ -472,8 +509,13 @@ export function mapBridgeAgent(
     primary_agent_name: agent.primary_agent_name,
     primary_icon_url: agent.primary_icon_url,
     bridge: true,
-    is_owner: agent.is_owner !== false,
-    is_shared: agent.is_shared === true,
+    // A shared recipient can chat, but cannot edit / start / reload / delete.
+    // Peer ownership still applies when this user owns the link.
+    is_owner: linkOwnedByViewer && peerOwns,
+    is_shared: sharedLinkViewer || agent.is_shared === true,
+    owner_username: sharedLinkViewer
+      ? conn.owner_display_name || conn.owner_username || null
+      : null,
     bridge_disconnected: false,
     bridge_inbound: Boolean(conn.inbound) || conn.has_password === false,
     bridge_connection_id: conn.connection_id,
@@ -486,6 +528,8 @@ export function mapBridgeAgent(
 }
 
 export function AgentProvider({ children }: { children: ReactNode }) {
+  const user = useCurrentUser();
+  const includeBridge = userCan(user, "bridge");
   const [agents, setAgents] = useState<OctopAgent[]>([]);
   const [activeAgentId, setActiveAgentIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -512,7 +556,11 @@ export function AgentProvider({ children }: { children: ReactNode }) {
       }
       setError(null);
       try {
-        const { agents: list, liveConnectionIds } = await fetchAgents();
+        const {
+          agents: list,
+          liveConnectionIds,
+          resolvedConnectionIds,
+        } = await fetchAgents(includeBridge);
         // Only update state when content actually changed, to prevent
         // unnecessary re-renders of every component subscribed to this context
         // (the chat page polls every 10 s to refresh unread badges).
@@ -522,6 +570,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
             prev,
             list,
             liveConnectionIds,
+            resolvedConnectionIds,
           );
           if (!options?.force && agentsSnapshotEqual(prev, merged)) {
             merged = prev;
@@ -552,7 +601,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [persistAndApply],
+    [includeBridge, persistAndApply],
   );
 
   // Initial fetch — fire once on mount. Login flow lives elsewhere; this

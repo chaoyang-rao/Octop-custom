@@ -1,0 +1,239 @@
+/* Octop compact chat. Loaded after the versioned dashboard styles. */
+html,
+body {
+  font-size: 13px;
+}
+
+/* Keep existing small metadata and avatar dimensions; reduce prominent UI text. */
+[class*="__sessionTitle__"],
+[class*="__mobileTitle__"] {
+  font-size: 14px;
+}
+
+[class*="__dockTabLabel__"],
+[class*="__chatTitleText__"],
+[class*="__chatTitleInput__"],
+[class*="__agentCardName__"] {
+  font-size: 13px;
+}
+
+/* Extra chat-page specificity also wins over the lazily loaded Markdown CSS. */
+[class*="__chatPage__"] [class*="__userText__"],
+[class*="__chatPage__"] [class*="__assistantText__"],
+[class*="__chatPage__"] [class*="__markdownBody__"] {
+  font-size: 13px;
+}
+
+[class*="__chatPage__"] [class*="__assistantText__"] code,
+[class*="__chatPage__"] [class*="__codeBlock__"] {
+  font-size: 12.5px;
+}
+
+/* No fixed wrapper height: previews, attachments and queued messages can grow. */
+[class*="__chatPage__"] [class*="__inputWrapper__"] {
+  padding: 5px 10px 5px 12px;
+}
+
+/* This class must work outside chatPage too: autosize measures a body clone. */
+[class*="__textarea__"] {
+  box-sizing: border-box;
+  min-height: 39px;
+  max-height: 160px;
+  padding: 1px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+[class*="__chatPage__"] [class*="__actionsRow__"] {
+  margin-top: 2px;
+  padding-top: 2px;
+}
+
+[class*="__chatPage__"] [class*="__secondaryActions__"] {
+  padding-top: 0;
+  gap: 4px;
+}
+
+/* Retain a 24px target while reducing only the toolbar's visible glyphs. */
+[class*="__actionsRow__"] [class*="__secondaryBtn__"],
+[class*="__actionsRow__"] [class*="__newChatBtn__"],
+[class*="__actionsRow__"] [class*="__sendBtn__"],
+[class*="__actionsRow__"] [class*="__contextRingBtn__"] {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+[class*="__actionsRow__"] [class*="__sendBtn__"] {
+  border-radius: 50%;
+}
+
+/* Attribute sizing preserves spinner transforms and exact 50% icon scaling. */
+[class*="__actionsRow__"] button > svg[width="12"][height="12"] {
+  width: 6px;
+  height: 6px;
+}
+
+[class*="__actionsRow__"] button > svg[width="14"][height="14"] {
+  width: 7px;
+  height: 7px;
+}
+
+[class*="__actionsRow__"] button > svg[width="15"][height="15"] {
+  width: 7.5px;
+  height: 7.5px;
+}
+
+[class*="__actionsRow__"] button > svg[width="16"][height="16"] {
+  width: 8px;
+  height: 8px;
+}
+
+[class*="__actionsRow__"] button > svg[width="18"][height="18"] {
+  width: 9px;
+  height: 9px;
+}
+
+[class*="__actionsRow__"] [class*="__contextRingSvg__"] {
+  width: 16px;
+  height: 16px;
+}
+
+[class*="__actionsRow__"] [class*="__contextRingLabel__"] {
+  font-size: 9px;
+}
+
+@media (max-width: 767px) {
+  [class*="__chatPage__"] [class*="__inputWrapper__"] {
+    padding: 5px 10px 5px 12px;
+  }
+
+  [class*="__textarea__"] {
+    min-height: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="__textarea__"] {
+    transition: none;
+  }
+}
+
+/* 圆形发送按钮，内部图标再缩小一圈 */
+[class*="__actionsRow__"] [class*="__sendBtn__"] > svg[width][height] {
+  width: 7px;
+  height: 7px;
+}
+
+/* Composer tools inherit semantic colors in both light and dark themes. */
+[class*="__actionsRow__"] [class*="__secondaryBtn__"],
+[class*="__actionsRow__"] [class*="__newChatBtn__"],
+[class*="__actionsRow__"] [class*="__contextRingLabel__"] {
+  color: var(--fn-text-secondary);
+}
+
+/* Preserve brand hover feedback and the existing selected/disabled states. */
+[class*="__actionsRow__"] [class*="__secondaryBtn__"]:hover:not(:disabled),
+[class*="__actionsRow__"] [class*="__newChatBtn__"]:hover:not(:disabled) {
+  color: var(--fn-text-brand);
+}
+
+/* Match the adjacent tool buttons' 24px outer circle and interaction target. */
+[class*="__actionsRow__"] [class*="__contextRingSvg__"] {
+  width: 24px;
+  height: 24px;
+}
+
+/* Enlarge the glyphs without changing the existing 24px button targets. */
+[data-octop-composer-tools]
+  button
+  > svg:is(
+    [width="12"],
+    [width="14"],
+    [width="15"],
+    [width="16"],
+    [width="18"]
+  ) {
+  width: 16px !important;
+  height: 16px !important;
+}
+[data-octop-composer-tools] [class*="contextRingLabel"] {
+  font-size: 10px;
+}
+
+/* Only the actual Dock / conversation-list scroll layers. Keep their existing
+   overflow, dimensions and scroll positions; fade the thumb, not the content. */
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  ) {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  )::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  )::-webkit-scrollbar-track,
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  )::-webkit-scrollbar-corner {
+  background: transparent;
+}
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  )::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 6px;
+}
+/* Mouse focus alone should not leave a thumb stuck on after the pointer leaves.
+   Keyboard focus, including focus on a child link, keeps the scrollbar usable. */
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  ):is(:hover, :focus-visible, :has(:focus-visible)) {
+  scrollbar-color: var(--fn-text-tertiary, rgba(110, 116, 130, 0.55))
+    transparent;
+}
+:is(
+    [data-octop-sidebar-scroll="dock"],
+    [class*="__sessionItems__"],
+    [class*="__minimalAgentNav__"],
+    [class*="__minimalSettingsPane__"]
+  ):is(:hover, :focus-visible, :has(:focus-visible))::-webkit-scrollbar-thumb {
+  background: var(--fn-text-tertiary, rgba(110, 116, 130, 0.55));
+}
+
+/* Brand mark stays monochrome: black on light theme, white on dark theme. */
+img[alt="Octop"],
+img[alt="octop"] {
+  filter: brightness(0);
+}
+html[data-theme="dark"] img[alt="Octop"],
+html[data-theme="dark"] img[alt="octop"] {
+  filter: brightness(0) invert(1);
+}

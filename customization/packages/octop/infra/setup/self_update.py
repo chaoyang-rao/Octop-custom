@@ -975,8 +975,7 @@ def run_upgrade(
     version: str | None = None,
     locale: str = DEFAULT_LOCALE,
 ) -> UpgradeResult:
-    # This distribution is rebuilt from a reviewed Git snapshot. A PyPI
-    # replacement would discard its dashboard and cross-package patches.
+    # Replacing this reviewed distribution with PyPI would discard customizations.
     if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" or (
         Path(__file__).resolve().parents[3] / "octop-custom-release.json"
     ).is_file():

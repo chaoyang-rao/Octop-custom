@@ -16,7 +16,7 @@ import secrets
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit, urlunsplit
 
 from cryptography.hazmat.primitives import hashes
@@ -28,6 +28,9 @@ from octop.infra.db.repos.settings import SettingsRepo
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.mobile_access.seal import notification_key
 from octop.infra.utils.ulid import new_ulid
+
+if TYPE_CHECKING:
+    from octop.infra.db.repos.users import UserRepo
 
 TOKEN_PREFIX = "octop_mobile_"
 SHARE_PREFIX = TOKEN_PREFIX + "share_"
@@ -106,14 +109,40 @@ class DeviceSession:
 
 
 class MobileAccessService:
-    def __init__(self, settings_repo: SettingsRepo, secret_repo: SecretRepo) -> None:
+    def __init__(
+        self, settings_repo: SettingsRepo, secret_repo: SecretRepo, *, user_repo: UserRepo
+    ) -> None:
         self._settings = settings_repo
         self._secrets = secret_repo
+        self._users = user_repo
         self._lock = asyncio.Lock()
         self._attempts: dict[str, tuple[int, int]] = {}
         self._presence_lock = threading.RLock()
         self._foreground: dict[str, int] = {}
         self._presence: dict[tuple[int, str], tuple[str | None, int]] = {}
+
+    def _account_versions(self, user_id: int) -> tuple[int, int] | None:
+        row = self._users.get(user_id)
+        if row is None or row.disabled:
+            return None
+        return row.password_version, row.mfa_version
+
+    def _device_is_current(self, user_id: int, row: dict[str, Any]) -> bool:
+        if row.get("revoked_at") or row["expires_at"] <= int(time.time()):
+            return False
+        # Legacy grants predate version binding. Only accounts still at zero
+        # keep them; a later password/MFA change requires fresh pairing.
+        versions = self._account_versions(user_id)
+        return versions is not None and versions == (
+            row.get("password_version", 0),
+            row.get("mfa_version", 0),
+        )
+
+    def device_is_current(self, user_id: int, device_id: str) -> bool:
+        """Recheck an outbound delivery after awaiting provider configuration."""
+        rows = self._read(f"mobile_access.devices.{user_id}", [])
+        row = next((row for row in rows if row["device_id"] == device_id), None)
+        return row is not None and self._device_is_current(user_id, row)
 
     def _read(self, key: str, default: Any) -> Any:
         raw = self._settings.get(key)
@@ -222,11 +251,11 @@ class MobileAccessService:
         row = next((r for r in rows if secrets.compare_digest(r["code_hash"], digest)), None)
         if row is None or row["state"] != "pending":
             raise _error()
+        versions = self._account_versions(user_id)
+        if versions is None:
+            raise _error()
         devices = self._read(f"mobile_access.devices.{user_id}", [])
-        if (
-            sum(not r.get("revoked_at") and r["expires_at"] > int(time.time()) for r in devices)
-            >= 20
-        ):
+        if sum(self._device_is_current(user_id, r) for r in devices) >= 20:
             raise OctopError(ErrorCode.FORBIDDEN, "mobile device limit reached")
         device_id = new_ulid()
         token = f"{TOKEN_PREFIX}{user_id}.{device_id}.{secrets.token_urlsafe(32)}"
@@ -240,6 +269,8 @@ class MobileAccessService:
             "created_at": now,
             "expires_at": now + DEVICE_TTL,
             "revoked_at": None,
+            "password_version": versions[0],
+            "mfa_version": versions[1],
         }
         devices.append(device)
         self._write(f"mobile_access.devices.{user_id}", devices)
@@ -292,7 +323,7 @@ class MobileAccessService:
             raise _error()
         rows = self._read(f"mobile_access.devices.{user_id}", [])
         row = next((r for r in rows if r["device_id"] == parts[1]), None)
-        if row is None or row.get("revoked_at") or row["expires_at"] <= int(time.time()):
+        if row is None or not self._device_is_current(user_id, row):
             raise _error()
         verifier = row.get("share_hash") if is_share else row["token_hash"]
         if not verifier or not secrets.compare_digest(str(verifier), _hash(token)):
@@ -536,8 +567,7 @@ class MobileAccessService:
             }
             for row in rows
             if row.get("push")
-            and not row.get("revoked_at")
-            and row["expires_at"] > int(time.time())
+            and self._device_is_current(user_id, row)
             and "notifications" in row["scopes"]
         ]
 
@@ -600,8 +630,7 @@ class MobileAccessService:
         targets = []
         for row in self._read(f"mobile_access.devices.{user_id}", []):
             if (
-                row.get("revoked_at")
-                or row["expires_at"] <= int(time.time())
+                not self._device_is_current(user_id, row)
                 or "notifications" not in row["scopes"]
                 or not row.get("activities")
                 or self._preferences(row).get("foreground")
@@ -618,6 +647,12 @@ class MobileAccessService:
 def service_for(server: Any) -> MobileAccessService:
     service = getattr(server, "_mobile_access_service", None)
     if not isinstance(service, MobileAccessService):
-        service = MobileAccessService(server.services.settings_repo, server.services.secret_repo)
+        service = MobileAccessService(
+            server.services.settings_repo,
+            server.services.secret_repo,
+            user_repo=server.services.user_repo,
+        )
         server._mobile_access_service = service
+    else:
+        service._users = server.services.user_repo
     return service
