@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
@@ -18,6 +20,8 @@ from octop.infra.utils.locale import DEFAULT_LOCALE
 
 
 class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
+    before_context_compaction = True
+
     def __init__(
         self,
         *,
@@ -40,6 +44,8 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
             for tool in tools or []
         }
         prefix: list[Any] = []
+        if cfg.get("octop_team_assignment") is True:
+            prefix.append(SystemMessage(content=tr("teams.member_briefing", locale)))
         if "conversation_history" in names:
             prefix.append(SystemMessage(content=tr("teams.history_access_briefing", locale)))
         team_id = str(cfg.get("octop_team_id") or "")
@@ -100,27 +106,45 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
         return prefix, team_id, room_id
 
     def _transcript(
-        self, team_id: str, room_id: str, page: dict[str, Any], locale: str
+        self,
+        team_id: str,
+        room_id: str,
+        page: dict[str, Any],
+        locale: str,
+        *,
+        max_chars: int = 32000,
+        visible_ids: set[str] | None = None,
     ) -> HumanMessage:
         team = self._repos.agent_repo.get(team_id)
         primary = self._teams.require_primary(team.user_id)
         # Keep model input bounded. Full older messages remain available through
         # the explicit paginated history tool, without touching either checkpoint.
-        messages = page["messages"]
-        while len(messages) > 1 and len(json.dumps(messages, ensure_ascii=False)) > 32000:
+        page = dict(page)
+        messages = [
+            dict(item)
+            for item in page["messages"]
+            if item.get("message_id") not in (visible_ids or set())
+        ]
+        while len(messages) > 1 and len(json.dumps(messages, ensure_ascii=False)) > max_chars:
             messages = messages[1:]
             page["has_more"] = True
-        if messages and len(json.dumps(messages, ensure_ascii=False)) > 32000:
+        if messages and len(json.dumps(messages, ensure_ascii=False)) > max_chars:
             messages = [
-                {**messages[-1], "content": messages[-1]["content"][-30000:], "excerpt": True}
+                {
+                    **messages[-1],
+                    "content": messages[-1]["content"][-max(0, max_chars - 1200) :],
+                    "excerpt": True,
+                }
             ]
             page["has_more"] = True
         payload = {
             "group": {
                 "name": team.name,
-                "description": team.description,
+                "description": (team.description or "")[: max_chars // 8],
+                "description_excerpt": len(team.description or "") > max_chars // 8,
                 "primary_agent_id": primary.agent_id,
-                "members": self._teams.visible_member_ids(team_id),
+                "members": self._teams.visible_member_ids(team_id)[: max(1, max_chars // 256)],
+                "member_count": len(self._teams.visible_member_ids(team_id)),
             },
             "thread_id": room_id,
             "messages": messages,
@@ -134,6 +158,109 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
             + json.dumps(payload, ensure_ascii=False)
         )
 
+    def _cutoff(self, request: ModelRequest[Any]) -> int:
+        event = (getattr(request, "state", None) or {}).get("_summarization_event")
+        cutoff = event.get("cutoff_index", 0) if isinstance(event, dict) else 0
+        cutoff = cutoff if isinstance(cutoff, int) and cutoff >= 0 else 0
+        if isinstance(event, dict):
+            version = event.get("coverage_version", 0)
+            if not (isinstance(version, int) and version >= 2) and cutoff <= len(request.messages):
+                return 0
+        return min(cutoff, len(request.messages))
+
+    def _visible_ids(self, request: ModelRequest[Any]) -> set[str]:
+        return {
+            str(item.id)
+            for item in request.messages[self._cutoff(request) :]
+            if getattr(item, "id", None)
+        }
+
+    def _context_limit(self, request: ModelRequest[Any]) -> int:
+        profile = getattr(getattr(request, "model", None), "profile", None)
+        capacity = profile.get("max_input_tokens", 0) if isinstance(profile, dict) else 0
+        return (
+            min(32000, max(1600, int(capacity * 0.15)))
+            if isinstance(capacity, int) and capacity > 0
+            else 8000
+        )
+
+    def _prepare(
+        self, request: ModelRequest[Any], prefix: list[Any], cfg: dict[str, Any]
+    ) -> ModelRequest[Any]:
+        locale = str(cfg.get("locale") or DEFAULT_LOCALE)
+        messages = list(request.messages)
+        seen_briefings: set[str] = set()
+        authors: dict[str, str] = {}
+        scope = current_primary_room()
+        user_id = request_user_id({"configurable": cfg}) or (scope.user_id if scope else None)
+        for index in range(len(messages) - 1, self._cutoff(request) - 1, -1):
+            message = messages[index]
+            content = message.content
+            if (
+                isinstance(message, SystemMessage)
+                and isinstance(content, str)
+                and content.startswith(
+                    (
+                        "[Team assignment, not a direct user question]",
+                        "[团队派工，不是用户在直接问你]",
+                    )
+                )
+            ):
+                if content in seen_briefings:
+                    messages[index] = message.model_copy(
+                        update={"content": tr("teams.superseded_briefing", locale)}
+                    )
+                seen_briefings.add(content)
+                continue
+            extra = getattr(message, "additional_kwargs", None) or {}
+            speaker = str(extra.get("speaker_agent_id") or "")
+            if (
+                not speaker
+                or speaker == str(cfg.get("agent_id") or "")
+                or message.type not in {"ai", "tool"}
+            ):
+                continue
+            if speaker not in authors:
+                authors[speaker] = speaker
+                if user_id is not None:
+                    try:
+                        author = self._history.require_visible_agent(user_id, speaker)
+                        authors[speaker] = author.name
+                    except PermissionError:
+                        pass
+            label = tr("teams.author_quote", locale, name=authors[speaker], agent_id=speaker)
+            if isinstance(content, str):
+                projected: Any = label + "\n" + content
+            else:
+                projected = deepcopy(content)
+                insert_at = 0
+                while (
+                    insert_at < len(projected)
+                    and isinstance(projected[insert_at], dict)
+                    and projected[insert_at].get("type")
+                    in {"thinking", "reasoning", "redacted_thinking"}
+                ):
+                    insert_at += 1
+                projected.insert(insert_at, {"type": "text", "text": label})
+            update: dict[str, Any] = {"content": projected}
+            if message.type == "ai":
+                update["name"] = "expert_" + hashlib.sha256(speaker.encode()).hexdigest()[:16]
+            messages[index] = message.model_copy(deep=True, update=update)
+        system = getattr(request, "system_message", None)
+        if prefix:
+            addition = "\n\n".join(str(item.content) for item in prefix)
+            if system is None:
+                system = SystemMessage(content=addition)
+            elif isinstance(system.content, str):
+                system = system.model_copy(update={"content": system.content + "\n\n" + addition})
+            else:
+                system = system.model_copy(
+                    update={"content": [*system.content, {"type": "text", "text": addition}]}
+                )
+        # The checkpoint cutoff is indexed against raw messages. Ephemeral
+        # context must not insert messages or change those positions.
+        return request.override(messages=messages, system_message=system)
+
     def wrap_model_call(
         self, request: ModelRequest[Any], handler: Callable[[ModelRequest[Any]], ModelResponse[Any]]
     ) -> ModelResponse[Any]:
@@ -145,9 +272,16 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
             assert user_id is not None
             page = self._history.read(user_id, room_id, limit=100)
             prefix.append(
-                self._transcript(team_id, room_id, page, str(cfg.get("locale") or DEFAULT_LOCALE))
+                self._transcript(
+                    team_id,
+                    room_id,
+                    page,
+                    str(cfg.get("locale") or DEFAULT_LOCALE),
+                    max_chars=self._context_limit(request),
+                    visible_ids=self._visible_ids(request),
+                )
             )
-        prepared = request.override(messages=[*prefix, *request.messages])
+        prepared = self._prepare(request, prefix, cfg)
         if team_id and self._workspace_for is not None:
             from octop.infra.agents.middleware.workspace_image import (
                 WorkspaceImageMaterializeMiddleware,
@@ -179,9 +313,11 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
                     room_id,
                     page,
                     str(cfg.get("locale") or DEFAULT_LOCALE),
+                    max_chars=self._context_limit(request),
+                    visible_ids=self._visible_ids(request),
                 )
             )
-        prepared = request.override(messages=[*prefix, *request.messages])
+        prepared = await asyncio.to_thread(self._prepare, request, prefix, cfg)
         if team_id and self._workspace_for is not None:
             from octop.infra.agents.middleware.workspace_image import (
                 WorkspaceImageMaterializeMiddleware,

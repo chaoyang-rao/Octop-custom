@@ -25,6 +25,44 @@ def _model(ref: str, cap: int) -> SimpleNamespace:
     )
 
 
+def test_unknown_capacity_is_not_proven_safe_even_with_a_host_cap() -> None:
+    candidate = AutoRouteCandidate("p/unknown", 0)
+    assert not model_failover._fits_context(candidate, 200000)
+    assert not model_failover._fits_context(candidate, 1000, route_cap=64000)
+
+
+@pytest.mark.asyncio
+async def test_fallback_cannot_bypass_the_acting_users_model_permissions(monkeypatch) -> None:
+    models = {ref: _model(ref, 100000) for ref in ["p/a", "p/forbidden", "p/allowed"]}
+    cfg = {"model": "p/a", "octop_auto_route": True, "octop_execution_user_id": 7}
+    monkeypatch.setattr(model_failover, "_configurable", lambda _: cfg)
+    middleware = SafeModelFailoverMiddleware(
+        health=ModelHealthRegistry(),
+        candidates=lambda *_: [
+            AutoRouteCandidate("p/forbidden", 100000),
+            AutoRouteCandidate("p/allowed", 100000),
+        ],
+        model_for_ref=models.__getitem__,
+        max_retries=0,
+        initial_delay=0,
+        max_delay=0,
+        allow_model=lambda uid, ref: uid == 7 and ref == "p/allowed",
+        on_failure="error",
+    )
+    attempts = []
+
+    async def handler(request):
+        attempts.append(request.model.model)
+        if request.model.model == "p/a":
+            raise ConnectionError("offline")
+        return ModelResponse(result=[AIMessage(content="ok")])
+
+    await middleware.awrap_model_call(
+        ModelRequest(model=models["p/a"], messages=[HumanMessage(content="hello")]), handler
+    )
+    assert attempts == ["p/a", "p/allowed"]
+
+
 @pytest.mark.asyncio
 async def test_auto_route_switches_after_retry_exhaustion(monkeypatch) -> None:
     models = {"p/a": _model("p/a", 100_000), "p/b": _model("p/b", 100_000)}
@@ -200,7 +238,7 @@ async def test_failover_skips_model_with_smaller_context(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_failover_respects_agent_context_cap(monkeypatch) -> None:
+async def test_failover_passes_host_cap_to_each_fresh_context_check(monkeypatch) -> None:
     models = {"p/a": _model("p/a", 100_000), "p/b": _model("p/b", 100_000)}
     middleware = SafeModelFailoverMiddleware(
         health=ModelHealthRegistry(clock=lambda: 100.0),
@@ -210,6 +248,7 @@ async def test_failover_respects_agent_context_cap(monkeypatch) -> None:
         initial_delay=0,
         max_delay=0,
     )
+    middleware._fresh_compaction = True
     monkeypatch.setattr(
         model_failover,
         "_configurable",
@@ -224,6 +263,7 @@ async def test_failover_respects_agent_context_cap(monkeypatch) -> None:
 
     async def handler(request: ModelRequest) -> ModelResponse:
         attempts.append(request.model.model)
+        assert model_failover._configurable(request)["max_input_tokens"] == 1_000
         raise RuntimeError("context_length_exceeded")
 
     response = await middleware.awrap_model_call(
@@ -232,7 +272,7 @@ async def test_failover_respects_agent_context_cap(monkeypatch) -> None:
     )
 
     assert "[model_call_failed]" in str(response.result[0].content)
-    assert attempts == ["p/a"]
+    assert attempts == ["p/a", "p/b"]
 
 
 @pytest.mark.asyncio

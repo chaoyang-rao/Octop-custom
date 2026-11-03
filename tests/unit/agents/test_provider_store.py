@@ -497,3 +497,18 @@ def test_list_auto_route_candidates_filters_and_preserves_capacity(
     assert [(item.ref, item.max_input_tokens) for item in vision_candidates] == [
         ("p/vision", 32_000)
     ]
+
+
+def test_context_capacity_belongs_to_the_exact_provider_model_route(store: ProviderStore) -> None:
+    for provider, capacity in [("small", 32000), ("large", 1000000)]:
+        store._provider_repo.create(
+            name=provider,
+            kind="openai",
+            base_url="https://example.invalid/v1",
+            api_key="test",
+            models_json=json.dumps([{"id": "shared-model", "context_window": capacity}]),
+        )
+    assert store.model_context_capacity("small/shared-model", reserved_output_tokens=8000) == 24000
+    assert store.model_context_capacity("large/shared-model") == 1000000
+    assert store.model_context_capacity("shared-model") == 0
+    assert store.model_context_capacity("unregistered/model") == 0

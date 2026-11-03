@@ -897,17 +897,8 @@ class TeamManager:
 
     async def _dispatch_message(self, call: PeerCall, user_id: int | None) -> str:
         locale = self._locale_for(user_id)
-        transcript = await self._room_transcript(
-            call.source_thread_id,
-            call.from_agent_id,
-            locale,
-        )
-        if transcript:
-            return tr(
-                "teams.member_briefing_with_history",
-                locale,
-                history=transcript,
-            )
+        # The request middleware supplies the authorized, bounded room view.
+        # Persisting another transcript here duplicates the member's history.
         return tr("teams.member_briefing", locale)
 
     async def _visible_user_prompt(self, call: PeerCall) -> str:
@@ -2430,12 +2421,14 @@ def wire_host_dispatch(
         pair = take_prompt(agent_id, getattr(req, "thread_id", None))
         if not pair:
             return req
-        from langchain_core.messages import HumanMessage, SystemMessage
+        from langchain_core.messages import HumanMessage
 
         question, dispatch = pair
         messages: list[Any] = []
         if dispatch and dispatch != question:
-            messages.append(SystemMessage(content=dispatch))
+            cfg = dict(getattr(req, "configurable", None) or {})
+            cfg["octop_team_assignment"] = True
+            req.configurable = cfg
         if question:
             messages.append(
                 HumanMessage(

@@ -11,6 +11,7 @@ from langchain.agents.middleware.model_retry import ModelRetryMiddleware
 from langchain_core.messages import AIMessage
 from langgraph.errors import GraphBubbleUp
 from octop_harness.context_usage import breakdown_from_model_request
+from octop_harness.middleware import summarization_limits as harness_compaction
 from octop_harness.middleware.runtime import runtime_config
 from octop_harness.middleware.turn_model import latest_human_needs_multimodal
 
@@ -45,6 +46,8 @@ def _fits_context(
     route_cap: int | None = None,
 ) -> bool:
     cap = candidate.max_input_tokens
+    if cap <= 0:
+        return False
     if route_cap is not None and route_cap > 0:
         cap = min(cap, route_cap) if cap > 0 else route_cap
     if cap <= 0:
@@ -54,6 +57,8 @@ def _fits_context(
 
 class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
     """Retry one model, then switch only for AUTO and safe failure classes."""
+
+    wraps_context_compaction = True
 
     def __init__(
         self,
@@ -65,12 +70,17 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
         initial_delay: float,
         max_delay: float,
         on_failure: Callable[[Exception], str] | Literal["error"] | None = None,
+        allow_model: Callable[[int | None, str], bool] | None = None,
     ) -> None:
         super().__init__()
         self._health = health
         self._candidates = candidates
         self._model_for_ref = model_for_ref
         self._on_failure = on_failure
+        self._allow_model = allow_model
+        self._fresh_compaction = (
+            getattr(harness_compaction, "REQUEST_SCOPED_COMPACTION", False) is True
+        )
         self._retry = ModelRetryMiddleware(
             max_retries=max_retries,
             initial_delay=initial_delay,
@@ -101,13 +111,28 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
         estimated = _estimated_input_tokens(request)
         raw_route_cap = _configurable(request).get(CONFIGURABLE_MAX_INPUT_TOKENS)
         route_cap = raw_route_cap if isinstance(raw_route_cap, int) else None
-        return [
-            candidate
-            for candidate in self._candidates(current_ref, needs_multimodal)
-            if candidate.ref != current_ref
-            and self._health.is_routable(candidate.ref)
-            and _fits_context(candidate, estimated, route_cap)
-        ]
+        cfg = _configurable(request)
+        raw_user = cfg.get("octop_execution_user_id") or cfg.get("user")
+        user_id = (
+            int(raw_user)
+            if isinstance(raw_user, (str, int))
+            and not isinstance(raw_user, bool)
+            and str(raw_user).isdigit()
+            else None
+        )
+        candidates = []
+        for candidate in self._candidates(current_ref, needs_multimodal):
+            if candidate.ref == current_ref or not self._health.is_routable(candidate.ref):
+                continue
+            if candidate.max_input_tokens <= 0:
+                continue
+            if self._allow_model is not None and not self._allow_model(user_id, candidate.ref):
+                continue
+            if self._fresh_compaction or _fits_context(candidate, estimated, route_cap):
+                candidates.append(candidate)
+        # Prefer routes that already fit. Smaller known routes run a fresh
+        # compaction pass inside this middleware before any provider request.
+        return sorted(candidates, key=lambda item: not _fits_context(item, estimated, route_cap))
 
     def _record_failure(self, ref: str, exc: Exception) -> bool:
         decision = classify_model_failure(exc)
@@ -135,6 +160,8 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
             if automatic and ref != current_ref and not self._health.begin_attempt(ref):
                 continue
             routed = request if model is request.model else request.override(model=model)
+            configurable = _configurable(request)
+            previous_model = configurable.get("model")
             if automatic and ref and ref != current_ref:
                 _configurable(request)["model"] = ref
             try:
@@ -148,7 +175,15 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
                     return self._failure_response(exc)
                 logger.warning("AUTO model route failed; trying next candidate: model=%s", ref)
                 continue
+            finally:
+                if automatic:
+                    if previous_model is None:
+                        configurable.pop("model", None)
+                    else:
+                        configurable["model"] = previous_model
             self._health.record_success(ref)
+            if automatic and ref:
+                configurable["model"] = ref
             return cast(ModelResponse[Any], response)
 
         return self._failure_response(
@@ -175,6 +210,8 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
             if automatic and ref != current_ref and not self._health.begin_attempt(ref):
                 continue
             routed = request if model is request.model else request.override(model=model)
+            configurable = _configurable(request)
+            previous_model = configurable.get("model")
             if automatic and ref and ref != current_ref:
                 _configurable(request)["model"] = ref
             try:
@@ -188,7 +225,15 @@ class SafeModelFailoverMiddleware(AgentMiddleware[Any, Any]):
                     return self._failure_response(exc)
                 logger.warning("AUTO model route failed; trying next candidate: model=%s", ref)
                 continue
+            finally:
+                if automatic:
+                    if previous_model is None:
+                        configurable.pop("model", None)
+                    else:
+                        configurable["model"] = previous_model
             self._health.record_success(ref)
+            if automatic and ref:
+                configurable["model"] = ref
             return cast(ModelResponse[Any], response)
 
         return self._failure_response(

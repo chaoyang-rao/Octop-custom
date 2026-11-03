@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel, Field
 
 from octop.api.common.agent import require_agent_row
 from octop.api.common.agent_workspace import resolve_agent_workspace_dir
@@ -46,6 +47,25 @@ from octop.infra.users.resource_policy import (
 from octop.infra.utils.locale import resolve_request_locale
 
 router = APIRouter()
+
+
+class ContextUsageSegmentOut(BaseModel):
+    key: str
+    tokens: int
+
+
+class ThreadContextUsageOut(BaseModel):
+    max_tokens: int = Field(
+        description="Actual input budget; zero means model capacity is unknown."
+    )
+    used_tokens: int
+    decision_saved: int
+    estimated: bool = Field(
+        description="True when occupancy is estimated rather than a current provider snapshot."
+    )
+    segments: list[ContextUsageSegmentOut]
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -409,6 +429,8 @@ def _parse_csv_query(raw: str | None) -> list[str] | None:
 @router.get(
     "/agents/{agent_id}/threads/{thread_id}/context-usage",
     summary="Context window usage breakdown",
+    description="Uses the actual execution expert and this thread's usage snapshot. Falls back to bounded message metadata or ledger estimates without decoding checkpoints. A zero capacity means the model window is unknown.",
+    response_model=ThreadContextUsageOut,
 )
 async def get_thread_context_usage(
     agent_id: str,
@@ -424,7 +446,9 @@ async def get_thread_context_usage(
     """Return persisted context-window usage for a thread (octop-harness snapshot)."""
     _require_thread(server, agent_id, thread_id, user, as_user)
     registry = server.app_runtime.agent_registry
-    effective_max = registry.resolve_context_max_tokens(agent_id, fallback=max_tokens)
+    effective_max = await asyncio.to_thread(
+        registry.resolve_context_max_tokens, agent_id, fallback=max_tokens, thread_id=thread_id
+    )
     breakdown = await compute_context_breakdown(
         registry,
         agent_id=agent_id,
@@ -434,11 +458,13 @@ async def get_thread_context_usage(
         mcp_servers=_parse_csv_query(mcp_servers),
         skills=_parse_csv_query(skills),
         usage_repo=server.services.usage_repo,
+        message_repo=server.services.thread_message_repo,
     )
     return {
         "max_tokens": breakdown.max_tokens,
         "used_tokens": breakdown.used_tokens,
         "decision_saved": breakdown.decision_saved,
+        "estimated": breakdown.estimated,
         "segments": [
             {"key": key, "tokens": breakdown.segments.get(key, 0)}
             for key in SEGMENT_KEYS

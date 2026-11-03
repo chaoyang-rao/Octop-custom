@@ -1187,6 +1187,7 @@ export default function ChatInputActionsRow({
       ) : null}
       <div className={styles.inputActions}>
         <ContextWindowRing
+          isStreaming={isStreaming}
           usedTokens={contextUsedTokens}
           usageEstimated={contextUsedTokens == null}
           maxTokens={contextMaxTokens}

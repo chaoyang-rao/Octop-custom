@@ -81,10 +81,12 @@ class ContextUsageMiddleware(AgentMiddleware[Any, Any]):
         *,
         mcp_tool_names: frozenset[str] | None = None,
         max_tokens: int = 0,
+        agent_id: str | None = None,
     ) -> None:
         super().__init__()
         self._mcp_tool_names = mcp_tool_names or frozenset()
         self._max_tokens = max_tokens
+        self._agent_id = agent_id
         self._snapshots: dict[str, ContextUsage] = {}
 
     def get_snapshot(self, thread_id: str) -> ContextUsage | None:
@@ -126,9 +128,9 @@ class ContextUsageMiddleware(AgentMiddleware[Any, Any]):
         try:
             # Prefer the routed request model window (ModelRouter runs outer→inner
             # before this middleware) so the ring matches the turn's context cap.
-            cap = max_input_tokens_from_model(getattr(request, "model", None), fallback=self._max_tokens)
-            if cap <= 0:
-                cap = self._max_tokens
+            cap = max_input_tokens_from_model(getattr(request, "model", None), fallback=0)
+            if cap <= 0 and self._agent_id is None and not getattr(request.model, "_harness_request_budget", False):
+                cap = max(0, self._max_tokens)
             usage = build_context_usage(
                 request,
                 response_messages=list(getattr(response, "result", None) or []),
@@ -136,6 +138,9 @@ class ContextUsageMiddleware(AgentMiddleware[Any, Any]):
                 max_tokens=cap,
             )
             thread_id = _thread_id_from_request(request)
+            cfg = runtime_config(request).get("configurable") or {}
+            usage.agent_id = self._agent_id or str(cfg.get("agent_id") or "")
+            usage.thread_id = thread_id or ""
             if thread_id:
                 self._snapshots[thread_id] = usage
             if usage.source == "empty":

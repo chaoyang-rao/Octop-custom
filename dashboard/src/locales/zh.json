@@ -1642,11 +1642,14 @@
     "composerContextLabel": "消息附加上下文",
     "contextWindow": {
       "tooltip": "上下文占用 {{used}} / {{max}} · {{percent}}%（最近一次模型请求）",
+      "capacityUnknown": "模型容量未配置，暂不能计算占用比例",
+      "capacityUnknownTooltip": "已用 {{used}} · 模型容量未配置，无法计算百分比",
+      "estimatedTooltip": "上下文估算 {{used}} / {{max}} · {{percent}}%",
       "breakdownTitle": "上下文使用",
       "breakdownPercent": "已用 {{percent}}%",
       "breakdownHint": "显示当前上下文窗口占用，不是本轮计费合计。",
       "decisionSaved": "决策节省",
-      "estimateHint": "供应商未回传用量，以下为估算。",
+      "estimateHint": "当前为估算；下一次模型请求完成后刷新。",
       "segments": {
         "system_prompt": "系统提示词",
         "tool_definitions": "工具定义",

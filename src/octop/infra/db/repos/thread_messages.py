@@ -61,6 +61,16 @@ class ThreadMessageRepo:
     def __init__(self, db: DatabasePool) -> None:
         self._db = db
 
+    def recent_context_candidates(self, thread_id: str) -> list[ThreadMessageRow]:
+        """Bounded small AI rows; never load a legacy conversation checkpoint."""
+        with self._db.connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM thread_messages WHERE thread_id=? AND role IN ('ai','assistant') "
+                "AND LENGTH(message_json)<=262144 AND message_json LIKE ? ORDER BY seq DESC LIMIT 16",
+                (thread_id, '%"context_usage"%'),
+            ).fetchall()
+        return [ThreadMessageRow.from_row(row) for row in rows]
+
     def head(self, thread_id: str) -> int:
         with self._db.connect() as conn:
             row = conn.execute(

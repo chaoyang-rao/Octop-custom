@@ -1641,12 +1641,15 @@
     "sessionWaiting": "Waiting for you",
     "composerContextLabel": "Message context",
     "contextWindow": {
+      "capacityUnknown": "Model capacity is not configured; percentage is unavailable",
+      "capacityUnknownTooltip": "{{used}} used · Model capacity is unknown; percentage is unavailable",
+      "estimatedTooltip": "Estimated context {{used}} / {{max}} · {{percent}}%",
       "tooltip": "Context {{used}} / {{max}} · {{percent}}% (last model request)",
       "breakdownTitle": "Context Usage",
       "breakdownPercent": "{{percent}}% Full",
       "breakdownHint": "Shows current context-window occupancy, not this turn’s billed total.",
       "decisionSaved": "Decision saved",
-      "estimateHint": "The provider did not return usage; figures below are estimates.",
+      "estimateHint": "Estimated usage; refreshed after the next model request completes.",
       "segments": {
         "system_prompt": "System prompt",
         "tool_definitions": "Tool definitions",

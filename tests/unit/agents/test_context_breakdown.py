@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -17,6 +18,133 @@ def test_segment_keys_stable() -> None:
     assert "conversation" in SEGMENT_KEYS
     assert "system_prompt" in SEGMENT_KEYS
     assert "skills" in SEGMENT_KEYS
+
+
+@pytest.mark.asyncio
+async def test_team_reads_actual_primary_snapshot_for_the_same_room() -> None:
+    usage = SimpleNamespace(
+        used_tokens=220000,
+        max_tokens=1000000,
+        segments={"conversation": 220000},
+        budget_version=2,
+    )
+    lookups = []
+
+    def get_agent(agent_id):
+        lookups.append(agent_id)
+        return SimpleNamespace(
+            _context_usage_mw=SimpleNamespace(
+                get_snapshot=lambda _: usage if agent_id == "primary" else None
+            )
+        )
+
+    registry = SimpleNamespace(
+        get_row=lambda _: SimpleNamespace(),
+        get_agent=get_agent,
+        principal_agent_id=lambda _: "primary",
+    )
+    result = await compute_context_breakdown(
+        registry, agent_id="team", thread_id="room", max_tokens=128000, input_tokens=220000
+    )
+    assert result.max_tokens == 1000000
+    assert result.used_tokens == 220000
+    assert lookups == ["primary"]
+
+
+@pytest.mark.asyncio
+async def test_unknown_capacity_keeps_uncapped_input_tokens_without_a_fake_default() -> None:
+    registry = _registry(None)
+    result = await compute_context_breakdown(
+        registry, agent_id="expert", thread_id="room", max_tokens=0, input_tokens=220000
+    )
+    assert result.max_tokens == 0
+    assert result.used_tokens == 220000
+
+
+@pytest.mark.asyncio
+async def test_cold_team_context_uses_primary_stamp_not_newer_member_usage() -> None:
+    def row(speaker, capacity, used):
+        return SimpleNamespace(
+            message_json=json.dumps(
+                {
+                    "type": "ai",
+                    "data": {
+                        "additional_kwargs": {
+                            "speaker_agent_id": speaker,
+                            "context_usage": {
+                                "budget_version": 2,
+                                "max_tokens": capacity,
+                                "agent_id": speaker,
+                                "thread_id": "room",
+                                "used_tokens": used,
+                                "input_tokens": used,
+                                "segments": {"conversation": used},
+                                "estimated": False,
+                            },
+                        }
+                    },
+                }
+            )
+        )
+
+    registry = _registry(None)
+    registry.principal_agent_id.return_value = "primary"
+    messages = SimpleNamespace(
+        recent_context_candidates=lambda _: [
+            row("member", 32000, 3000),
+            row("primary", 1000000, 220000),
+        ]
+    )
+    result = await compute_context_breakdown(
+        registry,
+        agent_id="team",
+        thread_id="room",
+        max_tokens=128000,
+        input_tokens=3000,
+        message_repo=messages,
+    )
+    assert result.max_tokens == 1000000 and result.used_tokens == 220000
+    assert result.estimated is False
+    registry.get_agent.return_value.aget_history.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_team_without_primary_usage_does_not_adopt_member_hint() -> None:
+    registry = _registry(None)
+    registry.principal_agent_id.return_value = "primary"
+    result = await compute_context_breakdown(
+        registry, agent_id="team", thread_id="room", max_tokens=1000000, input_tokens=3000
+    )
+    assert result.used_tokens == 0
+
+
+@pytest.mark.asyncio
+async def test_legacy_stamp_restores_uncapped_input_but_uses_verified_route_capacity() -> None:
+    wire = {
+        "type": "ai",
+        "data": {
+            "additional_kwargs": {
+                "context_usage": {
+                    "max_tokens": 128000,
+                    "used_tokens": 128000,
+                    "input_tokens": 220000,
+                    "segments": {"conversation": 220000},
+                }
+            }
+        },
+    }
+    messages = SimpleNamespace(
+        recent_context_candidates=lambda _: [SimpleNamespace(message_json=json.dumps(wire))]
+    )
+    result = await compute_context_breakdown(
+        _registry(None),
+        agent_id="expert",
+        thread_id="room",
+        max_tokens=1000000,
+        message_repo=messages,
+    )
+    assert result.max_tokens == 1000000 and result.used_tokens == 220000
+    assert result.estimated is True
 
 
 def test_segment_keys_match_harness_when_available() -> None:
@@ -40,6 +168,8 @@ def _usage(
         output_tokens=0,
         segments=segments,
         source=source,
+        budget_version=2,
+        estimated=False,
     )
 
     def with_max_tokens(cap: int) -> SimpleNamespace:

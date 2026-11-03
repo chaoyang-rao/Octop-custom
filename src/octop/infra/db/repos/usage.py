@@ -533,6 +533,16 @@ class UsageRepo:
             return 0
         return int(row["input_tokens"] or 0)
 
+    def last_thread_model(self, *, agent_id: str, thread_id: str) -> str | None:
+        """Last recorded route for the non-blocking context-window fallback."""
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT model FROM usage_log WHERE agent_id = ? AND thread_id = ? "
+                "ORDER BY ts DESC, id DESC LIMIT 1",
+                (agent_id, thread_id),
+            ).fetchone()
+        return str(row["model"]) if row is not None and row["model"] else None
+
     def total_tokens_for_user(self, user_id: int) -> int:
         """Lifetime ``total_tokens`` for one user (all agents and sources)."""
         with self._db.connect() as conn:

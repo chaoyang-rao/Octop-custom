@@ -174,9 +174,13 @@ def build_harness_manager_mock(
             return agent_obj.call(request)
         raise NotImplementedError("fake agent has no call()")
 
-    def _resume_hitl(agent_id: str, thread_id: str, decisions: Any) -> Any:
+    def _resume_hitl(
+        agent_id: str, thread_id: str, decisions: Any, *, configurable: dict[str, Any] | None = None
+    ) -> Any:
         agent_obj = _get_agent(agent_id).agent
         if hasattr(agent_obj, "resume_hitl"):
+            if configurable is not None:
+                return agent_obj.resume_hitl(thread_id, decisions, configurable=configurable)
             return agent_obj.resume_hitl(thread_id, decisions)
         raise NotImplementedError("fake agent has no resume_hitl()")
 

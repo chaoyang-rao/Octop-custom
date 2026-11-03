@@ -7,6 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
+from langchain_core.exceptions import ContextOverflowError
+
 from octop.i18n.domains.stream import (
     AUTH,
     CONTEXT_LENGTH,
@@ -59,6 +61,8 @@ _MODEL_NOT_FOUND_MARKERS = (
 
 def classify_model_failure(exc: Exception) -> FailureDecision:
     """Decide whether AUTO routing may try another model after *exc*."""
+    if isinstance(exc, ContextOverflowError):
+        return FailureDecision(True, "context_length", FailureScope.NONE)
     detail = exception_display_message(exc)
     lower = detail.lower()
     if any(marker in lower for marker in _MODEL_NOT_FOUND_MARKERS):

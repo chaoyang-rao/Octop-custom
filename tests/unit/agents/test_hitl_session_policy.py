@@ -150,13 +150,20 @@ def test_store_set_persists_once() -> None:
 async def test_resume_hitl_binds_thread_scope() -> None:
     seen: list[str | None] = []
 
-    async def fake_resume(agent_id: str, thread_id: str, decisions: list[dict[str, Any]]) -> Any:
+    async def fake_resume(
+        agent_id: str,
+        thread_id: str,
+        decisions: list[dict[str, Any]],
+        *,
+        configurable: dict[str, Any] | None = None,
+    ) -> Any:
         seen.append(current_hitl_thread_id())
         if False:
             yield {}
 
     manager = AgentManager.__new__(AgentManager)
     manager._harness_manager = SimpleNamespace(resume_hitl=fake_resume)
+    manager._thread_project_config = lambda *_: {}
     manager._history_backfills = {}
     manager._reclaim_pending = set()
     manager._reclaim_holds = {}

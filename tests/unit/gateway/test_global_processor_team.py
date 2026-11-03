@@ -900,7 +900,7 @@ async def test_prepare_team_dispatch_tracks_job_and_forces_sync(
 
 
 @pytest.mark.asyncio
-async def test_prepare_team_dispatch_includes_room_history(
+async def test_prepare_team_dispatch_defers_history_to_ephemeral_model_context(
     processor_env: dict,
 ) -> None:
     from langchain_core.messages import AIMessage, HumanMessage
@@ -934,16 +934,16 @@ async def test_prepare_team_dispatch_includes_room_history(
     assert pair is not None
     question, dispatch = pair
     assert question == "survey market"
-    assert "what is the market?" in dispatch
-    assert "I will ask Researcher" in dispatch
+    assert "what is the market?" not in dispatch
+    assert "I will ask Researcher" not in dispatch
     assert "Team assignment" in dispatch or "团队派工" in dispatch
     taken = processor.teams.take_peer_prompt("child", "thr_parent~child")
     assert taken == pair
-    assert harness.aget_history.await_count >= 1
+    assert harness.aget_history.await_count == 0
 
 
 @pytest.mark.asyncio
-async def test_prepare_team_dispatch_uses_projected_member_speech(
+async def test_prepare_team_dispatch_does_not_duplicate_projected_member_speech(
     processor_env: dict,
 ) -> None:
     import json
@@ -1000,9 +1000,9 @@ async def test_prepare_team_dispatch_uses_projected_member_speech(
     assert pair is not None
     question, dispatch = pair
     assert question == "size the TAM"
-    assert "TAM is 12B" in dispatch
-    assert "Researcher" in dispatch
-    assert "what is the market?" in dispatch
+    assert "TAM is 12B" not in dispatch
+    assert "Researcher" not in dispatch
+    assert "what is the market?" not in dispatch
     assert harness.aget_history.await_count == 0
 
 

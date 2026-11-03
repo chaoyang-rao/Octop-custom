@@ -7,6 +7,7 @@ Hosts (e.g. Octop) map agent config onto these configurable keys before
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from copy import copy
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
@@ -34,34 +35,38 @@ def apply_configurable_model_settings(request: ModelRequest) -> ModelRequest:
     max_input = configurable.get(CONFIGURABLE_MAX_INPUT_TOKENS)
     model = getattr(updated, "model", None)
     if model is not None:
-        profile = getattr(model, "profile", None)
-        if not isinstance(profile, dict):
-            profile = {}
-            try:
-                object.__setattr__(model, "profile", profile)
-            except (AttributeError, TypeError):
-                return updated
-
-        if isinstance(max_input, int) and max_input > 0:
-            # A host-level prompt cap is explicit and takes precedence.
-            profile["max_input_tokens"] = max_input
+        raw = getattr(model, "profile", None)
+        profile = dict(raw) if isinstance(raw, dict) else {}
+        base_input = getattr(model, "_harness_max_input_tokens", 0)
+        context_window = getattr(model, "_harness_context_window", 0)
+        if not isinstance(base_input, int) or base_input <= 0:
+            base_input = profile.get("max_input_tokens", 0)
+        if not isinstance(context_window, int) or context_window <= 0:
+            context_window = profile.get("context_window", 0) or base_input
+        base_input = base_input if isinstance(base_input, int) and base_input > 0 else 0
+        context_window = context_window if isinstance(context_window, int) and context_window > 0 else 0
+        limit = base_input
+        if isinstance(max_input, int) and not isinstance(max_input, bool) and max_input > 0:
+            limit = min(limit, max_input) if limit > 0 else max_input
+        output = 0
+        for key in ("max_tokens", "max_completion_tokens", "max_output_tokens"):
+            value = (getattr(updated, "model_settings", None) or {}).get(key, getattr(model, key, None))
+            if isinstance(value, int) and not isinstance(value, bool):
+                output = max(output, value)
+        if context_window > 0 and output > 0:
+            available = max(context_window - output, 1)
+            limit = min(limit, available) if limit > 0 else available
+        if limit > 0:
+            profile["max_input_tokens"] = limit
         else:
-            base_input = getattr(model, "_harness_max_input_tokens", 0)
-            context_window = getattr(model, "_harness_context_window", 0)
-            if not isinstance(base_input, int) or base_input <= 0:
-                raw_base = profile.get("max_input_tokens")
-                base_input = raw_base if isinstance(raw_base, int) else 0
-            if not isinstance(context_window, int) or context_window <= 0:
-                raw_context = profile.get("context_window")
-                context_window = raw_context if isinstance(raw_context, int) else 0
-
-            output_tokens = (getattr(updated, "model_settings", None) or {}).get("max_tokens")
-            if isinstance(output_tokens, int) and output_tokens > 0 and context_window > 0:
-                safe_input = max(context_window - output_tokens, 1)
-                profile["max_input_tokens"] = min(base_input, safe_input) if base_input > 0 else safe_input
-            elif base_input > 0:
-                # Restore the baseline after a previous request reserved output.
-                profile["max_input_tokens"] = base_input
+            profile.pop("max_input_tokens", None)
+        # SDK clients may be shared; mutable prompt budgets must not be shared.
+        clone = copy(model)
+        object.__setattr__(clone, "profile", profile)
+        object.__setattr__(clone, "_harness_max_input_tokens", base_input)
+        object.__setattr__(clone, "_harness_context_window", context_window)
+        object.__setattr__(clone, "_harness_request_budget", True)
+        updated = updated.override(model=clone)
     return updated
 
 

@@ -325,6 +325,29 @@ class ProviderStore:
                 return _model_dict_supports_image(model)
         return False
 
+    def model_context_capacity(self, ref: str, *, reserved_output_tokens: int = 0) -> int:
+        """Declared input budget for an exact route, never an invented default."""
+        provider_name, _, model_id = ref.partition("/")
+        row = self._provider_repo.get_by_name(provider_name) if model_id else None
+        matches = (
+            [model for model in row.get_models() if model.get("id") == model_id]
+            if row is not None
+            else [
+                model
+                for provider in self.iter_usable_rows()
+                for model in provider.get_models()
+                if model.get("id") == ref
+            ]
+        )
+        if len(matches) != 1:
+            return 0
+        try:
+            return self._model_config_from_row(matches[0]).input_token_budget(
+                reserved_output_tokens=reserved_output_tokens
+            )
+        except (TypeError, ValueError):
+            return 0
+
     def resolve_multimodal_model_ref(self) -> str | None:
         """First enabled image-capable model across usable providers."""
         for row in self.iter_usable_rows():

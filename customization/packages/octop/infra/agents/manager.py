@@ -3379,9 +3379,30 @@ class AgentManager:
             )
             self.sync_skill_package_dirs(row.agent_id)
 
-    def resolve_context_max_tokens(self, agent_id: str, *, fallback: int = 128_000) -> int:
-        """Return the configured context cap for *agent_id* (``max_input_length``)."""
-        return config_context_max_tokens(self.get_config(agent_id), fallback=fallback)
+    def resolve_context_max_tokens(
+        self, agent_id: str, *, fallback: int = 128_000, thread_id: str | None = None
+    ) -> int:
+        """Resolve the actual executor/model budget; zero means unknown capacity."""
+        if thread_id is None:
+            return config_context_max_tokens(self.get_config(agent_id), fallback=fallback)
+        from octop.infra.agents.settings.runtime_limits import agent_model_settings
+
+        executor = self.principal_agent_id(agent_id)
+        cfg = self.get_config(executor)
+        ref = self._repos.usage_repo.last_thread_model(agent_id=executor, thread_id=thread_id)
+        if not ref:
+            thread = self._repos.thread_repo.get(thread_id)
+            row = self.get_row(executor)
+            ref = (
+                (thread.model_ref if thread else None)
+                or (self._providers.resolve_explicit_default_model(row, cfg) if row else None)
+                or self.resolve_fallback_model_ref()
+            )
+        output = agent_model_settings(cfg).get("max_tokens", 0)
+        output = output if isinstance(output, int) and output > 0 else 0
+        capacity = self._providers.model_context_capacity(ref or "", reserved_output_tokens=output)
+        override = config_context_max_tokens(cfg, fallback=0)
+        return min(capacity, override) if capacity > 0 and override > 0 else capacity or override
 
     async def list_skill_summaries(
         self,
@@ -4635,6 +4656,9 @@ class AgentManager:
 
                 retry_middleware: Any = SafeModelFailoverMiddleware(
                     health=self._model_health,
+                    allow_model=lambda uid, ref: self.model_ref_allowed_for_user(
+                        uid or row.user_id or 0, ref
+                    ),
                     candidates=lambda _current_ref, needs_multimodal: (
                         self._providers.list_auto_route_candidates(
                             needs_multimodal=needs_multimodal

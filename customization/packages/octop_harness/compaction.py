@@ -154,21 +154,10 @@ def _has_reusable_helper(mw: Any) -> bool:
 
 @contextmanager
 def _force_policy(mw: Any, model: Any) -> Iterator[Any]:
-    """Apply force keep + turn summary model on the graph MW; restore after."""
-    helper = mw._lc_helper
-    old_keep = helper.keep
-    old_model = helper.model
-    old_summary = helper._summary_model
-    helper.keep = ("messages", FORCE_KEEP_MESSAGES)
-    helper.model = model
-    bind_retry = getattr(model, "with_retry", None)
-    helper._summary_model = bind_retry() if callable(bind_retry) else model
-    try:
-        yield mw
-    finally:
-        helper.keep = old_keep
-        helper.model = old_model
-        helper._summary_model = old_summary
+    """Use a detached force policy; another room may be using the same graph."""
+    from octop_harness.middleware.summarization_limits import scoped_summarization
+
+    yield scoped_summarization(mw, model, keep=("messages", FORCE_KEEP_MESSAGES))
 
 
 def _resolve_offload_session_id(mw: Any, values: dict[str, Any]) -> str:
@@ -270,6 +259,7 @@ async def _persist_compact_event(
         "cutoff_index": work_mw._compute_state_cutoff(event, cutoff),
         "summary_message": summary_msg,
         "file_path": file_path,
+        "coverage_version": 2,
     }
     shown = display_offload_path(file_path, session_id) or None
     try:
@@ -333,6 +323,10 @@ async def force_compact_thread(
         values = {}
     messages = list(values.get("messages") or [])
     event = values.get("_summarization_event")
+    from octop_harness.middleware.summarization_limits import legacy_summary_can_rebuild
+
+    if legacy_summary_can_rebuild(event, len(messages)):
+        event = None
 
     graph_mw = summarization_middleware if _is_summarization_middleware(summarization_middleware) else None
     offload_backend = _resolve_offload_backend(graph_mw, backend)

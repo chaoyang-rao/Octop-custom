@@ -143,39 +143,22 @@ describe("ChatInputActionsRow plus menu", () => {
     expect(screen.getByLabelText("快捷指令")).toBeInTheDocument();
   });
 
-  it("opens a flyout beside the plus menu instead of a window drawer", async () => {
+  it("opens the model picker from the persistent shortcut without a window drawer", async () => {
     render(
       <MemoryRouter>
         <ChatInputActionsRow {...baseProps} />
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByTestId("composer-plus"));
-
-    await waitFor(() => {
-      expect(document.querySelector(".ant-popover")).toBeInTheDocument();
-    });
-    expect(screen.getByText("Model")).toBeInTheDocument();
-    expect(screen.queryByTestId("composer-plus-panel")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Model"));
-
-    const panel = await screen.findByTestId("composer-plus-panel");
-    expect(panel.getAttribute("data-align")).toMatch(/^(top|bottom)$/);
+    fireEvent.click(screen.getByTestId("composer-model-shortcut"));
+    const panel = await screen.findByRole("dialog");
     expect(panel.querySelector("img")).not.toBeNull();
-    const menu = document.querySelector("[class*='plusFlyoutMenu']");
-    if (menu && menu.getBoundingClientRect().height > 0) {
-      expect(
-        Number.parseFloat(getComputedStyle(panel).maxHeight),
-      ).toBeGreaterThanOrEqual(Math.round(menu.getBoundingClientRect().height));
-    }
     expect(document.querySelector(".ant-drawer-content")).toBeNull();
     expect(document.querySelector(".ant-popover")).toBeInTheDocument();
-    expect(screen.getByText("Model")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Search models")).toBeInTheDocument();
   });
 
-  it("filters models from the plus-menu search box", async () => {
+  it("filters models from the persistent picker search box", async () => {
     const extraModels: ResolvedModel[] = [
       ...models,
       {
@@ -193,8 +176,7 @@ describe("ChatInputActionsRow plus menu", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByTestId("composer-plus"));
-    fireEvent.click(await screen.findByText("Model"));
+    fireEvent.click(screen.getByTestId("composer-model-shortcut"));
     expect(
       await screen.findByText("Provider / Compact Model"),
     ).toBeInTheDocument();

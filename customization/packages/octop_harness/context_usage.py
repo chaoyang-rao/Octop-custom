@@ -368,6 +368,10 @@ class ContextUsage:
     segments: dict[str, int] = field(default_factory=dict)
     source: ContextUsageSource = "empty"
     decision_saved: int = 0
+    budget_version: int = 2
+    estimated: bool = True
+    agent_id: str = ""
+    thread_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -388,7 +392,7 @@ class ContextUsage:
         if source == "empty" and (used_tokens > 0 or input_tokens > 0 or segments):
             source = "model_request"
         return cls(
-            max_tokens=int(data.get("max_tokens") or DEFAULT_MAX_TOKENS),
+            max_tokens=max(0, int(data.get("max_tokens", DEFAULT_MAX_TOKENS) or 0)),
             used_tokens=used_tokens,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
@@ -399,6 +403,10 @@ class ContextUsage:
             segments=segments,
             source=source,  # type: ignore[arg-type]
             decision_saved=max(0, int(data.get("decision_saved") or 0)),
+            budget_version=int(data.get("budget_version") or 0),
+            estimated=data.get("estimated", True) is not False,
+            agent_id=str(data.get("agent_id") or ""),
+            thread_id=str(data.get("thread_id") or ""),
         )
 
     def with_max_tokens(self, max_tokens: int) -> ContextUsage:
@@ -408,11 +416,11 @@ class ContextUsage:
         Prefer ``input_tokens`` (provider-reported) when raising the cap so the
         ring reflects real occupancy against the true context window.
         """
-        cap = max_tokens if max_tokens > 0 else DEFAULT_MAX_TOKENS
+        cap = max(0, max_tokens)
         raw_used = self.input_tokens if self.input_tokens > 0 else self.used_tokens
         return ContextUsage(
             max_tokens=cap,
-            used_tokens=min(raw_used, cap),
+            used_tokens=min(raw_used, cap) if cap else raw_used,
             input_tokens=self.input_tokens,
             output_tokens=self.output_tokens,
             uncached_input_tokens=self.uncached_input_tokens,
@@ -422,11 +430,15 @@ class ContextUsage:
             segments=dict(self.segments),
             source=self.source,
             decision_saved=self.decision_saved,
+            budget_version=self.budget_version,
+            estimated=self.estimated,
+            agent_id=self.agent_id,
+            thread_id=self.thread_id,
         )
 
 
 def empty_context_usage(*, max_tokens: int = DEFAULT_MAX_TOKENS) -> ContextUsage:
-    return ContextUsage(max_tokens=max_tokens if max_tokens > 0 else DEFAULT_MAX_TOKENS)
+    return ContextUsage(max_tokens=max(0, max_tokens))
 
 
 def build_context_usage(
@@ -444,12 +456,14 @@ def build_context_usage(
     cache_read_tokens = 0
     cache_write_tokens = 0
     reasoning_tokens = 0
+    estimated = True
 
     for msg in reversed(response_messages or []):
         usage = extract_usage_from_message(msg)
         if usage:
             if usage["input_tokens"] > 0:
                 input_tokens = usage["input_tokens"]
+                estimated = False
             output_tokens = usage["output_tokens"]
             uncached_input_tokens = usage["uncached_input_tokens"]
             cache_read_tokens = usage["cache_read_tokens"]
@@ -463,11 +477,11 @@ def build_context_usage(
     segments = raw if input_tokens > 0 else dict.fromkeys(SEGMENT_KEYS, 0)
     # Drop zero segments for a compact persisted payload / API response.
     compact = {k: v for k, v in segments.items() if v > 0}
-    cap = max_tokens if max_tokens > 0 else DEFAULT_MAX_TOKENS
+    cap = max(0, max_tokens)
     decision_saved = max(0, int(pending_decision_saved.get() or 0))
     return ContextUsage(
         max_tokens=cap,
-        used_tokens=min(input_tokens, cap),
+        used_tokens=min(input_tokens, cap) if cap else input_tokens,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         uncached_input_tokens=uncached_input_tokens,
@@ -477,6 +491,7 @@ def build_context_usage(
         segments=compact,
         source="model_request" if input_tokens > 0 else "empty",
         decision_saved=decision_saved,
+        estimated=estimated,
     )
 
 
@@ -510,10 +525,10 @@ def shrink_context_usage(usage: ContextUsage, removed_tokens: int) -> ContextUsa
     else:
         applied = delta
     input_tokens = max(0, usage.input_tokens - applied)
-    cap = usage.max_tokens if usage.max_tokens > 0 else DEFAULT_MAX_TOKENS
+    cap = max(0, usage.max_tokens)
     return ContextUsage(
         max_tokens=cap,
-        used_tokens=min(input_tokens, cap),
+        used_tokens=min(input_tokens, cap) if cap else input_tokens,
         input_tokens=input_tokens,
         output_tokens=0,
         uncached_input_tokens=0,
@@ -523,6 +538,10 @@ def shrink_context_usage(usage: ContextUsage, removed_tokens: int) -> ContextUsa
         segments=segments,
         source=usage.source,
         decision_saved=usage.decision_saved,
+        budget_version=usage.budget_version,
+        estimated=True,
+        agent_id=usage.agent_id,
+        thread_id=usage.thread_id,
     )
 
 

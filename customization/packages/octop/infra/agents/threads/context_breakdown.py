@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 from dataclasses import dataclass
+from types import SimpleNamespace
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -38,38 +41,86 @@ class ContextBreakdownResult:
     used_tokens: int
     segments: dict[str, int]
     decision_saved: int = 0
+    estimated: bool = False
 
 
 def _empty_breakdown(*, max_tokens: int) -> ContextBreakdownResult:
-    cap = max_tokens if max_tokens > 0 else 128_000
+    cap = max(0, max_tokens)
     return ContextBreakdownResult(
         max_tokens=cap,
         used_tokens=0,
         segments=dict.fromkeys(SEGMENT_KEYS, 0),
+        estimated=True,
     )
 
 
 def _usage_to_breakdown(usage: Any, *, fallback_max_tokens: int) -> ContextBreakdownResult:
     raw_segments = getattr(usage, "segments", None) or {}
     segments = {key: int(raw_segments.get(key, 0) or 0) for key in SEGMENT_KEYS}
-    used = int(getattr(usage, "used_tokens", 0) or 0)
-    cap = int(getattr(usage, "max_tokens", fallback_max_tokens) or fallback_max_tokens or 128_000)
+    current_budget = _token_int(getattr(usage, "budget_version", 0)) >= 2
+    cap = (
+        max(0, int(getattr(usage, "max_tokens", fallback_max_tokens) or 0))
+        if current_budget
+        else max(0, fallback_max_tokens)
+    )
+    raw_used = _token_int(getattr(usage, "input_tokens", 0)) or _token_int(
+        getattr(usage, "used_tokens", 0)
+    )
+    used = min(raw_used, cap) if cap else raw_used
     saved = _token_int(getattr(usage, "decision_saved", 0))
     return ContextBreakdownResult(
         max_tokens=cap,
         used_tokens=used,
         segments=segments,
         decision_saved=saved,
+        estimated=getattr(usage, "estimated", True) is not False or not current_budget,
     )
 
 
 def _from_stream_input_tokens(input_tokens: int, *, max_tokens: int) -> ContextBreakdownResult:
     """Minimal fallback when harness has no persisted breakdown yet."""
-    cap = max_tokens if max_tokens > 0 else 128_000
-    used = min(max(0, input_tokens), cap)
+    cap = max(0, max_tokens)
+    used = min(max(0, input_tokens), cap) if cap else max(0, input_tokens)
     segments = dict.fromkeys(SEGMENT_KEYS, 0)
     segments["conversation"] = used
-    return ContextBreakdownResult(max_tokens=cap, used_tokens=used, segments=segments)
+    return ContextBreakdownResult(
+        max_tokens=cap, used_tokens=used, segments=segments, estimated=True
+    )
+
+
+def _persisted_context(
+    message_repo: Any, thread_id: str, executor_id: str, room: bool, fallback_max_tokens: int
+) -> ContextBreakdownResult | None:
+    reader = getattr(message_repo, "recent_context_candidates", None)
+    if not callable(reader):
+        return None
+    for row in reader(thread_id):
+        try:
+            wire = json.loads(row.message_json)
+            data = wire.get("data", wire)
+            extra = data.get("additional_kwargs") or {}
+            speaker = str(extra.get("speaker_agent_id") or "")
+            if (speaker and speaker != executor_id) or (room and not speaker):
+                continue
+            snapshot = extra.get("context_usage")
+            if not isinstance(snapshot, dict):
+                continue
+            if _token_int(snapshot.get("budget_version")) >= 2:
+                if (
+                    snapshot.get("thread_id") != thread_id
+                    or snapshot.get("agent_id") != executor_id
+                ):
+                    continue
+            elif snapshot.get("thread_id") not in (None, "", thread_id) or snapshot.get(
+                "agent_id"
+            ) not in (None, "", executor_id):
+                continue
+            return _usage_to_breakdown(
+                SimpleNamespace(**snapshot), fallback_max_tokens=fallback_max_tokens
+            )
+        except (ValueError, TypeError, AttributeError):
+            continue
+    return None
 
 
 def _usage_has_segments(usage: Any) -> bool:
@@ -209,6 +260,7 @@ async def compute_context_breakdown(
     mcp_servers: list[str] | None = None,
     skills: list[str] | None = None,
     usage_repo: Any | None = None,
+    message_repo: Any | None = None,
 ) -> ContextBreakdownResult:
     """Return a non-blocking context snapshot or a token-ledger fallback.
 
@@ -222,9 +274,14 @@ async def compute_context_breakdown(
     if row is None:
         raise ValueError(f"agent {agent_id!r} not found")
 
+    principal = getattr(registry, "principal_agent_id", None)
+    executor_id = await asyncio.to_thread(principal, agent_id) if callable(principal) else agent_id
+    if not isinstance(executor_id, str) or not executor_id:
+        executor_id = agent_id
+
     harness: Any = None
     try:
-        harness = registry.get_agent(agent_id)
+        harness = registry.get_agent(executor_id)
     except Exception:
         logger.debug("no live harness for context usage agent=%s", agent_id, exc_info=True)
 
@@ -245,19 +302,40 @@ async def compute_context_breakdown(
     if _usage_has_segments(usage):
         return _usage_to_breakdown(usage, fallback_max_tokens=max_tokens)
 
+    if message_repo is not None:
+        try:
+            persisted = await asyncio.to_thread(
+                _persisted_context,
+                message_repo,
+                thread_id,
+                executor_id,
+                executor_id != agent_id,
+                max_tokens,
+            )
+            if persisted is not None:
+                return persisted
+        except Exception:
+            logger.debug(
+                "persisted context metadata unavailable thread=%s", thread_id, exc_info=True
+            )
+
     logged = 0
     if usage_repo is not None:
         last_fn = getattr(usage_repo, "last_thread_input_tokens", None)
         if callable(last_fn):
             try:
-                logged = _token_int(last_fn(agent_id=agent_id, thread_id=thread_id))
+                logged = _token_int(
+                    await asyncio.to_thread(last_fn, agent_id=executor_id, thread_id=thread_id)
+                )
             except Exception:
                 logger.debug(
                     "usage_log fallback failed for thread=%s",
                     thread_id,
                     exc_info=True,
                 )
-    fallback = logged or _token_int(input_tokens)
+    # A team stream may carry a member's usage hint. It is not the primary
+    # expert's context; never mix their budgets or token counters.
+    fallback = logged or (_token_int(input_tokens) if executor_id == agent_id else 0)
     if fallback:
         return _from_stream_input_tokens(fallback, max_tokens=max_tokens)
 

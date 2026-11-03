@@ -10,7 +10,6 @@ import { isPendingThread } from "../hooks/useSessions";
 import { contextUsedPercent } from "../hooks/useChatContextWindow";
 import styles from "../index.module.less";
 
-const DEFAULT_MAX = 128_000;
 const BREAKDOWN_CACHE_TTL_MS = 30_000;
 
 const SEGMENT_COLORS: Record<ContextUsageSegmentKey, string> = {
@@ -42,6 +41,7 @@ interface ContextWindowRingProps {
   isMobile?: boolean;
   /** Session total omitted by the decision filter. Same figure as 本会话累计. */
   decisionSaved?: number;
+  isStreaming?: boolean;
 }
 
 export default function ContextWindowRing({
@@ -53,6 +53,7 @@ export default function ContextWindowRing({
   selectedConnectors = [],
   isMobile = false,
   decisionSaved = 0,
+  isStreaming = false,
 }: ContextWindowRingProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -65,27 +66,24 @@ export default function ContextWindowRing({
     at: number;
     data: ContextUsageBreakdown;
   } | null>(null);
+  const requestIdRef = useRef(0);
   // Stream hint — kept in a ref so prefetch does not re-fire on every token tick.
   const hintUsedRef = useRef(usedTokens ?? 0);
   hintUsedRef.current = usedTokens ?? 0;
 
-  const max = maxTokens > 0 ? maxTokens : DEFAULT_MAX;
+  const max = Math.max(0, maxTokens);
   const hintUsed = usedTokens ?? 0;
+  const connectorKey = JSON.stringify(selectedConnectors);
 
   const cacheKey = useMemo(
-    () =>
-      [
-        agentId ?? "",
-        threadId ?? "",
-        String(max),
-        selectedConnectors.join(","),
-      ].join("|"),
-    [agentId, threadId, max, selectedConnectors],
+    () => [agentId ?? "", threadId ?? "", String(max), connectorKey].join("|"),
+    [agentId, threadId, max, connectorKey],
   );
 
   const loadBreakdown = useCallback(
     async (opts?: { silent?: boolean; force?: boolean }) => {
       if (!agentId || !threadId || isPendingThread(threadId)) return;
+      const requestId = ++requestIdRef.current;
       const cached = cacheRef.current;
       const hint = hintUsedRef.current;
       // A new model call moves the live total. The 30s cache would otherwise
@@ -115,23 +113,20 @@ export default function ContextWindowRing({
         const data = await octopThreadsApi.contextUsage(agentId, threadId, {
           maxTokens: max,
           inputTokens: !haveSegments && hint > 0 ? hint : undefined,
-          mcpServers: selectedConnectors,
+          mcpServers: JSON.parse(connectorKey) as string[],
         });
-        if (data.used_tokens > 0) {
-          cacheRef.current = { key: cacheKey, at: Date.now(), data };
-          setBreakdown(data);
-        } else {
-          // Empty harness snapshot (old threads) must not pin the ring at 0%.
-          cacheRef.current = null;
-          setBreakdown(null);
-        }
+        if (requestId !== requestIdRef.current) return;
+        cacheRef.current = { key: cacheKey, at: Date.now(), data };
+        setBreakdown(data);
       } catch {
-        if (!opts?.silent) setBreakdown(null);
+        if (requestId === requestIdRef.current && !opts?.silent)
+          setBreakdown(null);
       } finally {
-        if (!opts?.silent) setLoading(false);
+        if (requestId === requestIdRef.current && !opts?.silent)
+          setLoading(false);
       }
     },
-    [agentId, threadId, max, selectedConnectors, cacheKey],
+    [agentId, threadId, max, connectorKey, cacheKey],
   );
 
   // Reset detail cache on thread/filter changes. The ring itself keeps growing
@@ -141,27 +136,37 @@ export default function ContextWindowRing({
     cacheRef.current = null;
   }, [cacheKey]);
 
+  useEffect(() => {
+    void loadBreakdown({ silent: true, force: true });
+    return () => {
+      requestIdRef.current += 1;
+    };
+  }, [loadBreakdown, usedTokens, isStreaming]);
+
+  const ringMax = breakdown ? breakdown.max_tokens : max;
+  const capacityKnown = ringMax > 0;
   const ringUsed = useMemo(() => {
-    if (hintUsed > 0) return Math.min(hintUsed, max);
-    if (breakdown && breakdown.used_tokens > 0) {
-      const breakdownMax =
-        breakdown.max_tokens > 0 ? breakdown.max_tokens : max;
-      return Math.min(breakdown.used_tokens, breakdownMax);
+    if (breakdown) {
+      return ringMax > 0
+        ? Math.min(breakdown.used_tokens, ringMax)
+        : breakdown.used_tokens;
     }
+    if (hintUsed > 0)
+      return ringMax > 0 ? Math.min(hintUsed, ringMax) : hintUsed;
     // Until prefetch returns, show last-call hint (capped so a stale
     // turn-sum cannot flash a full ring).
     return 0;
-  }, [breakdown, hintUsed, max]);
-
-  const ringMax =
-    breakdown && breakdown.max_tokens > 0 ? breakdown.max_tokens : max;
+  }, [breakdown, hintUsed, ringMax]);
 
   const { usedPct, strokeColor, dashOffset, circumference } = useMemo(() => {
     const usedRatio = ringMax > 0 ? Math.min(ringUsed / ringMax, 1) : 0;
     const usedPercent = contextUsedPercent(ringUsed, ringMax);
     const r = 13;
     const circ = 2 * Math.PI * r;
-    let color = "var(--fn-color-success, #22c55e)";
+    let color =
+      ringMax > 0
+        ? "var(--fn-color-success, #22c55e)"
+        : "var(--fn-color-text-tertiary, #9ca3af)";
     if (usedRatio >= 0.8) {
       color = "var(--fn-color-danger, #ef4444)";
     } else if (usedRatio >= 0.5) {
@@ -175,11 +180,19 @@ export default function ContextWindowRing({
     };
   }, [ringUsed, ringMax]);
 
-  const tooltip = t("chat.contextWindow.tooltip", {
-    used: formatTokenK(ringUsed),
-    max: formatTokenK(ringMax),
-    percent: usedPct,
-  });
+  const isEstimate = breakdown?.estimated ?? usageEstimated;
+  const tooltip = t(
+    capacityKnown
+      ? isEstimate
+        ? "chat.contextWindow.estimatedTooltip"
+        : "chat.contextWindow.tooltip"
+      : "chat.contextWindow.capacityUnknownTooltip",
+    {
+      used: formatTokenK(ringUsed),
+      max: formatTokenK(ringMax),
+      percent: usedPct,
+    },
+  );
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -194,7 +207,7 @@ export default function ContextWindowRing({
     segments: [] as ContextUsageBreakdown["segments"],
   };
   const displayUsed = display.used_tokens > 0 ? display.used_tokens : ringUsed;
-  const displayMax = display.max_tokens > 0 ? display.max_tokens : ringMax;
+  const displayMax = display.max_tokens;
   const displayPct = contextUsedPercent(displayUsed, displayMax);
   const segments =
     display.segments.length > 0
@@ -216,10 +229,12 @@ export default function ContextWindowRing({
         {t("chat.contextWindow.breakdownTitle")}
       </div>
       <div className={styles.contextUsageSubtitle}>
-        {t("chat.contextWindow.breakdownPercent", { percent: displayPct })}
+        {capacityKnown
+          ? t("chat.contextWindow.breakdownPercent", { percent: displayPct })
+          : t("chat.contextWindow.capacityUnknown")}
       </div>
       <div className={styles.contextUsageHint}>
-        {usageEstimated
+        {isEstimate
           ? t("chat.contextWindow.estimateHint")
           : t("chat.contextWindow.breakdownHint")}
       </div>
@@ -229,38 +244,40 @@ export default function ContextWindowRing({
         </div>
       ) : (
         <>
-          <div
-            className={styles.contextUsageBar}
-            role="img"
-            aria-label={t("chat.contextWindow.breakdownTitle")}
-          >
-            {segmentTotal > 0 ? (
-              segments.map((segment) => (
+          {capacityKnown ? (
+            <div
+              className={styles.contextUsageBar}
+              role="img"
+              aria-label={t("chat.contextWindow.breakdownTitle")}
+            >
+              {segmentTotal > 0 ? (
+                segments.map((segment) => (
+                  <span
+                    key={segment.key}
+                    className={styles.contextUsageBarSegment}
+                    style={{
+                      // Provider input usage owns the total bar width. Segment
+                      // estimates contribute only their relative composition.
+                      flexGrow: (displayUsed * segment.tokens) / segmentTotal,
+                      background: SEGMENT_COLORS[segment.key],
+                    }}
+                  />
+                ))
+              ) : (
                 <span
-                  key={segment.key}
                   className={styles.contextUsageBarSegment}
                   style={{
-                    // Provider input usage owns the total bar width. Segment
-                    // estimates contribute only their relative composition.
-                    flexGrow: (displayUsed * segment.tokens) / segmentTotal,
-                    background: SEGMENT_COLORS[segment.key],
+                    flexGrow: displayUsed,
+                    background: strokeColor,
                   }}
                 />
-              ))
-            ) : (
+              )}
               <span
-                className={styles.contextUsageBarSegment}
-                style={{
-                  flexGrow: displayUsed,
-                  background: strokeColor,
-                }}
+                className={styles.contextUsageBarRemainder}
+                style={{ flexGrow: Math.max(displayMax - displayUsed, 0) }}
               />
-            )}
-            <span
-              className={styles.contextUsageBarRemainder}
-              style={{ flexGrow: Math.max(displayMax - displayUsed, 0) }}
-            />
-          </div>
+            </div>
+          ) : null}
           <ul className={styles.contextUsageLegend}>
             {segments.map((segment) => (
               <li key={segment.key} className={styles.contextUsageLegendItem}>
@@ -328,7 +345,9 @@ export default function ContextWindowRing({
           transform="rotate(-90 16 16)"
         />
       </svg>
-      <span className={styles.contextRingLabel}>{usedPct}</span>
+      <span className={styles.contextRingLabel}>
+        {capacityKnown ? usedPct : "?"}
+      </span>
     </>
   );
 
@@ -336,7 +355,7 @@ export default function ContextWindowRing({
     <div
       className={styles.contextRingBtn}
       role="progressbar"
-      aria-valuenow={usedPct}
+      aria-valuenow={capacityKnown ? usedPct : undefined}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={tooltip}

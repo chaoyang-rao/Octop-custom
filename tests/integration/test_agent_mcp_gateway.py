@@ -197,6 +197,8 @@ async def test_agent_mcp_hitl_lifecycle_and_followup_approval(
     async def _resume_with_followup(
         resumed_thread_id: str,
         decisions: list[dict[str, Any]],
+        *,
+        configurable: dict[str, Any] | None = None,
     ) -> Any:
         resume_calls.append((resumed_thread_id, decisions))
         yield {"type": "token", "content": "first approved"}
@@ -281,6 +283,8 @@ async def test_agent_mcp_hitl_lifecycle_and_followup_approval(
     async def _resume_with_answer(
         resumed_thread_id: str,
         decisions: list[dict[str, Any]],
+        *,
+        configurable: dict[str, Any] | None = None,
     ) -> Any:
         resume_calls.append((resumed_thread_id, decisions))
         yield {"type": "token", "content": "finished"}

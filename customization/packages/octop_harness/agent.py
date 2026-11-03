@@ -10,7 +10,7 @@ import time
 import uuid
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Coroutine, Iterator, Sequence
 from contextlib import asynccontextmanager
-from copy import deepcopy
+from copy import copy, deepcopy
 from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING, Any, cast
@@ -111,11 +111,24 @@ def _patched_summarization_factory(factory: Callable[..., Any]) -> Iterator[None
 
     with _SUMMARIZATION_FACTORY_LOCK:
         previous = deepagents_graph.create_summarization_middleware  # type: ignore[attr-defined]
+        # This is a private factory slot, not a public DeepAgents re-export.
+        namespace = vars(deepagents_graph)
+        previous_create_agent = namespace["create_agent"]
+
+        def create_agent_with_context_order(*args: Any, **kwargs: Any) -> Any:
+            from octop_harness.middleware.compaction_order import context_middleware_order
+
+            if "middleware" in kwargs:
+                kwargs["middleware"] = context_middleware_order(kwargs["middleware"])
+            return previous_create_agent(*args, **kwargs)
+
         deepagents_graph.create_summarization_middleware = factory  # type: ignore[attr-defined]
+        namespace["create_agent"] = create_agent_with_context_order
         try:
             yield
         finally:
             deepagents_graph.create_summarization_middleware = previous  # type: ignore[attr-defined]
+            namespace["create_agent"] = previous_create_agent
 
 
 class HarnessAgent:
@@ -1658,8 +1671,13 @@ class HarnessAgent:
         if cfg.task_tool_last:
             chain.append(TaskToolLastMiddleware())
 
+        from octop_harness.middleware.context_budget import ContextBudgetGuardMiddleware
+
+        chain.append(ContextBudgetGuardMiddleware())
+
         # After tool-order normalization so the snapshot matches the final request.
         self._context_usage_mw = ContextUsageMiddleware(
+            agent_id=getattr(self, "_agent_id", None),
             mcp_tool_names=self._mcp_tool_name_set,
             max_tokens=self._default_max_input_tokens(),
         )
@@ -1876,10 +1894,11 @@ class HarnessAgent:
             # Summarization wraps the memory middleware and sees clean state
             # messages. Include their recall snapshots in its budget/keep math.
             kwargs.setdefault("token_counter", count_tokens_with_recall)
-            # deepagents' factory leaves this unset, so compaction resends the
-            # whole evicted history. Cap it before the summary model sees it.
+            # The covering summarizer bounds each source fragment and merges
+            # its checkpoint; it never drops the beginning of an evicted span.
             kwargs.setdefault("trim_tokens_to_summarize", SUMMARY_INPUT_TOKEN_LIMIT)
             mw = harden_summarization_middleware(orig_factory(*args, **kwargs))
+            mw._harness_auto_context_defaults = True
             captured.append(mw)
             return mw
 
@@ -1895,12 +1914,12 @@ class HarnessAgent:
         Installs a turn-aware ``profile`` so deepagents
         ``SummarizationMiddleware`` fraction thresholds follow the same turn
         model-ref rules as ``ModelRouterMiddleware`` (explicit override /
-        default). Invoke/summary LLM still use the seed; the router swaps the
-        chat model separately.
+        default). The cached SDK model is left unchanged. Runtime compaction
+        uses a detached helper and the actual routed model for that request.
         """
         from octop_harness.middleware.turn_aware_profile import install_turn_aware_profile
 
-        seed = self._model_factory.get_chat_model(self._config.pick_default_model_ref())
+        seed = copy(self._model_factory.get_chat_model(self._config.pick_default_model_ref()))
         return install_turn_aware_profile(
             seed,
             factory=self._model_factory,

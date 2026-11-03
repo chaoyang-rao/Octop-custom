@@ -174,12 +174,13 @@ async def test_model_context_is_ephemeral_and_includes_all_recent_member_authors
         tools = [NS(name="conversation_history")]
 
         def override(self, **kwargs):
-            return NS(messages=kwargs["messages"])
+            return NS(**kwargs)
 
     seen = []
 
     async def handler(request):
         seen.extend(request.messages)
+        seen.append(request.system_message)
         return "response"
 
     assert await middleware.awrap_model_call(Request(), handler) == "response"
@@ -188,6 +189,114 @@ async def test_model_context_is_ephemeral_and_includes_all_recent_member_authors
     assert "另一个用户的秘密" not in transcript and "不应导出深度思考" not in transcript
     assert Request.messages == original and len(original) == 1
     assert env.repos.thread_message_repo.head("group") == 4
+
+
+@pytest.mark.asyncio
+async def test_projection_preserves_checkpoint_positions_and_serialized_authorship(
+    primary_env, monkeypatch
+):
+    from langchain.agents.middleware import ModelRequest
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    from langchain_core.messages import ToolMessage
+    from langchain_openai.chat_models.base import _convert_message_to_dict
+
+    import octop.infra.agents.middleware.team_context as module
+
+    original = [
+        HumanMessage(content="old question", id="group-1"),
+        AIMessage(
+            content="This conclusion needs review",
+            id="group-2",
+            additional_kwargs={"speaker_agent_id": "member"},
+            tool_calls=[{"id": "call-1", "name": "analyze", "args": {}}],
+        ),
+        ToolMessage(
+            content="evidence",
+            tool_call_id="call-1",
+            id="result-1",
+            additional_kwargs={"speaker_agent_id": "member"},
+        ),
+    ]
+    cfg = {
+        "agent_id": "lead",
+        "user": str(primary_env.one),
+        "thread_id": "group",
+        "octop_team_id": "room",
+        "octop_team_thread_id": "group",
+        "locale": "zh",
+    }
+    monkeypatch.setattr(module, "runtime_config", lambda _: {"configurable": cfg})
+    mw = TeamConversationContextMiddleware(repos=primary_env.repos, teams=primary_env.teams)
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"], profile={"max_input_tokens": 32000}),
+        messages=original,
+        state={"_summarization_event": {"cutoff_index": 1, "coverage_version": 2}},
+    )
+    captured = []
+
+    async def handler(prepared):
+        captured.append(prepared)
+        return "ok"
+
+    await mw.awrap_model_call(request, handler)
+    prepared = captured[0]
+    assert [item.id for item in prepared.messages] == [item.id for item in original]
+    assert "数据分析师" in json.dumps(
+        _convert_message_to_dict(prepared.messages[1]), ensure_ascii=False
+    )
+    assert prepared.messages[1].name.startswith("expert_")
+    assert prepared.messages[2].tool_call_id == "call-1"
+    assert original[1].content == "This conclusion needs review" and original[1].name is None
+    assert '"message_id": "group-2"' not in prepared.system_message.content
+
+
+def test_projection_collapses_only_identical_legacy_briefings_without_losing_unique_goals(
+    primary_env,
+):
+    from langchain.agents.middleware import ModelRequest
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    from langchain_core.messages import SystemMessage
+
+    repeated = "[团队派工，不是用户在直接问你]\n重复背景"
+    unique = "[团队派工，不是用户在直接问你]\nORIGINAL_GOAL_KEEP_THIS"
+    original = [
+        SystemMessage(content=repeated, id="a"),
+        SystemMessage(content=repeated, id="b"),
+        SystemMessage(content=unique, id="c"),
+        HumanMessage(content="continue", id="d"),
+    ]
+    mw = TeamConversationContextMiddleware(repos=primary_env.repos, teams=primary_env.teams)
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"]), messages=original, state={}
+    )
+    prepared = mw._prepare(request, [], {"locale": "zh", "user": str(primary_env.one)})
+    assert len(prepared.messages) == len(original)
+    assert "重复背景" not in prepared.messages[0].content
+    assert "重复背景" in prepared.messages[1].content
+    assert "ORIGINAL_GOAL_KEEP_THIS" in prepared.messages[2].content
+    assert original[0].content == repeated
+
+
+def test_author_label_preserves_signed_thinking_block_order_and_raw_content(primary_env):
+    from langchain.agents.middleware import ModelRequest
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+
+    content = [
+        {"type": "thinking", "thinking": "synthetic", "signature": "signed"},
+        {"type": "text", "text": "public answer"},
+    ]
+    message = AIMessage(content=content, additional_kwargs={"speaker_agent_id": "member"})
+    mw = TeamConversationContextMiddleware(repos=primary_env.repos, teams=primary_env.teams)
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"]), messages=[message], state={}
+    )
+    prepared = mw._prepare(
+        request, [], {"agent_id": "lead", "user": str(primary_env.one), "locale": "zh"}
+    )
+    assert prepared.messages[0].content[0]["type"] == "thinking"
+    assert prepared.messages[0].content[1]["type"] == "text"
+    prepared.messages[0].content[0]["signature"] = "changed"
+    assert message.content[0]["signature"] == "signed"
 
 
 @pytest.mark.asyncio
@@ -362,7 +471,7 @@ async def test_hitl_resume_uses_the_primary_checkpoint_and_keeps_room_identity(p
         yield
 
     class Harness:
-        async def resume_hitl(self, aid, tid, decisions):
+        async def resume_hitl(self, aid, tid, decisions, *, configurable=None):
             seen.append((aid, tid, decisions, current_primary_room()))
             yield {"type": "token", "content": "已按批准继续"}
 
