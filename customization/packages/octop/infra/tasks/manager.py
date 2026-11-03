@@ -91,6 +91,19 @@ class TaskManager:
         self._resume_leases: dict[str, set[TaskResumeLease]] = {}
         self._bindings: dict[tuple[str, int, str], tuple[str, int]] = {}
         self._hook_calls: dict[str, deque[float]] = defaultdict(deque)
+        self._coding_service: Any = None
+        self._return_service: Any = None
+        self._return_locks: dict[str, asyncio.Lock] = {}
+        self._delegated_waiters: set[str] = set()
+        self._settled_children: dict[tuple[str, int], set[str]] = {}
+        self._verification_tasks: dict[tuple[str, int], asyncio.Task[Any]] = {}
+        self._return_offset = 0
+        from octop.infra.tasks.coordinator import TaskCoordinator
+
+        self._coordinator = TaskCoordinator(self)
+        from octop.infra.tasks.rooms import TaskRooms
+
+        self._rooms = TaskRooms(self)
 
     def _error(self, key: str, *, user_id: int | None = None, status: int = 400) -> OctopError:
         locale = self._locales.get(user_id or 0, DEFAULT_LOCALE)
@@ -123,6 +136,7 @@ class TaskManager:
         if self._loop:
             return
         recovered = await asyncio.to_thread(self._repo.recover)
+        await self._coordinator.start()
         for task_id in recovered:
             task = await asyncio.to_thread(self._repo.get, task_id)
             if task and task.run_id:
@@ -136,6 +150,8 @@ class TaskManager:
         self._loop = asyncio.create_task(self._serve(), name="octop-task-queue")
 
     async def stop(self) -> None:
+        await self._coordinator.stop()
+        self._rooms.close()
         for leases in list(self._resume_leases.values()):
             for lease in list(leases):
                 lease.cancel()
@@ -159,15 +175,75 @@ class TaskManager:
             await asyncio.gather(*finalizers, return_exceptions=True)
         self._finalizers.clear()
         self._continuations.clear()
+        self._delegated_waiters.clear()
+        self._settled_children.clear()
 
     def replace_repos(self, repos: RepoBundle) -> None:
-        if self._running:
+        if self._running or self._finalizers or self._coordinator.jobs:
             raise RuntimeError("stop task manager before rebinding persistence")
+        self._rooms.close()
         self._repos = repos
         self._repo = repos.task_repo
+        self._return_service = None
+        self._delegated_waiters.clear()
+        self._settled_children.clear()
+        self._return_offset = 0
+        from octop.infra.tasks.coordinator import TaskCoordinator
 
-    async def enqueue(self, user_id: int, body: TaskCreate) -> TaskRow:
+        self._coordinator = TaskCoordinator(self)
+        from octop.infra.tasks.rooms import TaskRooms
+
+        self._rooms = TaskRooms(self)
+
+    async def enqueue(
+        self,
+        user_id: int,
+        body: TaskCreate,
+        *,
+        request_key: str | None = None,
+        coordination: dict[str, Any] | None = None,
+    ) -> TaskRow:
         await asyncio.to_thread(self._validate_task, user_id, body)
+        if coordination is not None:
+            from octop.infra.tasks.scope import current_coordinator_scope
+
+            if current_coordinator_scope() is None and body.origin_thread_id:
+                bound_scope = await asyncio.to_thread(
+                    self._repos.task_coordination_repo.scope_for_room,
+                    user_id,
+                    body.origin_thread_id,
+                )
+                if bound_scope and await self._room_parent_current(bound_scope):
+                    if await asyncio.to_thread(self._scope_approval_paused, bound_scope):
+                        raise self._error("coordination_source_busy", user_id=user_id, status=409)
+                    if (
+                        body.coding
+                        and body.coding.publish_pr
+                        and not bound_scope.get("allow_publish")
+                    ):
+                        raise self._error("coordination_publish", user_id=user_id, status=403)
+                    room_thread_id = body.origin_thread_id
+                    room_thread = await asyncio.to_thread(
+                        self._origin_thread, user_id, room_thread_id
+                    )
+                    if (room_thread.agent_id, user_id, room_thread_id) not in self._bindings:
+                        await self._rooms.record_input(
+                            user_id,
+                            room_thread_id,
+                            str(coordination.get("source_message_id") or ""),
+                            str(coordination.get("goal_text") or ""),
+                            explicit_dispatch=True,
+                        )
+                        body = body.model_copy(
+                            update={"origin_thread_id": bound_scope["origin_thread_id"]}
+                        )
+                    coordination = None
+                else:
+                    bound_scope = None
+            else:
+                bound_scope = None
+        else:
+            bound_scope = None
         if body.thread_id:
             previous = await asyncio.to_thread(
                 self._repo.latest_in_thread, body.agent_id, user_id, body.thread_id
@@ -183,27 +259,283 @@ class TaskManager:
             user_id, body.agent_id, [*body.attachments, *options.attachments]
         )
         task_id = new_ulid()
-        await asyncio.to_thread(
-            self._repo.enqueue,
-            [
-                {
-                    "task_id": task_id,
-                    "user_id": user_id,
-                    "agent_id": body.agent_id,
-                    "thread_id": body.thread_id,
-                    "title": body.title,
-                    "prompt": body.prompt,
-                    "options": options.model_dump(exclude_none=True),
-                }
-            ],
+        origin = await asyncio.to_thread(self._origin_thread, user_id, body.origin_thread_id)
+        parent = await asyncio.to_thread(self._dispatch_parent, user_id, origin, body.agent_id)
+        if parent is not None and request_key:
+            from octop.infra.tasks.scope import current_coordinator_scope
+
+            if current_coordinator_scope() is None:
+                parent_context = await asyncio.to_thread(
+                    self._repos.task_dispatch_repo.get, parent.task_id
+                )
+                inherited = (
+                    await asyncio.to_thread(
+                        self._repos.task_coordination_repo.get, parent_context["scope_id"]
+                    )
+                    if parent_context and parent_context.get("scope_id")
+                    else None
+                )
+                if inherited is not None:
+                    if inherited["user_id"] != user_id or inherited["state"] == "stopped":
+                        raise self._error("dispatch_context", user_id=user_id, status=409)
+                    if (
+                        body.coding
+                        and body.coding.publish_pr
+                        and not inherited.get("allow_publish")
+                    ):
+                        raise self._error("coordination_publish", user_id=user_id, status=403)
+                    bound_scope, coordination = inherited, None
+        if request_key and parent:
+            request_key = hashlib.sha256(
+                json.dumps([request_key, parent.task_id, parent.attempt]).encode()
+            ).hexdigest()
+        dispatch = None
+        if origin is not None or body.coding is not None:
+            dispatch = {
+                "origin_agent_id": origin.agent_id if origin else None,
+                "origin_thread_id": origin.thread_id if origin else None,
+                "request_key": request_key,
+                "coding_spec": body.coding.model_dump() if body.coding else None,
+                "parent_task_id": parent.task_id if parent else None,
+                "parent_attempt": parent.attempt if parent else None,
+            }
+        if coordination is not None:
+            if origin is None or dispatch is None:
+                raise self._error("dispatch_context", user_id=user_id)
+            from octop.infra.tasks.scope import current_coordinator_scope
+
+            active_scope = current_coordinator_scope()
+            if active_scope is not None:
+                scope = await asyncio.to_thread(
+                    self._repos.task_coordination_repo.get, active_scope.scope_id
+                )
+                if (
+                    scope is None
+                    or scope["state"] != "running"
+                    or scope["user_id"] != user_id
+                    or scope["origin_thread_id"] != origin.thread_id
+                    or scope.get("active_signature") != active_scope.active_signature
+                ):
+                    raise self._error("dispatch_context", user_id=user_id, status=409)
+                if body.coding and body.coding.publish_pr and not scope.get("allow_publish"):
+                    raise self._error("coordination_publish", user_id=user_id, status=403)
+            else:
+                if parent:
+                    coordination = {
+                        **coordination,
+                        "scope_id": hashlib.sha256(
+                            json.dumps(
+                                [coordination["scope_id"], parent.task_id, parent.attempt]
+                            ).encode()
+                        ).hexdigest(),
+                    }
+                scope = await asyncio.to_thread(
+                    self._repos.task_coordination_repo.ensure,
+                    {
+                        **coordination,
+                        "user_id": user_id,
+                        "origin_agent_id": origin.agent_id,
+                        "origin_thread_id": origin.thread_id,
+                        "parent_task_id": parent.task_id if parent else None,
+                        "parent_attempt": parent.attempt if parent else None,
+                        "allow_publish": bool(body.coding and body.coding.publish_pr),
+                    },
+                )
+            dispatch["scope_id"] = scope["scope_id"]
+        elif bound_scope is not None and dispatch is not None:
+            dispatch["scope_id"] = bound_scope["scope_id"]
+            dispatch["origin_agent_id"] = bound_scope["origin_agent_id"]
+            dispatch["origin_thread_id"] = bound_scope["origin_thread_id"]
+        from octop.infra.tasks.admission import enqueue_dispatch
+
+        existing = await enqueue_dispatch(
+            self,
+            {
+                "task_id": task_id,
+                "user_id": user_id,
+                "agent_id": body.agent_id,
+                "thread_id": body.thread_id,
+                "title": body.title,
+                "prompt": body.prompt,
+                "options": options.model_dump(exclude_none=True),
+                "dispatch": dispatch,
+            },
+            parent,
         )
+        task_id = existing or task_id
         self._wake.set()
         row = await asyncio.to_thread(self._owned_task, task_id, user_id)
+        if dispatch and dispatch.get("scope_id"):
+            try:
+                await self._rooms.ensure(str(dispatch["scope_id"]))
+            except (OctopError, PermissionError, ValueError, RuntimeError, OSError):
+                logger.warning("Task group creation deferred task=%s", task_id, exc_info=True)
         await self._publish(row, notify=False)
         return row
 
+    async def _room_parent_current(self, scope: dict[str, Any]) -> bool:
+        if not scope.get("parent_task_id"):
+            return True
+        parent = await asyncio.to_thread(self._repo.get, scope["parent_task_id"])
+        return bool(
+            parent
+            and parent.attempt == scope.get("parent_attempt")
+            and parent.state in {"running", "waiting"}
+        )
+
+    def _scope_approval_paused(self, scope: dict[str, Any]) -> bool:
+        thread_id = scope["origin_thread_id"]
+        if self._gateway.steer.is_hitl_paused(thread_id):
+            return True
+        pending = getattr(getattr(self._gateway.processor, "hitl_coordinator", None), "store", None)
+        if pending is None:
+            return False
+        for agent_id in {
+            scope["origin_agent_id"],
+            self._agents.principal_agent_id(scope["origin_agent_id"]),
+        }:
+            if thread_id in pending.pending_thread_ids(agent_id=agent_id, user_id=scope["user_id"]):
+                return True
+        return False
+
+    async def record_room_input(
+        self, message: InboundMessage, *, user_id: int, thread_id: str
+    ) -> None:
+        from octop.infra.tasks.scope import current_coordinator_scope
+
+        meta = message.metadata or {}
+        if (
+            current_coordinator_scope() is not None
+            or meta.get("task_id")
+            or meta.get("conversation_mode") in {"ask", "plan"}
+        ):
+            return
+        if message.channel_type != "dashboard" or not message.text.strip():
+            return
+        identifier = str(meta.get("client_message_id") or "")
+        if identifier:
+            thread = await asyncio.to_thread(self._repos.thread_repo.get, thread_id)
+            if thread is None or thread.user_id != user_id or thread.agent_id != message.tenant_id:
+                return
+            await self._rooms.record_input(user_id, thread_id, identifier, message.text)
+
     def _validate_task(self, user_id: int, body: TaskCreate) -> None:
         self._validate_task_policy(user_id, body.agent_id, body.thread_id, body.options)
+        self._origin_thread(user_id, body.origin_thread_id)
+        if body.coding is not None:
+            self._validate_coding(user_id, body.coding)
+
+    def _origin_thread(self, user_id: int, thread_id: str | None) -> Any:
+        if not thread_id:
+            return None
+        thread = self._repos.thread_repo.get(thread_id)
+        if thread is None or thread.user_id != user_id:
+            raise self._error("thread_not_owned", user_id=user_id, status=404)
+        self._owned_agent(thread.agent_id, user_id)
+        return thread
+
+    def _dispatch_parent(self, user_id: int, origin: Any, target_id: str) -> TaskRow | None:
+        if origin is None:
+            return None
+        binding = self._bindings.get((origin.agent_id, user_id, origin.thread_id))
+        if binding is None:
+            return None
+        parent = self._owned_task(binding[0], user_id)
+        if parent.attempt != binding[1] or parent.state not in {"running", "waiting"}:
+            raise self._error("invalid_transition", user_id=user_id, status=409)
+        self._assert_dispatch_target(user_id, parent, target_id)
+        return parent
+
+    def _assert_dispatch_target(self, user_id: int, parent: TaskRow, target_id: str) -> None:
+        ancestor: TaskRow | None = parent
+        visited: set[str] = set()
+        while ancestor is not None:
+            if ancestor.agent_id == target_id or ancestor.task_id in visited:
+                raise self._error("dispatch_cycle", user_id=user_id, status=409)
+            visited.add(ancestor.task_id)
+            context = self._repos.task_dispatch_repo.get(ancestor.task_id)
+            previous = (context or {}).get("parent_task_id")
+            ancestor = self._owned_task(previous, user_id) if previous else None
+
+    def _validate_coding(self, user_id: int, spec: Any) -> None:
+        from octop.infra.agents.threads.project_runtime import normalize_project_path
+        from octop.infra.users.resource_policy import (
+            POLICY_WORKSPACE_ROOT_DIR,
+            effective_workspace_root_dir,
+        )
+
+        user = self._repos.user_repo.get(user_id)
+        if user is None or user.disabled or not _identity(user).is_admin:
+            raise self._error("coding_host_permission", user_id=user_id, status=403)
+        allowed = effective_workspace_root_dir(
+            self._repos.user_policy_repo.get(user_id, POLICY_WORKSPACE_ROOT_DIR)
+        )
+        try:
+            path = normalize_project_path(spec.project_path, allowed_root=allowed)
+        except (ValueError, OSError) as exc:
+            raise self._error("coding_invalid_path", user_id=user_id) from exc
+        registered = {
+            str(project["project_path"])
+            for agent in self._repos.agent_repo.list_by_user(user_id)
+            for project in self._repos.thread_repo.list_projects(
+                agent_id=agent.agent_id, user_id=user_id
+            )
+        }
+        if path not in registered:
+            raise self._error("coding_registered_project", user_id=user_id)
+
+    async def validate_dispatch_actor(self, user_id: int, agent_id: str) -> None:
+        await asyncio.to_thread(self._validate_task_policy, user_id, agent_id, None, TaskOptions())
+
+    async def available_experts(self, user_id: int) -> builtins.list[dict[str, Any]]:
+        from octop.infra.agents.teams.service import is_team_agent
+
+        rows = await asyncio.to_thread(self._repos.agent_repo.list_by_user, user_id)
+        return [
+            {
+                "agent_id": row.agent_id,
+                "name": row.name,
+                "description": str(getattr(row, "description", "") or "")[:1000],
+                "enabled": bool(row.enabled),
+            }
+            for row in rows
+            if row.enabled and not is_team_agent(row)
+        ]
+
+    async def public_task(self, row: TaskRow, *, detail: bool) -> dict[str, Any]:
+        result = row.to_public(detail=detail)
+        result["dispatch"] = await asyncio.to_thread(
+            self._repos.task_dispatch_repo.get, row.task_id
+        )
+        await self._enrich_coordination(row, result)
+        return result
+
+    async def _enrich_coordination(self, row: TaskRow, result: dict[str, Any]) -> None:
+        context = result.get("dispatch")
+        scope_id = (context or {}).get("scope_id")
+        if not scope_id:
+            scopes = await asyncio.to_thread(
+                self._repos.task_coordination_repo.for_parent, row.task_id, row.attempt
+            )
+            scope_id = scopes[-1]["scope_id"] if scopes else None
+        if scope_id:
+            context = context or {"task_id": row.task_id}
+            context["coordination"] = await self._coordinator.public(scope_id)
+            result["dispatch"] = context
+
+    def bound_task(self, agent_id: str, user_id: int, thread_id: str) -> TaskRow | None:
+        binding = self._bindings.get((agent_id, user_id, thread_id))
+        row = self._repo.get(binding[0]) if binding else None
+        return (
+            row
+            if row is not None
+            and binding is not None
+            and row.user_id == user_id
+            and row.agent_id == agent_id
+            and row.attempt == binding[1]
+            and row.state in {"running", "waiting"}
+            else None
+        )
 
     def _validate_task_policy(
         self, user_id: int, agent_id: str, thread_id: str | None, options: TaskOptions
@@ -234,13 +566,152 @@ class TaskManager:
         rows = await asyncio.to_thread(
             self._repo.list, user_id, archived=archived, agent_id=agent_id
         )
-        return [row.to_public(detail=False) for row in rows]
+        contexts = await asyncio.to_thread(
+            self._repos.task_dispatch_repo.get_many, [row.task_id for row in rows]
+        )
+        result = []
+        for row in rows:
+            item = {**row.to_public(detail=False), "dispatch": contexts.get(row.task_id)}
+            await self._enrich_coordination(row, item)
+            result.append(item)
+        return result
 
     async def detail(self, user_id: int, task_id: str) -> dict[str, Any]:
         row = await asyncio.to_thread(self._owned_task, task_id, user_id)
-        result = row.to_public()
+        result = await self.public_task(row, detail=True)
         result["events"] = await asyncio.to_thread(self._repo.events, task_id)
         return result
+
+    async def decide_coordination(
+        self, user_id: int, scope_id: str, *, decision: str, summary: str, question: str
+    ) -> dict[str, Any]:
+        from octop.infra.tasks.scope import current_coordinator_scope
+
+        context = current_coordinator_scope()
+        scope = await asyncio.to_thread(self._repos.task_coordination_repo.get, scope_id)
+        if (
+            context is None
+            or context.scope_id != scope_id
+            or context.user_id != user_id
+            or scope is None
+            or scope["user_id"] != user_id
+            or scope["state"] != "running"
+            or scope["active_signature"] != context.active_signature
+        ):
+            raise self._error("dispatch_context", user_id=user_id, status=403)
+        if decision == "needs_user" and not question.strip():
+            raise self._error("coordination_question", user_id=user_id)
+        if decision == "ready":
+            members = await asyncio.to_thread(self._repos.task_coordination_repo.members, scope_id)
+            if any(
+                member["state"] not in TERMINAL_STATES for member in members
+            ) or self._rooms.has_pending_peers(scope_id):
+                raise self._error("coordination_running", user_id=user_id, status=409)
+        changed = await asyncio.to_thread(
+            self._repos.task_coordination_repo.decide,
+            scope_id,
+            decision,
+            summary[:6000],
+            question[:6000],
+        )
+        if not changed:
+            raise self._error("invalid_transition", user_id=user_id, status=409)
+        return {"scope_id": scope_id, "decision": decision, "recorded": True}
+
+    async def validate_scoped_action(
+        self,
+        user_id: int,
+        scope_id: str,
+        task_id: str,
+        action: str,
+        *,
+        direct_user: bool = False,
+    ) -> None:
+        row = await asyncio.to_thread(self._owned_task, task_id, user_id)
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, task_id)
+        scope = await asyncio.to_thread(self._repos.task_coordination_repo.get, scope_id)
+        if (
+            not context
+            or context.get("scope_id") != scope_id
+            or not scope
+            or (scope["state"] != "running" and not direct_user)
+            or scope["state"] == "stopped"
+        ):
+            raise self._error("dispatch_context", user_id=user_id, status=403)
+        if action == "retry" and await asyncio.to_thread(self._scope_approval_paused, scope):
+            raise self._error("coordination_source_busy", user_id=user_id, status=409)
+        if action == "retry" and row.state == "cancelled" and not direct_user:
+            raise self._error("coordination_cancelled", user_id=user_id, status=409)
+        spec = context.get("coding_spec")
+        if action == "retry" and spec and spec.get("publish_pr") and not scope.get("allow_publish"):
+            raise self._error("coordination_publish", user_id=user_id, status=403)
+
+    async def continue_coordination(
+        self, user_id: int, task_id: str, *, prompt: str, allow_publish: bool | None = None
+    ) -> dict[str, Any]:
+        row = await asyncio.to_thread(self._owned_task, task_id, user_id)
+        view = await self.public_task(row, detail=False)
+        scope_view = (view.get("dispatch") or {}).get("coordination")
+        if not scope_view or not prompt.strip():
+            raise self._error("dispatch_context", user_id=user_id)
+        scope = await asyncio.to_thread(
+            self._repos.task_coordination_repo.get, scope_view["scope_id"]
+        )
+        if scope is None or scope["user_id"] != user_id:
+            raise self._error("not_found", user_id=user_id, status=404)
+        await self.validate_dispatch_actor(
+            user_id, self._agents.principal_agent_id(scope["origin_agent_id"])
+        )
+        await asyncio.to_thread(self._origin_thread, user_id, scope["origin_thread_id"])
+        if self._gateway.steer.is_hitl_paused(scope["origin_thread_id"]):
+            raise self._error("coordination_source_busy", user_id=user_id, status=409)
+        if scope.get("parent_task_id"):
+            parent = await asyncio.to_thread(self._repo.get, scope["parent_task_id"])
+            if (
+                parent is None
+                or parent.attempt != scope["parent_attempt"]
+                or parent.state not in {"running", "waiting"}
+            ):
+                raise self._error("recovery_requires_retry", user_id=user_id, status=409)
+        if allow_publish:
+            user = await asyncio.to_thread(self._repos.user_repo.get, user_id)
+            if user is None or not _identity(user).is_admin:
+                raise self._error("coding_host_permission", user_id=user_id, status=403)
+        changed = await asyncio.to_thread(
+            self._repos.task_coordination_repo.resume,
+            scope["scope_id"],
+            user_id,
+            prompt.strip(),
+            allow_publish,
+        )
+        if not changed:
+            raise self._error("invalid_transition", user_id=user_id, status=409)
+        if scope.get("parent_task_id"):
+            await asyncio.to_thread(
+                self._repo.transition,
+                scope["parent_task_id"],
+                expected={"waiting"},
+                expected_attempt=scope["parent_attempt"],
+                state="running",
+                action="coordination_resumed",
+            )
+        self._wake.set()
+        return {"scope_id": scope["scope_id"], "accepted": True}
+
+    async def stop_coordination(self, user_id: int, task_id: str) -> dict[str, Any]:
+        row = await asyncio.to_thread(self._owned_task, task_id, user_id)
+        view = await self.public_task(row, detail=False)
+        scope_view = (view.get("dispatch") or {}).get("coordination")
+        if not scope_view or scope_view.get("user_id") != user_id:
+            raise self._error("not_found", user_id=user_id, status=404)
+        scope = await asyncio.to_thread(
+            self._repos.task_coordination_repo.get, scope_view["scope_id"]
+        )
+        if scope is None or scope["user_id"] != user_id:
+            raise self._error("not_found", user_id=user_id, status=404)
+        await self._coordinator.stop_scope(scope)
+        self._wake.set()
+        return {"scope_id": scope["scope_id"], "accepted": True}
 
     async def action(
         self,
@@ -293,6 +764,12 @@ class TaskManager:
                     pass
                 row = await asyncio.to_thread(self._owned_task, task_id, user_id)
         if action == "retry":
+            from octop.infra.tasks.children import cancel_children
+
+            verifier = self._verification_tasks.get((task_id, row.attempt))
+            if verifier is not None and verifier is not asyncio.current_task():
+                await asyncio.gather(verifier, return_exceptions=True)
+            await cancel_children(self, row)
             await reset_for_retry(
                 self._agents, self._repos, row, locale=self._locales.get(user_id, DEFAULT_LOCALE)
             )
@@ -324,6 +801,17 @@ class TaskManager:
             and agent_id
         ):
             await asyncio.to_thread(self._owned_agent, agent_id, user_id)
+            context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+            if context and context.get("parent_task_id"):
+                parent = await asyncio.to_thread(
+                    self._owned_task, context["parent_task_id"], user_id
+                )
+                if parent.attempt != context["parent_attempt"] or parent.state not in {
+                    "running",
+                    "waiting",
+                }:
+                    raise self._error("invalid_transition", user_id=user_id, status=409)
+                await asyncio.to_thread(self._assert_dispatch_target, user_id, parent, agent_id)
             fields = {"agent_id": agent_id, "thread_id": None}
         else:
             raise self._error("invalid_transition", user_id=user_id, status=409)
@@ -340,6 +828,13 @@ class TaskManager:
         if not changed:
             raise self._error("invalid_transition", user_id=user_id, status=409)
         if action == "cancel":
+            from octop.infra.tasks.children import cancel_children
+
+            await self._coordinator.stop_parent(row)
+            await cancel_children(self, row)
+            verifier = self._verification_tasks.get((task_id, row.attempt))
+            if verifier is not None and verifier is not asyncio.current_task():
+                verifier.cancel()
             for lease in list(self._resume_leases.get(task_id, set())):
                 if lease.attempt == row.attempt:
                     lease.cancel()
@@ -407,6 +902,9 @@ class TaskManager:
 
     async def process_once(self) -> None:
         """Bounded dispatcher seam used by the worker and deterministic tests."""
+        await self._retry_returns()
+        await self._rooms.process()
+        await self._coordinator.schedule()
         for task_id, task in list(self._running.items()):
             if task.done() and not task.cancelled() and task.exception() is not None:
                 await asyncio.to_thread(
@@ -419,9 +917,23 @@ class TaskManager:
                 )
         self._running = {key: task for key, task in self._running.items() if not task.done()}
         for row in await asyncio.to_thread(self._repo.queue_heads):
-            if len(self._running) >= 2:
+            if len(set(self._running) - self._delegated_waiters) >= 2:
                 break
             if row.state != "queued" or self._agents.is_agent_active(row.agent_id):
+                continue
+            if not await self._parent_current(row):
+                await asyncio.to_thread(
+                    self._repo.transition,
+                    row.task_id,
+                    expected={"queued"},
+                    expected_attempt=row.attempt,
+                    state="cancelled",
+                    action="cancel",
+                    fields={"finished_at": now_ts()},
+                )
+                changed = await asyncio.to_thread(self._repo.get, row.task_id)
+                if changed is not None:
+                    await self._notify_result(changed)
                 continue
             user = await asyncio.to_thread(self._repos.user_repo.get, row.user_id)
             agent = await asyncio.to_thread(self._repos.agent_repo.get, row.agent_id)
@@ -454,15 +966,27 @@ class TaskManager:
             if not await asyncio.to_thread(self._repo.claim, row.task_id):
                 continue
             claimed = await asyncio.to_thread(self._repo.get, row.task_id)
-            if claimed:
-                await self._publish(claimed, notify=False)
+            if claimed is None or claimed.state != "running":
+                continue
+            await self._publish(claimed, notify=False)
             self._running[row.task_id] = asyncio.create_task(
                 self._execute(row.task_id), name=f"task-{row.task_id}"
             )
 
     async def _execute(self, task_id: str) -> None:
         row = await asyncio.to_thread(self._repo.get, task_id)
-        if row is None:
+        if row is None or row.state != "running":
+            return
+        if not await self._parent_current(row):
+            await asyncio.to_thread(
+                self._repo.transition,
+                row.task_id,
+                expected={"running"},
+                expected_attempt=row.attempt,
+                state="cancelled",
+                action="cancel",
+                fields={"finished_at": now_ts()},
+            )
             return
         result_parts: builtins.list[str] = []
         failed = False
@@ -529,6 +1053,9 @@ class TaskManager:
             await asyncio.to_thread(
                 self._validate_task_policy, row.user_id, row.agent_id, row.thread_id, options
             )
+            code_context = await self._prepare_coding(row)
+            if code_context:
+                prompt += "\n\n" + code_context
             if options.skills is not None:
                 available = await self._agents.list_skill_summaries(row.agent_id)
                 allowed = {
@@ -574,6 +1101,7 @@ class TaskManager:
 
             async def observe(chunk: dict[str, Any]) -> None:
                 nonlocal failed, waiting
+                await self._rooms.relay(row, chunk)
                 kind = chunk.get("type")
                 if kind == "token":
                     result_parts.append(str(chunk.get("content") or ""))
@@ -607,13 +1135,28 @@ class TaskManager:
                     result_parts.append(str(outcome.get("output") or ""))
                     if self._continuations.get(task_id) is delegated:
                         self._continuations.pop(task_id, None)
+                from octop.infra.tasks.children import background_children
+
+                delegated = await background_children(self, row)
+                if delegated is not None:
+                    self._continuations[task_id] = delegated
+                    outcome = await asyncio.shield(delegated)
+                    failed = failed or bool(outcome.get("failed"))
+                    result_parts.append(str(outcome.get("output") or ""))
+                    if self._continuations.get(task_id) is delegated:
+                        self._continuations.pop(task_id, None)
+            if not waiting and not failed:
+                code_failed, code_summary = await self._finish_coding(row)
+                failed = failed or code_failed
+                if code_summary:
+                    result_parts.append("\n\n" + code_summary)
             state = "failed" if failed else "waiting" if waiting else "completed"
-            await asyncio.to_thread(
-                self._repo.transition,
-                task_id,
-                expected={"running", "waiting"},
+            from octop.infra.tasks.admission import finish_task
+
+            await finish_task(
+                self,
+                row,
                 state=state,
-                action=state,
                 fields={
                     "result": "".join(result_parts)[-128000:],
                     "error_code": "execution_failed" if failed else None,
@@ -633,15 +1176,23 @@ class TaskManager:
                 fields={"error_code": "interrupted", "finished_at": now_ts()},
             )
             raise
-        except Exception:
+        except Exception as exc:
             # Do not persist raw network exceptions, tool arguments or credentials.
+            from octop.infra.tasks.coding import CodingTaskError
+
+            code = exc.code if isinstance(exc, CodingTaskError) else "execution_failed"
+            if isinstance(exc, OctopError):
+                reason = exc.details.get("task_reason") if exc.details else None
+                if isinstance(reason, str) and reason.startswith("coding_"):
+                    code = reason
             await asyncio.to_thread(
                 self._repo.transition,
                 task_id,
-                expected={"running"},
+                expected={"running", "waiting"},
+                expected_attempt=row.attempt if row is not None else None,
                 state="failed",
                 action="failed",
-                fields={"error_code": "execution_failed", "finished_at": now_ts()},
+                fields={"error_code": code, "finished_at": now_ts()},
             )
         finally:
             latest = await asyncio.to_thread(self._repo.get, task_id)
@@ -650,6 +1201,181 @@ class TaskManager:
             if latest:
                 await self._notify_result(latest)
             self._wake.set()
+
+    def _code_service(self) -> Any:
+        if self._coding_service is None:
+            from octop.infra.tasks.coding import CodingTaskService
+
+            self._coding_service = CodingTaskService()
+        return self._coding_service
+
+    async def _parent_current(self, row: TaskRow) -> bool:
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+        if context and context.get("scope_id"):
+            scope = await asyncio.to_thread(
+                self._repos.task_coordination_repo.get, context["scope_id"]
+            )
+            if scope is None or scope["state"] == "stopped":
+                return False
+        parent_id = (context or {}).get("parent_task_id")
+        if not parent_id:
+            return True
+        parent = await asyncio.to_thread(self._repo.get, parent_id)
+        return bool(
+            context is not None
+            and parent is not None
+            and parent.user_id == row.user_id
+            and parent.attempt == context["parent_attempt"]
+            and parent.state in {"running", "waiting"}
+        )
+
+    async def _prepare_coding(self, row: TaskRow) -> str:
+        from octop.infra.tasks.models import CodingTaskSpec
+
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+        if not context or not context.get("coding_spec"):
+            return ""
+        spec = CodingTaskSpec.model_validate(context["coding_spec"])
+        await asyncio.to_thread(self._validate_coding, row.user_id, spec)
+        run = await self._code_service().prepare(
+            row.task_id, row.user_id, spec, previous=context.get("coding_run") or None
+        )
+        if not await asyncio.to_thread(
+            self._repos.task_dispatch_repo.update_coding,
+            row.task_id,
+            run,
+            expected_attempt=row.attempt,
+            expected_states={"running", "waiting"},
+        ):
+            raise self._error("invalid_transition", user_id=row.user_id, status=409)
+        return str(self._code_service().prompt_context(run))
+
+    async def _finish_coding(self, row: TaskRow) -> tuple[bool, str]:
+        current = asyncio.current_task()
+        key = (row.task_id, row.attempt)
+        if current is not None:
+            self._verification_tasks[key] = current
+        try:
+            return await self._verify_coding(row)
+        finally:
+            if self._verification_tasks.get(key) is current:
+                self._verification_tasks.pop(key, None)
+
+    async def _coding_active(self, row: TaskRow) -> None:
+        current = await asyncio.to_thread(self._repo.get, row.task_id)
+        if (
+            current is None
+            or current.attempt != row.attempt
+            or current.state not in {"running", "waiting"}
+            or current.archived
+        ):
+            raise asyncio.CancelledError
+        if not await self._parent_current(row):
+            raise asyncio.CancelledError
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+        if (
+            context
+            and context.get("scope_id")
+            and (context.get("coding_spec") or {}).get("publish_pr")
+        ):
+            scope = await asyncio.to_thread(
+                self._repos.task_coordination_repo.get, context["scope_id"]
+            )
+            if not scope or not scope.get("allow_publish"):
+                raise self._error("coordination_publish", user_id=row.user_id, status=403)
+        await asyncio.to_thread(
+            self._validate_task_policy,
+            row.user_id,
+            row.agent_id,
+            row.thread_id,
+            TaskOptions(),
+        )
+
+    async def _verify_coding(self, row: TaskRow) -> tuple[bool, str]:
+        from octop.infra.tasks.models import CodingTaskSpec
+
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+        if not context or not context.get("coding_spec"):
+            return False, ""
+        await self._coding_active(row)
+        spec = CodingTaskSpec.model_validate(context["coding_spec"])
+        await asyncio.to_thread(self._validate_coding, row.user_id, spec)
+        run = {**context.get("coding_run", {}), "phase": "verifying"}
+        if not await asyncio.to_thread(
+            self._repos.task_dispatch_repo.update_coding,
+            row.task_id,
+            run,
+            expected_attempt=row.attempt,
+            expected_states={"running", "waiting"},
+        ):
+            raise self._error("invalid_transition", user_id=row.user_id, status=409)
+        await self._publish(row, notify=False)
+        locale = self._locales.get(row.user_id, DEFAULT_LOCALE)
+
+        async def check_active() -> None:
+            await self._coding_active(row)
+            await asyncio.to_thread(self._validate_coding, row.user_id, spec)
+
+        async def verify_locked() -> None:
+            nonlocal run
+            await check_active()
+            run = await self._code_service().finalize(
+                row.task_id, row.title, spec, run, locale=locale, check_active=check_active
+            )
+
+        channel_manager = self._gateway.channel_manager
+        if channel_manager is None or not row.thread_id:
+            raise self._error("invalid_transition", user_id=row.user_id, status=409)
+        # Admission sees the persisted verifying phase; turns admitted earlier
+        # finish under this same transport lock before the exact-tree check.
+        await channel_manager.run_in_session(
+            self._gateway.dashboard_channel_id, f"thread:{row.thread_id}", verify_locked
+        )
+        await check_active()
+        changed = await asyncio.to_thread(
+            self._repos.task_dispatch_repo.update_coding,
+            row.task_id,
+            run,
+            expected_attempt=row.attempt,
+            expected_states={"running", "waiting"},
+        )
+        if not changed:
+            raise self._error("invalid_transition", user_id=row.user_id, status=409)
+        failed = run.get("phase") in {"verification_failed", "delivery_failed"}
+        if failed:
+            summary = tr(
+                f"tasks.errors.{run.get('error_code') or 'coding_verification_failed'}", locale
+            )
+        else:
+            summary = tr("tasks.coding.verified", locale, count=len(run.get("verification", [])))
+            if run.get("pr_url"):
+                summary += "\n" + str(run["pr_url"])
+            elif run.get("phase") == "unchanged":
+                summary += "\n" + tr("tasks.coding.unchanged", locale)
+        return failed, summary
+
+    async def _return_result(self, row: TaskRow) -> None:
+        from octop.infra.tasks.returns import TaskReturnService
+
+        async with self._return_locks.setdefault(row.task_id, asyncio.Lock()):
+            service = getattr(self, "_return_service", None)
+            if service is None:
+                service = TaskReturnService(
+                    repos=self._repos, gateway=self._gateway, agents=self._agents
+                )
+                self._return_service = service
+            await service.deliver(row)
+
+    async def _retry_returns(self) -> None:
+        pending = await asyncio.to_thread(
+            self._repos.task_dispatch_repo.pending_returns, limit=20, offset=self._return_offset
+        )
+        self._return_offset = self._return_offset + len(pending) if len(pending) == 20 else 0
+        for context in pending:
+            row = await asyncio.to_thread(self._repo.get, context["task_id"])
+            if row is not None:
+                with contextlib.suppress(Exception):
+                    await self._return_result(row)
 
     async def complete_waiting_turn(
         self,
@@ -738,27 +1464,41 @@ class TaskManager:
                 continue
             if continuation is None and not paused and not failed:
                 continuation = self._background_completion(row)
+                if continuation is None:
+                    from octop.infra.tasks.children import background_children
+
+                    continuation = await background_children(self, row)
+            task_failed = failed
+            task_output = output
+            if continuation is None and not paused and not task_failed:
+                try:
+                    code_failed, code_summary = await self._finish_coding(row)
+                    task_failed = task_failed or code_failed
+                    if code_summary:
+                        task_output += "\n\n" + code_summary
+                except Exception:
+                    task_failed = True
             state = (
                 "running"
                 if continuation is not None
                 else "failed"
-                if failed
+                if task_failed
                 else "waiting"
                 if paused
                 else "completed"
             )
-            changed = await asyncio.to_thread(
-                self._repo.transition,
-                row.task_id,
-                expected={row.state},
-                expected_attempt=row.attempt,
+            from octop.infra.tasks.admission import finish_task
+
+            changed = await finish_task(
+                self,
+                row,
                 state=state,
                 action="approval_resumed",
                 fields={
                     "finished_at": None if state in {"running", "waiting"} else now_ts(),
-                    "error_code": "execution_failed" if failed and state == "failed" else None,
+                    "error_code": "execution_failed" if task_failed and state == "failed" else None,
                 },
-                append_result=output,
+                append_result=task_output,
             )
             if not changed:
                 continue
@@ -769,10 +1509,10 @@ class TaskManager:
                     name=f"task-continuation-{row.task_id}",
                 )
             else:
-                if failed and row.run_id:
-                    await self._apply_failure_policy(row.run_id)
                 updated = await asyncio.to_thread(self._repo.get, row.task_id)
                 if updated:
+                    if updated.state == "failed" and updated.run_id:
+                        await self._apply_failure_policy(updated.run_id)
                     await self._notify_result(updated)
         self._wake.set()
 
@@ -808,7 +1548,8 @@ class TaskManager:
             await asyncio.to_thread(
                 self._repo.transition,
                 row.task_id,
-                expected={"running"},
+                expected={"running", "waiting"},
+                expected_attempt=row.attempt,
                 state="failed",
                 action="continuation_failed",
                 fields={"error_code": "execution_failed", "finished_at": now_ts()},
@@ -1122,6 +1863,16 @@ class TaskManager:
             )
 
     async def _notify_result(self, row: TaskRow) -> None:
+        if row.state in {"failed", "interrupted", "cancelled"}:
+            from octop.infra.tasks.children import cancel_children
+
+            await self._coordinator.stop_parent(row)
+            await cancel_children(self, row)
+        context = await asyncio.to_thread(self._repos.task_dispatch_repo.get, row.task_id)
+        has_origin = bool(context and context.get("origin_thread_id"))
+        if row.state in {"completed", "failed", "waiting", "cancelled", "interrupted"}:
+            with contextlib.suppress(Exception):
+                await self._return_result(row)
         if row.state == "completed":
             self._drop_binding(row)
         elif (
@@ -1139,6 +1890,8 @@ class TaskManager:
             if row.run_id:
                 steps = await asyncio.to_thread(self._repo.run_tasks, row.run_id, row.user_id)
                 announce = announce and all(step.state == "completed" for step in steps)
+        # Origin delivery refreshes the original conversation and owns its notification.
+        announce = announce and not has_origin
         if announce and row.thread_id:
             sessions = await asyncio.to_thread(
                 self._gateway.thread_registry.sessions_for_thread, row.thread_id
@@ -1196,6 +1949,15 @@ class TaskManager:
                         raise self._error(
                             "invalid_transition", user_id=previous.user_id, status=409
                         )
+                    if previous is not None and previous.state == "running":
+                        context = await asyncio.to_thread(
+                            self._repos.task_dispatch_repo.get, previous.task_id
+                        )
+                        phase = ((context or {}).get("coding_run") or {}).get("phase")
+                        if phase in {"verifying", "pushed"}:
+                            raise self._error(
+                                "invalid_transition", user_id=previous.user_id, status=409
+                            )
             return True
         completion = (message.metadata or {}).get("_octop_turn_completion")
         if isinstance(completion, asyncio.Future):

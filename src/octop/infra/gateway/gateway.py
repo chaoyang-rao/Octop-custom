@@ -521,6 +521,7 @@ class Gateway:
         text: str,
         *,
         notify: bool | None = None,
+        toast: bool = True,
     ) -> None:
         """Fan out a toast payload to the owner's dashboard notification sockets."""
         if not text.strip():
@@ -537,6 +538,7 @@ class Gateway:
                 "text": text,
                 "agent_name": agent_name,
                 **({"notify": notify} if notify is not None else {}),
+                **({"toast": False} if not toast else {}),
             },
         )
 

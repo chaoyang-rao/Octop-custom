@@ -97,7 +97,7 @@ class AvatarApiTests(unittest.TestCase):
         self.db.close()
         self.tmp.cleanup()
 
-    def test_all_49_choices_are_independent_and_preserve_real_image_and_card_color(self):
+    def test_all_81_choices_are_independent_and_preserve_real_image_and_card_color(self):
         for shape in AVATAR_SHAPES:
             for color in AVATAR_COLORS:
                 result = self.client.patch("/api/agents/expert", json={
@@ -214,7 +214,7 @@ class AvatarApiTests(unittest.TestCase):
                 for color in AVATAR_COLORS:
                     for suffix in ("", "?v=1", "#preview", "?cache=1#preview"):
                         self.assertTrue(is_generated_avatar_icon_url(f"/expert-avatars/{version}/{shape}-{color}.svg{suffix}"))
-        for url in ("/expert-avatars/v2/pentagon-ink.svg", "/expert-avatars/v1/blob-red.svg",
+        for url in ("/expert-avatars/v2/pentagon-ink.svg", "/expert-avatars/v1/blob-unknown.svg",
                     "/expert-avatars/v3/blob-ink.svg",
                     "https://external.example/expert-avatars/v1/blob-ink.svg",
                     "https://external.example/expert-avatars/v2/blob-ink.svg", "/other-image.svg"):
@@ -240,8 +240,9 @@ class AvatarApiTests(unittest.TestCase):
 
     def test_palette_ids_and_hex_values_match_the_frontend_library(self):
         expected = {
-            "ink": "#252830", "jade": "#19B7A2", "blue": "#486BCD", "violet": "#825DC5",
-            "rose": "#DB779A", "amber": "#DCAA46", "coral": "#E5805D",
+            "ink": "#000000", "jade": "#54B9A6", "blue": "#3B82F6", "violet": "#835BD6",
+            "rose": "#EB4698", "amber": "#F19D38", "coral": "#ED702D", "cocoa": "#8C6640",
+            "red": "#E75B66",
         }
         self.assertEqual(AVATAR_COLORS, expected)
         source = (Path(__file__).resolve().parents[2] / "dashboard/src/components/expertPortrait/avatar-library.mjs").read_text(encoding="utf-8")

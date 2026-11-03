@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import time
 from collections.abc import AsyncIterator
@@ -62,6 +63,7 @@ from octop.infra.gateway.process.agent_resolve import (
 from octop.infra.gateway.process.harness_request import (
     build_content_from_message,
     build_harness_request,
+    coordinator_request_context,
 )
 from octop.infra.gateway.process.message_keys import (
     INBOUND_ATTACHMENTS_KEY,
@@ -1425,7 +1427,16 @@ class GlobalProcessor:
                 channel_metadata=im_meta,
             )
 
-        self._schedule_auto_thread_title(thread_id, msg.text, user_id=user_id)
+        coordinator = coordinator_request_context(
+            thread_id=thread_id, user_id=user_id, agent_id=agent_id
+        )
+        visible_user_text = coordinator.user_input if coordinator is not None else msg.text
+        record_room_input = getattr(self._agent_manager, "record_task_room_input", None)
+        if coordinator is None and callable(record_room_input):
+            room_input_result = record_room_input(msg, user_id=user_id, thread_id=thread_id)
+            if inspect.isawaitable(room_input_result):
+                await room_input_result
+        self._schedule_auto_thread_title(thread_id, visible_user_text, user_id=user_id)
         turn_started = time.perf_counter()
         self._hitl.expire_pending_for_thread(thread_id, agent_id=agent_id, user_id=user_id)
         self.teams.cancel_member_hitl(thread_id)
@@ -1438,12 +1449,13 @@ class GlobalProcessor:
             meta=meta,
         )
         history_tracker = await self._begin_history(agent_id, thread_id, request)
-        self._observe_trajectory(
-            agent_id=agent_id,
-            thread_id=thread_id,
-            chunk={"type": "user", "content": msg.text or "", "source": channel_type},
-            enabled=traj_on,
-        )
+        if coordinator is None or visible_user_text:
+            self._observe_trajectory(
+                agent_id=agent_id,
+                thread_id=thread_id,
+                chunk={"type": "user", "content": visible_user_text or "", "source": channel_type},
+                enabled=traj_on,
+            )
         await self._observe_turn_start_context(
             agent_id=agent_id,
             thread_id=thread_id,
@@ -1485,7 +1497,12 @@ class GlobalProcessor:
                 ),
             ):
                 usage_tracker.observe(chunk)
-                history_tracker.observe(chunk)
+                if coordinator is not None:
+                    from octop.infra.tasks.coordinator_turn import coordinator_history_chunk
+
+                    history_tracker.observe(coordinator_history_chunk(request, chunk))
+                else:
+                    history_tracker.observe(chunk)
                 from octop.infra.history.recorder import flush_tracker  # noqa: PLC0415
 
                 await flush_tracker(history_tracker)

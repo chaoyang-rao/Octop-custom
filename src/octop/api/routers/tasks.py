@@ -10,7 +10,13 @@ from pydantic import BaseModel, Field
 
 from octop.api.deps import current_user, get_server, require_permission
 from octop.infra.tasks.manager import TaskManager
-from octop.infra.tasks.models import TaskCreate, TaskOptions, TaskState, WorkflowDefinition
+from octop.infra.tasks.models import (
+    TaskCreate,
+    TaskDispatchView,
+    TaskOptions,
+    TaskState,
+    WorkflowDefinition,
+)
 
 router = APIRouter()
 hook_router = APIRouter()
@@ -38,6 +44,9 @@ class TaskView(BaseModel):
     updated_at: int
     started_at: int | None = None
     finished_at: int | None = None
+    dispatch: TaskDispatchView | None = Field(
+        default=None, description="Original conversation and optional verified code-delivery state."
+    )
 
 
 class TaskEventView(BaseModel):
@@ -71,6 +80,23 @@ class QueueControl(BaseModel):
     paused: bool = Field(
         description="Pause admission after the current task; does not interrupt active tool execution."
     )
+
+
+class CoordinationContinue(BaseModel):
+    prompt: str = Field(
+        min_length=1,
+        max_length=32000,
+        description="Authenticated user's additional input for the original goal.",
+    )
+    allow_publish: bool | None = Field(
+        default=None,
+        description="Explicit host draft-PR permission for this goal; administrator only.",
+    )
+
+
+class CoordinationAccepted(BaseModel):
+    scope_id: str
+    accepted: bool
 
 
 class WorkflowWrite(BaseModel):
@@ -148,7 +174,8 @@ async def create_task(
     server: Any = Depends(get_server),
     _: Any = Depends(require_permission("tasks")),
 ) -> dict[str, Any]:
-    return (await _manager(server).enqueue(user.id, body)).to_public(detail=False)
+    manager = _manager(server)
+    return await manager.public_task(await manager.enqueue(user.id, body), detail=False)
 
 
 @router.get(
@@ -195,6 +222,38 @@ async def get_task(
 
 
 @router.post(
+    "/tasks/{task_id}/coordination",
+    response_model=CoordinationAccepted,
+    summary="Provide user input and continue the original primary-agent coordination",
+    description="Owned tasks only. Records real user input for the original conversation. Does not bypass a pending tool approval or automatically retry an interrupted parent task.",
+)
+async def continue_coordination(
+    task_id: str,
+    body: CoordinationContinue,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+    _: Any = Depends(require_permission("tasks")),
+) -> dict[str, Any]:
+    return await _manager(server).continue_coordination(
+        user.id, task_id, prompt=body.prompt, allow_publish=body.allow_publish
+    )
+
+
+@router.post(
+    "/tasks/{task_id}/coordination/stop",
+    response_model=CoordinationAccepted,
+    summary="Stop the owned coordination scope and its unfinished work",
+)
+async def stop_coordination(
+    task_id: str,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+    _: Any = Depends(require_permission("tasks")),
+) -> dict[str, Any]:
+    return await _manager(server).stop_coordination(user.id, task_id)
+
+
+@router.post(
     "/tasks/{task_id}/actions",
     response_model=TaskView,
     summary="Control, reassign or archive an owned task",
@@ -206,15 +265,17 @@ async def task_action(
     server: Any = Depends(get_server),
     _: Any = Depends(require_permission("tasks")),
 ) -> dict[str, Any]:
-    return (
-        await _manager(server).action(
+    manager = _manager(server)
+    return await manager.public_task(
+        await manager.action(
             user.id,
             task_id,
             body.action,
             agent_id=body.agent_id,
             expected_attempt=body.expected_attempt,
-        )
-    ).to_public(detail=False)
+        ),
+        detail=False,
+    )
 
 
 @router.get(

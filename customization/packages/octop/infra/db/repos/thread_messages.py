@@ -68,6 +68,18 @@ class ThreadMessageRepo:
             ).fetchone()
         return int(row[0])
 
+    def message_roles(self, thread_id: str, message_ids: Sequence[str]) -> dict[str, str]:
+        if not message_ids:
+            return {}
+        placeholders = ",".join("?" for _ in message_ids)
+        with self._db.connect() as conn:
+            rows = conn.execute(
+                "SELECT message_id,role FROM thread_messages WHERE thread_id=? "
+                f"AND message_id IN ({placeholders})",
+                (thread_id, *message_ids),
+            ).fetchall()
+        return {str(row["message_id"]): str(row["role"]) for row in rows}
+
     def range_rows(self, thread_id: str, start: int, end: int) -> list[ThreadMessageRow]:
         """Read an immutable legacy interval without triggering projection backfill."""
         with self._db.connect() as conn:

@@ -241,6 +241,21 @@ class HistoryStore:
             value: dict[str, Any] = self._decode(conn, json.loads(row[0]))
             return value
 
+    def messages_after(self, thread_id: str, after: int, limit: int) -> list[dict[str, Any]]:
+        """Read an ascending durable interval without rebuilding the UI projection."""
+        if not self.path.exists():
+            raise FileNotFoundError(self.path)
+        with self.db.connect() as conn:
+            rows = conn.execute(
+                "SELECT seq,data FROM documents WHERE thread_id=? AND kind='message' "
+                "AND seq>? ORDER BY seq LIMIT ?",
+                (thread_id, after, limit),
+            ).fetchall()
+            return [
+                {"seq": row["seq"], "value": self._decode(conn, json.loads(row["data"]))}
+                for row in rows
+            ]
+
     def message_page(
         self, thread_id: str, segment_id: int, before: int | None, limit: int
     ) -> list[dict[str, Any]]:

@@ -4,6 +4,7 @@ export type DashboardPushEvent = {
   thread_id: string;
   text: string;
   agent_name?: string;
+  toast?: false;
 };
 
 export function parseDashboardPushFrame(
@@ -24,6 +25,7 @@ export function parseDashboardPushFrame(
     thread_id: threadId,
     text,
     ...(name ? { agent_name: name } : {}),
+    ...(obj.toast === false ? { toast: false as const } : {}),
   };
 }
 

@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.3b2",
   "upstream_commit": "a40f54a8099b1faebc89c680ec1e1ece8b97a4e6",
-  "program_files": 3151,
-  "changed_program_files": 617,
+  "program_files": 3200,
+  "changed_program_files": 667,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -901,7 +901,7 @@
     },
     {
       "path": "octop/api/routers/tasks.py",
-      "sha256": "f08d9927f1dca0b72d0f51eeb21ca8df2f523147dc12d14409a9a10a27dd69fc",
+      "sha256": "c5274751895fa7d0979efeace3416b7cf660a7e449b5b906eec69d5dfc83ee9d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1278,8 +1278,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/AgentPluginsPanel.EuWta1mS.js",
-      "sha256": "1df9ead728e45bb3265ae05d29748c01801eb60c66a987f221da19beb3f11553",
+      "path": "octop/dashboard/assets/AgentPluginsPanel.DQUdnNKP.js",
+      "sha256": "149e5b15b025387397247841ca84a77392bc05f481ee892574494e4406340e06",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1290,20 +1290,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/AuthFileDownloadLink.BmdURFQp.js",
-      "sha256": "0d115f8374daeb8b56c77078f95ad4b17c0ab2372aa181cc051773e45080077d",
+      "path": "octop/dashboard/assets/AuthFileDownloadLink.DHdl7owp.js",
+      "sha256": "ef6864b97db4be5f7ea8ff51f269968e963e6e300020a0ca1bc0caed70b07259",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/CardSkeleton.B5VHp3Ov.js",
-      "sha256": "4457b16495e682c1b2bfadc93391412ffd6ac22dd6670a1a50f2d68c0fd44717",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/CopyableResourceId.DCNeTHWB.js",
-      "sha256": "1c1cd42da788f6f91835181d1cfd0ca809090f0334b8d7466d55ab5187423d02",
+      "path": "octop/dashboard/assets/CardSkeleton.C_f4UDVu.js",
+      "sha256": "4d164162e9b272e2d32fb4c71b74364bd47f948a2e00ac6dc7cf223b6b40c38b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1314,20 +1308,26 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop/dashboard/assets/CopyableResourceId.DzBVkypk.js",
+      "sha256": "04deb5be7ca356728d6c94b2dae4e11ee83893d94b79075c8f1c8d6955fbf0e1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/EditAgentDrawer.BKiWLT__.css",
       "sha256": "ea037591495a2334b3dd522c5317d0b51d44b8d6be45193434e27c94c791b3c8",
       "upstream_program_sha256": "ea037591495a2334b3dd522c5317d0b51d44b8d6be45193434e27c94c791b3c8",
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/EditAgentDrawer.QPUJj2MJ.js",
-      "sha256": "391473d1d2fd302696b876690b9c428d46d8af84b9193eb89638678eb9737228",
+      "path": "octop/dashboard/assets/EditAgentDrawer.CNtORFJC.js",
+      "sha256": "02829ae44c4fbaf47b1b98ac4e5733d73f88219d01eed61f30658ef60fbc7373",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/ExpertAgentAvatar.DT9tCNWV.js",
-      "sha256": "bae9a905b9cfab0395084676aa8bee704df5fe433ff3392423bb80277a4662c5",
+      "path": "octop/dashboard/assets/ExpertAgentAvatar.0ndxc2Q4.js",
+      "sha256": "561a8048e8bed005f931fc5af05566d06259b36f322f49f0d64781c56b8bb02e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1686,8 +1686,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/LazyMarkdown.oJR0m3Gs.js",
-      "sha256": "e91f7e3507e4d14c8d10e35121b7612cbe16a1b8619638f9e98cee87a84d735b",
+      "path": "octop/dashboard/assets/LazyMarkdown.BAIil3_N.js",
+      "sha256": "4a30c39a5385f733ccf5d7aba0069cce8678af1acb163582d933aab82447026b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1698,8 +1698,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/NotFoundPage.sEQRb4Ol.js",
-      "sha256": "868b91ddb2a8d5482e98547333150fbcd40b0be4ba610ea6afeb000fb6a58900",
+      "path": "octop/dashboard/assets/NotFoundPage.DhQZeYZb.js",
+      "sha256": "143b6028b217c5dbb1ced6fe4f083f21b31cd328c47af9439cffeeafbfa0409b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1710,14 +1710,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/PageShell.BsxLxanC.js",
-      "sha256": "8fce6a277f009cb87907ee587b409d4fc566703838348a66b9200ac90634f784",
+      "path": "octop/dashboard/assets/PageShell.C7li6xc6.js",
+      "sha256": "47f0f52f4c56712eb4f724c46f92fb9cf7ab12cdaa8a10c193821c4558e6ebb8",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/PeerOnlyRemoteAlert.i6sJA8oL.js",
-      "sha256": "17a1f0dbc5fe022a7cbcc4f9ec2b0f9264ce22a870388b89dfdafe31e65415db",
+      "path": "octop/dashboard/assets/PeerOnlyRemoteAlert.CUnkYtIH.js",
+      "sha256": "b8a77de457e0ce66372ba5ccb63f2f708848a4f502d4e34d25621da4fd93084f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1728,20 +1728,20 @@
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/SkillHubTab.6XQ53l0A.js",
-      "sha256": "1ecc32272a2f585b7324f7e404cdc1d09095d751d281e6a397b9fa7d7ff0ad3a",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
       "path": "octop/dashboard/assets/SkillHubTab.C3dd6ONz.css",
       "sha256": "c1cfd666959fa00d0f1eef49fde53f235089586025a60a2f1cceec63b5365e70",
       "upstream_program_sha256": "c1cfd666959fa00d0f1eef49fde53f235089586025a60a2f1cceec63b5365e70",
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/SkillsTabs.B5gnet-o.js",
-      "sha256": "638bb71061a58962ebd2d2a5d9203a0d80cf018232548de47c3dbd7494af1392",
+      "path": "octop/dashboard/assets/SkillHubTab.C9ZanZKl.js",
+      "sha256": "c69bf1d438683d62eb894709fc33504d7c20805fb8a304e01ae67f62989166ef",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/SkillsTabs.BMMpw0n6.js",
+      "sha256": "6cefb67741aa873dfedc439f55a00615097bf6e0361bb99b535089204022b122",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1752,8 +1752,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/StreamSetupGuide.CH0bFm1b.js",
-      "sha256": "1a220287470b65d6a70e94fa1057b4febf016ddb264f2a2caaec23013541a356",
+      "path": "octop/dashboard/assets/StreamSetupGuide.DFjyy54T.js",
+      "sha256": "6187d88660d76f3023686a7f0b1acd2e5ed2cb936c3fd3194ed071df251a7a72",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1782,8 +1782,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/WorkspaceDrawer.BU42yo0S.js",
-      "sha256": "b8c26e1da75965de10f83be6c5cbbbd829f1edb4a60c0309a480efdfa3d30a1e",
+      "path": "octop/dashboard/assets/WorkspaceDrawer.B69n-tpb.js",
+      "sha256": "92f10f57ce5cfca0500d009fbcb53e08544a406c82954b9c8396c5745d60268a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1794,20 +1794,20 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/agentBackendForm.DqYb6SH3.js",
-      "sha256": "07e1a8be2afb66a267d885e17252b9657ddb7117552a9261282901f8098506e3",
+      "path": "octop/dashboard/assets/agentBackendForm.DT-Ma3nZ.js",
+      "sha256": "db1b538d1547982c209ac5caad9916165af47d29fd32c3eabbcd6c43b58310f2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/agentChat.gOgQz9AY.js",
-      "sha256": "b7936ffd6a7b6a2bca5d97d03ccef3e58f8518170795b7745bcc8114775390cc",
+      "path": "octop/dashboard/assets/agentChat.gRin0sqK.js",
+      "sha256": "c2fcf779212ab00e599c778147c199b41e60c278ff37548c05a2592488f9f5ca",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/agentRuntimeConfig.DRYqc_wq.js",
-      "sha256": "fbe6198d47afc7c2f6cd2f9913ee617b635886fed5def5285f6f0ab5445745e0",
+      "path": "octop/dashboard/assets/agentRuntimeConfig.B0UL2lKB.js",
+      "sha256": "2c7219cbd1ad5f4dab2a377707a9471b14bdcb26f91b896914c4403ace4b1b81",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1830,8 +1830,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/architectureDiagram-3BPJPVTR.Nz51bAeU.js",
-      "sha256": "14e1ef085755cb3c5c1f4e817c7d0fa5239416804a78c8e1581d4b088f2bfaca",
+      "path": "octop/dashboard/assets/architectureDiagram-3BPJPVTR.DltkzBTW.js",
+      "sha256": "05e6211f885b6689238373d7f384c1f4e815f6749fccaf4bd59f82ee0dad0822",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1848,8 +1848,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/blockDiagram-GPEHLZMM.C-yXrjTO.js",
-      "sha256": "c623a3255e959ae0b4116de4d051deb46ef7bc0e8905ff89b55a6c8b32466200",
+      "path": "octop/dashboard/assets/blockDiagram-GPEHLZMM.MrVDwWfW.js",
+      "sha256": "27dd7bb18edfc5a18e09ca72c1152150792db911e4bcd61ccc6d17b7292fb8e4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1860,8 +1860,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/bridge.DVeyDn7D.js",
-      "sha256": "1f1a131191767215518ff83dd91307eb38e03cc7230747e02c8f5ff96352548c",
+      "path": "octop/dashboard/assets/bridge.syqbaqG3.js",
+      "sha256": "eec53379232913e7f1c11424239f219669b0d2fe8372d48702dda5530c4b9809",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1884,74 +1884,74 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/c4Diagram-AAUBKEIU.CuvO_n9O.js",
-      "sha256": "791c47e1c7a1cef63045b4a276f2c23e1dc46cc926ee080180e7f88bf9b3d0dd",
+      "path": "octop/dashboard/assets/c4Diagram-AAUBKEIU.t2ZUsvOr.js",
+      "sha256": "512453477561712c9afb10eb317ab988ca391c5b421c300e57daa7a4906d4807",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/channel.D0atGV_H.js",
-      "sha256": "d3effd09828528c5265135497c2a78408eacdcb0354c435dea3b9358d1a89ebe",
+      "path": "octop/dashboard/assets/channel.CnHLPmPF.js",
+      "sha256": "c3d51f92d7920ca0cf0aaeea7117135ed75401b61670ec0a8a0a92a42465778f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-2J33WTMH.LRKuh9S4.js",
-      "sha256": "e1d150889ad0424174929fff9a999d4fd4e8aff21f7db264c9671ef113424026",
+      "path": "octop/dashboard/assets/chunk-2J33WTMH.DWciwqpd.js",
+      "sha256": "ea13f92a454088794935e4aef94c0a352a2265e589369bcfd4f9fbd4a76edd1c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-4BX2VUAB.7a38mT56.js",
-      "sha256": "c04e43f5c7265e2ba6643eeb6e491b9b70ce1e51b0c5842781d8f8cd12f6c565",
+      "path": "octop/dashboard/assets/chunk-4BX2VUAB.B4Ou9llB.js",
+      "sha256": "fbfb6c441eac0c6cd4478b7e01d66885804600a3081539d5dcbf14d542a017e5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-55IACEB6.DG7A9eTm.js",
-      "sha256": "001fd1f50a0a9d8e9a1e489abdcf8f6542b4cb5dcc8caba6c79903d6956eb2c7",
+      "path": "octop/dashboard/assets/chunk-55IACEB6.Cr-izF01.js",
+      "sha256": "ebee0f77db88a99bba7e07501c198c0598b5be6c1655fc144d20a529a5d818fe",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-727SXJPM.C6HGeLtG.js",
-      "sha256": "87ba4dea0943ef20b4b079af92bc74094cd0540eed3a47931dfac47afbf39bb3",
+      "path": "octop/dashboard/assets/chunk-727SXJPM.BMuISE4W.js",
+      "sha256": "ba5008c17b43a59881ac3bd85299e458c8d0d571b9f354bfa2e9056d0411a2a4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-AQP2D5EJ.LsrRwRu6.js",
-      "sha256": "711d91315b01d10b6154997bd067187f781dc2f30efc9007630c60b9a35de310",
+      "path": "octop/dashboard/assets/chunk-AQP2D5EJ.B0LxY5xi.js",
+      "sha256": "89282db7fe7bf74a983dcb80f5b38a4a71ad3b28197eabd22caf9c0605c2d6d3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-FMBD7UC4.BINevDWZ.js",
-      "sha256": "41591d7d3f93809ba83ff1959e565f90bb22ba2d412504bb97a89088a8206232",
+      "path": "octop/dashboard/assets/chunk-FMBD7UC4.CwY4GtgO.js",
+      "sha256": "d72499bfdd92aa58b832f3dcbabb5607c61db4be7a6f60a015cbf9ab87c66719",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-ND2GUHAM.C8TmsvZ1.js",
-      "sha256": "0cf4a2aed420ec412689b21bc0f8abfc8b18aac6e751ca3274b0ef13e404ae20",
+      "path": "octop/dashboard/assets/chunk-ND2GUHAM.C9pISRoY.js",
+      "sha256": "9a98c79fb71015804e55c0bdf0251af68c0e0c282718ba6c1a09991790333433",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/chunk-QZHKN3VN.xUmQH1AM.js",
-      "sha256": "1e8f7a5e0ba55099ac6e6133505039e41bfe403dba6b440464dc7981e038fb68",
+      "path": "octop/dashboard/assets/chunk-QZHKN3VN.BZ3BR7ne.js",
+      "sha256": "9ca6868e66a3a43a9be72c6f65ce35e3b532f4219558b950aa7a3c4ce998aed0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/classDiagram-4FO5ZUOK.DQQeMvHW.js",
-      "sha256": "5a9ddfa802b131080fc5cb5ef5e2157b745268d0c0bf54e88f6dacfa71a1307a",
+      "path": "octop/dashboard/assets/classDiagram-4FO5ZUOK.DOFyP_r_.js",
+      "sha256": "9cbdccd0f1b2cfa78cfe246f4c06d06329f214b5bbe07b87b2918366bf80f480",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/classDiagram-v2-Q7XG4LA2.DQQeMvHW.js",
-      "sha256": "5a9ddfa802b131080fc5cb5ef5e2157b745268d0c0bf54e88f6dacfa71a1307a",
+      "path": "octop/dashboard/assets/classDiagram-v2-Q7XG4LA2.DOFyP_r_.js",
+      "sha256": "9cbdccd0f1b2cfa78cfe246f4c06d06329f214b5bbe07b87b2918366bf80f480",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1968,8 +1968,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/confirmModal.CNMMGQtm.js",
-      "sha256": "d4e02af7ae1c172d195d2a3ea404125d6094bd282a192e557b0fcc0292a58588",
+      "path": "octop/dashboard/assets/confirmModal.VGxtd-fc.js",
+      "sha256": "6b824b2c9c1132d8d70b3309f64df6ec81a8e87b8cf089527322a46b3c6b97c2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -1986,14 +1986,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/connectors.dgHBSek3.js",
-      "sha256": "88c25694971c69196c60ee00504b067fca236641f558e4c5a1f3391a1bbb503e",
+      "path": "octop/dashboard/assets/connectors.XGzphzMm.js",
+      "sha256": "8d682b27fe7587db990c1a343e187c637c2aae5e6741329ba51689a8a31968f2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/conversations.BRlUz_ud.js",
-      "sha256": "b5dc58b552a191bc61fcb5af9639e2bdc486f878c12d684e97571b512d4a6d6c",
+      "path": "octop/dashboard/assets/conversations.DTXsgGCv.js",
+      "sha256": "63e781837d9c9fcfc0dcc759b37fcd2112317f49f58e3e1cb287451654c3a0e4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2004,8 +2004,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/cose-bilkent-S5V4N54A.YasgHaIV.js",
-      "sha256": "d4d06e5bf20fa7d300d0e08b42e21b9c88ee1c05d45e8a957ed816a6a038443a",
+      "path": "octop/dashboard/assets/cose-bilkent-S5V4N54A.QVh-0tBf.js",
+      "sha256": "9246fa0698603afecb0cec04671ddcecfc69683ad2180794cc4b2e3f3df6c81c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2046,8 +2046,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/dagre-BM42HDAG.6kNezKhH.js",
-      "sha256": "2d772b7947435f92ab5fa3ba0de661c3844da71e1b46101cfa02321ff0113101",
+      "path": "octop/dashboard/assets/dagre-BM42HDAG.BulwjZuc.js",
+      "sha256": "18809993e744de1a34119183db3938d0a0b0688e3b16a72951918435ee8bed51",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2082,32 +2082,32 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/diagram-2AECGRRQ.BCB_fhXO.js",
-      "sha256": "4ea5971761e2178abffceec9cbb4e9583ebd4b239de15f7de95e455bdd6b5f64",
+      "path": "octop/dashboard/assets/diagram-2AECGRRQ.6g4c69Zw.js",
+      "sha256": "812824b5cde250e23191eae053183be4bac0d0fef1f355ed13b77146dca3b556",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/diagram-5GNKFQAL.D9bD_fUr.js",
-      "sha256": "478f88332514cdb6325ff1e1c43587473a3ea532f7a45c417cc462ee1f81ed80",
+      "path": "octop/dashboard/assets/diagram-5GNKFQAL.B8wB5mx8.js",
+      "sha256": "cac069262d76f8c79c15f3f7e358b7078c003428fa5475d1daf6041186006406",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/diagram-KO2AKTUF.B3zRsz7O.js",
-      "sha256": "ab776e5e082cc3fe940b5dd2f0e57082c1ce5f532dd2492a49c31eefda54620f",
+      "path": "octop/dashboard/assets/diagram-KO2AKTUF.BtvWzeQ-.js",
+      "sha256": "95fc440280b32910217894c42d2a9fe8e17744e173877a1d24469411e5d85d87",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/diagram-LMA3HP47.0rZasUzL.js",
-      "sha256": "427308a2330024699ce9aa478ca5f2120070a0da5585628b92f0376ad6b292a3",
+      "path": "octop/dashboard/assets/diagram-LMA3HP47.C0iA6Cl8.js",
+      "sha256": "b92f1c75fa76cc7ee86b415f51d17d891a35198fb40ffa350787849e91e47c25",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/diagram-OG6HWLK6.Cj90TwFc.js",
-      "sha256": "c51681b24abf245173feff0a63c16eff5703e2c18e44685dcab6a3953f775f00",
+      "path": "octop/dashboard/assets/diagram-OG6HWLK6.C0lIyv34.js",
+      "sha256": "e9adb7e54279b4e80e142d70833cb52336df25b978306b1f66b98b8f67cbe0f0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2142,26 +2142,26 @@
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/en.DJvjGGLK.js",
-      "sha256": "cd2cd18c8c82843d212b03b4989c11d7881f9a088db156740629870a4d47baa6",
+      "path": "octop/dashboard/assets/en.BGo9wXFW.js",
+      "sha256": "d7fa566c0d673337f94f3c8f3b62dc51e30fd57b9647fc299cf6921dbed29265",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/ensureBuiltins.Bv4S3Mw1.js",
-      "sha256": "cf7358c744a736c2161a7106d8045c770cfc0cd9215a5f6d8a9a393e5ccf041e",
+      "path": "octop/dashboard/assets/ensureBuiltins.BjK13puH.js",
+      "sha256": "b398d93fd1ca2fe5ab8a38a04fc003b0440527301e2770cef4047845e25b68bf",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/erDiagram-TEJ5UH35.BWTh0uL7.js",
-      "sha256": "3d171f0c3f06ced54b8121e3d9c9b71d58fad352ba1966eee5113a4378a26aad",
+      "path": "octop/dashboard/assets/erDiagram-TEJ5UH35.B1K1S4ze.js",
+      "sha256": "2a51aab12193c2233fd39ada1f922b208b10529d59034a32641b8f12c1312273",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/expertMarket.DXBR4mni.js",
-      "sha256": "0d141e20de81538668716a15e15905a0e677a9552f268c9a05072584fce54771",
+      "path": "octop/dashboard/assets/expertMarket.BDRqWBuu.js",
+      "sha256": "63cd8fcad6d130f611f66b482477e31ff0e6f56e478da560029c258675cb8705",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2184,14 +2184,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/fileTreeIcon.mIJJ3O-A.js",
-      "sha256": "68dd9434b81ac9f76003b45764e89e6aaeab9cb5969c0fbec13932bb6edd4d3c",
+      "path": "octop/dashboard/assets/fileTreeIcon.CAjuTAUX.js",
+      "sha256": "65d2ec61110d29a5297bf6a2325bccd3ae3dddf71d38378d8a18a0d8eb64397e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/fileTreeNodes.DpdYj5sD.js",
-      "sha256": "0c7d252bfbf80612309befa2bdac63ee69aa02bf64177695c49825bf416b1b82",
+      "path": "octop/dashboard/assets/fileTreeNodes.BWI7IpVk.js",
+      "sha256": "9f94c0d54e5a19ec084daacd341166f7286000b6b75cf2ea0e295739cb721999",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2202,8 +2202,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/flowDiagram-I6XJVG4X.Dhdr9D-s.js",
-      "sha256": "a911127890f0c9cd1396e976bc4efb9bd18ef26b7c03b622eb2b4f2f1d218751",
+      "path": "octop/dashboard/assets/flowDiagram-I6XJVG4X.D_GeHKBq.js",
+      "sha256": "8ddc714ec86eb649dddcef4efd3a87958716c3aeb645bde21d100e0b50b0bc1c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2214,14 +2214,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/ganttDiagram-6RSMTGT7.8qoEPnbE.js",
-      "sha256": "1a2b00640f839aaf5fb643d61a4ccdc491980ad0bb7abfb17de325092324694e",
+      "path": "octop/dashboard/assets/ganttDiagram-6RSMTGT7.C9x7DN8X.js",
+      "sha256": "8684fdf05b27c6488d5d06fbceb31fe6835d508edfa5232db478204c60a30e27",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/gitGraphDiagram-PVQCEYII.7uArzHYX.js",
-      "sha256": "98d0c9b57911410cf347b42893afd72cb255a4d97e2f9e49fcb9354e2e4f10ba",
+      "path": "octop/dashboard/assets/gitGraphDiagram-PVQCEYII.Bn-WGZOZ.js",
+      "sha256": "bad4c567d398a380f337a0354f6fb9ef6f1bbec2727e482d7e78a63985f01aa0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2244,14 +2244,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.-pZQbSG0.js",
-      "sha256": "bf801e67d45d3f29b19403fade9bec8ce8ee42143ef5eecbcec3b0e6133d71d7",
+      "path": "octop/dashboard/assets/index.2XrScu35.js",
+      "sha256": "2e85c7f06a9eba47229d733356fe0a25c01e3fd9bf177960a8b9e388992ebaf5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.2pYieL4X.js",
-      "sha256": "6e08ddf536ec654bbe88e442ed310a98eb539d8209b04dc28f1b0931b79e08c7",
+      "path": "octop/dashboard/assets/index.3zFzxhhZ.css",
+      "sha256": "c98146591fa927f82251389c23c7c08dc078eccdec9df7aa5f419ba097df96bd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2262,14 +2262,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.62UBSIA5.js",
-      "sha256": "8f36da31ec4a12d2818853f91e88000327b0d7e9bc8b86140f1d7b37b9675ee0",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.7t2h78CN.js",
-      "sha256": "c2c9e67778e6a2f10f7f824e9f5e3d5d6ee6c9914b5390aaf2979eabeba6737b",
+      "path": "octop/dashboard/assets/index.7SzkTHHv.js",
+      "sha256": "55c1f6a36b12919d768fa1407f8e033224c51365553838f256544b3fec279558",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2280,32 +2274,32 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.AniLrW0f.js",
-      "sha256": "be35001f1308c377e83ca1e0659caccf9f53573395b44bdfa4c62194ec1df3e1",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
       "path": "octop/dashboard/assets/index.AuUAVWTW.js",
       "sha256": "0ae19be0ae2b72c66f081dd6fed4c8a75b50ac57d0eb1cc0b2a1f1d72f1c4d5d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.B6XcEpmc.js",
-      "sha256": "a6759abe9d1ad05968d79741e844cb8946b168f98263d04508b7bca9cf4c9743",
+      "path": "octop/dashboard/assets/index.B27WLs3-.js",
+      "sha256": "12aeeda1c0f4ed5eca0bf4b2ed207dbebf3cfb77eb8d1feddc367d74a940688d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.BDlkVQ2f.js",
-      "sha256": "faa92e44edce50bde99f19a7d6cfa03e37907d7b2ac58d300146178bcde8cc9f",
+      "path": "octop/dashboard/assets/index.B3vRgum0.js",
+      "sha256": "b83a29316c5cc332c80d1bd47e2e7302ed9555f94905ceb597add69f65aa1e05",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.BGdwjC2q.js",
-      "sha256": "0be9f8b3b51ba702f1f911d503a2c037f6f77ee97083add1d4914369e20bf4d6",
+      "path": "octop/dashboard/assets/index.B4s2jie7.js",
+      "sha256": "88cc253645d5fec14b9aac0b17272b827c5b2deec7ed2d96acff1c9599b46ff8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BBzkHi6g.js",
+      "sha256": "b0ce2bc3f7dc240e6a87f3e003b07068e94d21d46c8eeca058b7fea5ba7d5915",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2334,20 +2328,32 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop/dashboard/assets/index.BYezBxG6.js",
+      "sha256": "0ac8b6241be3a9cf9fb28a7340da58342cc1b0a6e52772218675c083a27bc9ee",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.Bf2P8KOW.css",
       "sha256": "788ca9f3ad0383d4b0c28db0d57cc14075d736054aa1c26dbd699393781e2fca",
       "upstream_program_sha256": "788ca9f3ad0383d4b0c28db0d57cc14075d736054aa1c26dbd699393781e2fca",
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.BfAS3Eg6.js",
-      "sha256": "134146e83be043aacff4ac880a885ee57e5d1a22c5792ee5da4f238d743f8214",
+      "path": "octop/dashboard/assets/index.BmxQ3oG9.js",
+      "sha256": "fcc3f630aa7fec029013290d60697aaa491a8aa8ec2a1e407fe1a77e074a4c96",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/assets/index.BnrFhRZS.js",
       "sha256": "bce939258502e6b2113a7897c6393dd17484fa0fcf24db2dba73002c5e1a829d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BpC102mD.js",
+      "sha256": "0d0e92e18f9bef39d416f874dd3bd0e371b7846a0b7d083ae304a31874a095ad",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2364,10 +2370,40 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop/dashboard/assets/index.Bu9M7R35.js",
+      "sha256": "0a33b99181350530cda3da85adf548c3f30beb284ba9a50aed3fb327e105dff7",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BwOxqZnt.js",
+      "sha256": "980c297c395d9ea3e57b43859a1a848ad9ed4666f99e233eb2cdae0ace45e6ab",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BwoFYWTu.js",
+      "sha256": "cb5316cf540d0c76c7531f9095902382ede8df0e6cdd11b2ea7bb5d5acc139e0",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.BxiWFwpt.js",
+      "sha256": "83f1793bf335920f404b5574233ce94bce6ed289f85cc35f05759e06186d6f17",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/assets/index.C1PiI6iC.css",
       "sha256": "038f4885c458f8d2ea86d89cf89c5ec296eead5d2b806e3a9316879c133e54c5",
       "upstream_program_sha256": "038f4885c458f8d2ea86d89cf89c5ec296eead5d2b806e3a9316879c133e54c5",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/dashboard/assets/index.C1mTx7HW.js",
+      "sha256": "9dc65dc8336258fd3a6c6ba25690f96ed7d654915eabd7d1270cbf157263bdfb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/assets/index.C2dl2LAE.css",
@@ -2382,62 +2418,38 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.C5X-CRyl.js",
-      "sha256": "221434b06007e532431a5d9159fab10f6ffc055ea6023d6d59eecd8b8e5e705f",
+      "path": "octop/dashboard/assets/index.CA0Da1eQ.js",
+      "sha256": "96082c2ad9520b345ff1866bf363f93af9b0db11340fa52c442ea9bb9ddf1f8c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.C9iw2sNQ.js",
-      "sha256": "271c3aa0e935ede9a95cf96de42e1ebaf1b62d2f26fbaf15291303884569e21a",
+      "path": "octop/dashboard/assets/index.CBipw2ET.js",
+      "sha256": "e144ed99899a1d9ddd45d115ecbb7ea9fb020ea84327b040d71e43ebe99584e0",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.CALXAPQB.js",
-      "sha256": "df47933f18ea6b39c0e4a821f0c2970b916ce3d8facc1d20882e4bcf8ba63fd6",
+      "path": "octop/dashboard/assets/index.CKbEmBID.js",
+      "sha256": "29f41bc39b0f106a980e545c3035b2eaf7c9586cae250a3751b84db34cbec118",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.CC_eTdTW.js",
-      "sha256": "b326d6ab68c5e7ebdfe683d7e6b5ee208a78b95fb77327ddd2703cafac6c8baa",
+      "path": "octop/dashboard/assets/index.CMrA8oSR.js",
+      "sha256": "c8483b59535fb493d7642eb5896210b30a312067f5e3871973591825bf41ab4d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.CFtWSq8m.js",
-      "sha256": "24c14a3040f5718d2197b19335df887d484adb432aac57ef9152e995e17c1d39",
+      "path": "octop/dashboard/assets/index.CPjx5NV9.js",
+      "sha256": "af820fd3c6c550f1adef41066839e429b076b7152c99d1d83f3e086e54fcf9b7",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.CKFoc6sf.js",
-      "sha256": "937ea1ac5b065e56caa6b303a3017c2819a5b41392db3a443c9dfd0256109967",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.CPkKukiy.js",
-      "sha256": "065b434e103f69d0b28ee27b105b0c226955e86ab71e7efa779cb3caa67a1e8c",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.CQflC_SX.js",
-      "sha256": "e060a88e88354fe68581610e825ebb52074144c07394abc7633ca92c19d2fc11",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.Cgs4tUd6.js",
-      "sha256": "81e7cb998b7f3fc406cc82b25ce271cbf3908846e868943f2abefab160794581",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.CjUhA_dn.js",
-      "sha256": "ce60bf52c3d3af1f439d559cfcc3f9b0cf3212b4bce8db07ab413b0f7aab5505",
+      "path": "octop/dashboard/assets/index.Cfy1aMxx.js",
+      "sha256": "e057fbb2042fbe85fe683310f1eeb42ab1394422b53cce6da62d4a675be408a3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2454,20 +2466,26 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.ClyBNRJx.js",
-      "sha256": "f51a4a991b78f3172fea07985347b3396493438764f53d62465be6f3838007e7",
+      "path": "octop/dashboard/assets/index.CoJgp9Ab.js",
+      "sha256": "5f383b7c29f9a604ca4d78c522112874c3813778aae912266f3f305f1692d1f5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.Cyzzbulm.js",
-      "sha256": "05957a08e2e26b3f1a352627f61a64ac08d17eb5a43076dae4d1525cd68b4606",
+      "path": "octop/dashboard/assets/index.Cu32-HVk.js",
+      "sha256": "b8a03427ecc498c386dd4f653c4450662b052d865054ffecb51513ecc003fe73",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/assets/index.D-1Pswr8.css",
       "sha256": "96d16e725ed38853b59332e01102930edbadda71a70aba2422e158365cdbf1b3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.D3GYJ5zz.js",
+      "sha256": "d5ca61cced6bbc0bbd0cae3d368fe815e87b6401f84ee7eee11d4ac105f7c403",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2484,14 +2502,20 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.D6EXrjRG.js",
-      "sha256": "497055cac754a9d5d60f67c587208aae115d9d0d74fff1def8c9fad3ea155654",
+      "path": "octop/dashboard/assets/index.D6IDQFSM.js",
+      "sha256": "67a5be5649c589a9e178127f4ade0380b0bbff4f6c3d3d1c613b0fe55577fe77",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.D8SQUovj.js",
-      "sha256": "d48f019b425c336a141543219aa26b10d72d78c344d0c557552fa3620d5214f7",
+      "path": "octop/dashboard/assets/index.D7nuPrBc.js",
+      "sha256": "c246297cd11108e2eab1ba8f45eafb512486b7a4cd88a785dfdcc1eddab93fdf",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.DAK_qUVC.js",
+      "sha256": "dbdaad2daf527437826d023190f8d638c87c4434498f952bb6cdbad3db01b4ad",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2508,20 +2532,20 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.DPQisEJV.js",
-      "sha256": "e653d9dfec5eae5b6ace4369f5a77f6f2a63894dbcc2be47b3be795c23d531d1",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
       "path": "octop/dashboard/assets/index.DSNWQQpQ.css",
       "sha256": "bb7d12aa5e05532324cc85ce04eb66d0e4e09c19f53fca4f8b0af1f41e044ebf",
       "upstream_program_sha256": "bb7d12aa5e05532324cc85ce04eb66d0e4e09c19f53fca4f8b0af1f41e044ebf",
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.DWALHp9v.js",
-      "sha256": "469c26546ec8ac2b2f3b593fd2f541ceecc4bf07a0f54234fd2ec17699ff1dbc",
+      "path": "octop/dashboard/assets/index.DWIsS3D4.js",
+      "sha256": "5690fa08e4c6c8a675b89ac095647fe92025947b08b8ead44639cc99a8227090",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/assets/index.DY9QYO2P.js",
+      "sha256": "b669da2d914ab029253472926e1e539c15533bf16d585ef04b37cc78c690b58b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2532,8 +2556,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.DfJ4305m.js",
-      "sha256": "e016b21cdcf0bb0e19e16249cee489df67e53bb377d14bac5a74c43cbb093370",
+      "path": "octop/dashboard/assets/index.Dn0RWZOG.js",
+      "sha256": "25d7bd4d3c1b89cdf3b3f5afdf0d93e8b56774231cef7a1f8abdbfa38f8a8963",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2544,20 +2568,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.Dx84vuZH.css",
-      "sha256": "671ac3b99cb895bef369769fbc9ee2fbc2adaf2c44e6cac3f41a363de29d37f2",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.DyXM2nHQ.js",
-      "sha256": "7901fbac2bd461b472b9a27e6e1bb826cd5b1b89732ee44af05dbb29e30fa87b",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.EM_m78ZP.js",
-      "sha256": "bdeb6b51805eb91bba43d9d9a1c53e75eac9c2ee7f00ce18f26bd65f306ce413",
+      "path": "octop/dashboard/assets/index.L1AfpLt2.js",
+      "sha256": "e8f914508ab64c4cee209ea1885f83fcc2d7a69ec0366793cd2ed603102ed427",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2568,38 +2580,26 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/index.aQi6j9sf.js",
-      "sha256": "a6552f66633c920393d346a38b5bc929fa685baaa97c1ac08f7a9c250addaa49",
+      "path": "octop/dashboard/assets/index.d4c_m_Ug.js",
+      "sha256": "da6669d5afc1cd9471682982aec52519501550f29a5f74d37c03dae5095d5e5f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.fbnJU1pl.js",
-      "sha256": "b10a2f7395e2cf363bf9a4eba41ca82d4e0e519a9c8a1771ea8bdcf7460f55be",
+      "path": "octop/dashboard/assets/index.gg1onCOs.js",
+      "sha256": "8c58488167b82586d7dee3852717b3cc94b0fe75fea284bcdc7edcd3cd9d3612",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.hVF80_aM.js",
-      "sha256": "c2834b05024fa3f8b82d03c2bc4bd24b1f6809efe4af8fda851139125bcdd07c",
+      "path": "octop/dashboard/assets/index.module.DDhjBVDP.js",
+      "sha256": "86554f23cffa21fd639eff9ca3dfc5609314b096d779f8fe824288bb33729253",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/index.iZpjf1Wu.js",
-      "sha256": "a2f3905b4ce65cb25c3f2dc11e4a8dde6fd1024e1b4110800bcad3892cb8ea4f",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.module.gQnM-bi5.js",
-      "sha256": "2ccf513dbea6f5db32d09ff1869a6a12d0b3f552cf6cf84225ea61d09b57a40e",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/index.vSQZi_4M.js",
-      "sha256": "f915395f573510396e7db1522876272b916d422b6b3556cee5b55d016fde7330",
+      "path": "octop/dashboard/assets/index.sIAQdV7o.js",
+      "sha256": "d7b64cd02ef376277ef1566af0d2e8a7e4de945f6c900208d506652f3ba5d660",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2610,8 +2610,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/infoDiagram-5YYISTIA.GjViSbI8.js",
-      "sha256": "8492ae66451d91484506f4bc127ce39295925874f41a27acfdc57ece8b87a959",
+      "path": "octop/dashboard/assets/infoDiagram-5YYISTIA.CUm4YvNS.js",
+      "sha256": "2e5f139cc69dcab2a12ded6c8bae0725c8fd4aaf0bad90441b2427e8edd0e31c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2622,8 +2622,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/ishikawaDiagram-YF4QCWOH.DIUQ21MN.js",
-      "sha256": "103c80891814ff55cba290117bede2563df12150e080c5c20b287adf6942c898",
+      "path": "octop/dashboard/assets/ishikawaDiagram-YF4QCWOH.DofkKS7B.js",
+      "sha256": "ebade769fb26edfc4c28c37239248e69425a60b22b5a7b99d56fba31af24da9c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2652,8 +2652,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/journeyDiagram-JHISSGLW.BfaFktk8.js",
-      "sha256": "921ec3041fc0c166235b8d5ad39cc2c6a12d9fe03f3ba757dff6751f615435a3",
+      "path": "octop/dashboard/assets/journeyDiagram-JHISSGLW.kLmdzi3K.js",
+      "sha256": "caf40b7310985974848e516613664d61cb282b764705e1ebefa3635797f5f050",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2664,8 +2664,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/kanban-definition-UN3LZRKU.BPat5m1J.js",
-      "sha256": "c90148719c7c1393ee58458896f6fd8fb5c4b72bd2293a67d6a695a85372b04c",
+      "path": "octop/dashboard/assets/kanban-definition-UN3LZRKU.AGhzcymQ.js",
+      "sha256": "f946b42f72834241b0ecc40ff4ff80717fa66342480923d6dceb57379e06f9f3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2682,8 +2682,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/knowledgeIcons.CKSsqXQb.js",
-      "sha256": "c34807062378ecb4e9866aaad015c88cf8875b8a03eeb675f51d3667d06c1ab8",
+      "path": "octop/dashboard/assets/knowledgeIcons.BdKo2goT.js",
+      "sha256": "cfb26a54cc4628dee32969905d618dfb6de35752ae64a03a92732629730a094c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2814,8 +2814,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/mermaid.core.BpqRjBiL.js",
-      "sha256": "89c29e3057c328f07a87cf5360559fc4d7340a3c4c2b66fe55d3405bc6007d48",
+      "path": "octop/dashboard/assets/mermaid.core.BoG83eYA.js",
+      "sha256": "fcf6bda7fb6c9d24c16ef9fc57fa437d7035e8c0485592465e51a7e43aa74ee8",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2826,8 +2826,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/mindmap-definition-RKZ34NQL.CeC9weA_.js",
-      "sha256": "cf3ca71ff76ab97fc37239b155a3613b303df6375d1e623802b7f6ef6505359b",
+      "path": "octop/dashboard/assets/mindmap-definition-RKZ34NQL.Ixe9l0vO.js",
+      "sha256": "fa597ebac8c11e6bc178f76cc3c57fcd1544ec9e389893da41c74b553ec2da55",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2940,14 +2940,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/pieDiagram-4H26LBE5.CujVyE8b.js",
-      "sha256": "a96365a56ed13be3303cc4216a38edc6357c72071f614b82747b2a43c121c831",
+      "path": "octop/dashboard/assets/pieDiagram-4H26LBE5.UiVN1H3Z.js",
+      "sha256": "513b3a8f98a8d6bf998adeaab72e7f26383b4de27947051d60d6b760386dabaa",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/plugins.C7CGP2Xt.js",
-      "sha256": "d1676ff21e112276f32842afad1044c7ea180d2375c6fdfb40d0af0b89bf8ee3",
+      "path": "octop/dashboard/assets/plugins.DsPKpAJ5.js",
+      "sha256": "2f26ec3d582fbb1ee986ce1c541af63e4cd7d043dcb1ad12341052529d9251df",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2958,8 +2958,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/prism-light.DSqurI3b.js",
-      "sha256": "a02028cd7b626cc1becb92df7c3735cf763b92a1d0c0864e5c8769c25ed2a4ce",
+      "path": "octop/dashboard/assets/prism-light.BIdlFA-f.js",
+      "sha256": "69f22f2568bdcd2b7bdf73e91a62d2d558feecf4d99e84ea7f05ffba59b75fd1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2970,14 +2970,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/quadrantDiagram-W4KKPZXB.DjZ6M4oR.js",
-      "sha256": "e026dcff20dc3c92a71991ad6a1f680cf1c698f3915d21b4bd1f419d8936da67",
+      "path": "octop/dashboard/assets/quadrantDiagram-W4KKPZXB.D8maVi1U.js",
+      "sha256": "9622a77171ef0ad9f6a296719a011bb216c216269c42a3540db742059f263258",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/requirementDiagram-4Y6WPE33.B99BNVNf.js",
-      "sha256": "5d1aabf18b108aeea833b63049db52f522369f7460f4d7a603f37f81fcce0bc5",
+      "path": "octop/dashboard/assets/requirementDiagram-4Y6WPE33.NZBey9D_.js",
+      "sha256": "db0b84ca181dae079bfb307016529582d83d7a92120a978a3e73989139219f6b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -2988,20 +2988,20 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/sankeyDiagram-5OEKKPKP.Cxe0MUc_.js",
-      "sha256": "057a0b145a6f406246b4305dce267590ce621bbceba9a6b5e07dc52af47e501a",
+      "path": "octop/dashboard/assets/sankeyDiagram-5OEKKPKP.Ca-Qv1EH.js",
+      "sha256": "fcadfe24f2779a51990686a61ad561aca6971a4768853739e6d8b9663dd5ad9a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/saveBlobAsFile.B8vP2t7v.js",
-      "sha256": "1d88f818842ba5b4c35422ea8250153c0b9a969b6a4244d71c49cd60e4179262",
+      "path": "octop/dashboard/assets/saveBlobAsFile.bzZ4FoIV.js",
+      "sha256": "476defffbcb1ddfcf17d0ed0f3bd7ca8dc69f84997ca542cb9c8eab15753887f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/sequenceDiagram-3UESZ5HK.Bt6N7Ue5.js",
-      "sha256": "ebec5fa91ad599d1b586434fcb5865221ca9ab6380c8e938657c7302636fa910",
+      "path": "octop/dashboard/assets/sequenceDiagram-3UESZ5HK.jybQad7-.js",
+      "sha256": "61b90ca0e6e33a67c08240824c8a26c4635e125a60669172d480d5f467686a0a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3012,14 +3012,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/showApiToast.DWm1Wqnl.js",
-      "sha256": "2fa7f55e93b6c74aa196115a18ba2ed15b99e9677453137307ba6297cce52b0d",
+      "path": "octop/dashboard/assets/showApiToast.DPqgig6q.js",
+      "sha256": "9c3dda59ac341401f2bffc8cd0019f7cecffbbaf805e3598e8eb1caecc581c9f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/skillDisplayNames.Jb6Biue5.js",
-      "sha256": "4fd9c43e542366944898873654305d37dde4d97f9519fdc1b3b8e611623f6e36",
+      "path": "octop/dashboard/assets/skillDisplayNames.BWY7Pz63.js",
+      "sha256": "b06da8d08ad4658b80d761807379d367a2562cb7770ce5da844450687c5969b3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3036,14 +3036,14 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/stateDiagram-AJRCARHV.DjAyhdkI.js",
-      "sha256": "71b1ecfeb47586f6e683a2caa88fd84905ce790e57dd781a9690cc40d36adf9b",
+      "path": "octop/dashboard/assets/stateDiagram-AJRCARHV.CdqsGoTJ.js",
+      "sha256": "cb65c2082f49286cd57fc9311f8495a90bdcd73629470a7d78100d693a534f72",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/stateDiagram-v2-BHNVJYJU.Bb1j9EF1.js",
-      "sha256": "1827d37099d56f1a85d89709348bec8a121a3a2e2388adb336f4c4ee570fd9b0",
+      "path": "octop/dashboard/assets/stateDiagram-v2-BHNVJYJU.DYchw7I9.js",
+      "sha256": "8a03a968ea714ba177472c9166436ff11b1ad922a37ad14aab5bfeb4ecd6de6a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3066,8 +3066,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/sw-register.B3uGLpiA.js",
-      "sha256": "0687bad868869ee8067050524146dd131d2d2b980bbcb570c860d1e13ad812e9",
+      "path": "octop/dashboard/assets/sw-register.aX_agwW3.js",
+      "sha256": "f6e30d68bc899e6346bf721cb7bc6b004affe2d51ae091f5f1397610c8260aaa",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3078,8 +3078,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/teams.DXLqNN-W.js",
-      "sha256": "66a880ccb88853e059117d25e71a5941ea5bbea02f713af4c2f7af611e3d6fc8",
+      "path": "octop/dashboard/assets/teams.DqIO2Lv5.js",
+      "sha256": "aa6c292f2f721ed3e7991fadbb60da7a80a76f541ad6ee0b285c215c8762debf",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3102,8 +3102,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/terminalThemes.BF32c8-R.js",
-      "sha256": "9294b14ac2e9ff2fc9048800f02a567ef38686967533b5a3f1ae450432ecc1a4",
+      "path": "octop/dashboard/assets/terminalThemes.BVQp58Kq.js",
+      "sha256": "d679975cd0c25011a3031b6220e22387c55065ae1ecb8b6a3acfe2b913ebe06d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3114,8 +3114,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/timeline-definition-PNZ67QCA.ChJnb3dU.js",
-      "sha256": "0f8c8aa7e342ac8c8ae53d50fffaf79ff12993125cd78534a1af187c27fa8313",
+      "path": "octop/dashboard/assets/timeline-definition-PNZ67QCA.C5PVwaT6.js",
+      "sha256": "1fd7e5adba738fdf257386f01bb4ab17addb28cf4b65185f7fb2e221b5c8773c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3126,8 +3126,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/toolPluginIndex.IluIv9m3.js",
-      "sha256": "48217eaaf8138f8a107431f83590f8fe465cb259fa95fef76b4562a24804f3ae",
+      "path": "octop/dashboard/assets/toolPluginIndex.-0o7_439.js",
+      "sha256": "18217a9961aa1350c7fce02a97af935d8e3f4ec5f46a5f68c24320580217bd7f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3156,32 +3156,32 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/useAsyncResource.DgrB-0xy.js",
-      "sha256": "1841c51d8c91a728a2caf87cbc7590fed0e0e384ff39436f643448e14ebe2a41",
+      "path": "octop/dashboard/assets/useAsyncResource.CGOuRO4l.js",
+      "sha256": "e7afa196cfacdff0f3bf472d4e9dc14feb765e78591749e85e1f6780e3dc49dd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useCardTableView.CpzTPoBy.js",
-      "sha256": "9f5bd594b45389891e2d2297b749226db8809bb4af8cc318006348b3001b62bd",
+      "path": "octop/dashboard/assets/useCardTableView.Dfcz2IXR.js",
+      "sha256": "db9902054372c02a836cc1caed24fcf32e7e21751168c7a64470c26446232f1d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useGatedSearchTabs.l8X-E3l4.js",
-      "sha256": "665492f99deb86afb941bac90bb4fbb187dadab890d557895899fdf52ed4099e",
+      "path": "octop/dashboard/assets/useGatedSearchTabs.B9SUp9gT.js",
+      "sha256": "a5bd879dd29d70a6e90fb718e45992b91c9e4641d22b034dccef80eb9bfcad49",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useHorizontalResize.BGQ04twx.js",
-      "sha256": "a8315b6a0f176bd3d8809d5e682aaa613727f3ebbafb8d2945507749eaf9dff6",
+      "path": "octop/dashboard/assets/useHorizontalResize.CxjFQT0O.js",
+      "sha256": "42892963387f1d544e9021a5b83054bc492d53e32a9985e8db0f4dd742a9776f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useLandscapeFullscreen.CAjESKKR.js",
-      "sha256": "984081d3ad8c1b6379f321e623d7d80816492280bdb2a23cbbac6e2d09d33ea5",
+      "path": "octop/dashboard/assets/useLandscapeFullscreen.BirFDqsf.js",
+      "sha256": "fcc223cd3d8d24ca23b82a7df68a3fbcb7fb1291211cabc148d729eff158a03b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3198,20 +3198,20 @@
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useServerUploadLimit.C9ginxVs.js",
-      "sha256": "e7489fe7c18f04e348a9cac91eeb7be1e0b2d2bac7df1cccfc8ded6d4c1e1aa1",
+      "path": "octop/dashboard/assets/useServerUploadLimit.CFDUukZR.js",
+      "sha256": "92de885a41b5444ddfdcf63fb2023dfe26be06204271ba2a0388a80883708ce2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/useStorageBackends.W1K1jmgm.js",
-      "sha256": "1b4bb6493b8aa8a12abd9194fb8d964359ec68c06f44835c3031a3593fddca17",
+      "path": "octop/dashboard/assets/useStorageBackends.BZNkbCZa.js",
+      "sha256": "4fe84c38ff65fb8673f4a06f97b17264c74e26b3b38d709c508db41b5a718515",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/vendor-antd.CM60P3Cd.js",
-      "sha256": "085fc28da7825c937127ee22323ed1131d047aafbea2fc7bb009737e46cb02c0",
+      "path": "octop/dashboard/assets/vendor-antd.f_WKlU6m.js",
+      "sha256": "436dc8c6461abc8b09685357148cae9b1239e330bb4847bed16e26d1ad784cfa",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3258,26 +3258,20 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/vennDiagram-CIIHVFJN.B3o4wD4K.js",
-      "sha256": "14a340f930367f7035d56c1258bb2850d51c40ef62a2c25cf3975d9f7b420e92",
+      "path": "octop/dashboard/assets/vennDiagram-CIIHVFJN.IQnOKj3o.js",
+      "sha256": "bf3d64040c4d45bcaae9fc53e681dafce7f2fcbdb06bd52bb955865b702c4803",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/wardley-L42UT6IY.Dyv96YKr.js",
-      "sha256": "bec8bba46a9fb9746d2ea3664c8ccd80b3e43da3ca905edaf775f929681b4ac8",
+      "path": "octop/dashboard/assets/wardley-L42UT6IY.Bxx3Ysbg.js",
+      "sha256": "dfbd04300cbbe9802089f86a6c723cfbbe3405e18ab57ca63966a9c79efc9124",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
-      "path": "octop/dashboard/assets/wardleyDiagram-YWT4CUSO.ARfsNoz7.js",
-      "sha256": "b68de15282e1478777f0dda2091c57c7ff717fcdbe378143fcf78ddf27f07f5d",
-      "upstream_program_sha256": null,
-      "changed_from_saved_original": true
-    },
-    {
-      "path": "octop/dashboard/assets/workspacePath.BE1vk4Jk.js",
-      "sha256": "2158c1b49362ecd364bc68eb694389b4ae7dcf2b61558439bcf7b8f8633daf22",
+      "path": "octop/dashboard/assets/wardleyDiagram-YWT4CUSO.CJF7Lrvl.js",
+      "sha256": "46e7ba2039024356488ed2890e4a88338eac8e6121970be35bc38b6760ecd504",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3286,6 +3280,12 @@
       "sha256": "7434b19d6d4ae6f20149c982b4b625f76b95157195245e697cd7b4625a7704bc",
       "upstream_program_sha256": "7434b19d6d4ae6f20149c982b4b625f76b95157195245e697cd7b4625a7704bc",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/dashboard/assets/workspacePath.Dow4oWiy.js",
+      "sha256": "1bafa5b25aa93fb350b7ae6bdb3d84b48c0ce5afe5aef4120c021ae6c48ba39f",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/assets/xiaoyi.sDsAd89K.png",
@@ -3300,8 +3300,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/xychartDiagram-2RQKCTM6.DK8cim4P.js",
-      "sha256": "be431419e6369680be2382a7486cd6516c2009c4603c4e0e4b1bf7d3ce45651e",
+      "path": "octop/dashboard/assets/xychartDiagram-2RQKCTM6.tlMe-g1l.js",
+      "sha256": "e390f9c3a5973caed19356e555bee2faa4979f7192b87afca911e3df16538f6a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3318,8 +3318,8 @@
       "changed_from_saved_original": false
     },
     {
-      "path": "octop/dashboard/assets/zh.CM32mOm_.js",
-      "sha256": "5f62fd947221583bec8085e004cbd6cc9b274dd093562b17bc69065c0616525a",
+      "path": "octop/dashboard/assets/zh.KpCpMp2U.js",
+      "sha256": "76ac4a4372184f6a2a3f8b0c39098b211a0306c4e7f489491215d8d1aee92839",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -3625,295 +3625,487 @@
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-amber.svg",
-      "sha256": "6686501b99161e1a8ff7081168e201ee10330f86a568ad92946d78c5ba4e4fda",
+      "sha256": "4d16aff3e8270ed198255550519fc621d198b3e2e2de98465261253330b802a4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-blue.svg",
-      "sha256": "f652fab9ded8e44dd3b4206797bc0737f4b355c9e345054bcc0693276ecfb5a8",
+      "sha256": "8d7c2ddee8a6bd592eb5e53c0d8ea4092dc423f7aab8c397f054ba94f9437a73",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/blob-cocoa.svg",
+      "sha256": "abfa327323fc9d02758eb1b1d94900e3fa53c11789ae0ef79d835f255442f5c3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-coral.svg",
-      "sha256": "22f72eb616555877714a0a9245b3a07e2170b89b112c8a22bb134c66db5ec2fb",
+      "sha256": "9dec2b3c17ff3ceed90c711787385e804d9cc7bd7e9ee6181fcf6b213e29a4c2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-ink.svg",
-      "sha256": "a571b5dcd1036769bc304d6f638266788dd4f5aede12f0155b32d5c0f903449b",
+      "sha256": "829e92ee1ada65c0b4eea3f12b452dea6db7ca7ad6257ad33c7b686426c1462b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-jade.svg",
-      "sha256": "6d0f98fa31dcae3a0a38a40f19cc3f342c4ea27e51fa857bfa683f9391c33975",
+      "sha256": "9fb1ed1b3a65d13e19e01e3464c3d2a004c6e7d03ef184c0f39b56a740e64336",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/blob-red.svg",
+      "sha256": "7ba0c79d30f1706a2f64e720ce78db4dd0662de268bc15291361d82b498d308d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-rose.svg",
-      "sha256": "fcfc069f41c73a5441d04d660a0622dd160be9fe655aef1e77ac550bdd22eaa5",
+      "sha256": "6f009ed376c7f2662d752ff2d3f1d2483f156b6972deb3a133eb01e59d4758a8",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/blob-violet.svg",
-      "sha256": "a46681e15041f01e48107c07dfb2a18c54fb9811a2b5dcc20602b83bd2c7163c",
+      "sha256": "890b58b2a64d897759e967456344b1cc7d072536c33b7c15eff1de3a21d37d08",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-amber.svg",
+      "sha256": "1276bfa9900198fe1c8a3a1827467ebdead20847cae51323b64ce2f781380c45",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-blue.svg",
+      "sha256": "cc80b8411e52c0d5ff3dc5e25937103a3b0ff2ac36ed28bf1eadd19ff3b4f219",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-cocoa.svg",
+      "sha256": "ed5f25c28e6891b79d4d18cd700e72306d187f4569f7687a0fda4fb117a7f0c3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-coral.svg",
+      "sha256": "3c002ab66a8f206f584f8b273ca3cf6668f29590374469f5d0aa27eeb8a87f20",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-ink.svg",
+      "sha256": "2e0a8f8f93a17df2262314f8839205ceea99d9bec3b4667338385a2390b02221",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-jade.svg",
+      "sha256": "342262500e94185e0b2a0c9da7e147a26461e59f11eee840b7475300cd10eaab",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-red.svg",
+      "sha256": "2bc82aaef9a291073d9c1f9b02583382d69f62b7242a1fb163a13fbf6094f331",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-rose.svg",
+      "sha256": "4f978e45ad3e89ddf7482a119eeec2002151cccfbb00e18fcc4117e1b5c15145",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/capsule-violet.svg",
+      "sha256": "96c85bb41a806f5e8ebe45290030ba3799eca11685c5eef4801ecfb3bb04b9cc",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-amber.svg",
-      "sha256": "74e0b2ff53119f094d9c9d609da9957afefdef7dd7c3f79701319104e3ae6c9d",
+      "sha256": "f956b00e6eaa0ce811261d1802a729166dc6c3accb70020b1ada3af15f176c85",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-blue.svg",
-      "sha256": "ff02b1b2f73509b488bdcb8c21cbab191484e11a2752d6e0ae19f2ae64cc77a4",
+      "sha256": "1384586bf3d2d4037c62113e11c1ff1ddbea500849518e312c29a5f2dae8aacb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/cloud-cocoa.svg",
+      "sha256": "ab5094e856c558e7bf5685340e9b127fe31d1f9595a8f1b196113bac16c2d75f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-coral.svg",
-      "sha256": "ba732b461f01f1b9b1a31286bb5ef2b1928f23e8f4738f2197a0769808e0f1e1",
+      "sha256": "cd99391a7457644cc17580bbfb06c029401a70e87f12bf6e9a577e7a8d0f4e09",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-ink.svg",
-      "sha256": "0bf81d1b8f9429482bee70f6e3b5ade58b701c1c0148f07ed436d85a8e930e06",
+      "sha256": "c91199194875f60e88ac3adad6df533a222123fac1c10698a4ffad1a1a3e7860",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-jade.svg",
-      "sha256": "3b8fdfd9a02c2f6fc960372545c243bf2d204973fd7576482f1af7c0b14c2ee3",
+      "sha256": "759602a38ac903f4df9036291bb1901a3e9132be855884466650de58b03954a6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/cloud-red.svg",
+      "sha256": "b53049151748e6068cfd1a49f9b6e5d22d1e093a4620091a9fc252ea88b74997",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-rose.svg",
-      "sha256": "58eb951b0a18fd646fea3b24fa2646584feba4f41754d1ec92d27acd33b77d92",
+      "sha256": "329fccc4cb92ba324709cfa3d50ceb655fefc58ce819e31b50263fcd080a5600",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/cloud-violet.svg",
-      "sha256": "c88d4c760c5be76c0cef159e58c0ff6bdb9b39eef05bc5a2d9de2f004b8bb1a8",
+      "sha256": "cf0454b71c514afd1ce3a5c5f07dbc6d15e41db1b326cf3632e0890771d974d1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-amber.svg",
+      "sha256": "e2a1e97c6a09dd0649eea3e39039ae444b7cbd3998fea777ee1f8cc83bc498d1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-blue.svg",
+      "sha256": "c99b161c021cad358ebff0db43aed0a0cce32890939c56eb83eb0e10bc4eac20",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-cocoa.svg",
+      "sha256": "6e8dd9e29ab3e3c41a64cc8412cd5d72efafb5d8031170cb5af499000ced66bd",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-coral.svg",
+      "sha256": "fb16e19b626fba0819ab0a3ab86c240ebed1c266102b2be123dbe35b06af467e",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-ink.svg",
+      "sha256": "a8c0d697affffe1ac5a0afa596c201ddffff29068e962e1a1c3a1e6591292b42",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-jade.svg",
+      "sha256": "bb485a1a953ca17d8600af733356c008f68ad40d36d0db1af1a684c07d3a68f1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-red.svg",
+      "sha256": "7149530b48aa6a338429b3d065ec88807aa1f1b7ed18f1498aedf1cabc32ded4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-rose.svg",
+      "sha256": "1906b27cd366b65c81f4030a1cf6bd15d8ffe34c5761b212be43da2ab62d1a31",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/diamond-violet.svg",
+      "sha256": "8e7abe8f03b5703a10c0877f46b2a176bfb0b7bd4781e48abc51a07fef52a673",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-amber.svg",
-      "sha256": "0cac7415e1773b0530f64f8b29bbe73cb0a77cca5c52916ced99ea800930021b",
+      "sha256": "7232a8684d3a340b5c8f424672a4f0831f769944c5bd041b9fd5f3d8cb538d69",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-blue.svg",
-      "sha256": "becf36a9883dc50fc27afb34fa99ee0330cad2f87d979f246e9a20a27fc229a7",
+      "sha256": "9d3a44faf6fa21947c2fd62ed377da3d562ecfc11dfd4efb4c5469638ce664d3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/droplet-cocoa.svg",
+      "sha256": "5bf66973e555012e8f2699cd1fc22cc9678926c605218af0e193a6859453d4b1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-coral.svg",
-      "sha256": "1aa3f7ec8f6f60219f69c9824106e98e5afc3910f414180b08b22ec81d08f09c",
+      "sha256": "5a663b16475c915c2a8aefc1170e7abc4c755fe43fac6c2f289d323d1702ebdc",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-ink.svg",
-      "sha256": "512f04a02b12227133636cfa61f2a527b6a6872a5044a1e8b22730195f2861b1",
+      "sha256": "c62b368cca8fa9d7c81fd3589d40dd20bd094987a505a97c4f26a65ec0a13af3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-jade.svg",
-      "sha256": "99f450a7ee1b577a1c26c1a0249abeb554796f514385700bcb7717a779dad8fa",
+      "sha256": "8ec492921d550f431bbc79b28c2884ff9d2d500d2dca2df9bd40535993add9eb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/droplet-red.svg",
+      "sha256": "f89fef19dae44fa7dfbed14f5714c317fd3c52bb61d9daa188f77f7632808ebd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-rose.svg",
-      "sha256": "4d88fcd80eaf2219ba851bf23ffca3ad72905f2a99b3060e4308da247de5009b",
+      "sha256": "1877e71ab796ed340ad04c9c80f801da3d3eca7cbfe6d3e0bb1b6b6b2721a89c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/droplet-violet.svg",
-      "sha256": "831db2a98c29e16d37a9337504fd43dcf65efe48b69c0a000b5af874e941127e",
+      "sha256": "c6ea9c2acbab497664483ed8271a54b9430ab05a8566fb87696f86dc53db8298",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-amber.svg",
-      "sha256": "d25afd8bc8b35f9887db88eba455efc3491e859a5add3ed78d3772be77b3dc47",
+      "sha256": "331523d4a5f87152a6e560c6491b2725648aa0d6274ec0bf5dd50cfba376c3c9",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-blue.svg",
-      "sha256": "76be60d540f62b03aba3daf81de811e1760c9dab93bc35ab19cfa27951867de2",
+      "sha256": "2392c9dc609512b7f30282138824d2b4e21e3839c33372715a678d852ec6cae8",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/pebble-cocoa.svg",
+      "sha256": "b22f94d909c88a4cbfcbb82639248ccde2bd5c54e6b4c8ef996bf0f500429840",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-coral.svg",
-      "sha256": "9acaeab6cda511a93944e894b27d24ac498d0be73c2a119d2ac1f473dc41e74e",
+      "sha256": "944d769b405d79ed545beac11ace175753c1a2eea1452af5b104e8b552af234f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-ink.svg",
-      "sha256": "b9c64bf59e42752f37478bb94a191953b70cd5212823054bdc22d1a10ab88793",
+      "sha256": "4279ca9f1ce665b9c80b66bd5b632f70d439e4deaac8c67da7b8ddbbf72cdcf6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-jade.svg",
-      "sha256": "636f9032b5b2ce4ecd4853292948b288558dea17207b169a299569bcb483ce87",
+      "sha256": "4369e35ca9453bcdc7375a21bf0d8504e95c08a6738bbb25187cca42660195ba",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/pebble-red.svg",
+      "sha256": "c87ecdfae6f528f0f0cde77011ecc3bf7e237145502ebf8625347000badd62a6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-rose.svg",
-      "sha256": "e4608f703a11bada55452ff97ee1785493c87dd87895533856ec611d339b62f5",
+      "sha256": "ad89db92057f252b3d9d3969baa92d9badd0f966596cf5493a127cb256dc9c74",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/pebble-violet.svg",
-      "sha256": "985e45da471bb207d474f6203c43b0f632f3fa0914ed17b98e7a3cf998653528",
+      "sha256": "b3340117753de5311287dcbac123a2b5a62735f62ea5a4155366a2685f1a7259",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-amber.svg",
-      "sha256": "4800c88feb6896897f429f90acc950e648cda177ba349bf491dca18c67ed6040",
+      "sha256": "80da47f70cdd3c181cc3dfde2287f3f7fce6f4f2e0d9ca0aa5cc79697435f8de",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-blue.svg",
-      "sha256": "f4f1274c6cfc4affe00e907ab9d3dfdf3179cd7a88a617c2668fb5882ef6e61a",
+      "sha256": "0c10ef964494d6d2ace89e2cde3e2f635ee900f0f75d2045d84ea681a45f110c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/squircle-cocoa.svg",
+      "sha256": "5867588b8a413c8b8d24f5cfa56fe65fbf3e104da68c9e2e9bfc411b9ead9f42",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-coral.svg",
-      "sha256": "cbd2a42e6b7e9bc342114335bb632021551722ca2b44889bad57e467c5f90120",
+      "sha256": "36e4cf9888a86054df4459576c5b2dc6ca24e8579e53723468a13e893edebb12",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-ink.svg",
-      "sha256": "df5b517b636fe6409f47025fb9e0941e3b52cdb362916b5ab2bdfe383dacc551",
+      "sha256": "2d791b90fc5a785c6dd560792c5e8a7db376b0946aa7501c8933e80d13eda3a3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-jade.svg",
-      "sha256": "acdbb4ef28f8e7fe49ff938df28f6ff118455cfca48d1f88647ec1aa77e81b61",
+      "sha256": "3a2b558db085b23282149c969d0f7fd6837e4334004ae7aab1d214ac6057dd21",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/squircle-red.svg",
+      "sha256": "66e132accd47b1aaa811be9c1a9bcd4427de9ee73e95afdb37688ac17bb312e3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-rose.svg",
-      "sha256": "e60473400836d3192c443ea7f6d6cc505c794a9764aae82fc5bcc7dadcc11c15",
+      "sha256": "51663fb85e4de3aacd8f32c6aeb9f61d2507586d495cf4110d8430fd6022b99f",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/squircle-violet.svg",
-      "sha256": "afe8a7abde2597c7fe358ba934a2591ab29cebf553fb05b8c046da5bddee67d8",
+      "sha256": "3901db518069222b5a7311e8cb28fb9c19489f86f96b764fa469459390cb3ec3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-amber.svg",
-      "sha256": "69efada462e12863aa6364851a1cb9269f1b578734bdfcbdb78f31538d07147d",
+      "sha256": "eb1919f5463d047aae23fe3e8509ec240f3a35964ad00330b784e829921ab6d4",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-blue.svg",
-      "sha256": "d2ebf23f3db914669de491dd1adfd14d9295be27a7636719f0578608bb6fcadd",
+      "sha256": "f873025072abde6efdea7f14080e937e2ce17fe958ff64f506ce408ed208106d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/star-cocoa.svg",
+      "sha256": "58ff8cf2a54ca07330725dd1359ecc02beaafff1195843a445c188482c2f676c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-coral.svg",
-      "sha256": "e3d21e7ea3870ae45e6709e484dca67760767783db45e42d2004a846b7437191",
+      "sha256": "485d67f9766670022f294b28695467ecd0b6c537d7f53e5b229b7935aa19dbbd",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-ink.svg",
-      "sha256": "6abb74b2f2c61b68fabd0fa19a3129e525b02ca6cb84673a539dcb9a24862b79",
+      "sha256": "c5753915f0681fe6443ee857f94c9fe54346baaa18c12d951954e50181440fef",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-jade.svg",
-      "sha256": "a317dde187776d8db5429030dca43a38a12bf3cd55d167b9d526c5f6e7feda2d",
+      "sha256": "726b49bc34d7d9f6e3966f0cb4590a7eeb85309a0a8012d56c8618c7de9a18de",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/star-red.svg",
+      "sha256": "0ba5b7ea3d681561e173610224fcdd5372d730a6d8df3cde78bc574eb5c13b5c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-rose.svg",
-      "sha256": "89986bc29401c48897e15a0468e685b626346db9eaa45912d06b247ca6e6e4d9",
+      "sha256": "e42311a2639d1169644a9efbb60ab9f9c573c51bd45599aa6e8efa68d6982309",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/star-violet.svg",
-      "sha256": "0007b1dd6d0beeaca986edd08b3b85fa642b6db5b4644fa4450150622713ccc1",
+      "sha256": "afbbb791b7bd76438acd26fe1835fcd5aff27aebd344ba9d5f453ab881801642",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-amber.svg",
-      "sha256": "f4e3e0f4ef71dff79909b1ed59dd1c504cbcd0e91f21571a4a75a64bc5c3334e",
+      "sha256": "12d513d4550a39038dc5ebf4cce471c1533ce041ebcd31814cf5e3cd2456e7d2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-blue.svg",
-      "sha256": "647d2b378f1761526f398874e04a3335abf6979ad73ddc0b8410366592c2553b",
+      "sha256": "7b708d5bc2e4341946b837fb34b9f2acccbb217dad7b7ff5a17da0c3d8a17dc2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/triangle-cocoa.svg",
+      "sha256": "d3ccac8fe79b5c61677a6609fa80fc36326c14577b1befd2a55be9a7a8d7c190",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-coral.svg",
-      "sha256": "35bf9fa622ab9500be4fb89c244836a9707d1aa7aa45b42220210b3faaa1311b",
+      "sha256": "30ae758728c5e942139bd93aa87c125f6ef4d8d30fc1043aa9fb059ad2a5b9be",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-ink.svg",
-      "sha256": "a44883deb9cdabebd01a72a0ac4dc53180389eb410c4047524f3bf4e519135a4",
+      "sha256": "171dedce78bb5ad967e7906e2dbfacea15ffab87af8a540ecdf3b1866772fe24",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-jade.svg",
-      "sha256": "7110c263b3c67cbd884510892bcf06bacd10e3de496be3d0068d67511962b49f",
+      "sha256": "7abf6c5b5abd0e2d3bf6c0252436b7f25c768fb8499c990e28cd10b2c4688f16",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/expert-avatars/v2/triangle-red.svg",
+      "sha256": "f565ef5623ec916823058eb8f4c65fb2d031fb0a5a75c57984e9ad13a816e392",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-rose.svg",
-      "sha256": "13a86d84d357287deb68b52d20720174107b604de9d9e7657a2a692cb4978806",
+      "sha256": "5b226d5d9fd1aee5d5cfc2c00caad4e56b0a251cba5e487c47d932794ded61a3",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/dashboard/expert-avatars/v2/triangle-violet.svg",
-      "sha256": "098a97b05d82971cd9f028f466f694dda64a10cf492d372a50a5b584489b191b",
+      "sha256": "ade2abd9a98212b259d3144ab11231bde890080f2c4fd42900ef0a4d78661aec",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -4195,7 +4387,7 @@
     },
     {
       "path": "octop/dashboard/index.html",
-      "sha256": "140371ec91fef4306f29bfc51f89d52819ea334acdcd5042fe6264aaba3f5f73",
+      "sha256": "f7c247f29fdfabb9c9a2f607f8c223c98021d11a306a5de9c1020a4573241b88",
       "upstream_program_sha256": "02611ef913e5e955001be050f36e4f8b6e971610c0b8024daa557ff9e207f73f",
       "changed_from_saved_original": true
     },
@@ -4303,7 +4495,7 @@
     },
     {
       "path": "octop/dashboard/sw.js",
-      "sha256": "1bf5cbcd77026baf9abbf7197097f6081e2338052e41479be88f860ae1080282",
+      "sha256": "338ffa24c2263089701fd8151112b2d5a3b0f07650dae152bc1cda79ae230563",
       "upstream_program_sha256": "afe129a2503be2e7c1449959917e6be9983c3a69ebe705b4142e9483df463429",
       "changed_from_saved_original": true
     },
@@ -4387,7 +4579,7 @@
     },
     {
       "path": "octop/i18n/en.json",
-      "sha256": "63c01294ae7207d70688cfeb068c38315a17ceedb423403a7edc324d7e403b5f",
+      "sha256": "91ac4cc111903a8e37cccff58202ebe70b6e150219eb301e2e578e921bb78d92",
       "upstream_program_sha256": "999c03d0e1e1e6bf1c3b90db3b5c621a89828d3066cdb282368d31c57f17db37",
       "changed_from_saved_original": true
     },
@@ -4399,7 +4591,7 @@
     },
     {
       "path": "octop/i18n/zh.json",
-      "sha256": "76b9c37fb324461ad8f525bde4278184752911acb6055179201e998a1b84b060",
+      "sha256": "6bf225a7d302de93f8e1679c51f8e0bdfe375b0dd3ddfc4b5b90d3482d78303f",
       "upstream_program_sha256": "124fdb732ef8ac0aa24a3034854feedf78d4a4c4ed489568b0e530012a59f684",
       "changed_from_saved_original": true
     },
@@ -9283,7 +9475,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "d41eb9477ce238330338f6e0d2836edac7bf682ce95f9695d1fc21acd2d5f022",
+      "sha256": "7803c9f112ed24777ccdc73d704b2a08ea76467e6d00a45a31ecba4be6bc54b4",
       "upstream_program_sha256": "5e159025f344f7f4c3c04e64a3205441dafca8bfeebff5795d2d25ccf2bedadc",
       "changed_from_saved_original": true
     },
@@ -9382,6 +9574,12 @@
       "sha256": "d10eb983fda5f5071a7e68c8c12ad5f9ad1a7e268549945d7cf93b822e3156de",
       "upstream_program_sha256": "d10eb983fda5f5071a7e68c8c12ad5f9ad1a7e268549945d7cf93b822e3156de",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/infra/agents/middleware/task_dispatch.py",
+      "sha256": "adaa8a9338f4ad950cdaa94ee8891349c1917033b70b8849dee101c12bb275e4",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/middleware/team_context.py",
@@ -10435,7 +10633,7 @@
     },
     {
       "path": "octop/infra/agents/settings/geometric_avatar.py",
-      "sha256": "174cdc9a703f249f44ebd3b1fee185aa3996d9bcca2c107e11624d7c4d979125",
+      "sha256": "ae755a13a556e6311fc576ff3a6b9f069fd6a8751a563a702935457818f50d7c",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -13459,7 +13657,7 @@
     },
     {
       "path": "octop/infra/agents/teams/team_manager.py",
-      "sha256": "464d6e53c1434cfa514efdc7aededb48af4e5630b8d0bc80e68ecb98b789da34",
+      "sha256": "385727d9195878ece134c903ffc57a9f304217991505703b9a71ebd2ff8c14c8",
       "upstream_program_sha256": "c25dbe1dffe6fc921354c2e01fb1a6123ffac80c69c89ee68d0c383ec7561854",
       "changed_from_saved_original": true
     },
@@ -13519,7 +13717,7 @@
     },
     {
       "path": "octop/infra/agents/threads/project_runtime.py",
-      "sha256": "04e1b3075581f16dabf04b7e467090ecf3a9ab24d56816ffbb8aa50313441d1b",
+      "sha256": "3e834edb332b42c63ebc9efca7d015e2c6e0bc1ac734f08a98ba59547ec83992",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -14563,7 +14761,7 @@
     },
     {
       "path": "octop/infra/db/migrate.py",
-      "sha256": "9805adc367d4a7b3d8f6c108a21d8957893e3cd5163785c0c31fb5816b9ff1bd",
+      "sha256": "0c5ac934c1b6e2a8af63f0cd6977557d5aaee5e3a055653717679a64ddc3acae",
       "upstream_program_sha256": "bfaa192cb1c966c8c54190b3354bc91935e0747a5e0c5a19fbfd6324cb57bc0e",
       "changed_from_saved_original": true
     },
@@ -14880,6 +15078,30 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/infra/db/migrations/027_task_dispatch.pg.sql",
+      "sha256": "48f2ac664ece7ea59e82208f8e93af37daf66eb3d75609c07c17dae372250b65",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/db/migrations/027_task_dispatch.sql",
+      "sha256": "cd44381be85a073474ffdb2d882c2324373912e35355e42d422e9648ba7b43bb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/db/migrations/028_task_rooms.pg.sql",
+      "sha256": "a1ac8e866f697ae8337470b9065f9b5f83e590282b720997129dba808b634cdb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/db/migrations/028_task_rooms.sql",
+      "sha256": "8003e24c3f554ca81bdd7db05638aff592f982e57e7f86289e2c938f28a8bc57",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/db/pool.py",
       "sha256": "05b5a86b53db4e951b74129d7d718854780c6db7c3ce26445bd676e4773a5b94",
       "upstream_program_sha256": "05b5a86b53db4e951b74129d7d718854780c6db7c3ce26445bd676e4773a5b94",
@@ -15036,14 +15258,26 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop/infra/db/repos/task_coordination.py",
+      "sha256": "546865d1e55f70b28b3e1af649ae2d5cfaaf0b36c1d7417c603553264da440b5",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/db/repos/task_dispatches.py",
+      "sha256": "d99ca8e0f704d36ee37643ae998d961de7c2ddc05a8d9f23c931729819b9e37d",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/db/repos/tasks.py",
-      "sha256": "d601371a6b20643a3c78c31773dbe55518ffbc00af8cee33e1a1f30ff1f20d81",
+      "sha256": "da188fceb065e7e667992a8b0f308c4d0c0bfb85c509156c937bb99697ebe39d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/db/repos/thread_messages.py",
-      "sha256": "fa669c0fb9c34b59713e60fb232bfd9b16ab648c6bc54e872f3d0097cc16ecd7",
+      "sha256": "c39f17397b9737c31b743aa4fc11807ebca39bb3808301f40c2a9b02129444bc",
       "upstream_program_sha256": "b94e783c5bc8a7d4be71b32a23f1320f47ca24f4666941bd40e10b3db57c3ec0",
       "changed_from_saved_original": true
     },
@@ -15121,7 +15355,7 @@
     },
     {
       "path": "octop/infra/db/services.py",
-      "sha256": "3cac0c16676d704acd347b17953f6f1e6d5a2060a930bfa5cc46b462be950e15",
+      "sha256": "9285b7b0688a502f7b89eab8f449279f6688e67b230fd51b729f6c759e970098",
       "upstream_program_sha256": "3460567796654473c8c363ae81c299d1ca07ea717a27e82ef264c64f06e3a112",
       "changed_from_saved_original": true
     },
@@ -15217,7 +15451,7 @@
     },
     {
       "path": "octop/infra/gateway/gateway.py",
-      "sha256": "2b54a62b7aa4668635bb6cb7a99186b198fc155c4456af89a0fafb77a729a5f7",
+      "sha256": "d333cfad56d34ab89295e5f49fb7d5787cfeb69b804434a4b19e19bf09f70ad1",
       "upstream_program_sha256": "d805248911792028fca21fd502650b06093088518f9da2aebee6eb1b16bb18aa",
       "changed_from_saved_original": true
     },
@@ -15331,7 +15565,7 @@
     },
     {
       "path": "octop/infra/gateway/process/harness_request.py",
-      "sha256": "0296e493ea0ac8561c1c19da78fe3ab3144b49d3ba0d663185e3e7ae8b3a1bf0",
+      "sha256": "8b5c600f08623f63c9e5250d76814cc04e8d60889b145c7514bd725b990f5d7b",
       "upstream_program_sha256": "2f5b1c910a943ef3528c28658090dd8a3add1454b15e13e6c2fdb4b14da948be",
       "changed_from_saved_original": true
     },
@@ -15343,7 +15577,7 @@
     },
     {
       "path": "octop/infra/gateway/process/processor.py",
-      "sha256": "f47f85f46c39260a39ba34a9a660fad649b143e9c1a82ebf070c9bf749a6eaa0",
+      "sha256": "58840aafa17ede0127c3250990851bdca90cf47dcbe12ebccf65647cdcb7b726",
       "upstream_program_sha256": "3022c5dd1d9c21a95a029e0fac192f05f1610e3da1b3ede8415332251a3b2147",
       "changed_from_saved_original": true
     },
@@ -15522,6 +15756,12 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/infra/history/external.py",
+      "sha256": "ace334ace3eb4521a4005c37461a97261d058d5417dcb6912b638d3f9cce36a1",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/history/legacy.py",
       "sha256": "a31f7396b23542e61e8540cf2f3ddb50385dab23e8f63431e0b419000fbe93c8",
       "upstream_program_sha256": "a31f7396b23542e61e8540cf2f3ddb50385dab23e8f63431e0b419000fbe93c8",
@@ -15553,9 +15793,9 @@
     },
     {
       "path": "octop/infra/history/store.py",
-      "sha256": "6331e7a3edd7a6607c7efbccff11a138c28147e379bf5deaa81175508fe80ed2",
+      "sha256": "7a7182b4e34884cb8ad548cc786cdb9ff0d736d4e26f7fe098b03de80dc9fd0a",
       "upstream_program_sha256": "6331e7a3edd7a6607c7efbccff11a138c28147e379bf5deaa81175508fe80ed2",
-      "changed_from_saved_original": false
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/history/trajectory/__init__.py",
@@ -15823,7 +16063,7 @@
     },
     {
       "path": "octop/infra/server.py",
-      "sha256": "a36f5ee2843a90ec52717f47c1ad986376dcdf36263a70f3b4cbb2c81bd57c64",
+      "sha256": "626f9935cdb72b2c90c8507f873101c7340522096c2e5900f7b2c46e7ca2db5e",
       "upstream_program_sha256": "b337e26fadfccaffe367ac459f5a2f8fb3be67fac1c8a8f7578561eee7fc59d7",
       "changed_from_saved_original": true
     },
@@ -16014,8 +16254,38 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/infra/tasks/admission.py",
+      "sha256": "42f00f4acea610631ff10b79000fa68751833fef67145cab63148e7f66917f24",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/tasks/attachments.py",
       "sha256": "95ff40c98b9d55cec1f48fe50866da8cbd869d3448dc4cf009dfa0b38f5a6523",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/children.py",
+      "sha256": "410379b209893a9dfdf651201d5db5a4f95e184361d113169f684a2c2caca29c",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/coding.py",
+      "sha256": "a9baed8e9d1ecaf7293afa4f0137151b18af6e2f6563cc6b2501079bb54a05d3",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/coordinator.py",
+      "sha256": "fc11d708a13eaf56b722bc000f8963cf6b92ef3a3a0f57fb900c87e38053c1a6",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/coordinator_turn.py",
+      "sha256": "17588cdf14f77a64ed8f303ac63e30b956c5c1cc754156269e501cda95b9c7ae",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -16027,13 +16297,13 @@
     },
     {
       "path": "octop/infra/tasks/manager.py",
-      "sha256": "22625354405cd37daa77eab230100d0241572bf93069633c222e7180e7def804",
+      "sha256": "65b650d68a3d52a8868213aaa2b3430638c1c209c9b7a22395ba0afb821a8779",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/tasks/models.py",
-      "sha256": "d25d4507bd6ce9e01a1893ba03abfad854d27e0575bd58689e9cdf5863073cc6",
+      "sha256": "30b5b921b4fee9c5318830a080ce8524466710334ff07f0f23a263f9091a8f4b",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -16050,14 +16320,38 @@
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/infra/tasks/returns.py",
+      "sha256": "2efa6d1bf6931c495cfa082910ca774b1d642e0eeb09725cd538d0cc825b75cf",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/rooms.py",
+      "sha256": "fc330d2a23a124fb2a78f307fc816be0ff0ff213afe8c585a434e2bf75d575eb",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/tasks/scheduling.py",
       "sha256": "37c2b3a713586dd6426fbb6aa396a894e87329e0d09635be8af065975cbe261e",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
+      "path": "octop/infra/tasks/scope.py",
+      "sha256": "f53cb02a311ae748758d8395a29bb9209f007e3fa1019f8dbc2b871315e2db89",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/infra/tasks/team_completion.py",
       "sha256": "6f4ebdc22f17504ea22bdc2f5fdf7df18036d0bdb56bd1bd1111058450870b07",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/tasks/tools.py",
+      "sha256": "61f11f79e322829986d7b31c7a0bbcf1e665cc431d3962a9608892ea3f30dad6",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },

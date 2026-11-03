@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -46,12 +46,113 @@ class TaskOptions(BaseModel):
     attachments: list[TaskAttachment] = Field(default_factory=list, max_length=10)
 
 
+class CodingTaskSpec(BaseModel):
+    """Optional code-delivery requirements for an otherwise ordinary expert task."""
+
+    model_config = ConfigDict(extra="forbid")
+    project_path: str = Field(
+        min_length=1,
+        max_length=4000,
+        description="Registered local project directory; checked against the owner's workspace policy.",
+    )
+    base_ref: str = Field(
+        default="HEAD",
+        min_length=1,
+        max_length=200,
+        description="Git reference resolved before preparing the isolated task branch.",
+    )
+    test_commands: list[Annotated[str, Field(min_length=1, max_length=4000)]] = Field(
+        min_length=1,
+        max_length=8,
+        description="Verification commands run in the task working tree, not the original checkout.",
+    )
+    publish_pr: bool = Field(
+        default=False, description="Publish a draft pull request only after verification succeeds."
+    )
+
+    @field_validator("project_path", "base_ref")
+    @classmethod
+    def nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError(tr("tasks.validation.blank", DEFAULT_LOCALE))
+        return value.strip()
+
+    @field_validator("test_commands")
+    @classmethod
+    def nonblank_commands(cls, values: list[str]) -> list[str]:
+        if any(not value.strip() for value in values):
+            raise ValueError(tr("tasks.validation.blank", DEFAULT_LOCALE))
+        return [value.strip() for value in values]
+
+
+CoordinationState = Literal["pending", "running", "idle", "needs_user", "interrupted", "stopped"]
+
+
+class CoordinationScopeView(BaseModel):
+    """An owned coordination goal; full goal text belongs only in owner detail views."""
+
+    id: str
+    scope_id: str
+    user_id: int
+    origin_agent_id: str
+    origin_thread_id: str
+    parent_task_id: str | None = None
+    parent_attempt: int | None = None
+    source_message_id: str
+    goal_text: str | None = Field(
+        default=None, description="Available only in owner-scoped detail."
+    )
+    allow_publish: bool = False
+    state: CoordinationState
+    last_signature: str = ""
+    active_signature: str = ""
+    review_turns: int = 0
+    decision: str = ""
+    summary: str = ""
+    question: str = ""
+    user_input: str = ""
+    resume_seq: int = 0
+    handled_resume_seq: int = 0
+    created_at: int
+    updated_at: int
+    room: dict[str, str] | None = Field(
+        default=None, description="Owned collaboration room, created for multi-expert work."
+    )
+
+
+class TaskDispatchView(BaseModel):
+    """Public task context; an internal deduplication key is never exposed."""
+
+    task_id: str
+    origin_agent_id: str | None = None
+    origin_thread_id: str | None = None
+    parent_task_id: str | None = None
+    parent_attempt: int | None = None
+    scope_id: str | None = None
+    coordination: dict[str, Any] | None = None
+    coding_spec: CodingTaskSpec | None = None
+    coding_run: dict[str, Any] = Field(
+        default_factory=dict, description="Server-managed code preparation and delivery results."
+    )
+    returned_attempt: int = 0
+    returned_state: str = ""
+    returned_event_id: int = 0
+    current_event_id: int = 0
+
+
 class TaskCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     agent_id: str = Field(min_length=1, max_length=100)
     title: str = Field(min_length=1, max_length=200)
     prompt: str = Field(min_length=1, max_length=32000)
     thread_id: str | None = Field(default=None, max_length=100)
+    origin_thread_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        description="Owned conversation receiving status and results; its expert is resolved server-side.",
+    )
+    coding: CodingTaskSpec | None = None
     options: TaskOptions = Field(default_factory=TaskOptions)
     attachments: list[TaskAttachment] = Field(default_factory=list, max_length=10)
 

@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Radio,
   Select,
   Space,
   Switch,
@@ -18,7 +19,7 @@ import {
   Upload,
 } from "antd";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAgent } from "../../context/AgentContext";
 import {
   taskQueueApi,
@@ -26,6 +27,7 @@ import {
   type TaskAttachment,
   type TaskAction,
   type TaskDetail,
+  type TaskProject,
   type TaskWorkflow,
   type WorkflowDefinition,
   type WorkflowRun,
@@ -37,7 +39,18 @@ import { useServerTimezone } from "../../hooks/useServerTimezone";
 import { formatServerDateTime } from "../../utils/formatMessageTime";
 import { workflowGraphError } from "./workflowValidation";
 import { saveBlobAsFile } from "../../utils/saveBlobAsFile";
-import { apiErrorMessage, parseApiError } from "../../utils/apiError";
+import { ExpertPortrait } from "../../components/expertPortrait";
+import TaskDispatchDetails from "./TaskDispatchDetails";
+import { CoordinationStatusTag } from "./TaskCoordinationDetails";
+import {
+  taskCreateFromDraft,
+  taskActionError,
+  originReturned,
+  coordinationNeedsRefresh,
+  uniqueProjects,
+  verificationCommands,
+  type TaskDraft,
+} from "./dispatchPresentation";
 
 const terminal = new Set(["completed", "failed", "cancelled", "interrupted"]);
 const stateColors: Record<string, string> = {
@@ -54,6 +67,7 @@ type StepDraft = WorkflowStep;
 export default function TaskQueue() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { message } = App.useApp();
   const { agents } = useAgent();
   const timeZone = useServerTimezone();
@@ -67,6 +81,21 @@ export default function TaskQueue() {
   }));
   const agentName = (id: string) =>
     owned.find((agent) => agent.agent_id === id)?.name ?? id;
+  const renderExpert = (id: string) => {
+    const expert = owned.find((agent) => agent.agent_id === id);
+    return (
+      <Space size={6}>
+        {expert && <ExpertPortrait agent={expert} size={24} />}
+        <span>{agentName(id)}</span>
+      </Space>
+    );
+  };
+  const originValue = (location.state as { origin_thread_id?: unknown } | null)
+    ?.origin_thread_id;
+  const originThreadId =
+    typeof originValue === "string" && originValue.length <= 100
+      ? originValue
+      : undefined;
   const refreshVersion = useRef(0);
   const refreshing = useRef(false);
   const [tasks, setTasks] = useState<QueuedTask[]>([]);
@@ -77,6 +106,54 @@ export default function TaskQueue() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<TaskDetail | null>(null);
+  const detailRequestVersion = useRef(0);
+  const detailActionVersion = useRef(0);
+  const selectedTaskId = selected?.id;
+  const selectedTaskState = selected?.state;
+  const originReturnPending =
+    !!selected?.dispatch?.origin_thread_id &&
+    !originReturned(selected.dispatch, selected.attempt, selected.state);
+  const coordinatorRefresh = coordinationNeedsRefresh(
+    selected?.dispatch?.coordination,
+  );
+  useEffect(() => {
+    if (
+      !selectedTaskId ||
+      (selectedTaskState &&
+        terminal.has(selectedTaskState) &&
+        !originReturnPending &&
+        !coordinatorRefresh)
+    )
+      return;
+    let active = true;
+    let pending = false;
+    const timer = window.setInterval(() => {
+      if (pending) return;
+      pending = true;
+      const version = detailActionVersion.current;
+      void taskQueueApi
+        .detail(selectedTaskId)
+        .then((next) => {
+          if (active && version === detailActionVersion.current)
+            setSelected((current) =>
+              current?.id === selectedTaskId ? next : current,
+            );
+        })
+        .catch(() => {})
+        .finally(() => {
+          pending = false;
+        });
+    }, 4000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [
+    selectedTaskId,
+    selectedTaskState,
+    originReturnPending,
+    coordinatorRefresh,
+  ]);
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [editing, setEditing] = useState<TaskWorkflow | null>(null);
@@ -88,18 +165,41 @@ export default function TaskQueue() {
   const [form] = Form.useForm();
   const [workflowForm] = Form.useForm();
   const uploadAgent = Form.useWatch("agent_id", form) as string | undefined;
+  const taskKind = Form.useWatch("task_kind", form) as string | undefined;
+  const [projects, setProjects] = useState<TaskProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [projectLoadFailed, setProjectLoadFailed] = useState(false);
+  const ownedAgentIds = JSON.stringify(owned.map((agent) => agent.agent_id));
+  useEffect(() => {
+    if (!createOpen || taskKind !== "coding") return;
+    let active = true;
+    setProjectsLoading(true);
+    setProjectLoadFailed(false);
+    const ids = JSON.parse(ownedAgentIds) as string[];
+    void Promise.all(ids.map((id) => taskQueueApi.projects(id)))
+      .then((groups) => {
+        if (active) setProjects(uniqueProjects(groups));
+      })
+      .catch(() => {
+        if (active) {
+          setProjects([]);
+          setProjectLoadFailed(true);
+        }
+      })
+      .finally(() => {
+        if (active) setProjectsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [createOpen, taskKind, ownedAgentIds]);
   const { maxUploadBytes: uploadLimit } = useServerUploadLimit();
   const [attachments, setAttachments] = useState<TaskAttachment[]>([]);
   const [uploading, setUploading] = useState(0);
   useEffect(() => setAttachments([]), [uploadAgent]);
   const showError = useCallback(
     (error: unknown) => {
-      const reason = parseApiError(error)?.details?.task_reason;
-      message.error(
-        typeof reason === "string"
-          ? t(`taskQueue.errors.${reason}`, t("taskQueue.failed"))
-          : apiErrorMessage(error, t("taskQueue.failed"), t),
-      );
+      message.error(taskActionError(error, t));
     },
     [message, t],
   );
@@ -153,10 +253,13 @@ export default function TaskQueue() {
     }
   };
   const details = async (task: QueuedTask) => {
+    const version = ++detailRequestVersion.current;
+    detailActionVersion.current++;
     try {
-      setSelected(await taskQueueApi.detail(task.id));
+      const detail = await taskQueueApi.detail(task.id);
+      if (version === detailRequestVersion.current) setSelected(detail);
     } catch (error) {
-      showError(error);
+      if (version === detailRequestVersion.current) showError(error);
     }
   };
   const editWorkflow = (workflow?: TaskWorkflow) => {
@@ -234,12 +337,9 @@ export default function TaskQueue() {
     }
     setBusy(true);
     try {
-      const { notify_policy, ...body } = values;
-      await taskQueueApi.create({
-        ...body,
-        options: { quiet: notify_policy === "failure" },
-        ...(attachments.length ? { attachments } : {}),
-      });
+      await taskQueueApi.create(
+        taskCreateFromDraft(values as TaskDraft, attachments, originThreadId),
+      );
       setCreateOpen(false);
       form.resetFields();
       setAttachments([]);
@@ -298,9 +398,25 @@ export default function TaskQueue() {
         {
           title: t("taskQueue.expert"),
           dataIndex: "agent_id",
-          render: agentName,
+          render: renderExpert,
         },
-        { title: t("taskQueue.status"), dataIndex: "state", render: status },
+        {
+          title: t("taskQueue.status"),
+          dataIndex: "state",
+          render: (_, task) => (
+            <Space wrap size={4}>
+              {task.dispatch?.coordination && (
+                <Typography.Text type="secondary">
+                  {t("taskQueue.executorStatus")}
+                </Typography.Text>
+              )}
+              {status(task.state)}
+              {task.dispatch?.coordination && (
+                <CoordinationStatusTag scope={task.dispatch.coordination} />
+              )}
+            </Space>
+          ),
+        },
         {
           title: t("taskQueue.created"),
           dataIndex: "created_at",
@@ -645,10 +761,31 @@ export default function TaskQueue() {
           <Form.Item
             name="agent_id"
             label={t("taskQueue.expert")}
+            extra={t("taskQueue.executorHint")}
             rules={[{ required: true }]}
           >
             <Select options={agentOptions} />
           </Form.Item>
+          <Form.Item
+            name="task_kind"
+            initialValue="general"
+            label={t("taskQueue.taskKind")}
+          >
+            <Radio.Group
+              options={[
+                { value: "general", label: t("taskQueue.generalTask") },
+                { value: "coding", label: t("taskQueue.codingTask") },
+              ]}
+            />
+          </Form.Item>
+          {originThreadId && (
+            <Alert
+              type="info"
+              showIcon
+              message={t("taskQueue.originReturnHint")}
+              style={{ marginBottom: 16 }}
+            />
+          )}
           <Form.Item
             name="title"
             label={t("taskQueue.name")}
@@ -663,6 +800,74 @@ export default function TaskQueue() {
           >
             <Input.TextArea rows={6} />
           </Form.Item>
+          {taskKind === "coding" && (
+            <>
+              <Form.Item
+                name="project_path"
+                label={t("taskQueue.codeProject")}
+                rules={[{ required: true }]}
+                extra={t("taskQueue.codeProjectHint")}
+              >
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  loading={projectsLoading}
+                  placeholder={t("taskQueue.chooseCodeProject")}
+                  notFoundContent={
+                    projectsLoading
+                      ? t("taskQueue.loadingProjects")
+                      : t("taskQueue.noCodeProjects")
+                  }
+                  options={projects.map((project) => ({
+                    value: project.project_path,
+                    label: `${project.project_name || project.project_path} · ${
+                      project.project_path
+                    }`,
+                  }))}
+                />
+              </Form.Item>
+              {projectLoadFailed && (
+                <Alert
+                  type="error"
+                  message={t("taskQueue.projectsLoadFailed")}
+                  style={{ marginBottom: 16 }}
+                />
+              )}
+              <Form.Item
+                name="test_commands"
+                label={t("taskQueue.verificationCommands")}
+                extra={t("taskQueue.verificationCommandsHint")}
+                rules={[
+                  {
+                    validator: (_, value: string) => {
+                      const commands = verificationCommands(value || "");
+                      return commands.length >= 1 && commands.length <= 8
+                        ? Promise.resolve()
+                        : Promise.reject(
+                            new Error(
+                              t("taskQueue.verificationCommandsRequired"),
+                            ),
+                          );
+                    },
+                  },
+                ]}
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder={"npm test\nnpm run build"}
+                />
+              </Form.Item>
+              <Form.Item
+                name="publish_pr"
+                initialValue={false}
+                label={t("taskQueue.createDraftPullRequest")}
+                valuePropName="checked"
+                extra={t("taskQueue.createDraftPullRequestHint")}
+              >
+                <Switch />
+              </Form.Item>
+            </>
+          )}
           <Form.Item
             label={t("taskQueue.attachments")}
             extra={t("taskQueue.attachmentHint")}
@@ -923,14 +1128,23 @@ export default function TaskQueue() {
       <Drawer
         open={!!selected}
         title={selected?.title}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          detailRequestVersion.current++;
+          detailActionVersion.current++;
+          setSelected(null);
+        }}
         width={600}
       >
         {selected && (
           <Space direction="vertical" style={{ width: "100%" }}>
             <Space>
+              {selected.dispatch?.coordination && (
+                <Typography.Text type="secondary">
+                  {t("taskQueue.executorStatus")}
+                </Typography.Text>
+              )}
               {status(selected.state)}
-              <Typography.Text>{agentName(selected.agent_id)}</Typography.Text>
+              {renderExpert(selected.agent_id)}
             </Space>
             {selected.error_code && (
               <Alert
@@ -953,6 +1167,49 @@ export default function TaskQueue() {
               >
                 {t("taskQueue.openConversation")}
               </Button>
+            )}
+            {selected.dispatch && (
+              <TaskDispatchDetails
+                dispatch={selected.dispatch}
+                taskAttempt={selected.attempt}
+                taskState={selected.state}
+                visibleAgentIds={new Set(owned.map((agent) => agent.agent_id))}
+                openConversation={(agentId, threadId) =>
+                  navigate(
+                    `/chat/${encodeURIComponent(agentId)}/${encodeURIComponent(
+                      threadId,
+                    )}`,
+                  )
+                }
+                onContinue={async (body) => {
+                  const id = selected.id;
+                  const version = ++detailActionVersion.current;
+                  await taskQueueApi.continueCoordination(id, body);
+                  if (detailActionVersion.current === version) {
+                    const committed = ++detailActionVersion.current;
+                    const next = await taskQueueApi.detail(id);
+                    if (detailActionVersion.current === committed)
+                      setSelected((current) =>
+                        current?.id === id ? next : current,
+                      );
+                  }
+                  await refresh(true);
+                }}
+                onStop={async () => {
+                  const id = selected.id;
+                  const version = ++detailActionVersion.current;
+                  await taskQueueApi.stopCoordination(id);
+                  if (detailActionVersion.current === version) {
+                    const committed = ++detailActionVersion.current;
+                    const next = await taskQueueApi.detail(id);
+                    if (detailActionVersion.current === committed)
+                      setSelected((current) =>
+                        current?.id === id ? next : current,
+                      );
+                  }
+                  await refresh(true);
+                }}
+              />
             )}
             <Typography.Title level={5}>
               {t("taskQueue.prompt")}

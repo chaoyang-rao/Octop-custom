@@ -172,7 +172,11 @@ class TaskRepo:
     def enqueue(
         self, tasks: builtins.list[dict[str, Any]], *, run: dict[str, Any] | None = None
     ) -> str | None:
-        """Insert every node of a workflow run atomically; return a deduplicated run id."""
+        """Insert atomically; return an existing run/task id on an idempotent replay."""
+        if any((task.get("dispatch") or {}).get("request_key") for task in tasks) and (
+            run is not None or len(tasks) != 1
+        ):
+            raise ValueError("dispatch request keys identify one ordinary task")
         with self._db.transaction() as conn:
             if run:
                 if run.get("trigger_key"):
@@ -204,6 +208,27 @@ class TaskRepo:
                         return str(existing["run_id"])
                     raise RuntimeError("workflow run insert failed")
             for task in tasks:
+                dispatch = task.get("dispatch")
+                if dispatch is not None and dispatch.get("scope_id"):
+                    scope = conn.execute(
+                        "SELECT user_id,origin_agent_id,origin_thread_id "
+                        "FROM task_coordination_scopes WHERE scope_id=?",
+                        (dispatch["scope_id"],),
+                    ).fetchone()
+                    if (
+                        scope is None
+                        or scope["user_id"] != task["user_id"]
+                        or scope["origin_agent_id"] != dispatch.get("origin_agent_id")
+                        or scope["origin_thread_id"] != dispatch.get("origin_thread_id")
+                    ):
+                        raise ValueError(
+                            "coordination scope belongs to a different owner or origin"
+                        )
+                request_key = (dispatch or {}).get("request_key") or None
+                if request_key:
+                    previous = self._dispatch_task(conn, task, request_key)
+                    if previous is not None:
+                        return previous
                 conn.execute(
                     "INSERT INTO agent_tasks(task_id,user_id,agent_id,thread_id,title,prompt,options_json,run_id,step_key,dependency_ids,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
@@ -221,8 +246,59 @@ class TaskRepo:
                         now_ts(),
                     ),
                 )
+                if dispatch is not None:
+                    specification = dispatch.get("coding_spec")
+                    inserted = conn.execute(
+                        "INSERT INTO task_dispatch_context "
+                        "(task_id,origin_agent_id,origin_thread_id,request_key,coding_spec_json,"
+                        "parent_task_id,parent_attempt,scope_id) "
+                        "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(request_key) DO NOTHING",
+                        (
+                            task["task_id"],
+                            dispatch.get("origin_agent_id"),
+                            dispatch.get("origin_thread_id"),
+                            request_key,
+                            json.dumps(specification, ensure_ascii=False)
+                            if specification is not None
+                            else None,
+                            dispatch.get("parent_task_id"),
+                            dispatch.get("parent_attempt"),
+                            dispatch.get("scope_id"),
+                        ),
+                    )
+                    if not inserted.rowcount:
+                        # UNIQUE permits multiple NULLs; only a real key can conflict.
+                        assert request_key is not None
+                        previous = self._dispatch_task(conn, task, request_key)
+                        if previous is None:
+                            raise RuntimeError("dispatch receipt insert failed")
+                        conn.execute("DELETE FROM agent_tasks WHERE task_id=?", (task["task_id"],))
+                        return previous
                 self._event(conn, task["task_id"], "created", "queued", task["user_id"])
         return None
+
+    @staticmethod
+    def _dispatch_task(conn: Any, task: dict[str, Any], request_key: str) -> str | None:
+        previous = conn.execute(
+            "SELECT d.task_id,t.user_id,d.origin_agent_id,d.origin_thread_id,"
+            "d.parent_task_id,d.parent_attempt,d.scope_id "
+            "FROM task_dispatch_context d JOIN agent_tasks t ON t.task_id=d.task_id "
+            "WHERE d.request_key=?",
+            (request_key,),
+        ).fetchone()
+        if previous is None:
+            return None
+        dispatch = task["dispatch"]
+        if (
+            previous["user_id"] != task["user_id"]
+            or previous["origin_agent_id"] != dispatch.get("origin_agent_id")
+            or previous["origin_thread_id"] != dispatch.get("origin_thread_id")
+            or previous["parent_task_id"] != dispatch.get("parent_task_id")
+            or previous["parent_attempt"] != dispatch.get("parent_attempt")
+            or previous["scope_id"] != dispatch.get("scope_id")
+        ):
+            raise ValueError("dispatch request key belongs to a different owner or origin")
+        return str(previous["task_id"])
 
     def queue_heads(self) -> builtins.list[TaskRow]:
         # A paused or approval-waiting head deliberately blocks later tasks for that expert.

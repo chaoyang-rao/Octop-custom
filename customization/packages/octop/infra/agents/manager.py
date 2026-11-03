@@ -492,6 +492,7 @@ class AgentManager:
         self._expert_catalog = expert_catalog
         self._plugin_manager = plugin_manager
         self._cron_manager: CronManager | None = None
+        self._task_manager: Any = None
         self._proactive_scheduler: ProactiveCareScheduler | None = None
         self._team_processor: Any | None = None
         self._history_archive: Any | None = None
@@ -602,6 +603,14 @@ class AgentManager:
         """Attach the process-wide CronManager (must be set before boot())."""
         self._cron_manager = cron_manager
 
+    def set_task_manager(self, task_manager: Any) -> None:
+        """Bind durable delegation after gateway construction; tools resolve it lazily."""
+        self._task_manager = task_manager
+
+    @property
+    def history_archive(self) -> Any:
+        return self._history_archive
+
     def set_proactive_scheduler(self, scheduler: ProactiveCareScheduler) -> None:
         """Attach the process-wide proactive-care scheduler (optional; used after create/delete)."""
         self._proactive_scheduler = scheduler
@@ -619,6 +628,20 @@ class AgentManager:
     @property
     def teams(self) -> Any:
         return self._teams
+
+    async def record_task_room_input(self, message: Any, *, user_id: int, thread_id: str) -> None:
+        if self._task_manager is not None:
+            await self._task_manager.record_room_input(
+                message, user_id=user_id, thread_id=thread_id
+            )
+
+    async def record_task_peer(self, call: Any, thread_id: str) -> None:
+        if self._task_manager is not None:
+            await self._task_manager._rooms.register_peer(call, thread_id)
+
+    async def finish_task_peer(self, call: Any) -> None:
+        if self._task_manager is not None:
+            await self._task_manager._rooms.finish_peer(call)
 
     async def boot(self) -> None:
         self._tool_guard_rules.ensure_seeded()
@@ -4155,7 +4178,11 @@ class AgentManager:
             else agent_id
         )
         return thread_project_config(
-            self._repos.thread_repo, agent_id=owner_id, thread_id=thread_id
+            self._repos.thread_repo,
+            agent_id=owner_id,
+            thread_id=thread_id,
+            task_repo=getattr(self._repos, "task_repo", None),
+            dispatch_repo=getattr(self._repos, "task_dispatch_repo", None),
         )
 
     def _stream_model_label(self, agent_id: str, request: dict[str, Any], thread_id: str) -> str:
@@ -4311,8 +4338,11 @@ class AgentManager:
         sanitize_plugin_tool_names(
             plugin_tools,
             reserved={
-                str(getattr(t, "name", ""))
-                for t in [*(cron_tools or []), *knowledge_tools, *mobile_tools]
+                "expert_tasks",
+                *{
+                    str(getattr(t, "name", ""))
+                    for t in [*(cron_tools or []), *knowledge_tools, *mobile_tools]
+                },
             },
         )
         self._plugin_tool_labels[row.agent_id] = {
@@ -4404,6 +4434,16 @@ class AgentManager:
                     self._repos, self._teams, page_reader=self.read_conversation_page
                 )
             )
+            if row.user_id is not None and not row.is_shared:
+                from octop.infra.agents.middleware.task_dispatch import TaskDispatchMiddleware
+                from octop.infra.tasks.tools import build_expert_task_tools
+
+                merged_tools.extend(
+                    build_expert_task_tools(lambda: self._task_manager, self._repos, self._teams)
+                )
+                agent_middleware.insert(
+                    0, TaskDispatchMiddleware(self._teams, lambda: self._task_manager)
+                )
             agent_middleware.insert(
                 0,
                 TeamConversationContextMiddleware(

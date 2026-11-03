@@ -44,6 +44,15 @@ def repo_root() -> Path:
     return _REPO_ROOT
 
 
+@pytest.fixture(autouse=True)
+def _isolate_git_repositories(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A pre-commit hook exports these for its own repository. Tests create
+    # independent repositories/worktrees, whose Git commands must discover
+    # their own metadata instead of inheriting the committing repository's.
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_PREFIX"):
+        monkeypatch.delenv(name, raising=False)
+
+
 # Creating an agent now starts a multi-hour asyncio.sleep (proactive care
 # defaults to on). pytest-asyncio waits for leftover tasks before fixture
 # teardown, so any test that boots OctopServer without going through

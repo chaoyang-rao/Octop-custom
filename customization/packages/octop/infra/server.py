@@ -702,6 +702,7 @@ class OctopServer:
         task_manager = TaskManager(
             repos=services.repos, gateway=gateway, agent_manager=registry, config=config
         )
+        registry.set_task_manager(task_manager)
         self.app_runtime = AppRuntime(
             agent_registry=registry,
             gateway=gateway,

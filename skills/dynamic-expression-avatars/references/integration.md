@@ -4,8 +4,8 @@
 
 `avatar-library.mjs` 支持浏览器 ESM 和 Node，无第三方运行依赖。
 
-- `SHAPES`：`blob / pebble / squircle / droplet / cloud / star / triangle`。
-- `COLORS`：`ink / jade / blue / violet / rose / amber / coral`，带中文名和 `hex`。
+- `SHAPES`：`blob / pebble / squircle / droplet / cloud / star / triangle / diamond / capsule`。前七项保留旧存储 ID，其轮廓现为圆形、六边形、圆方、椭圆、五边形、八边形、三角；显示名与存储 ID 无需相同，不因外形更新清空用户选择。
+- `COLORS`：`ink / jade / blue / violet / rose / amber / coral / cocoa / red`，带中文名和 `hex`。
 - `createExpertAvatars({React})`：返回 `Avatar`、`ShapeColorPicker`、`renderAvatar` 及兼容别名。保存返回值，复用已有 React 实例。
 - `Avatar({shape,color,size,className,style,static})`：原生 SVG；`static:true` 固定初始姿态。
 - `ShapeColorPicker({shape,color,onShapeChange,onColorChange,disabled})`：独立选择形色。
@@ -39,6 +39,6 @@
 
 同时满足：用户消息、当前会话不是群聊、角色启用有效几何形状。不要用发言成员的普通专家类型代替当前会话类型判断。
 
-背景用实际 `hex`，不暗换成浅色透明底。本套蓝紫已适当加深：曜石、晴蓝、鸢紫配白字，青绿、莓粉、蜜橙、珊瑚配 `#0B101B`，均满足 4.5:1。修改配色后重新核算对比度，头像与气泡使用同一基色。局部 `::selection` 反转前景背景并覆盖正文子节点；别改全局品牌色，别强改附件后代正常文字颜色。
+背景用实际 `hex`，不暗换成浅色透明底。曜黑、鸢紫、可可配白字，其余六色配 `#0B101B`，均满足 4.5:1。修改配色后重新核算对比度，头像与气泡使用同一基色。局部 `::selection` 反转前景背景并覆盖正文子节点；别改全局品牌色，别强改附件后代正常文字颜色。
 
-核对七色对比、旧图模式、单聊→群聊→单聊、助手/附件、保存与刷新。没有群聊实机环境时，说明自动检查范围，不声称已完成群聊实机验证。
+核对九色对比、旧图模式、单聊→群聊→单聊、助手/附件、保存与刷新。没有群聊实机环境时，说明自动检查范围，不声称已完成群聊实机验证。

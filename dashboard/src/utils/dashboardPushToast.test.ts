@@ -36,6 +36,32 @@ describe("parseDashboardPushFrame", () => {
     ).toBeNull();
     expect(parseDashboardPushFrame(null)).toBeNull();
   });
+
+  it("keeps an explicit silent-toast flag", () => {
+    const frame = {
+      type: "dashboard_push",
+      agent_id: "a1",
+      thread_id: "thr_1",
+      text: "Task complete",
+      toast: false,
+    };
+    expect(parseDashboardPushFrame(frame)).toEqual(frame);
+  });
+
+  it.each([undefined, true, null, 0, "false"])(
+    "preserves the old event shape for toast=%s",
+    (toast) => {
+      const frame = {
+        type: "dashboard_push",
+        agent_id: "a1",
+        thread_id: "thr_1",
+        text: "Task complete",
+      };
+      expect(
+        parseDashboardPushFrame({ ...frame, toast, notify: false }),
+      ).toEqual(frame);
+    },
+  );
 });
 
 describe("truncatePushText", () => {

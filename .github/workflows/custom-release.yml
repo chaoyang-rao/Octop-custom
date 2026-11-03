@@ -89,7 +89,16 @@ jobs:
           src/utils/parseHarnessChunk.test.ts
           src/pages/Chat/components/projectFolders/index.test.tsx
           src/components/accountAvatar/index.test.tsx
+          src/components/expertPortrait/avatars.test.tsx
+          src/pages/Chat/components/MessageBubble.userAvatar.test.tsx
           src/pages/Chat/hooks/useChatComposerResources.test.tsx
+          src/pages/TaskQueue/index.test.tsx
+          src/pages/TaskQueue/TaskDispatchDetails.test.tsx
+          src/pages/TaskQueue/TaskCoordinationDetails.test.tsx
+          src/pages/TaskQueue/dispatchPresentation.test.ts
+          src/pages/TaskQueue/workflowValidation.test.ts
+          src/utils/dashboardPushToast.test.ts
+          src/hooks/useDashboardPushToast.test.tsx
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard

@@ -8,17 +8,31 @@ from __future__ import annotations
 import hashlib
 from typing import Any, Literal
 
-AvatarShape = Literal["blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle"]
-AvatarColor = Literal["ink", "jade", "blue", "violet", "rose", "amber", "coral"]
-AVATAR_SHAPES = ("blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle")
+AvatarShape = Literal[
+    "blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle", "diamond", "capsule"
+]
+AvatarColor = Literal["ink", "jade", "blue", "violet", "rose", "amber", "coral", "cocoa", "red"]
+AVATAR_SHAPES = (
+    "blob",
+    "pebble",
+    "squircle",
+    "droplet",
+    "cloud",
+    "star",
+    "triangle",
+    "diamond",
+    "capsule",
+)
 AVATAR_COLORS = {
-    "ink": "#252830",
-    "jade": "#19B7A2",
-    "blue": "#486BCD",
-    "violet": "#825DC5",
-    "rose": "#DB779A",
-    "amber": "#DCAA46",
-    "coral": "#E5805D",
+    "ink": "#000000",
+    "jade": "#54B9A6",
+    "blue": "#3B82F6",
+    "violet": "#835BD6",
+    "rose": "#EB4698",
+    "amber": "#F19D38",
+    "coral": "#ED702D",
+    "cocoa": "#8C6640",
+    "red": "#E75B66",
 }
 _UNSET = object()
 

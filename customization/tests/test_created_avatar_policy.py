@@ -7,10 +7,10 @@ from octop.infra.agents.settings.geometric_avatar import avatar_response
 
 
 class CreatedAvatarPolicyTests(unittest.TestCase):
-    def test_all_49_combinations_are_used_before_repeating(self):
+    def test_all_81_combinations_are_used_before_repeating(self):
         occupied = []
         with patch("octop.infra.agents.settings.avatar_policy.secrets.choice", side_effect=lambda pool: pool[0]):
-            for _ in range(49):
+            for _ in range(81):
                 selected = created_avatar({}, occupied)
                 self.assertNotIn(selected, occupied)
                 occupied.append(selected)

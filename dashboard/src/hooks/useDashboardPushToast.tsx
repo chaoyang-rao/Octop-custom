@@ -130,6 +130,7 @@ export function useDashboardPushToast(): void {
           sessionId: parsed.thread_id,
           agentId: parsed.agent_id,
         });
+        if (parsed.toast === false) return;
         const agent = agentsRef.current.find(
           (a) => a.agent_id === parsed.agent_id,
         );

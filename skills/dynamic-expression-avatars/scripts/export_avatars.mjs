@@ -35,9 +35,8 @@ const bubbleStyles=Object.fromEntries(colors.map(c=>[c.id,bubbleStyle(c.id)]));
 gallery=gallery.replace('<script type="module">','<script>')
   .replace("import {SHAPES,COLORS,bubbleStyle} from './avatar-library.mjs';",`const SHAPES=${JSON.stringify(shapes)},COLORS=${JSON.stringify(colors)},BUBBLE_STYLES=${JSON.stringify(bubbleStyles)};\nconst bubbleStyle=id=>BUBBLE_STYLES[id]||BUBBLE_STYLES[COLORS[0].id];`)
   .replaceAll('COLORS[i].id','COLORS[i%COLORS.length].id')
-  .replace('七个小家伙，各有脾气。',`${shapes.length} 个小家伙，各有脾气。`)
-  .replace('七种头像形状',`${shapes.length} 种头像形状`)
-  .replace('7 种形状和 7 种颜色自由搭配。',`${shapes.length} 种形状和 ${colors.length} 种颜色自由搭配。`);
+  .replaceAll('{{SHAPE_COUNT}}',String(shapes.length))
+  .replaceAll('{{COLOR_COUNT}}',String(colors.length));
 if(!opts.bubbleDemo)gallery=gallery.replace(/\s*<section class="bubble-demo"[\s\S]*?<\/section>/,'');
 fs.writeFileSync(path.join(out,'index.html'),gallery);
 const variants=[];

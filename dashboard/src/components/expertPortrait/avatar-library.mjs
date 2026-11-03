@@ -1,22 +1,26 @@
 /* Original Octop geometric avatars. Geometry, expression and motion are authored
  * here; no artwork or implementation from another product is embedded. */
 export const SHAPES = Object.freeze([
-  { id: "blob", name: "软团", mood: "安静", motion: "轻呼吸 · 双眨眼" },
-  { id: "pebble", name: "棱石", mood: "好奇", motion: "左右张望 · 单眨轻跳" },
+  { id: "blob", name: "圆形", mood: "安静", motion: "轻呼吸 · 双眨眼" },
+  { id: "pebble", name: "六边形", mood: "好奇", motion: "左右张望 · 单眨轻跳" },
   { id: "squircle", name: "圆方", mood: "专注", motion: "眯眼思考 · 轻偏头" },
-  { id: "droplet", name: "水滴", mood: "腼腆", motion: "探头 · 害羞眨眼" },
-  { id: "cloud", name: "云朵", mood: "开心", motion: "轻轻漂浮 · 笑眼" },
-  { id: "star", name: "星星", mood: "兴奋", motion: "蓄力跳起 · 摇摆" },
+  { id: "droplet", name: "椭圆", mood: "腼腆", motion: "探头 · 害羞眨眼" },
+  { id: "cloud", name: "五边形", mood: "开心", motion: "轻轻漂浮 · 笑眼" },
+  { id: "star", name: "八边形", mood: "兴奋", motion: "蓄力跳起 · 摇摆" },
   { id: "triangle", name: "三角", mood: "沉稳", motion: "缓慢环顾 · 点头" },
+  { id: "diamond", name: "菱形", mood: "自信", motion: "抬头示意 · 俏皮眨眼" },
+  { id: "capsule", name: "胶囊", mood: "灵动", motion: "左右摇摆 · 轻快回望" },
 ]);
 export const COLORS = Object.freeze([
-  { id: "ink", name: "曜石", hex: "#252830" },
-  { id: "jade", name: "青绿", hex: "#19B7A2" },
-  { id: "blue", name: "晴蓝", hex: "#486BCD" },
-  { id: "violet", name: "鸢紫", hex: "#825DC5" },
-  { id: "rose", name: "莓粉", hex: "#DB779A" },
-  { id: "amber", name: "蜜橙", hex: "#DCAA46" },
-  { id: "coral", name: "珊瑚", hex: "#E5805D" },
+  { id: "ink", name: "曜黑", hex: "#000000" },
+  { id: "jade", name: "青绿", hex: "#54B9A6" },
+  { id: "blue", name: "晴蓝", hex: "#3B82F6" },
+  { id: "violet", name: "鸢紫", hex: "#835BD6" },
+  { id: "rose", name: "莓粉", hex: "#EB4698" },
+  { id: "amber", name: "金橙", hex: "#F19D38" },
+  { id: "coral", name: "暖橙", hex: "#ED702D" },
+  { id: "cocoa", name: "可可", hex: "#8C6640" },
+  { id: "red", name: "朱红", hex: "#E75B66" },
 ]);
 const shapeIds = new Set(SHAPES.map((x) => x.id));
 const colorIds = new Set(COLORS.map((x) => x.id));
@@ -26,12 +30,14 @@ export const getColor = (id) => COLORS.find((x) => x.id === id) || COLORS[0];
 // Tight but motion-safe framing: the whole six-second motion remains visible.
 export const VIEWBOXES = Object.freeze({
   blob: "40 40 432 432",
-  pebble: "40 32 432 432",
-  squircle: "56 56 400 400",
+  pebble: "28 24 456 456",
+  squircle: "48 56 416 416",
   droplet: "40 48 432 432",
   cloud: "32 32 448 448",
-  star: "40 24 432 432",
-  triangle: "64 64 384 384",
+  star: "28 16 456 456",
+  triangle: "56 64 400 400",
+  diamond: "32 40 448 448",
+  capsule: "40 56 432 400",
 });
 const TAU = Math.PI * 2;
 const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
@@ -67,15 +73,17 @@ function roundedPolygon(vertices, rounding = 0.24, steps = 7) {
   }
   return out;
 }
-const pebble = roundedPolygon([
-  [-104, -175],
-  [77, -172],
-  [176, -66],
-  [161, 101],
-  [33, 177],
-  [-126, 130],
-  [-183, -29],
-]);
+// Keep persisted IDs while replacing the old organic silhouettes with symmetry.
+const regularPolygon = (sides, radius, offset = -Math.PI / 2) =>
+  roundedPolygon(
+    Array.from({ length: sides }, (_, i) => {
+      const angle = offset + (i * TAU) / sides;
+      return [Math.cos(angle) * radius, Math.sin(angle) * radius];
+    }),
+    0.1,
+    8,
+  );
+const pebble = regularPolygon(6, 198, -Math.PI / 6);
 const triangle = roundedPolygon(
   [
     [0, -191],
@@ -85,79 +93,24 @@ const triangle = roundedPolygon(
   0.18,
   14,
 );
-const star = roundedPolygon(
-  Array.from({ length: 10 }, (_, i) => {
-    const a = -Math.PI / 2 + (i * TAU) / 10,
-      r = i % 2 ? 112 : 192;
-    return [Math.cos(a) * r, Math.sin(a) * r];
-  }),
-  0.24,
-  6,
+const star = regularPolygon(8, 197, Math.PI / 8);
+const cloud = regularPolygon(5, 201);
+const diamond = roundedPolygon(
+  [
+    [0, -213],
+    [203, 0],
+    [0, 213],
+    [-203, 0],
+  ],
+  0.1,
+  12,
 );
-
-function cloudBody() {
-  const out = [];
-  const segments = [
-    [
-      [-178, 41],
-      [-213, -9],
-      [-168, -67],
-      [-119, -56],
-    ],
-    [
-      [-119, -56],
-      [-123, -136],
-      [-30, -164],
-      [18, -110],
-    ],
-    [
-      [18, -110],
-      [66, -161],
-      [144, -113],
-      [142, -61],
-    ],
-    [
-      [142, -61],
-      [207, -43],
-      [221, 55],
-      [164, 92],
-    ],
-    [
-      [164, 92],
-      [110, 139],
-      [-115, 145],
-      [-169, 88],
-    ],
-    [
-      [-169, 88],
-      [-182, 75],
-      [-184, 58],
-      [-178, 41],
-    ],
-  ];
-  for (const [a, b, c, d] of segments)
-    for (let i = 0; i < 15; i++) {
-      const u = i / 15,
-        v = 1 - u;
-      out.push([
-        v * v * v * a[0] +
-          3 * v * v * u * b[0] +
-          3 * v * u * u * c[0] +
-          u * u * u * d[0],
-        v * v * v * a[1] +
-          3 * v * v * u * b[1] +
-          3 * v * u * u * c[1] +
-          u * u * u * d[1],
-      ]);
-    }
-  return out;
-}
-const cloud = cloudBody();
-function bodyPoints(shape, phase) {
+function bodyPoints(shape) {
   if (shape === "pebble") return pebble;
   if (shape === "triangle") return triangle;
   if (shape === "star") return star;
   if (shape === "cloud") return cloud;
+  if (shape === "diamond") return diamond;
   const out = [];
   for (let i = 0; i < 96; i++) {
     const a = (i * TAU) / 96;
@@ -169,17 +122,12 @@ function bodyPoints(shape, phase) {
         168 * Math.sign(s) * Math.abs(s) ** 0.53,
       ]);
     } else if (shape === "droplet") {
-      // Pointed crown with one continuous, broad lower belly.
-      const s = Math.sin(a),
-        radius = 158 * (1 + 0.25 * s);
-      out.push([radius * Math.cos(a), 188 * s]);
+      out.push([157 * Math.cos(a), 188 * Math.sin(a)]);
+    } else if (shape === "capsule") {
+      const c = Math.cos(a);
+      out.push([28 * Math.sign(c) + 162 * c, 162 * Math.sin(a)]);
     } else {
-      const r =
-        1 +
-        0.032 * Math.sin(3 * a + 0.28) +
-        0.017 * Math.cos(5 * a - 0.4) +
-        0.006 * Math.sin(2 * a + phase);
-      out.push([184 * r * Math.cos(a), 180 * r * Math.sin(a)]);
+      out.push([182 * Math.cos(a), 182 * Math.sin(a)]);
     }
   }
   return out;
@@ -193,18 +141,6 @@ function eyePoints(cx, cy, diameter, open = 1, smile = 0) {
       x = Math.cos(a) * rx;
     return [cx + x, cy + Math.sin(a) * ry - smile * (1 - (x / rx) ** 2)];
   });
-}
-function shade(hex, delta) {
-  return (
-    "#" +
-    [1, 3, 5]
-      .map((i) =>
-        Math.round(clamp(parseInt(hex.slice(i, i + 2), 16) + delta, 0, 255))
-          .toString(16)
-          .padStart(2, "0"),
-      )
-      .join("")
-  );
 }
 export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
   shape = validShape(shape) ? shape : "blob";
@@ -339,6 +275,34 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
         [0.88, 0.17],
         [4.4, 0.22],
       ]);
+  } else if (shape === "diamond") {
+    const greet = windowAt(t, 1.35, 2.55, 0.3),
+      glance = windowAt(t, 3.6, 4.9, 0.35);
+    rot = 3 * b - 4 * greet;
+    dy = -7 * greet + 2 * b;
+    faceY = -18;
+    gx = 9 * glance;
+    gy = -5 * greet;
+    openL =
+      1 -
+      blinkAt(t, [
+        [0.8, 0.24],
+        [5.3, 0.26],
+      ]);
+    openR = Math.min(openL, 1 - pulse(t, 2.05, 0.32));
+  } else if (shape === "capsule") {
+    const glance = windowAt(t, 2.8, 4.25, 0.4);
+    rot = 5 * b;
+    dy = -6 * pulse(t, 1.7, 0.7) + 2 * b;
+    faceY = -12;
+    gx = 12 * b - 9 * glance;
+    gy = -3 * glance;
+    openL = openR =
+      1 -
+      blinkAt(t, [
+        [1.15, 0.22],
+        [4.7, 0.27],
+      ]);
   } else {
     const nod = 4 * pulse(t, 2.1, 0.52) + 3 * pulse(t, 2.83, 0.48),
       look = windowAt(t, 3.6, 5.3, 0.5);
@@ -357,6 +321,13 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
         [4.7, 0.36],
       ]);
   }
+  // A shared tilted pose and upper-right gaze; retain each character's lids,
+  // smiles, glances and body motion. The triangle needs its wider lower face.
+  rot -= 9;
+  faceX = shape === "triangle" ? 16 : 30 + faceX * 0.15;
+  faceY = shape === "triangle" ? 8 : -54 + faceY * 0.15;
+  gx *= 0.65;
+  gy *= 0.65;
   const angle = (rot * Math.PI) / 180,
     tx = (points) =>
       points.map(([x, y]) => {
@@ -367,7 +338,7 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
           264 + dy + x * Math.sin(angle) + y * Math.cos(angle),
         ];
       });
-  const body = tx(bodyPoints(shape, p));
+  const body = tx(bodyPoints(shape));
   // 100 px between eye centers (v2 was 71–73): visibly wider spacing.
   const eyes = [
     tx(eyePoints(faceX - 50 + gx, faceY + gy, diameter, clamp(openL), smile)),
@@ -375,38 +346,14 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
       eyePoints(faceX + 50 + gx, faceY - 3 + gy, diameter, clamp(openR), smile),
     ),
   ];
-  const facets =
-    shape === "pebble"
-      ? [
-          {
-            points: tx([
-              [-240, -210],
-              [15, -210],
-              [-33, 6],
-              [-230, 72],
-            ]),
-            fill: shade(base, -8),
-          },
-          {
-            points: tx([
-              [120, -220],
-              [240, -150],
-              [250, 220],
-              [86, 220],
-              [40, 28],
-            ]),
-            fill: shade(base, 8),
-          },
-        ]
-      : [];
   return {
     shape,
     color: getColor(color).id,
     base,
-    outline: shade(base, base === "#252830" ? 24 : -18),
+    outline: base,
     body,
     eyes,
-    facets,
+    facets: [],
   };
 }
 export const pathData = (points) =>
@@ -529,7 +476,7 @@ export function createExpertAvatars({ React }) {
     }, [shape, still]);
     const f = avatarFrame(shape, color, time),
       clip = `oa-${id}`;
-    const name = SHAPES.find((x) => x.id === f.shape)?.name || "软团";
+    const name = SHAPES.find((x) => x.id === f.shape)?.name || "圆形";
     return h(
       "svg",
       {
@@ -558,6 +505,7 @@ export function createExpertAvatars({ React }) {
         h("clipPath", { id: clip }, h("path", { d: pathData(f.body) })),
       ),
       h("path", {
+        "data-avatar-body": "",
         d: pathData(f.body),
         fill: f.base,
         stroke: f.outline,

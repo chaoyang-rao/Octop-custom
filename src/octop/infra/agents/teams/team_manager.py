@@ -37,6 +37,7 @@ from octop.i18n.domains.stream import format_stream_error
 from octop.infra.agents.teams.service import _user_may_use_member, is_team_agent
 from octop.infra.agents.threads.artifact import artifact_path_allowed, extract_artifact_paths
 from octop.infra.db.repos.agents import AgentRow
+from octop.infra.errors import OctopError
 from octop.infra.gateway.media.tool_media import tool_name_base
 from octop.infra.history.projection import (
     live_message_inputs,
@@ -161,6 +162,15 @@ class TeamManager:
     def replace_thread_message_repo(self, repo: Any) -> None:
         self._thread_message_repo = repo
 
+    async def relay_task_chunk(
+        self, chunk: dict[str, Any], *, room_thread_id: str, speaker_id: str
+    ) -> None:
+        """Use the same member wall for an owned durable Task execution."""
+        await self._push_room_frame(chunk, room_thread_id, speaker_id)
+
+    async def finish_task_wall(self, room_thread_id: str, speaker_id: str) -> None:
+        await self._clear_live_member(room_thread_id, speaker_id)
+
     # -- ask_agent session (member page) -------------------------------------
 
     async def prepare_peer_session(self, call: PeerCall) -> PeerSession | None:
@@ -224,6 +234,14 @@ class TeamManager:
                     question or str(call.message or ""),
                     turn_id=getattr(call, "job_id", None),
                 )
+            record_task_peer = getattr(self._agent_manager, "record_task_peer", None)
+            if callable(record_task_peer):
+                try:
+                    recording_result = record_task_peer(call, thread_id)
+                    if inspect.isawaitable(recording_result):
+                        await recording_result
+                except (OctopError, PermissionError, ValueError, RuntimeError, OSError):
+                    logger.warning("Task peer history registration deferred", exc_info=True)
         return _make_peer_session(
             thread_id=thread_id,
             session_key=session_key,
@@ -256,6 +274,7 @@ class TeamManager:
                     HumanMessage(
                         content=prompt,
                         id=_peer_user_message_id(thread_id, getattr(call, "job_id", None)),
+                        additional_kwargs={"octop_peer_question": str(call.message or "")},
                     ),
                     *visible,
                 ]
@@ -283,6 +302,11 @@ class TeamManager:
             )
         finally:
             self._track_job(call, begin=False)
+            finish_task_peer = getattr(self._agent_manager, "finish_task_peer", None)
+            if callable(finish_task_peer):
+                result = finish_task_peer(call)
+                if inspect.isawaitable(result):
+                    await result
 
     def compose_followup(
         self,

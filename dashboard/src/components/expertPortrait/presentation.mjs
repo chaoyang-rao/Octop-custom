@@ -1,14 +1,7 @@
 /** Expert-only portraits. Account avatars use their existing independent renderer. */
-const SHAPES = [
-  "blob",
-  "pebble",
-  "squircle",
-  "droplet",
-  "cloud",
-  "star",
-  "triangle",
-];
-const COLORS = ["ink", "jade", "blue", "violet", "rose", "amber", "coral"];
+import { SHAPES as shapes, COLORS as colors } from "./avatar-library.mjs";
+const SHAPES = shapes.map(({ id }) => id);
+const COLORS = colors.map(({ id }) => id);
 let previous;
 export function randomAvatar(random = Math.random) {
   const shapes = SHAPES.filter((value) => value !== previous?.shape);
@@ -25,7 +18,10 @@ export function portraitFor(seed, avatars) {
   let n = 2166136261;
   for (const char of String(seed || "expert").split(/[?#]/, 1)[0])
     n = Math.imul(n ^ char.codePointAt(0), 16777619) >>> 0;
-  return { shape: SHAPES[n % 7], color: COLORS[Math.floor(n / 7) % 7] };
+  return {
+    shape: SHAPES[n % SHAPES.length],
+    color: COLORS[Math.floor(n / SHAPES.length) % COLORS.length],
+  };
 }
 export function createExpertPresentation({ React, avatars, useAgent }) {
   const h = React.createElement;
@@ -48,6 +44,26 @@ export function createExpertPresentation({ React, avatars, useAgent }) {
           "/expert-avatars/v2/star-amber.svg",
           "/expert-avatars/v2/cloud-rose.svg",
         ];
+    const positions = {
+      1: [[0, 0]],
+      2: [
+        [0, 0.02],
+        [0.24, 0.24],
+      ],
+      3: [
+        [0, 0],
+        [0.3, 0],
+        [0.15, 0.3],
+      ],
+      4: [
+        [0, 0],
+        [0.36, 0],
+        [0, 0.36],
+        [0.36, 0.36],
+      ],
+    }[portraits.length];
+    const faceSize =
+      size * { 1: 1, 2: 0.76, 3: 0.7, 4: 0.64 }[portraits.length];
     return h(
       "span",
       {
@@ -68,9 +84,15 @@ export function createExpertPresentation({ React, avatars, useAgent }) {
             key: id || index,
             className: "octop-team-face",
             "data-face": index,
-            style: { width: size * 0.69, height: size * 0.69 },
+            style: {
+              width: faceSize,
+              height: faceSize,
+              left: size * positions[index][0],
+              top: size * positions[index][1],
+              zIndex: index + 1,
+            },
           },
-          avatars.renderAvatar({ ...face, size: size * 0.69 }),
+          avatars.renderAvatar({ ...face, size: faceSize }),
         );
       }),
     );

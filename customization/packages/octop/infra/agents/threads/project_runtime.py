@@ -12,12 +12,36 @@ from octop.infra.utils.locale import DEFAULT_LOCALE, Locale
 PROJECT_CONFIG_KEYS = ("octop_project_path", "octop_project_name")
 
 
-def thread_project_config(thread_repo: Any, *, agent_id: str, thread_id: str) -> dict[str, str]:
+def thread_project_config(
+    thread_repo: Any,
+    *,
+    agent_id: str,
+    thread_id: str,
+    task_repo: Any = None,
+    dispatch_repo: Any = None,
+) -> dict[str, str]:
     if not thread_id:
         return {}
     row = thread_repo.get(thread_id)
     if row is None or row.agent_id != agent_id:
         return {}
+    if task_repo is not None and dispatch_repo is not None:
+        task = task_repo.latest_in_thread(agent_id, row.user_id, thread_id)
+        context = dispatch_repo.get(task.task_id) if task is not None else None
+        run = (context or {}).get("coding_run") or {}
+        worktree = run.get("worktree")
+        if (
+            task is not None
+            and task.state in {"running", "waiting"}
+            and isinstance(worktree, str)
+            and worktree
+            and run.get("task_id") == task.task_id
+            and run.get("user_id") == row.user_id
+        ):
+            return {
+                "octop_project_path": worktree,
+                "octop_project_name": task.title,
+            }
     path = getattr(row, "project_path", None)
     if not isinstance(path, str) or not path.strip():
         return {}

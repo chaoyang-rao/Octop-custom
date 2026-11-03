@@ -38,6 +38,8 @@ async def test_upload_get_delete_avatar(env):
         "cloud",
         "star",
         "triangle",
+        "diamond",
+        "capsule",
     }
 
     got = await c.get(icon_url, headers=auth)

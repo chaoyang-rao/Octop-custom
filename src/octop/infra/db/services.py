@@ -32,6 +32,8 @@ from octop.infra.db.repos.sessions import SessionRepo
 from octop.infra.db.repos.settings import SettingsRepo
 from octop.infra.db.repos.skill_packages import SkillPackageRepo
 from octop.infra.db.repos.sso import SsoRepo
+from octop.infra.db.repos.task_coordination import TaskCoordinationRepo
+from octop.infra.db.repos.task_dispatches import TaskDispatchRepo
 from octop.infra.db.repos.tasks import TaskRepo
 from octop.infra.db.repos.thread_messages import ThreadMessageRepo
 from octop.infra.db.repos.threads import ThreadRepo
@@ -78,6 +80,8 @@ class RepoBundle:
     proactive_care_config_repo: ProactiveCareConfigRepo
     sso_repo: SsoRepo
     task_repo: TaskRepo
+    task_dispatch_repo: TaskDispatchRepo
+    task_coordination_repo: TaskCoordinationRepo
     conversation_repo: ConversationRepo
     user_group_repo: UserGroupRepo
     user_group_member_repo: UserGroupMemberRepo
@@ -118,6 +122,8 @@ class RepoBundle:
             proactive_care_config_repo=ProactiveCareConfigRepo(db),
             sso_repo=SsoRepo(db),
             task_repo=TaskRepo(db),
+            task_dispatch_repo=TaskDispatchRepo(db),
+            task_coordination_repo=TaskCoordinationRepo(db),
             conversation_repo=ConversationRepo(db),
             user_group_repo=UserGroupRepo(db),
             user_group_member_repo=UserGroupMemberRepo(db),

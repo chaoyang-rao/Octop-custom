@@ -70,13 +70,15 @@ describe("MessageBubble user avatar", () => {
     expect(sender).not.toHaveTextContent("A");
   });
 
-  it("keeps the Lucide default when no account icon is chosen", () => {
+  it("keeps the account name initials when no account icon is chosen", () => {
     currentUser.avatar_icon = null;
     currentUser.avatar_url = null;
     render(<MessageBubble message={userMessage()} showAvatar />);
 
-    const sender = screen.getByLabelText("Ada");
-    expect(sender.querySelector("svg")).toBeTruthy();
+    const sender = screen.getByText("AD");
+    expect(sender).toHaveAttribute("aria-label", "Ada");
+    expect(sender).toHaveTextContent("AD");
+    expect(sender.querySelector("svg")).toBeNull();
     expect(sender.querySelector("img")).toBeNull();
   });
 

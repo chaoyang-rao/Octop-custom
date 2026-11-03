@@ -26,6 +26,79 @@ export interface TaskOptions {
   quiet?: boolean;
   attachments?: TaskAttachment[];
 }
+export interface CodingTaskSpec {
+  project_path: string;
+  base_ref?: string;
+  test_commands: string[];
+  publish_pr?: boolean;
+}
+export interface CodingVerification {
+  command_index: number;
+  exit_code: number | null;
+  passed: boolean;
+  log_path: string;
+  timed_out?: boolean;
+  truncated?: boolean;
+}
+export interface CodingTaskRun {
+  phase?: string;
+  repository?: string;
+  worktree?: string;
+  branch?: string;
+  base_ref?: string;
+  base_oid?: string;
+  verification?: CodingVerification[];
+  pr_url?: string;
+  commit?: string;
+  changed_files?: string[];
+  diff_path?: string;
+  [key: string]: unknown;
+}
+export type CoordinationState =
+  | "pending"
+  | "running"
+  | "idle"
+  | "needs_user"
+  | "interrupted"
+  | "stopped";
+export interface TaskCoordination {
+  scope_id: string;
+  user_id: number;
+  origin_agent_id: string;
+  origin_thread_id: string;
+  parent_task_id?: string | null;
+  parent_attempt?: number | null;
+  state: CoordinationState;
+  review_turns: number;
+  decision: string;
+  summary: string;
+  question: string;
+  allow_publish: boolean;
+  has_coding_tasks?: boolean;
+  room?: { agent_id: string; thread_id: string; name: string } | null;
+  [key: string]: unknown;
+}
+export interface CoordinationContinue {
+  prompt: string;
+  allow_publish?: boolean;
+}
+export interface TaskDispatchView {
+  origin_agent_id?: string | null;
+  origin_thread_id?: string | null;
+  coding_spec?: CodingTaskSpec | null;
+  coding_run: CodingTaskRun;
+  returned_attempt: number;
+  returned_state: string;
+  current_event_id?: number;
+  returned_event_id?: number;
+  coordination?: TaskCoordination | null;
+}
+export interface TaskProject {
+  project_path: string;
+  project_name: string;
+  thread_count: number;
+  created_at: number;
+}
 export interface QueuedTask {
   id: string;
   task_id: string;
@@ -44,6 +117,7 @@ export interface QueuedTask {
   updated_at: number;
   started_at: number | null;
   finished_at: number | null;
+  dispatch?: TaskDispatchView | null;
 }
 export interface TaskDetail extends QueuedTask {
   prompt: string;
@@ -63,6 +137,8 @@ export interface TaskCreate {
   thread_id?: string;
   options?: TaskOptions;
   attachments?: TaskAttachment[];
+  origin_thread_id?: string;
+  coding?: CodingTaskSpec;
 }
 export type TaskAction =
   | "pause"
@@ -109,6 +185,18 @@ export interface WorkflowRun {
   tasks: QueuedTask[];
 }
 export const taskQueueApi = {
+  stopCoordination: (id: string) =>
+    request<unknown>(`/tasks/${encodeURIComponent(id)}/coordination/stop`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+  continueCoordination: (id: string, body: CoordinationContinue) =>
+    request<unknown>(`/tasks/${encodeURIComponent(id)}/coordination`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  projects: (agentId: string) =>
+    request<TaskProject[]>(`/agents/${encodeURIComponent(agentId)}/projects`),
   list: (archived = false, agentId?: string) =>
     request<QueuedTask[]>(
       `/tasks?archived=${archived}${

@@ -1877,6 +1877,39 @@ def _ensure_tasks_schema(db: DatabasePool) -> None:
         _ensure_column(db, "threads", "archived", "INTEGER NOT NULL DEFAULT 0")
 
 
+def _ensure_task_dispatch_schema(db: DatabasePool) -> None:
+    """Repair an imported watermark without replaying unrelated migrations."""
+    suffix = ".pg.sql" if db.dialect == "postgresql" else ".sql"
+    sql = (_MIGRATIONS_DIR / ("027_task_dispatch" + suffix)).read_text(encoding="utf-8")
+    statements = _split_pg_sql(sql)
+    with db.connect() as conn:
+        for statement in statements:
+            if statement.startswith("CREATE TABLE"):
+                conn.execute(statement)
+    _ensure_column(db, "task_dispatch_context", "returned_event_id", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(
+        db,
+        "task_dispatch_context",
+        "parent_task_id",
+        "TEXT REFERENCES agent_tasks(task_id) ON DELETE SET NULL",
+    )
+    _ensure_column(db, "task_dispatch_context", "parent_attempt", "INTEGER")
+    _ensure_column(
+        db,
+        "task_dispatch_context",
+        "scope_id",
+        "TEXT REFERENCES task_coordination_scopes(scope_id) ON DELETE SET NULL",
+    )
+    _ensure_column(db, "task_coordination_scopes", "resume_seq", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(
+        db, "task_coordination_scopes", "handled_resume_seq", "INTEGER NOT NULL DEFAULT 0"
+    )
+    with db.connect() as conn:
+        for statement in statements:
+            if not statement.startswith(("CREATE TABLE", "UPDATE _schema_version")):
+                conn.execute(statement)
+
+
 def _repair_connector_text_credentials(db: DatabasePool) -> None:
     """Cast TEXT ``connectors.credential_blob`` values back to BLOB.
 
@@ -2407,6 +2440,25 @@ def _expand_page_tab_permissions(db: DatabasePool) -> None:
             )
 
 
+def _ensure_task_rooms_schema(db: DatabasePool) -> None:
+    suffix = ".pg.sql" if db.dialect == "postgresql" else ".sql"
+    sql = (_MIGRATIONS_DIR / ("028_task_rooms" + suffix)).read_text(encoding="utf-8")
+    with db.connect() as conn:
+        for statement in _split_pg_sql(sql):
+            if not statement.startswith(("UPDATE _schema_version", "ALTER TABLE")):
+                conn.execute(statement)
+    _ensure_column(db, "task_coordination_scopes", "peer_revision", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(db, "task_room_cursors", "source_kind", "TEXT NOT NULL DEFAULT 'projection'")
+    _ensure_column(db, "task_room_cursors", "last_id", "TEXT NOT NULL DEFAULT ''")
+    _ensure_column(db, "task_room_inputs", "input_text", "TEXT NOT NULL DEFAULT ''")
+    _ensure_column(
+        db,
+        "task_room_inputs",
+        "created_at",
+        ("BIGINT" if db.dialect == "postgresql" else "INTEGER") + " NOT NULL DEFAULT 0",
+    )
+
+
 def run_migrations(db: DatabasePool) -> None:
     if db.dialect == "sqlite":
         _repair_legacy_schema(db)
@@ -2417,12 +2469,18 @@ def run_migrations(db: DatabasePool) -> None:
             continue
         # The local v22/v23 schema used numbers later published by upstream.
         # Keep upstream DDL at 22-25 and apply the local extensions at 26.
-        if version in {18, 26}:
+        if version in {18, 26, 27, 28}:
             if version == 18:
                 _ensure_user_role_schema(db)
-            else:
+            elif version == 26:
                 _ensure_thread_projects_schema(db)
                 _ensure_tasks_schema(db)
+            elif version == 27:
+                _ensure_tasks_schema(db)
+                _ensure_task_dispatch_schema(db)
+            else:
+                _ensure_task_dispatch_schema(db)
+                _ensure_task_rooms_schema(db)
             with db.connect() as conn:
                 placeholder = "%s" if db.dialect == "postgresql" else "?"
                 conn.execute(f"UPDATE _schema_version SET version = {placeholder}", (version,))
@@ -2462,6 +2520,8 @@ def run_migrations(db: DatabasePool) -> None:
     _ensure_agent_profile_columns(db)
     _ensure_thread_projects_schema(db)
     _ensure_tasks_schema(db)
+    _ensure_task_dispatch_schema(db)
+    _ensure_task_rooms_schema(db)
     _ensure_sso_provider_kind_schema(db)
     _ensure_user_role_schema(db)
     _ensure_bridge_connections_schema(db)
