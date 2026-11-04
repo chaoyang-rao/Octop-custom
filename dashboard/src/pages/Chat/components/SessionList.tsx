@@ -14,7 +14,7 @@ import {
   PinOff,
   Search,
   Trash2,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import type { Session } from "../hooks/useSessions";
 import type { OctopAgent } from "../../../context/AgentContext";
 import { isAgentChatReady } from "../../../utils/agentError";

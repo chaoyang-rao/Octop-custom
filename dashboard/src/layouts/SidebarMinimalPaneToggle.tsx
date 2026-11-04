@@ -1,4 +1,4 @@
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight } from "../components/arcIcons";
 import { Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 import type { MinimalNavPane } from "./layoutModeStorage";

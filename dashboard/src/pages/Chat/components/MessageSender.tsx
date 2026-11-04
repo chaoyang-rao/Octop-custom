@@ -50,6 +50,7 @@ export function ExpertMessageAvatar({
   const canOpen = Boolean(profile?.canOpen);
   const avatar = (
     <ExpertAgentAvatar
+      agentId={profileAgentId}
       iconName={iconName}
       iconUrl={iconUrl}
       color={color}

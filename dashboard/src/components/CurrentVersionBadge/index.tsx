@@ -26,10 +26,23 @@ export default function CurrentVersionBadge({
     ? t("header.currentVersionAdmin", { version })
     : t("header.currentVersion", { version });
   const label = `v${version}`;
+  const tooltipContent = (
+    <span>
+      {tooltip}
+      <br />
+      <a
+        href="/third-party-notices/solar-icons.html"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t("header.iconCredits")}
+      </a>
+    </span>
+  );
 
   if (canUpdate) {
     return (
-      <Tooltip title={tooltip} mouseEnterDelay={0.35}>
+      <Tooltip title={tooltipContent} mouseEnterDelay={0.35}>
         <button
           type="button"
           className={`${styles.versionBadge} ${
@@ -45,7 +58,7 @@ export default function CurrentVersionBadge({
   }
 
   return (
-    <Tooltip title={tooltip} mouseEnterDelay={0.35}>
+    <Tooltip title={tooltipContent} mouseEnterDelay={0.35}>
       <span
         className={`${styles.versionBadge} ${
           isMobile ? styles.versionBadgeMobile : ""

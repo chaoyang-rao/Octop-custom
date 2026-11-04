@@ -1,1 +1,0 @@
-import{_ as __name}from"./mermaid.core.BK0zZPt4.js";var _a,ImperativeState=(_a=class{constructor(init){this.init=init,this.records=this.init()}reset(){this.records=this.init()}},__name(_a,"ImperativeState"),_a);export{ImperativeState as I};

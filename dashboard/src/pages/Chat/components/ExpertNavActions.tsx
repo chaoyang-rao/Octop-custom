@@ -8,7 +8,7 @@ import {
   MoreVertical,
   Pin,
   PinOff,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import styles from "../index.module.less";
 
 /** Small pin shown on a pinned expert row. The action itself stays in the menu. */

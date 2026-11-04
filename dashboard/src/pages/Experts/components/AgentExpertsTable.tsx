@@ -317,6 +317,7 @@ export default function AgentExpertsTable({
             }}
           >
             <ExpertIcon
+              agent={row}
               iconUrl={row.icon_url}
               iconName={row.icon_name}
               size={row.icon_url ? 28 : 16}

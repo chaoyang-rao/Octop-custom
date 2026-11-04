@@ -128,6 +128,7 @@ does not set these headers itself.
 |--------|------|------|-------|
 | `GET`    | `/agents` | user | `[{id, agent_id, name, persona_mbti, state, unread_count, ...}]` |
 | `POST`   | `/agents` | user | body `{name, persona_mbti?, default_model?, system_prompt?, description?, icon?, template_name?, config?}` → `201` |
+| `POST`   | `/agents/primary/ensure` | user | Dashboard login initialization → `{agent_id, name}`. Reuses the account's primary or creates Xiaotong; concurrent calls are idempotent. Expert quota and workspace policy apply. |
 | `GET`    | `/agents/{id}` | owner | full agent row |
 | `PATCH`  | `/agents/{id}` | owner | body subset of create body |
 | `DELETE` | `/agents/{id}` | owner | `204` |

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { FileText, Plug } from "lucide-react";
+import { FileText, Plug } from "../../../components/arcIcons";
 import type { ChatConnectorOption } from "./ConnectorPickerPopover";
 import type { ChatAgentOption } from "./ExpertAgentAvatar";
 import type { AgentSubagentSummary } from "../../../api/modules/subagents";

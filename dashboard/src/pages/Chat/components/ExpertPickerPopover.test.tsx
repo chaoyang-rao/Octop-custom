@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import ExpertPickerPopover from "./ExpertPickerPopover";
@@ -60,8 +60,15 @@ describe("ExpertPickerPopover hide shared experts", () => {
     const hideButtons = screen.getAllByRole("button", {
       name: /chat\.expertHide|Hide shared expert|隐藏共享专家/,
     });
-    expect(hideButtons.length).toBe(2);
-    await user.click(hideButtons[0]);
+    expect(hideButtons.length).toBe(3);
+    const sharedRow = screen.getByRole("button", {
+      name: /共享专家甲/,
+    }).parentElement as HTMLElement;
+    await user.click(
+      within(sharedRow).getByRole("button", {
+        name: /chat\.expertHide|Hide shared expert|隐藏共享专家/,
+      }),
+    );
 
     expect(screen.queryByText("共享专家甲")).not.toBeInTheDocument();
     expect(screen.getByText("共享专家乙")).toBeInTheDocument();

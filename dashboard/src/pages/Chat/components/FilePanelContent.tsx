@@ -17,7 +17,7 @@ import {
   FileX,
   Eye,
   Code2,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { probeAuthResource, request, requestBlob } from "../../../api/request";
 import { isNotFoundApiError } from "../../../utils/apiError";

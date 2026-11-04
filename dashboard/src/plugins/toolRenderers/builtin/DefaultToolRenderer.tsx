@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Image, Button } from "antd";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { builtinToolIcon } from "../../../utils/builtinToolIcons";
 import {

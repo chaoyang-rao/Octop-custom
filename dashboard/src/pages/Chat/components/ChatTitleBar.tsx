@@ -9,7 +9,7 @@ import {
   Pencil,
   Trash2,
   GitFork,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { confirmDeleteConversation } from "../utils/deleteConversation";
 import type { Session } from "../hooks/useSessions";
 import SessionChannelIcon from "./SessionChannelIcon";

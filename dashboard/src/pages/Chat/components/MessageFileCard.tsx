@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Download, Eye, Paperclip } from "lucide-react";
+import { Download, Eye, Paperclip } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { downloadAuthFile } from "../../../components/AuthFileDownloadLink";
 import { saveBlobAsFile } from "../../../utils/saveBlobAsFile";

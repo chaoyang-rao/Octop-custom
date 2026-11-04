@@ -13,7 +13,7 @@ import {
   Settings,
   GitFork,
   PanelRight,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { ChatAttachment, ChatMessage } from "../hooks/useChat";

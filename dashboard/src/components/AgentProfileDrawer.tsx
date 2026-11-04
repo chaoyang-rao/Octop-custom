@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Collapse, Drawer, Spin, Tag } from "antd";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "./arcIcons";
 import { request } from "../api/request";
 import { withFromWorkspace } from "../utils/fromWorkspace";
 import type { OctopAgent } from "../context/AgentContext";

@@ -1918,6 +1918,8 @@
     },
     "expertWorkEnabled": "已启用",
     "teamPrimaryHostHover": "{{name}} · 主专家",
+    "primaryExpertBadge": "主",
+    "primaryExpertBadgeTitle": "主专家 · 负责主持团队与派工",
     "projectFolders": {
       "failed": "操作失败，请重试",
       "running": "会话正在运行，请等待任务结束后再更改项目。",
@@ -4297,6 +4299,7 @@
       "custom": "自定义颜色"
     },
     "currentVersion": "当前版本 v{{version}}",
+    "iconCredits": "图标来源与许可",
     "currentVersionAdmin": "当前版本 v{{version}}，点击查看更新",
     "versionUpdateAvailable": "当前 v{{current}}，新版本 v{{latest}} 可用，点击前往更新",
     "versionUpdateAvailableReadonly": "当前 v{{current}}，新版本 v{{latest}} 可用",

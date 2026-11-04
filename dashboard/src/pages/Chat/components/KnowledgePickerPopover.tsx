@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "antd";
-import { Info, Settings2 } from "lucide-react";
+import { Info, Settings2 } from "../../../components/arcIcons";
 import SearchablePickerPanel, {
   pickerStyles,
 } from "../../../components/ChatPicker/SearchablePickerPanel";

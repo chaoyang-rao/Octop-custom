@@ -1,4 +1,4 @@
-import { ChevronDown, ShieldAlert } from "lucide-react";
+import { ChevronDown, ShieldAlert } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { Dropdown } from "antd";
 import type { HitlActionRequest } from "../../../api/types/hitl";

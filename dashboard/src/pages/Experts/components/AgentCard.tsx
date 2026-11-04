@@ -327,6 +327,7 @@ export const AgentCard = memo(function AgentCard({
               style={{ color: accent, background: `${accent}1a` }}
             >
               <ExpertIcon
+                agent={agent}
                 iconUrl={iconUrl ?? agent.icon_url}
                 iconName={iconName ?? agent.icon_name}
                 size={iconUrl ?? agent.icon_url ? 42 : 22}

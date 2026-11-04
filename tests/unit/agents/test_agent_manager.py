@@ -2923,3 +2923,80 @@ async def test_restore_respects_runtime_capability_and_expert_scope(
     finally:
         for row in rows:
             await manager.stop(row.agent_id)
+
+
+async def test_primary_login_reuses_bound_expert_without_resetting_configuration(
+    manager: AgentManager, monkeypatch: Any
+) -> None:
+    uid = manager._repos.user_repo.create(username="primary-owner", password_hash="x", role="admin")
+    manager._repos.agent_repo.create(
+        agent_id="MY_MAIN", user_id=uid, name="我的小通", config_json='{"cli":{"command":"custom"}}'
+    )
+    manager._repos.settings_repo.set(f"teams.primary_expert.{uid}", "MY_MAIN")
+    create = AsyncMock()
+    monkeypatch.setattr(manager, "create", create)
+    primary = await manager.ensure_primary_expert(uid)
+    assert primary.agent_id == "MY_MAIN"
+    assert primary.name == "我的小通"
+    assert json.loads(primary.config_json)["cli"]["command"] == "custom"
+    create.assert_not_awaited()
+
+
+async def test_primary_login_provisions_once_even_with_other_experts(
+    manager: AgentManager, monkeypatch: Any, tmp_path: Path
+) -> None:
+    from octop.infra.agents.experts.catalog import ExpertCatalog
+    from octop.infra.users.resource_policy import POLICY_WORKSPACE_ROOT_DIR
+
+    catalog = ExpertCatalog(default_library_root())
+    catalog.refresh()
+    manager._expert_catalog = catalog
+    uid = manager._repos.user_repo.create(username="needs-primary", password_hash="x", role="user")
+    other_uid = manager._repos.user_repo.create(
+        username="other-primary", password_hash="x", role="user"
+    )
+    manager._repos.agent_repo.create(agent_id="OTHER_MAIN", user_id=other_uid, name="小通")
+    manager._repos.agent_repo.create(agent_id="ANALYST", user_id=uid, name="分析师")
+    root = tmp_path.resolve().as_posix()
+    manager._repos.user_policy_repo.set(uid, POLICY_WORKSPACE_ROOT_DIR, root)
+
+    async def create_row(spec: Any, **kwargs: Any) -> AgentRow:
+        await asyncio.sleep(0)  # Overlap callers before the row exists.
+        assert kwargs["defer_bootstrap"] is True
+        assert spec.name == "小通" and spec.user_id == uid
+        assert spec.config["backend"]["root_dir"] == root
+        manager._repos.agent_repo.create(
+            agent_id="NEW_MAIN", user_id=uid, name=spec.name, template_name=spec.template_name
+        )
+        row = manager.get_row("NEW_MAIN")
+        assert row is not None
+        return row
+
+    create = AsyncMock(side_effect=create_row)
+    monkeypatch.setattr(manager, "create", create)
+    first, second = await asyncio.gather(
+        manager.ensure_primary_expert(uid), manager.ensure_primary_expert(uid)
+    )
+    assert first.agent_id == second.agent_id == "NEW_MAIN"
+    assert manager._repos.settings_repo.get(f"teams.primary_expert.{uid}") == "NEW_MAIN"
+    assert len(manager._repos.agent_repo.list_by_user(uid)) == 2
+    create.assert_awaited_once()
+
+
+async def test_primary_login_obeys_expert_quota(manager: AgentManager) -> None:
+    from octop.infra.agents.experts.catalog import ExpertCatalog
+    from octop.infra.users.resource_policy import POLICY_MAX_AGENTS
+
+    catalog = ExpertCatalog(default_library_root())
+    catalog.refresh()
+    manager._expert_catalog = catalog
+    uid = manager._repos.user_repo.create(
+        username="limited-primary", password_hash="x", role="user"
+    )
+    manager._repos.agent_repo.create(agent_id="ANALYST", user_id=uid, name="分析师")
+    manager._repos.user_policy_repo.set(uid, POLICY_MAX_AGENTS, "1")
+    with pytest.raises(OctopError) as exc:
+        await manager.ensure_primary_expert(uid)
+    assert exc.value.code == ErrorCode.AGENT_QUOTA_EXCEEDED
+    assert manager._repos.settings_repo.get(f"teams.primary_expert.{uid}") is None
+    assert len(manager._repos.agent_repo.list_by_user(uid)) == 1

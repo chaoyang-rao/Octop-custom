@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "./arcIcons";
 import { useTranslation } from "react-i18next";
 import styles from "./RailEdgeControl.module.less";
 

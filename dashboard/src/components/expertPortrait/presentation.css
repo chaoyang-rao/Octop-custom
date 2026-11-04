@@ -1,3 +1,28 @@
+.octop-primary-portrait {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+  overflow: visible;
+}
+.octop-primary-badge {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--primary-badge-size);
+  height: var(--primary-badge-size);
+  border-radius: 5px;
+  background: #202630;
+  color: #fff;
+  box-shadow: 0 0 0 1.5px var(--fn-bg-color, #fff);
+  font:
+    700 calc(var(--primary-badge-size) * 0.64) / 1 system-ui,
+    sans-serif;
+  z-index: 2;
+}
 .octop-team-portrait {
   display: inline-block;
   position: relative;

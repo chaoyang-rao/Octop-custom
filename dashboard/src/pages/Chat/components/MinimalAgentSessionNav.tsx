@@ -17,7 +17,7 @@ import {
   PinOff,
   Search,
   Trash2,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import type { OctopAgent } from "../../../context/AgentContext";
 import { octopThreadsApi } from "../../../api/modules/octopThreads";
 import {

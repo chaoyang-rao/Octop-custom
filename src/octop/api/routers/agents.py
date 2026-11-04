@@ -90,6 +90,11 @@ class ExpertCopyResult(BaseModel):
     state: str
 
 
+class PrimaryExpertResult(BaseModel):
+    agent_id: str = Field(description="Owned primary expert reused or created for this account")
+    name: str
+
+
 class CliReuseBody(BaseModel):
     agent_ids: list[str] = Field(
         min_length=1,
@@ -374,6 +379,29 @@ async def list_agents(
         ],
     )
     return await attach_expert_work_status(server, user.id, payloads)
+
+
+@router.post(
+    "/primary/ensure",
+    response_model=PrimaryExpertResult,
+    summary="Initialize the account's primary expert",
+    description=(
+        "Authenticated dashboard initialization. Reuses the owned primary expert or creates "
+        "Xiaotong from the general-assistant template, then persists the account binding. "
+        "Concurrent calls do not create duplicate experts. Existing configuration is preserved; "
+        "normal expert quota and workspace policy apply."
+    ),
+)
+async def ensure_primary_expert(
+    request: Request,
+    user: Any = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> PrimaryExpertResult:
+    assert server.app_runtime is not None
+    row = await server.app_runtime.agent_registry.ensure_primary_expert(
+        user.id, locale=resolve_request_locale(request)
+    )
+    return PrimaryExpertResult(agent_id=row.agent_id, name=row.name)
 
 
 @router.post("", status_code=201, summary="Create agent")

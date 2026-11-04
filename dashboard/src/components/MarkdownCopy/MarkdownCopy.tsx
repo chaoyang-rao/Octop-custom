@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button, Switch, Input } from "antd";
 import { message } from "@/utils/antdMessage";
 
-import { Copy } from "lucide-react";
+import { Copy } from "../arcIcons";
 import Markdown from "../Markdown/LazyMarkdown";
 import { useTranslation } from "react-i18next";
 import type { CSSProperties } from "react";

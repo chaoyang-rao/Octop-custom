@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Share2 } from "lucide-react";
+import { Share2 } from "../arcIcons";
 import { Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 import styles from "./SharedResourceBadge.module.less";

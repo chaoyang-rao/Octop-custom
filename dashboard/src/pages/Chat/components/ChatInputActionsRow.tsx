@@ -30,7 +30,7 @@ import {
   Route,
   Info,
   Search,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { Tooltip, Popover } from "antd";
 import { message } from "@/utils/antdMessage";
 import type { ResolvedModel } from "../../../api/types";
@@ -1263,6 +1263,7 @@ export default function ChatInputActionsRow({
             type="button"
             // Dictation only fills the composer, so it stays available while a
             // reply is still streaming.
+            aria-label={t("voice.startRecording", "语音输入")}
             disabled={disabled || transcribing || !_sttAvailable}
             onClick={voiceHoldToTalk ? undefined : onToggleVoice}
             onPointerDown={

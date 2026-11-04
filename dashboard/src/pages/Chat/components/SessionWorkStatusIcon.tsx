@@ -1,4 +1,4 @@
-import { Loader2, Clock } from "lucide-react";
+import { Loader2, Clock } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { SessionWorkStatus } from "../utils/sessionWorkStatus";
 import styles from "../index.module.less";

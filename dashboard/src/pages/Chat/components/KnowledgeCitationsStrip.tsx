@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "antd";
-import { FileText } from "lucide-react";
+import { FileText } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { KnowledgeCitation } from "../../../utils/parseKnowledgeCitations";
 import {

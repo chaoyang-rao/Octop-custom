@@ -1,8 +1,8 @@
 /**
- * Map workspace filenames / extensions to coloured lucide icons for file trees.
+ * Map workspace filenames / extensions to coloured arc icons for file trees.
  */
 
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../components/arcIcons";
 import {
   Archive,
   BookOpen,
@@ -34,7 +34,7 @@ import {
   Terminal,
   User,
   Wrench,
-} from "lucide-react";
+} from "../components/arcIcons";
 
 const DEFAULT_COLOR = "var(--fn-text-tertiary)";
 

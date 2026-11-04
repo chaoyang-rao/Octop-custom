@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../../../components/arcIcons";
 import type { SlashMenuGroup } from "../../../utils/slashCategories";
 
 export type SlashPickerRow = {

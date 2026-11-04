@@ -1,5 +1,5 @@
 import { createStyles } from "antd-style";
-import { Sun, Cloud, CloudRain } from "lucide-react";
+import { Sun, Cloud, CloudRain } from "../../../components/arcIcons";
 import { Card, Typography } from "antd";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";

@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "../components/arcIcons";
 import {
   Activity,
   Archive,
@@ -19,7 +19,7 @@ import {
   Type,
   Undo2,
   Zap,
-} from "lucide-react";
+} from "../components/arcIcons";
 
 export const SLASH_ICONS: Record<string, LucideIcon> = {
   Activity,

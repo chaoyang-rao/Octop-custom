@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ChevronDown } from "../../../components/arcIcons";
 import { ExpertIcon } from "../../Experts/components/iconForName";
 import { pastelIconBackground } from "../../../utils/pastelIconBackground";
 import { expertMentionToken, withExpertMention } from "../utils/expertMention";
@@ -88,16 +89,7 @@ export default function WelcomeQuickCards({
           }`}
           onClick={onToggle}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          <ChevronDown size={24} />
         </button>
       )}
     </div>

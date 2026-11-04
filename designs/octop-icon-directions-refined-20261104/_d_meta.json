@@ -1,0 +1,46 @@
+{
+  "type": "design",
+  "designSystems": [],
+  "primaryDesignSystem": null,
+  "assets": {
+    "index": {
+      "versions": [
+        {
+          "path": "index.html",
+          "createdAt": "2026-11-03T17:27:16.733Z",
+          "status": "needs-review"
+        }
+      ]
+    },
+    "option-a": {
+      "versions": [
+        {
+          "path": "option-a.html",
+          "createdAt": "2026-11-03T17:27:16.857Z",
+          "status": "approved",
+          "subtitle": "用户已选定圆弧细线，接入 Octop 侧栏及聊天工具栏"
+        }
+      ]
+    },
+    "option-b": {
+      "versions": [
+        {
+          "path": "option-b.html",
+          "createdAt": "2026-11-03T17:27:16.980Z",
+          "status": "needs-review"
+        }
+      ]
+    },
+    "option-c": {
+      "versions": [
+        {
+          "path": "option-c.html",
+          "createdAt": "2026-11-03T17:27:17.096Z",
+          "status": "needs-review"
+        }
+      ]
+    }
+  },
+  "createdAt": "2026-11-03T17:27:16.741Z",
+  "updatedAt": "2026-11-03T17:55:36.845Z"
+}

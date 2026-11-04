@@ -122,6 +122,40 @@ describe("team portrait occupancy", () => {
     } as unknown as MediaQueryList);
   });
 
+  it("marks only an explicitly identified primary, including renamed experts", () => {
+    const primary = {
+      agent_id: "main",
+      name: "我的助手",
+      is_team_primary: true,
+      icon_url: "/expert-avatars/v2/blob-jade.svg",
+    };
+    const { ExpertPortrait } = createExpertPresentation({
+      React,
+      avatars,
+      useAgent: () => ({ agents: [primary], activeAgent: primary }),
+    });
+    const { container, rerender } = render(
+      <ExpertPortrait agent={primary} size={48} />,
+    );
+    expect(container.querySelector(".octop-primary-badge")?.textContent).toBe(
+      "主",
+    );
+    rerender(<ExpertPortrait iconUrl={primary.icon_url} size={48} />);
+    expect(container.querySelector(".octop-primary-badge")).toBeNull();
+    rerender(<ExpertPortrait agentId="main" size={36} />);
+    expect(container.querySelector(".octop-primary-badge")?.textContent).toBe(
+      "主",
+    );
+    rerender(<ExpertPortrait agent={{ ...primary, is_team_primary: false }} />);
+    expect(container.querySelector(".octop-primary-badge")).toBeNull();
+    rerender(
+      <ExpertPortrait
+        agent={{ ...primary, kind: "team", member_ids: ["main"] }}
+      />,
+    );
+    expect(container.querySelector(".octop-primary-badge")).toBeNull();
+  });
+
   it.each([1, 2, 3, 4])(
     "fits %i equal-size members into a fixed slot",
     (count) => {

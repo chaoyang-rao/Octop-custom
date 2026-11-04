@@ -9,14 +9,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { App, Button, Dropdown, Space, Tag, Typography } from "antd";
-import {
-  CommentOutlined,
-  InboxOutlined,
-  MessageOutlined,
-  RollbackOutlined,
-  SmileOutlined,
-  CloseOutlined,
-} from "@ant-design/icons";
+import { Quote, Archive, MessageSquare, Undo2, Smile, X } from "../arcIcons";
 import { useTranslation } from "react-i18next";
 import {
   conversationsApi,
@@ -138,7 +131,7 @@ export function QuotedReplyDraft({
         fontSize: 12,
       }}
     >
-      <CommentOutlined />
+      <Quote size={14} />
       <Typography.Text ellipsis style={{ flex: 1 }}>
         {t("conversationLibrary.quoting")}{" "}
         {draft.resolved.speaker_name || draft.resolved.role}:{" "}
@@ -147,7 +140,7 @@ export function QuotedReplyDraft({
       <Button
         type="text"
         size="small"
-        icon={<CloseOutlined />}
+        icon={<X size={14} />}
         aria-label={t("conversationLibrary.clearQuote")}
         onClick={onClear}
       />
@@ -173,7 +166,7 @@ export function ChatConversationActions({
       size="small"
       type="text"
       loading={busy}
-      icon={archived ? <RollbackOutlined /> : <InboxOutlined />}
+      icon={archived ? <Undo2 size={14} /> : <Archive size={14} />}
       onClick={async () => {
         setBusy(true);
         try {
@@ -318,7 +311,7 @@ export function ChatMessageActions({
             type="text"
             size="small"
             disabled={busy}
-            icon={<SmileOutlined />}
+            icon={<Smile size={14} />}
             aria-label={t("conversationLibrary.react")}
           />
         </Dropdown>
@@ -327,7 +320,7 @@ export function ChatMessageActions({
             type="text"
             size="small"
             disabled={busy}
-            icon={<CommentOutlined />}
+            icon={<Quote size={14} />}
             aria-label={t("conversationLibrary.quote")}
             onClick={() =>
               void run(async () => {
@@ -352,7 +345,7 @@ export function ChatMessageActions({
             type="text"
             size="small"
             disabled={busy}
-            icon={<MessageOutlined />}
+            icon={<MessageSquare size={14} />}
             aria-label={t("conversationLibrary.sideQuestion")}
             onClick={() =>
               void run(async () => {

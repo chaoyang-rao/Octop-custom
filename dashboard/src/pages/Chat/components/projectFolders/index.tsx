@@ -1,7 +1,11 @@
 import * as React from "react";
 import i18n from "../../../../i18n";
 import { Dropdown } from "antd";
-import { ChevronRight, MoreHorizontal, Plus } from "lucide-react";
+import {
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+} from "../../../../components/arcIcons";
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "../../index.module.less";

@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef } from "react";
+import { CircleDot, Sparkles, Wand2 } from "../../../components/arcIcons";
 import type { TrajectoryEvent } from "../../../api/modules/trajectory";
 import { laneForKind, toLedgerRow } from "../utils/trajectoryModel";
 import styles from "./TrajectoryLedger.module.less";
@@ -33,50 +34,12 @@ function matchAttr(
 
 function KindIcon({ kind }: { kind: string }) {
   if (kind === "tool") {
-    return (
-      <svg
-        className={styles.kindIcon}
-        width="13"
-        height="13"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        aria-hidden
-      >
-        <path d="M10.5 2.5a2.5 2.5 0 0 1 3 3L9 10l-3 1 1-3 4.5-5.5Z" />
-        <path d="M2 14l4-1" />
-      </svg>
-    );
+    return <Wand2 className={styles.kindIcon} size={13} />;
   }
   if (kind === "assistant" || kind === "compacted") {
-    return (
-      <svg
-        className={styles.kindIcon}
-        width="13"
-        height="13"
-        viewBox="0 0 16 16"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d="M8 1.6 9.7 6l4.5.4-3.4 3.1.9 4.4L8 11.7 4.3 13.9l.9-4.4L1.8 6.4 6.3 6 8 1.6Z" />
-      </svg>
-    );
+    return <Sparkles className={styles.kindIcon} size={13} />;
   }
-  return (
-    <svg
-      className={styles.kindIcon}
-      width="13"
-      height="13"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden
-    >
-      <circle cx="8" cy="8" r="5.25" />
-    </svg>
-  );
+  return <CircleDot className={styles.kindIcon} size={13} />;
 }
 
 function kindTagClass(kind: string): string {

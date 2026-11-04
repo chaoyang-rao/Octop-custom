@@ -23,7 +23,12 @@ export function portraitFor(seed, avatars) {
     color: COLORS[Math.floor(n / SHAPES.length) % COLORS.length],
   };
 }
-export function createExpertPresentation({ React, avatars, useAgent }) {
+export function createExpertPresentation({
+  React,
+  avatars,
+  useAgent,
+  usePrimaryLabels,
+}) {
   const h = React.createElement;
   function memberFace(member) {
     const choice = member?.avatar_shape
@@ -97,8 +102,20 @@ export function createExpertPresentation({ React, avatars, useAgent }) {
       }),
     );
   }
-  function ExpertPortrait({ iconUrl, iconName, size = 32, className, agent }) {
+  function ExpertPortrait({
+    iconUrl,
+    iconName,
+    size = 32,
+    className,
+    agent,
+    agentId,
+  }) {
     const context = useAgent?.();
+    const labels = usePrimaryLabels?.() || { label: "主", title: "主专家" };
+    agent ||=
+      agentId && context?.agents?.find((item) => item.agent_id === agentId);
+    // Shared geometric artwork is not an identity: only an explicit expert gets a role badge.
+    const primary = agent?.is_team_primary === true && agent?.kind !== "team";
     agent =
       agent ||
       (iconUrl && context?.activeAgent?.icon_url === iconUrl
@@ -124,12 +141,34 @@ export function createExpertPresentation({ React, avatars, useAgent }) {
     const face = agent
       ? memberFace(agent)
       : portraitFor(iconUrl || iconName, avatars);
-    return avatars.renderAvatar({
+    const portrait = avatars.renderAvatar({
       ...face,
       size,
       className,
       style: { maxWidth: "100%", maxHeight: "100%", flexShrink: 0 },
     });
+    if (!primary) return portrait;
+    return h(
+      "span",
+      {
+        className: "octop-primary-portrait",
+        style: {
+          width: size,
+          height: size,
+          "--primary-badge-size": `${Math.max(10, Math.min(16, size / 3))}px`,
+        },
+      },
+      portrait,
+      h(
+        "span",
+        {
+          className: "octop-primary-badge",
+          title: labels.title,
+          "aria-label": labels.title,
+        },
+        labels.label,
+      ),
+    );
   }
   function HiddenRestore({ agents = [], onRestore, label }) {
     if (!agents.length) return null;

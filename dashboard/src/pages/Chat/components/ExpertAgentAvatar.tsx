@@ -19,6 +19,7 @@ export interface ChatAgentOption {
 }
 
 interface ExpertAgentAvatarProps {
+  agentId?: string | null;
   iconName?: string | null;
   iconUrl?: string | null;
   color?: string | null;
@@ -32,6 +33,7 @@ interface ExpertAgentAvatarProps {
 }
 
 export default function ExpertAgentAvatar({
+  agentId,
   iconName,
   iconUrl,
   size = 32,
@@ -39,6 +41,7 @@ export default function ExpertAgentAvatar({
 }: ExpertAgentAvatarProps) {
   return (
     <ExpertIcon
+      agentId={agentId}
       iconUrl={iconUrl}
       iconName={iconName}
       size={size}

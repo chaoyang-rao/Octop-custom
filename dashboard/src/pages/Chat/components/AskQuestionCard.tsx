@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Input } from "antd";
-import { X } from "lucide-react";
+import { X } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { AskQuestion } from "../../../api/types/hitl";
 import styles from "./AskQuestionCard.module.less";

@@ -1,5 +1,5 @@
 import { Layout } from "antd";
-import { Menu as MenuIcon } from "lucide-react";
+import { Menu as MenuIcon } from "../components/arcIcons";
 import PwaInstallPrompt from "../components/PwaInstallPrompt";
 import AppVersionBadge from "../components/AppVersionBadge";
 import CurrentVersionBadge from "../components/CurrentVersionBadge";

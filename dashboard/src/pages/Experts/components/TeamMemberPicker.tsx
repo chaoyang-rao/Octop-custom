@@ -146,6 +146,7 @@ export default function TeamMemberPicker({
                   style={{ color: accent, background: `${accent}1a` }}
                 >
                   <ExpertIcon
+                    agent={expert}
                     iconUrl={expert.icon_url}
                     iconName={expert.icon_name}
                     size={expert.icon_url ? 36 : 18}

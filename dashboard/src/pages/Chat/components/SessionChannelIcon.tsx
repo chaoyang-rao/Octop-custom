@@ -1,5 +1,5 @@
 import { Tooltip } from "antd";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import {
   CHANNEL_ICONS,

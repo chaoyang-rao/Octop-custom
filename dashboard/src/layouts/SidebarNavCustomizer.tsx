@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Button, Drawer, Input, Popconfirm } from "antd";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, GripVertical, Plus, Trash2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  GripVertical,
+  Plus,
+  Trash2,
+} from "../components/arcIcons";
 import { message } from "../utils/antdMessage";
 import { apiErrorMessage } from "../utils/apiError";
 import { preferencesApi } from "../api/modules/preferences";

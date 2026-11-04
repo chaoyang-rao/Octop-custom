@@ -11,9 +11,9 @@
   min-height: 24px;
   margin-left: 4px;
   padding: 0 5px;
-  border: 1px solid var(--fn-border-secondary, rgba(120, 125, 145, 0.2));
-  border-radius: 999px;
-  background: var(--fn-bg-secondary, #f7f8fa);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--fn-text-secondary, #4b5563);
   font: inherit;
   font-size: 12px;

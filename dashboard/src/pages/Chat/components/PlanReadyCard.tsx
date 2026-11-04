@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ListTodo } from "lucide-react";
+import { ListTodo } from "../../../components/arcIcons";
 import styles from "./PlanReadyCard.module.less";
 
 export interface PlanReadyCardProps {

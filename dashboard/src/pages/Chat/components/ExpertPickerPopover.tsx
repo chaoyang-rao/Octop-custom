@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, GraduationCap, Info } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Info } from "../../../components/arcIcons";
 import SearchablePickerPanel, {
   pickerStyles,
 } from "../../../components/ChatPicker/SearchablePickerPanel";
@@ -155,6 +155,7 @@ export default function ExpertPickerPopover({
               onClick={() => onSelect(agent)}
             >
               <ExpertAgentAvatar
+                agentId={agent.agent_id}
                 iconName={agent.icon_name}
                 iconUrl={agent.icon_url}
                 color={agent.color}

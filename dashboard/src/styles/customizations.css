@@ -55,7 +55,7 @@ body {
   gap: 4px;
 }
 
-/* Retain a 24px target while reducing only the toolbar's visible glyphs. */
+/* Keep the existing 24px targets for the shared arc icon grid. */
 [class*="__actionsRow__"] [class*="__secondaryBtn__"],
 [class*="__actionsRow__"] [class*="__newChatBtn__"],
 [class*="__actionsRow__"] [class*="__sendBtn__"],
@@ -69,33 +69,7 @@ body {
 }
 
 [class*="__actionsRow__"] [class*="__sendBtn__"] {
-  border-radius: 50%;
-}
-
-/* Attribute sizing preserves spinner transforms and exact 50% icon scaling. */
-[class*="__actionsRow__"] button > svg[width="12"][height="12"] {
-  width: 6px;
-  height: 6px;
-}
-
-[class*="__actionsRow__"] button > svg[width="14"][height="14"] {
-  width: 7px;
-  height: 7px;
-}
-
-[class*="__actionsRow__"] button > svg[width="15"][height="15"] {
-  width: 7.5px;
-  height: 7.5px;
-}
-
-[class*="__actionsRow__"] button > svg[width="16"][height="16"] {
-  width: 8px;
-  height: 8px;
-}
-
-[class*="__actionsRow__"] button > svg[width="18"][height="18"] {
-  width: 9px;
-  height: 9px;
+  border-radius: 6px;
 }
 
 [class*="__actionsRow__"] [class*="__contextRingSvg__"] {
@@ -121,12 +95,6 @@ body {
   [class*="__textarea__"] {
     transition: none;
   }
-}
-
-/* 圆形发送按钮，内部图标再缩小一圈 */
-[class*="__actionsRow__"] [class*="__sendBtn__"] > svg[width][height] {
-  width: 7px;
-  height: 7px;
 }
 
 /* Composer tools inherit semantic colors in both light and dark themes. */

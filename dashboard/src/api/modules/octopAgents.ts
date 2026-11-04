@@ -1,6 +1,10 @@
 import { request, requestUpload } from "../request";
 
 export const octopAgentsApi = {
+  ensurePrimary: () =>
+    request<{ agent_id: string; name: string }>("/agents/primary/ensure", {
+      method: "POST",
+    }),
   copyExpert: (agentId: string, name?: string) =>
     request<{ agent_id: string; name: string }>(
       `/agents/${encodeURIComponent(agentId)}/copy`,

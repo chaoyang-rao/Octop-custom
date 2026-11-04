@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from "react";
 import { setActiveAgentId } from "../api/request";
 import { agentApi as legacyAgentApi } from "../api/modules/agent";
+import { octopAgentsApi } from "../api/modules/octopAgents";
 import { onSessionEvent, onStreamEvent } from "../pages/Chat/hooks/chatStore";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { userCan } from "../utils/permissions";
@@ -586,7 +587,10 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         if (haveStored) {
           persistAndApply(stored);
         } else if (merged.length > 0) {
-          persistAndApply(merged[0].agent_id);
+          persistAndApply(
+            (merged.find((agent) => agent.is_team_primary) || merged[0])
+              .agent_id,
+          );
         } else {
           persistAndApply(null);
         }
@@ -608,7 +612,23 @@ export function AgentProvider({ children }: { children: ReactNode }) {
   // provider sits inside AuthGuard so by the time we mount, the JWT is
   // already in localStorage.
   useEffect(() => {
-    void refresh();
+    let disposed = false;
+    void (async () => {
+      let initializationError: unknown;
+      try {
+        await octopAgentsApi.ensurePrimary();
+      } catch (err) {
+        initializationError = err;
+      }
+      if (disposed) return;
+      await refresh();
+      if (!disposed && initializationError instanceof Error) {
+        setError(initializationError.message);
+      }
+    })();
+    return () => {
+      disposed = true;
+    };
   }, [refresh]);
 
   // One activity refresh loop for chat and non-chat navigation alike.

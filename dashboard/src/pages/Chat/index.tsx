@@ -11,7 +11,7 @@ import {
   Terminal,
   FolderOpen,
   Activity,
-} from "lucide-react";
+} from "../../components/arcIcons";
 import { Alert, Button, Tooltip } from "antd";
 import { message as antMessage } from "@/utils/antdMessage";
 import { showConfirmModal } from "../../utils/confirmModal";

@@ -1,4 +1,5 @@
 import { ExpertPortrait } from "../../../components/expertPortrait";
+import type { OctopAgent } from "../../../context/AgentContext";
 /**
  * iconForName — map an expert's ``icon_name`` (a free-form string from the
  * manifest, e.g. ``"cpu"``, ``"trending-up"``, ``"baby"``) to a lucide-react
@@ -118,11 +119,18 @@ export function iconForName(
 
 /** Prefer a remote ``icon_url`` (SkillHub / market) or uploaded avatar over Lucide. */
 export function ExpertIcon({
+  agent,
+  agentId,
   iconUrl,
   iconName,
   size = 22,
   className,
 }: {
+  agentId?: string | null;
+  agent?: Pick<
+    Partial<OctopAgent>,
+    "agent_id" | "is_team_primary" | "kind" | "name" | "icon_url"
+  >;
   iconUrl?: string | null;
   iconName?: string | null;
   size?: number;
@@ -130,6 +138,8 @@ export function ExpertIcon({
 }): ReactNode {
   return (
     <ExpertPortrait
+      agent={agent}
+      agentId={agentId}
       iconUrl={iconUrl}
       iconName={iconName}
       size={size}

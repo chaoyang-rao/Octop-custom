@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from "react";
-import { Cpu } from "lucide-react";
+import { Cpu } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { UserComposerContext } from "../hooks/useChat";
 import type { SkillSpec } from "../../Agent/Skills/useSkills";

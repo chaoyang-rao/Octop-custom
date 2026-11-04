@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Empty, Tooltip } from "antd";
-import { ChevronDown, ChevronRight, Download, Info } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  Info,
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { message } from "@/utils/antdMessage";
 import { requestBlob } from "../../../api/request";

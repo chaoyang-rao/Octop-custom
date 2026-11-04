@@ -1,4 +1,9 @@
-import { Clock, Search, SquareMinus, SquarePlus } from "lucide-react";
+import {
+  Clock,
+  Search,
+  SquareMinus,
+  SquarePlus,
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import styles from "./TrajectoryToolbar.module.less";
 

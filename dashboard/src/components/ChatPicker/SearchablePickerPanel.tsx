@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Search } from "lucide-react";
+import { Search } from "../arcIcons";
 import { useFilteredList } from "../../hooks/useFilteredList";
 import styles from "./picker.module.less";
 

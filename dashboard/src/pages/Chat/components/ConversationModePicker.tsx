@@ -5,7 +5,7 @@ import {
   ListTodo,
   MessageCircleQuestion,
   type LucideIcon,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { Popover, Tooltip } from "antd";
 import type { ConversationMode } from "../utils/conversationMode";
 import styles from "../index.module.less";

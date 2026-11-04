@@ -1918,6 +1918,8 @@
     },
     "expertWorkEnabled": "Enabled",
     "teamPrimaryHostHover": "{{name}} · Primary expert",
+    "primaryExpertBadge": "P",
+    "primaryExpertBadgeTitle": "Primary expert · Coordinates teams and delegates tasks",
     "projectFolders": {
       "failed": "Operation failed. Please try again.",
       "running": "Wait until the conversation finishes before changing its project.",
@@ -4297,6 +4299,7 @@
       "custom": "Custom color"
     },
     "currentVersion": "Current version v{{version}}",
+    "iconCredits": "Icon credits and license",
     "currentVersionAdmin": "Current version v{{version}}. Click to open Updates.",
     "versionUpdateAvailable": "v{{current}} installed — v{{latest}} is available. Click to open Updates.",
     "versionUpdateAvailableReadonly": "v{{current}} installed — v{{latest}} is available",

@@ -3,6 +3,7 @@ import {
   Monitor,
   MessageSquareText,
   Timer,
+  ClipboardCheck,
   SlidersHorizontal,
   Waypoints,
   Link2,
@@ -20,7 +21,7 @@ import {
   GraduationCap,
   Shield,
   PanelsTopLeft,
-} from "lucide-react";
+} from "../components/arcIcons";
 import type { OctopUser } from "../api/modules/auth";
 import { navAllowed, userCan } from "../utils/permissions";
 
@@ -192,7 +193,7 @@ export function buildNavSections(
     topItems.push({
       key: "task-queue",
       path: "/task-queue",
-      icon: <Timer size={iconSize} strokeWidth={iconStroke} />,
+      icon: <ClipboardCheck size={iconSize} strokeWidth={iconStroke} />,
       labelKey: "nav.taskQueue",
     });
   }

@@ -508,6 +508,7 @@ class AgentManager:
         self._harness_manager: HarnessAgentManager | None = None
         self.memory_slim = MemorySlimCoordinator(self)
         self._lock = asyncio.Lock()
+        self._primary_bootstrap_locks: dict[int, asyncio.Lock] = {}
         # Serialize start/reload per agent so parallel provider reloads cannot
         # double-register the same harness id ("already exists in the registry").
         self._agent_lifecycle_locks: dict[str, asyncio.Lock] = {}
@@ -628,6 +629,52 @@ class AgentManager:
     @property
     def teams(self) -> Any:
         return self._teams
+
+    async def ensure_primary_expert(self, user_id: int, *, locale: str = "zh") -> AgentRow:
+        """Reuse the account's primary, or provision Xiaotong on first dashboard login."""
+        from octop.infra.agents.experts.catalog import build_create_spec_from_expert
+        from octop.infra.agents.experts.default_agent import (
+            DEFAULT_EXPERT_ID,
+            default_home_local_backend,
+        )
+        from octop.infra.users.resource_policy import (
+            POLICY_WORKSPACE_ROOT_DIR,
+            effective_workspace_root_dir,
+        )
+
+        async with self._primary_bootstrap_locks.setdefault(user_id, asyncio.Lock()):
+            primary = await asyncio.to_thread(self._teams.primary_expert_for_user, user_id)
+            if primary is None:
+                expert = (
+                    self._expert_catalog.get(DEFAULT_EXPERT_ID) if self._expert_catalog else None
+                )
+                if expert is None:
+                    raise OctopError(
+                        ErrorCode.EXPERT_TEMPLATE_NOT_FOUND, "expert template not found"
+                    )
+                policy = await asyncio.to_thread(
+                    self._repos.user_policy_repo.get, user_id, POLICY_WORKSPACE_ROOT_DIR
+                )
+                spec = build_create_spec_from_expert(
+                    expert_id=DEFAULT_EXPERT_ID,
+                    expert=expert,
+                    user_id=user_id,
+                    name="小通",
+                    locale=locale,
+                    config_extra={
+                        "backend": default_home_local_backend(
+                            root_dir=effective_workspace_root_dir(policy)
+                        )
+                    },
+                )
+                primary = await self.create(spec, defer_bootstrap=True)
+                await asyncio.to_thread(
+                    self._repos.settings_repo.set,
+                    f"teams.primary_expert.{user_id}",
+                    primary.agent_id,
+                )
+            # Persist the inferred legacy primary, retaining its name, model and CLI settings.
+            return cast("AgentRow", await asyncio.to_thread(self._teams.require_primary, user_id))
 
     async def record_task_room_input(self, message: Any, *, user_id: int, thread_id: str) -> None:
         if self._task_manager is not None:

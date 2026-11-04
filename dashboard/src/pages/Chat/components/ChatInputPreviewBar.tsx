@@ -1,5 +1,5 @@
 import { Image } from "antd";
-import { X, FileText } from "lucide-react";
+import { X, FileText } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { useAuthImageSrc } from "../../../hooks/useAuthImageSrc";
 import type { ChatAttachment } from "../hooks/useChat";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import styles from "../index.module.less";
 

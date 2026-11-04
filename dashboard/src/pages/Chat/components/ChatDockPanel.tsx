@@ -21,7 +21,7 @@ import {
   RefreshCw,
   Terminal,
   X,
-} from "lucide-react";
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import BrowserWorkspace, {
   type PanelMode,

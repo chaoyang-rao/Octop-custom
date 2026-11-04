@@ -1,4 +1,9 @@
-import { CornerDownLeft, Paperclip, Pencil, X } from "lucide-react";
+import {
+  CornerDownLeft,
+  Paperclip,
+  Pencil,
+  X,
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { QueuedChatItem } from "../hooks/useChatMessageQueue";
 import styles from "../index.module.less";

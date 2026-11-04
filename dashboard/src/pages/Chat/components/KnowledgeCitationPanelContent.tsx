@@ -7,7 +7,11 @@ import {
   type ReactNode,
 } from "react";
 import { App, Tooltip } from "antd";
-import { ArrowDownToLine, ArrowUpToLine, ExternalLink } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ArrowUpToLine,
+  ExternalLink,
+} from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "antd";
-import { Users } from "lucide-react";
+import { Users } from "../../../components/arcIcons";
 import { isTeamAgent } from "../../../utils/teamAgent";
 import styles from "../index.module.less";
 

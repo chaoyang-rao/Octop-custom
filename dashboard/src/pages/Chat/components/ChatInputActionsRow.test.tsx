@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { ResolvedModel } from "../../../api/types";
@@ -246,9 +246,7 @@ function renderRow(overrides: Record<string, unknown> = {}) {
       />
     </MemoryRouter>,
   );
-  const mic = view.container
-    .querySelector("svg.lucide-mic")
-    ?.closest("button") as HTMLButtonElement;
+  const mic = view.getByRole("button", { name: "语音输入" });
   return { ...view, ...handlers, mic };
 }
 

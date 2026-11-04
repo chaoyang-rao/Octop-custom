@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ChevronRight, FilePen, Globe } from "lucide-react";
+import { ChevronRight, FilePen, Globe } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import type { HitlDecisionHandler } from "../../../api/types/hitl";
 import type { ChatMessage } from "../hooks/useChat";
