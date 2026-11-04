@@ -428,6 +428,19 @@ class ThreadRegistry:
     def list_projects(self, *, agent_id: str, user_id: int) -> list[dict[str, object]]:
         return self._threads.list_projects(agent_id=agent_id, user_id=user_id)
 
+    def inherit_project_from(
+        self, *, source_id: str, target_id: str, user_id: int, agent_id: str
+    ) -> None:
+        from octop.infra.agents.threads.project_runtime import inherit_task_project
+
+        inherit_task_project(
+            self._threads,
+            source_id=source_id,
+            target_id=target_id,
+            user_id=user_id,
+            agent_id=agent_id,
+        )
+
     def upsert_project(
         self, *, agent_id: str, user_id: int, project_path: str, project_name: str | None = None
     ) -> dict[str, object]:

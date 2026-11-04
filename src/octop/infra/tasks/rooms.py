@@ -434,6 +434,16 @@ class TaskRooms:
                 channel_id=self.gateway.dashboard_channel_id,
             )
             await asyncio.to_thread(registry.set_title_if_null, thread_id, row.name)
+            from octop.infra.agents.threads.project_runtime import inherit_task_project
+
+            await asyncio.to_thread(
+                inherit_task_project,
+                self.repos.thread_repo,
+                source_id=scope["origin_thread_id"],
+                target_id=thread_id,
+                user_id=owner.id,
+                agent_id=row.agent_id,
+            )
             room = await asyncio.to_thread(self.repo.bind_room, scope_id, row.agent_id, thread_id)
             await self._roster(room["agent_id"], owner, members)
             # The real primary performed the delegation; this is a recorded host event.

@@ -9,6 +9,7 @@ import {
   Pencil,
   Trash2,
   GitFork,
+  Brain,
 } from "../../../components/arcIcons";
 import { confirmDeleteConversation } from "../utils/deleteConversation";
 import type { Session } from "../hooks/useSessions";
@@ -31,6 +32,7 @@ interface ChatTitleBarProps {
   ) => void | Promise<boolean | null | void>;
   forkDisabled?: boolean;
   forkDisabledHint?: string;
+  onOpenMemory?: () => void;
   isTeam?: boolean;
   agent?: {
     bridge?: boolean | null;
@@ -48,6 +50,7 @@ export default function ChatTitleBar({
   onDelete,
   forkDisabled,
   forkDisabledHint,
+  onOpenMemory,
   isTeam = false,
   agent = null,
 }: ChatTitleBarProps) {
@@ -79,6 +82,16 @@ export default function ChatTitleBar({
 
   const menuItems: MenuProps["items"] = useMemo(
     () => [
+      ...(onOpenMemory
+        ? [
+            {
+              key: "memory",
+              label: t("scopedMemory.title"),
+              icon: <Brain size={14} />,
+              onClick: onOpenMemory,
+            },
+          ]
+        : []),
       {
         key: "pin",
         label: session.pinned
@@ -115,6 +128,7 @@ export default function ChatTitleBar({
       onDelete,
       forkDisabled,
       forkDisabledHint,
+      onOpenMemory,
       t,
     ],
   );

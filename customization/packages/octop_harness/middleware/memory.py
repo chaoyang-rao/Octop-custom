@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import asyncio
 import logging
 import os
 import threading
@@ -251,7 +252,7 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
         # so ``after_model`` can record only the messages produced this turn.
         # Keyed by thread id rather than ``self`` to stay correct under parallel
         # subagents.
-        self._cursors: dict[int, int] = {}
+        self._cursors: dict[str | int, int] = {}
         # Track session_id -> set of thread_ids seen, for ``end_session``.
         # We treat one langgraph thread_id as one logical session for now;
         # callers wanting cross-thread sessions can pass an explicit one in
@@ -302,7 +303,10 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
         """
         try:
             messages = _extract_messages(state)
-            self._cursors[threading.get_ident()] = len(messages)
+            key = _get_configurable(runtime).get("thread_id") or threading.get_ident()
+            self._cursors[key] = len(messages)
+            if messages and isinstance(messages[-1], HumanMessage) and callable(getattr(type(self._service), "for_context", None)):
+                self._service.for_context(_get_configurable(runtime), message=messages[-1])
             if (
                 self._service is not None
                 and self._recall_inject_enabled
@@ -327,14 +331,27 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
         """Replay durable recall on API message copies; preserve the system prompt."""
-        return handler(request.override(messages=replay_recall_snapshots(request.messages)))
+        return handler(request.override(messages=self._replay_scoped(request)))
 
     async def awrap_model_call(
         self,
         request: ModelRequest,
         handler: Callable[[ModelRequest], Any],
     ) -> Any:
-        return await handler(request.override(messages=replay_recall_snapshots(request.messages)))
+        messages = await asyncio.to_thread(self._replay_scoped, request)
+        return await handler(request.override(messages=messages))
+
+    def _replay_scoped(self, request: ModelRequest) -> list[Any]:
+        if callable(getattr(type(self._service), "for_context", None)):
+            from octop_harness.middleware.runtime import runtime_config
+
+            cfg = dict(runtime_config(request).get("configurable") or {})
+            try:
+                scope_id = self._service.for_context(cfg).scope_id
+            except PermissionError:
+                scope_id = "unavailable"
+            return replay_recall_snapshots(request.messages, scope_id=scope_id)
+        return replay_recall_snapshots(request.messages)
 
     def after_model(self, state: Any, runtime: Any) -> None:
         """Persist messages produced this turn to MemoryService and/or JSONL.
@@ -354,7 +371,8 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
         """
         try:
             messages = _extract_messages(state)
-            cursor = self._cursors.pop(threading.get_ident(), 0)
+            key = _get_configurable(runtime).get("thread_id") or threading.get_ident()
+            cursor = self._cursors.pop(key, 0)
             new_messages: list[BaseMessage] = list(messages[cursor:]) if cursor <= len(messages) else []
             if not new_messages:
                 return
@@ -407,10 +425,10 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
             logger.warning("MemoryMiddleware after_model failed", exc_info=True)
 
     async def abefore_model(self, state: Any, runtime: Any) -> dict[str, Any] | None:
-        return self.before_model(state, runtime)
+        return await asyncio.to_thread(self.before_model, state, runtime)
 
     async def aafter_model(self, state: Any, runtime: Any) -> None:
-        self.after_model(state, runtime)
+        await asyncio.to_thread(self.after_model, state, runtime)
 
     # ------------------------------------------------------------------
     # Session-end extract trigger
@@ -498,6 +516,7 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
     ) -> HumanMessage:
         """Freeze success, empty recall, maintenance skip, or failure for this turn."""
         rendered = ""
+        scope_id = None
         try:
             query = _stringify_content(message.content).strip()
             configurable = _get_configurable(runtime)
@@ -507,8 +526,12 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
                 logger.info("memory.recall skip: maintenance %s", self.maintenance_status()["phase"])
             elif query:
                 assert self._service is not None  # gated by caller
+                service = self._service
+                if callable(getattr(type(service), "for_context", None)):
+                    service = service.for_context(configurable)
+                    scope_id = service.scope_id
                 context_options = {"manual_context": manual_context} if manual_context is not None else {}
-                result = self._service.recall(
+                result = service.recall(
                     query, thread_id=thread_id, session_id=session_id, limit=self._recall_limit, **context_options
                 )
                 rendered = getattr(result, "rendered", None) or ""
@@ -521,7 +544,7 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
                 )
         except Exception:  # recall injection is best-effort; pylint: disable=broad-except
             logger.warning("MemoryMiddleware recall injection failed", exc_info=True)
-        return stamp_recall_snapshot(message, rendered)
+        return stamp_recall_snapshot(message, rendered, scope_id=scope_id)
 
     # ------------------------------------------------------------------
     # Write-path helpers
@@ -537,6 +560,8 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
         user_id = configurable.get("user")
         service = self._service
         assert service is not None  # gated by caller
+        if callable(getattr(type(service), "for_context", None)):
+            service = service.for_context(configurable)
 
         def _run() -> None:
             logger.debug(
@@ -687,6 +712,12 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
             self._idle_timers.clear()
         for timer in timers:
             timer.cancel()
+
+    def wait_background(self, *, timeout: float = 120) -> None:
+        """Drain accepted jobs after shutdown, including an already-paused store."""
+        with self._background_condition:
+            if not self._background_condition.wait_for(lambda: self._background_active == 0, timeout=timeout):
+                raise TimeoutError("Memory workers did not finish; keep their stores open")
 
     def schedule_manual_review(self) -> None:
         """Ask the background worker to compare one batch of atoms with the owner documents.
@@ -929,14 +960,15 @@ class MemoryMiddleware(AgentMiddleware[Any, Any]):
             # each reclaim the same rows back to back. Half the cadence is a
             # wide enough window to fold a startup burst into one pass while
             # still letting the next hourly tick through.
-            if not _claim_reclaim_slot(memory, window=self._maintenance_interval_seconds / 2):
-                logger.debug("memory.maintenance skip: another agent just reclaimed this store")
-                return
-
             def _nudge(store: Any) -> Any:
                 return nudge_vacuum(store, pages=_MAINTENANCE_VACUUM_PAGES)
 
-            self._run_reclaim_pass(memory, run_gc=run_gc, nudge_vacuum=_nudge)
+            memories = service.maintenance_memories() if callable(getattr(type(service), "maintenance_memories", None)) else [memory]
+            for store in memories:
+                if not _claim_reclaim_slot(store, window=self._maintenance_interval_seconds / 2):
+                    logger.debug("memory.maintenance skip: another agent just reclaimed this store")
+                    continue
+                self._run_reclaim_pass(store, run_gc=run_gc, nudge_vacuum=_nudge)
         except Exception:  # maintenance runs off the user path; pylint: disable=broad-except
             logger.warning("memory.maintenance failed", exc_info=True)
         finally:

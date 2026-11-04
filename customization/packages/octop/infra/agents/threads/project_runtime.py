@@ -12,6 +12,30 @@ from octop.infra.utils.locale import DEFAULT_LOCALE, Locale
 PROJECT_CONFIG_KEYS = ("octop_project_path", "octop_project_name")
 
 
+def inherit_task_project(
+    thread_repo: Any, *, source_id: str, target_id: str, user_id: int, agent_id: str
+) -> None:
+    """New task conversations keep the origin's project across expert changes."""
+    source, target = thread_repo.get(source_id), thread_repo.get(target_id)
+    if (
+        source is None
+        or target is None
+        or source.user_id != user_id
+        or target.user_id != user_id
+        or target.agent_id != agent_id
+        or not source.project_path
+        or target.project_path
+    ):
+        return
+    thread_repo.set_project(
+        target_id,
+        agent_id=agent_id,
+        user_id=user_id,
+        project_path=source.project_path,
+        project_name=source.project_name,
+    )
+
+
 def thread_project_config(
     thread_repo: Any,
     *,

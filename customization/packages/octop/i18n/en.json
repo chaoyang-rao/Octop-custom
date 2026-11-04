@@ -419,6 +419,8 @@
     "CHECKPOINT_DELETE_FAILED": "Conversation data was not deleted. The thread is still here; try again.",
     "AGENT_FAILED": "Agent failed to start.",
     "AGENT_BUSY": "Agent is busy.",
+    "MEMORY_SCOPE_UNAVAILABLE": "Cross-session memory is unavailable. Enable expert memory and reload the runtime.",
+    "MEMORY_REVISION_CONFLICT": "This memory has changed or was retired. Refresh before editing.",
     "AGENT_NAME_TAKEN": "This name is already in use. Please choose another.",
     "AGENT_ID_INVALID": "Invalid custom id: use 3-64 letters/digits/underscores/hyphens, starting and ending with a letter or digit.",
     "AGENT_ID_TAKEN": "This id is already in use. Please choose another.",

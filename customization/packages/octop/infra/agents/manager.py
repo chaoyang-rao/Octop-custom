@@ -1698,6 +1698,15 @@ class AgentManager:
         except KeyError:
             raise self._unavailable_error(agent_id) from None
 
+    def scoped_memory_operation(
+        self, agent_id: str, thread_id: str, user_id: int, operation: str, **params: Any
+    ) -> dict[str, Any]:
+        from octop.infra.agents.memory.scoped_dashboard import ScopedMemoryDashboard
+
+        return ScopedMemoryDashboard(self, self._repos, self._teams).execute(
+            agent_id, thread_id, user_id, operation, **params
+        )
+
     def _unavailable_error(self, agent_id: str) -> OctopError:
         """Map a missing live harness handle to the right public error code."""
         row = self.get_row(agent_id)
@@ -4633,6 +4642,13 @@ class AgentManager:
         harness_fields: dict[str, Any] = {}
         if "decision" in _HARNESS_AGENT_CONFIG_FIELDS:
             harness_fields["decision"] = self._decision.harness_config()
+        if "memory_scope_resolver" in _HARNESS_AGENT_CONFIG_FIELDS:
+            from octop.infra.agents.memory.scopes import MemoryScopePolicy
+
+            memory_policy = MemoryScopePolicy(self._repos, self._teams, self._config)
+            harness_fields["memory_scope_resolver"] = lambda context: memory_policy.resolve(
+                row.agent_id, context
+            )
 
         harness_cfg = HarnessAgentConfig(
             name=_memory_namespace(row.agent_id),

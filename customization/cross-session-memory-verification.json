@@ -1,0 +1,81 @@
+{
+  "feature": "project-scoped-cross-session-memory",
+  "date": "2026-11-04",
+  "status": "verified-before-install",
+  "checks": [
+    {
+      "command": "make all PYTEST_JOBS=4",
+      "passed": 5829,
+      "skipped": 35
+    },
+    {
+      "command": "uv run pytest tests/unit/agents/test_memory_scopes.py tests/unit/i18n -q",
+      "passed": 92
+    },
+    {
+      "command": "uv run pytest tests/unit/agents -k \"team or thread_project or memory_scopes\" -q",
+      "passed": 72
+    },
+    {
+      "command": "uv run pytest tests/unit/agents/test_memory_scopes.py tests/unit/agents/test_thread_project_runtime.py tests/unit/tasks -q",
+      "passed": 229
+    },
+    {
+      "command": "portable Python 3.12 offline scoped-memory and context-compaction unittest",
+      "passed": 15
+    },
+    {
+      "command": "vitest ScopedMemoryPanel ChatTitleBar --maxWorkers=1",
+      "passed": 9
+    },
+    {
+      "command": "npm run build",
+      "result": "passed; includes tsc -b"
+    },
+    {
+      "command": "mypy --strict src/octop",
+      "result": "passed"
+    },
+    {
+      "command": "sync_octop_source.py --check",
+      "result": "2201 files, no drift"
+    },
+    {
+      "command": "sync_dashboard.py --check",
+      "result": "540 files verified"
+    },
+    {
+      "command": "uv run pytest tests/unit/tasks/test_task_room_peers.py tests/unit/tasks/test_task_rooms.py tests/unit/agents/test_memory_scopes.py -q",
+      "passed": 25
+    },
+    {
+      "command": "make all PYTEST_JOBS=4 (final repeat)",
+      "passed": 5829,
+      "skipped": 35,
+      "failed": 1,
+      "failure": "tests/unit/tasks/test_coding.py::test_timeout_kills_child_even_when_its_parent_already_exited",
+      "detail": "Darwin PermissionError from os.killpg; the same unchanged cleanup case was already intermittent before this feature. Full coding module is retried separately; no bypass or coding source changes."
+    },
+    {
+      "command": "uv run pytest tests/unit/tasks/test_coding.py -q (isolated retry of unchanged macOS process cleanup module)",
+      "passed": 28
+    }
+  ],
+  "contracts": [
+    "same-account same-project expert and group sharing",
+    "account and project isolation",
+    "unbound private legacy read compatibility without project migration",
+    "source conversation links and append-only corrections",
+    "loaded scope token prevents stale project writes",
+    "user-quote evidence required for agent saves",
+    "assistant conjecture and delegated prompts excluded from long-term capture",
+    "latest-turn scoped recall and matching token accounting",
+    "background capture fixed to invocation scope; shutdown drains workers"
+  ],
+  "boundaries": [
+    "No historical auto-classification or bulk backfill",
+    "PostgreSQL uses existing library namespace backend; this acceptance exercised SQLite",
+    "Real provider network calls were not used in tests",
+    "Original expert export/restore surfaces continue targeting the original expert store"
+  ]
+}

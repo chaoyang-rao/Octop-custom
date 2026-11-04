@@ -77,6 +77,16 @@ class MemoryRuntime:
                 if workspace is not None
                 else None,
             )
+            if config.memory_scope_resolver is not None:
+                from octop_harness.memory.scoped import ScopedMemoryService
+
+                self._service = ScopedMemoryService(
+                    self._service,
+                    config=config,
+                    workspace_path=workspace_path,
+                    llm=self._llm_client,
+                    service_config=_extraction_service_config(config),
+                )
 
     @property
     def memory(self) -> Any | None:
@@ -97,6 +107,10 @@ class MemoryRuntime:
         """Return service-backed memory tools for the agent tool list."""
         if self._service is None:
             return []
+        if self._config.memory_scope_resolver is not None:
+            from octop_harness.memory.scoped import build_scoped_memory_tools
+
+            return build_scoped_memory_tools(self._service)
         return list(build_memory_tools(self._service))
 
     def build_middleware(self) -> MemoryMiddleware | None:
@@ -211,6 +225,10 @@ class MemoryRuntime:
         if middleware is not None:
             with contextlib.suppress(Exception):
                 middleware.shutdown()
+        if self._config.memory_scope_resolver is not None and self._service is not None:
+            if middleware is not None:
+                middleware.wait_background()
+            self._service.close()
         key = self._memory_key
         memory = self._memory
         self._memory_key = None

@@ -133,6 +133,8 @@
     "THREAD_TURN_ACTIVE": "A reply is still in progress. Stop it, then delete this conversation.",
     "AGENT_FAILED": "Agent failed to start.",
     "AGENT_BUSY": "Agent is busy.",
+    "MEMORY_SCOPE_UNAVAILABLE": "Cross-session memory is unavailable. Enable expert memory and reload the runtime.",
+    "MEMORY_REVISION_CONFLICT": "This memory has changed or was retired. Refresh before editing.",
     "AGENT_NAME_TAKEN": "This name is already in use. Please choose another.",
     "AGENT_ID_INVALID": "Invalid custom id: use 3-64 letters/digits/underscores/hyphens, starting and ending with a letter or digit.",
     "AGENT_ID_TAKEN": "This id is already in use. Please choose another.",
@@ -7901,5 +7903,32 @@
     },
     "actionFailed": "The action did not complete. Try again.",
     "finishApprovalBeforeQuote": "Complete the pending approval or clear the quote before replying."
+  },
+  "scopedMemory": {
+    "title": "Cross-session memory",
+    "scope": "Memory scope",
+    "description": "Experts and groups under the same account and project folder share project memories. Only relevant context is recalled. Unbound conversations use the current expert’s memory.",
+    "scopes": {
+      "auto": "Automatic: current project / expert",
+      "user": "User preferences: your experts",
+      "project": "Project: conversations in this project",
+      "expert": "Expert: this expert only",
+      "session": "Session: temporary information"
+    },
+    "search": "Search memories",
+    "includeOld": "Show replaced or retired memories",
+    "empty": "No distilled memories in this scope yet",
+    "retired": "Retired",
+    "source": "Source conversation",
+    "correct": "Correct",
+    "retire": "Retire",
+    "revisions": "Revision history",
+    "previous": "Previous",
+    "next": "Next",
+    "total": "{{count}} memories",
+    "add": "Add confirmed information",
+    "content": "Enter a fact or corrected assertion",
+    "historyHint": "Corrections create a successor. Previous assertions and sources remain available. Existing unclassified memories stay on the original expert memory page and are not automatically merged into projects.",
+    "failed": "Could not load memories. Please retry."
   }
 }

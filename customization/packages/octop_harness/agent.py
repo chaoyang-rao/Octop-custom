@@ -281,6 +281,13 @@ class HarnessAgent:
         """Low-level structured memory instance for advanced inspection/debugging."""
         return self._memory_runtime.memory
 
+    def memory_for_context(self, configurable: dict[str, Any]) -> Any:
+        """Return an authorized scoped view without changing checkpoint storage."""
+        service = self._memory_runtime.service
+        if self._config.memory_scope_resolver is None or service is None:
+            raise ValueError("scoped memory is disabled")
+        return service.for_context(configurable)
+
     def memory_maintenance_status(self) -> dict[str, Any] | None:
         """Slimming phase for host status APIs. ``None`` when memory is off."""
         middleware = self._memory_runtime.middleware
@@ -1072,9 +1079,9 @@ class HarnessAgent:
         if self._defer_close_while_busy():
             return
         self._hitl_resume_configs.clear()
+        self._memory_runtime.close()
         if self._owns_model_factory:
             self._model_factory.close()
-        self._memory_runtime.close()
         self._release_checkpointer()
         self._close_backend()
 
@@ -1090,9 +1097,9 @@ class HarnessAgent:
         if self._defer_close_while_busy():
             return
         self._hitl_resume_configs.clear()
+        await asyncio.to_thread(self._memory_runtime.close)
         if self._owns_model_factory:
             await self._model_factory.aclose()
-        self._memory_runtime.close()
         await self._release_checkpointer_async()
         self._close_backend()
 

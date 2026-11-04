@@ -218,6 +218,7 @@ class TeamManager:
                 uid,
             )
         if thread_id and session_key and uid is not None:
+            previous_thread = await asyncio.to_thread(self._thread_registry.get_thread, thread_id)
             parts = session_key.split(":", 3)
             channel_type = parts[1] if len(parts) >= 2 else "dashboard"
             self._thread_registry.ensure_thread(
@@ -227,6 +228,14 @@ class TeamManager:
                 channel_type=channel_type,
                 session_key=session_key,
             )
+            if previous_thread is None and call.source_thread_id:
+                await asyncio.to_thread(
+                    self._thread_registry.inherit_project_from,
+                    source_id=call.source_thread_id,
+                    target_id=thread_id,
+                    user_id=uid,
+                    agent_id=call.to_agent_id,
+                )
             self._title_member_thread(call, thread_id, uid)
             if group:
                 self._seed_member_user_question(

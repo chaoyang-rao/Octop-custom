@@ -806,6 +806,8 @@ class HarnessAgentConfig:
     # use ``self.name`` so each agent gets its own isolated memory partition
     # by default (decision A: per-agent isolation).
     memory_namespace: str | None = None
+    # Host-owned authorization callback; never loaded from declarative JSON.
+    memory_scope_resolver: Callable[[dict[str, Any]], dict[str, Any]] | None = None
     # Auxiliary model (extractor / promotion / page regen). ``False`` → run
     # MemoryService without an LLM; capture + raw FTS recall still work,
     # extraction degrades to ``failure_reason``.
@@ -1046,6 +1048,7 @@ class HarnessAgentConfig:
     _unserializable_fields: frozenset[str] = frozenset(
         {
             "model_selector",
+            "memory_scope_resolver",
             "checkpointer",
             "tools",
             "middleware",

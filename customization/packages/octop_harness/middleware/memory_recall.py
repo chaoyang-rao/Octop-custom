@@ -40,7 +40,7 @@ def has_recall_snapshot(message: HumanMessage) -> bool:
     return _snapshot_suffix(message) is not None
 
 
-def stamp_recall_snapshot(message: HumanMessage, rendered: str) -> HumanMessage:
+def stamp_recall_snapshot(message: HumanMessage, rendered: str, *, scope_id: str | None = None) -> HumanMessage:
     """Return a clean-content message with checkpoint-durable recall metadata."""
     suffix = (
         "\n\n<memory-context>\n"
@@ -50,24 +50,32 @@ def stamp_recall_snapshot(message: HumanMessage, rendered: str) -> HumanMessage:
         else ""
     )
     snapshot = {"version": 1, "content_hash": _content_hash(message.content), "suffix": suffix}
+    if scope_id is not None:
+        snapshot["scope_id"] = scope_id
     return message.model_copy(
         update={"additional_kwargs": {**message.additional_kwargs, RECALL_SNAPSHOT_KEY: snapshot}}
     )
 
 
-def replay_recall_snapshots(messages: list[AnyMessage]) -> list[AnyMessage]:
+def replay_recall_snapshots(messages: list[AnyMessage], *, scope_id: str | None = None) -> list[AnyMessage]:
     """Build API copies of all snapshotted user messages, stripping private metadata.
 
     Replay runs even when fresh recall is disabled/unavailable. Old turns must
     keep the content already sent. Unstamped legacy history stays untouched;
     an edited/compacted message discards its stale snapshot on the API copy.
+    Scoped calls replay only the latest user turn's matching-scope suffix;
+    earlier snapshots remain in checkpoints for provenance, not reinjection.
     """
     replayed: list[AnyMessage] = []
-    for message in messages:
+    latest_user = max((i for i, msg in enumerate(messages) if isinstance(msg, HumanMessage)), default=-1)
+    for index, message in enumerate(messages):
         if not isinstance(message, HumanMessage) or RECALL_SNAPSHOT_KEY not in message.additional_kwargs:
             replayed.append(message)
             continue
         suffix = _snapshot_suffix(message)
+        snapshot = message.additional_kwargs.get(RECALL_SNAPSHOT_KEY, {})
+        if scope_id is not None and (not isinstance(snapshot, dict) or snapshot.get("scope_id") != scope_id or index != latest_user):
+            suffix = None
         # Downstream provider adapters may decorate or normalize content blocks.
         # Keep those mutations off checkpoint-owned image/text dictionaries.
         api_message = message.model_copy(deep=True)
@@ -83,4 +91,5 @@ def replay_recall_snapshots(messages: list[AnyMessage]) -> list[AnyMessage]:
 def count_tokens_with_recall(messages: Iterable[MessageLikeRepresentation], **kwargs: Any) -> int:
     """Include durable recall when upstream compaction counts clean state messages."""
     normalized = cast(list[AnyMessage], convert_to_messages(messages))
-    return count_tokens_approximately(replay_recall_snapshots(normalized), **kwargs)
+    scope_id = next((msg.additional_kwargs[RECALL_SNAPSHOT_KEY].get("scope_id") for msg in reversed(normalized) if isinstance(msg, HumanMessage) and isinstance(msg.additional_kwargs.get(RECALL_SNAPSHOT_KEY), dict) and msg.additional_kwargs[RECALL_SNAPSHOT_KEY].get("scope_id")), None)
+    return count_tokens_approximately(replay_recall_snapshots(normalized, scope_id=scope_id), **kwargs)

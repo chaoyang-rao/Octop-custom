@@ -92,6 +92,36 @@ async def test_worker_consultation_creates_group_and_records_actual_question_and
     assert e.repos.task_repo.get(parent.task_id).state == "running"
 
 
+async def test_consultation_and_its_new_room_keep_the_origin_project(room_env, tmp_path):
+    e = room_env
+    _parent, tid = await running_parent(e)
+    project = tmp_path / "shared-project"
+    project.mkdir()
+    scope = e.repos.task_coordination_repo.get(e.scope_id)
+    for source_id in (tid, scope["origin_thread_id"]):
+        source = e.repos.thread_repo.get(source_id)
+        e.repos.thread_repo.set_project(
+            source_id,
+            agent_id=source.agent_id,
+            user_id=e.uid,
+            project_path=str(project),
+            project_name="Shared project",
+        )
+    call = PeerCall(
+        from_agent_id="b",
+        to_agent_id="c",
+        user_id=e.uid,
+        message="Check the project evidence",
+        source_thread_id=tid,
+        source_session_key=e.repos.thread_repo.get(tid).session_key,
+    )
+    session = await peer_bridge(e).prepare_peer_session(call)
+    peer = e.repos.thread_repo.get(session.thread_id)
+    room = e.repos.task_coordination_repo.room(e.scope_id)
+    assert peer.project_path == str(project)
+    assert e.repos.thread_repo.get(room["thread_id"]).project_path == str(project)
+
+
 async def test_consulting_primary_keeps_single_executor_in_original_conversation(room_env):
     e = room_env
     _parent, tid = await running_parent(e)

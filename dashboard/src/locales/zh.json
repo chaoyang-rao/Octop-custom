@@ -133,6 +133,8 @@
     "THREAD_TURN_ACTIVE": "回复进行中，请先停止再删除。",
     "AGENT_FAILED": "专家启动失败。",
     "AGENT_BUSY": "专家正忙。",
+    "MEMORY_SCOPE_UNAVAILABLE": "跨会话记忆尚未启用，请启用专家记忆并重新加载运行时。",
+    "MEMORY_REVISION_CONFLICT": "这条记忆已被修改或停用，请刷新后再试。",
     "AGENT_NAME_TAKEN": "该名称已被使用，请换一个名称。",
     "AGENT_ID_INVALID": "自定义 ID 无效：需 3-64 位字母/数字/下划线/连字符，且以字母或数字开头结尾。",
     "AGENT_ID_TAKEN": "该 ID 已被使用，请换一个 ID。",
@@ -7901,5 +7903,32 @@
     },
     "actionFailed": "操作未完成，请重试。",
     "finishApprovalBeforeQuote": "请先完成当前审批或取消引用，再继续回复。"
+  },
+  "scopedMemory": {
+    "title": "跨会话记忆",
+    "scope": "记忆范围",
+    "description": "同一账号、同一项目文件夹下的专家和群聊共享项目记忆。只召回相关内容；未绑定项目时，默认使用当前专家记忆。",
+    "scopes": {
+      "auto": "自动：当前项目 / 当前专家",
+      "user": "用户偏好：自己的专家共用",
+      "project": "项目共享：同项目会话共用",
+      "expert": "专家经验：仅当前专家",
+      "session": "当前会话：临时信息"
+    },
+    "search": "搜索记忆",
+    "includeOld": "显示已替换或停用的记忆",
+    "empty": "此范围暂时没有已提炼的记忆",
+    "retired": "已失效",
+    "source": "来源会话",
+    "correct": "纠正",
+    "retire": "停用",
+    "revisions": "修改记录",
+    "previous": "上一页",
+    "next": "下一页",
+    "total": "共 {{count}} 条",
+    "add": "添加已确认的信息",
+    "content": "输入需要记住的事实或纠正后的内容",
+    "historyHint": "纠正会生成新版本；旧结论及其来源会保留。已有未分类记忆仍可在专家原有记忆页查看，不会自动并入项目。",
+    "failed": "记忆读取失败，请重试。"
   }
 }

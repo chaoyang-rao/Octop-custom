@@ -1012,6 +1012,18 @@ class TaskManager:
                 await asyncio.to_thread(
                     self._gateway.thread_registry.set_title_if_null, thread_id, row.title
                 )
+                dispatch = await asyncio.to_thread(self._repos.task_dispatch_repo.get, task_id)
+                if dispatch and dispatch.get("origin_thread_id"):
+                    from octop.infra.agents.threads.project_runtime import inherit_task_project
+
+                    await asyncio.to_thread(
+                        inherit_task_project,
+                        self._repos.thread_repo,
+                        source_id=dispatch["origin_thread_id"],
+                        target_id=thread_id,
+                        user_id=row.user_id,
+                        agent_id=row.agent_id,
+                    )
                 await asyncio.to_thread(
                     self._repo.transition,
                     task_id,

@@ -11,6 +11,7 @@ import {
   Terminal,
   FolderOpen,
   Activity,
+  Brain,
 } from "../../components/arcIcons";
 import { Alert, Button, Tooltip } from "antd";
 import { message as antMessage } from "@/utils/antdMessage";
@@ -110,6 +111,7 @@ import {
 import { isAgentChatReady } from "../../utils/agentError";
 import { useMemoryMaintenance } from "./hooks/useMemoryMaintenance";
 import MemoryMaintenanceBanner from "./components/MemoryMaintenanceBanner";
+import ScopedMemoryPanel from "./components/ScopedMemoryPanel";
 import { useHistoryMigration } from "./hooks/useHistoryMigration";
 import HistoryMigrationBanner from "./components/HistoryMigrationBanner";
 import { apiErrorMessage } from "../../utils/apiError";
@@ -141,6 +143,7 @@ function ChatPageInner() {
   });
   const isMobile = useIsMobile();
   const user = useCurrentUser();
+  const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
   const { layoutMode } = useLayoutMode();
   const isMinimalLayout = layoutMode === "minimal";
   const canTerminal = userCan(user, "terminal");
@@ -1439,6 +1442,16 @@ function ChatPageInner() {
                 )}
                 {resolvedAgentId && !sharedExpertViewer && (
                   <div className={styles.mobileToolbarRight}>
+                    {activeThreadId && userCan(user, "memory") && (
+                      <button
+                        className={styles.menuBtn}
+                        onClick={() => setMemoryPanelOpen(true)}
+                        title={t("scopedMemory.title")}
+                        aria-label={t("scopedMemory.title")}
+                      >
+                        <Brain size={18} />
+                      </button>
+                    )}
                     <button
                       className={styles.menuBtn}
                       onClick={() => setAgentProfileOpen(true)}
@@ -1501,6 +1514,19 @@ function ChatPageInner() {
                 forkDisabledHint={sessionForkDisabledHint}
                 isTeam={isTeamChat}
                 agent={activeAgent}
+                onOpenMemory={
+                  activeThreadId && userCan(user, "memory")
+                    ? () => setMemoryPanelOpen(true)
+                    : undefined
+                }
+              />
+            )}
+            {memoryPanelOpen && resolvedAgentId && activeThreadId && (
+              <ScopedMemoryPanel
+                key={`${resolvedAgentId}/${activeThreadId}`}
+                agentId={resolvedAgentId}
+                threadId={activeThreadId}
+                onClose={() => setMemoryPanelOpen(false)}
               />
             )}
 
