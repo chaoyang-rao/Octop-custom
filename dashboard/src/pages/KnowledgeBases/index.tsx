@@ -68,6 +68,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import cx from "classnames";
 
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { userCan } from "../../utils/permissions";
@@ -128,6 +129,7 @@ import {
   KNOWLEDGE_DOC_TREE_ROOT,
   knowledgeBasename,
   knowledgeBreadcrumb,
+  knowledgeFileNameParts,
   shouldOpenKnowledgeFolder,
   type KnowledgeFileTreeNode,
 } from "./knowledgeFolder";
@@ -367,6 +369,13 @@ export default function KnowledgeBasesPage() {
   const [previewDocId, setPreviewDocId] = useState<string | null>(null);
   const [previewHasOriginal, setPreviewHasOriginal] = useState(false);
   const [previewAsMarkdown, setPreviewAsMarkdown] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"file" | "chunks">("file");
+  const [previewFileAvailable, setPreviewFileAvailable] = useState(true);
+  const [chunkItems, setChunkItems] = useState<
+    { ordinal: number; text: string }[]
+  >([]);
+  const [chunkLoading, setChunkLoading] = useState(false);
+  const [chunkError, setChunkError] = useState<string | null>(null);
   const [previewMaximized, setPreviewMaximized] = useState(false);
   const [mdOutlineOpen, setMdOutlineOpen] = useState(true);
   const [mdActiveOutlineIndex, setMdActiveOutlineIndex] = useState(0);
@@ -378,6 +387,7 @@ export default function KnowledgeBasesPage() {
   const mdFindInputRef = useRef<InputRef | null>(null);
   const mdFindHitsRef = useRef<{ node: Text; start: number }[]>([]);
   const previewTextAbortRef = useRef<AbortController | null>(null);
+  const chunkRequestRef = useRef(0);
   const isRichPreview = Boolean(previewKind || previewAsMarkdown);
 
   const [textEditorOpen, setTextEditorOpen] = useState(false);
@@ -574,6 +584,12 @@ export default function KnowledgeBasesPage() {
     setPreviewDocId(null);
     setPreviewHasOriginal(false);
     setPreviewAsMarkdown(false);
+    setPreviewMode("file");
+    setPreviewFileAvailable(true);
+    chunkRequestRef.current += 1;
+    setChunkItems([]);
+    setChunkLoading(false);
+    setChunkError(null);
     setPreviewMaximized(false);
     setMdOutlineOpen(true);
     setMdFindOpen(false);
@@ -1554,30 +1570,57 @@ export default function KnowledgeBasesPage() {
     setRenameModalOpen(true);
   };
 
-  const renameFolder = async () => {
+  const openRenameFile = (document: KnowledgeDocument) => {
+    const current = knowledgeBasename(document.path || document.filename);
+    setRenameTarget(document);
+    setRenameName(knowledgeFileNameParts(current).stem);
+    setRenameModalOpen(true);
+  };
+
+  const renameEntry = async () => {
     if (!selected || !renameTarget) return;
-    const name = renameName.trim();
-    if (!name) return;
-    if (
-      name === knowledgeBasename(renameTarget.path || renameTarget.filename)
-    ) {
+    const trimmed = renameName.trim();
+    if (!trimmed) return;
+    const current = knowledgeBasename(
+      renameTarget.path || renameTarget.filename,
+    );
+    const next = renameTarget.is_dir
+      ? trimmed
+      : `${trimmed}${knowledgeFileNameParts(current).suffix}`;
+    if (next === current) {
       setRenameModalOpen(false);
       return;
     }
+    const renamingFile = !renameTarget.is_dir;
     try {
       await knowledgeBasesApi.renameDocument(
         selected.id,
         renameTarget.id,
-        name,
+        next,
       );
       setRenameModalOpen(false);
       setRenameTarget(null);
       setRenameName("");
+      if (previewDocId === renameTarget.id) setPreviewFilename(next);
       await loadDetail(selected.id);
-      message.success(t("knowledgeBases.renameFolderSuccess"));
+      message.success(
+        t(
+          renamingFile
+            ? "knowledgeBases.renameFileSuccess"
+            : "knowledgeBases.renameFolderSuccess",
+        ),
+      );
     } catch (error) {
       message.error(
-        apiErrorMessage(error, t("knowledgeBases.renameFolderFailed"), t),
+        apiErrorMessage(
+          error,
+          t(
+            renamingFile
+              ? "knowledgeBases.renameFileFailed"
+              : "knowledgeBases.renameFolderFailed",
+          ),
+          t,
+        ),
       );
     }
   };
@@ -1608,9 +1651,34 @@ export default function KnowledgeBasesPage() {
     }
   };
 
-  const openDocumentPreview = async (document: KnowledgeDocument) => {
+  const loadDocumentChunks = async (kbId: string, documentId: string) => {
+    const request = ++chunkRequestRef.current;
+    setChunkLoading(true);
+    setChunkError(null);
+    try {
+      const body = await knowledgeBasesApi.listDocumentChunks(kbId, documentId);
+      if (chunkRequestRef.current !== request) return;
+      setChunkItems(body.chunks);
+    } catch (error) {
+      if (chunkRequestRef.current !== request) return;
+      setChunkItems([]);
+      setChunkError(
+        apiErrorMessage(error, t("knowledgeBases.chunksFailed"), t),
+      );
+    } finally {
+      if (chunkRequestRef.current === request) setChunkLoading(false);
+    }
+  };
+
+  const openDocumentPreview = async (
+    document: KnowledgeDocument,
+    mode: "file" | "chunks" = "file",
+  ) => {
     if (!selected || document.is_dir) return;
-    if (!canPreviewKnowledgeDocument(document)) return;
+    const filePreview = canPreviewKnowledgeDocument(document);
+    const chunkPreview = (document.chunk_count ?? 0) > 0;
+    if (mode === "file" && !filePreview) return;
+    if (!filePreview && !chunkPreview) return;
     const rich = canRichPreviewKnowledgeDocument(document);
     const kind = rich ? getDocKind(document.filename) : null;
     const asMarkdown = isKnowledgeMarkdownDocument(document);
@@ -1630,6 +1698,18 @@ export default function KnowledgeBasesPage() {
     setMdFindQuery("");
     setMdFindIndex(0);
     setMdFindHitCount(0);
+    setPreviewFileAvailable(filePreview);
+    setPreviewMode(filePreview ? mode : "chunks");
+    setChunkItems([]);
+    setChunkError(null);
+    if (mode === "chunks" || !filePreview) {
+      void loadDocumentChunks(selected.id, document.id);
+    }
+    if (!filePreview) {
+      setPreviewLoading(false);
+      setPreviewText("");
+      return;
+    }
     if (kind) {
       setPreviewLoading(false);
       return;
@@ -1975,6 +2055,40 @@ export default function KnowledgeBasesPage() {
     );
   };
 
+  const renderEntryName = (document: KnowledgeDocument, nameClass?: string) => {
+    const name = knowledgeBasename(document.path || document.filename);
+    const ext = !document.is_dir ? fileExtensionLabel(name) : "";
+    return (
+      <>
+        <span className={styles.filenameHover}>
+          <span
+            className={cx(styles.filenameText, nameClass)}
+            title={document.path || name}
+          >
+            {name}
+          </span>
+          {canWriteSelected && !document.is_dir ? (
+            <Tooltip title={t("knowledgeBases.renameFile")}>
+              <button
+                type="button"
+                className={styles.filenameRenameBtn}
+                data-kb-doc-actions=""
+                aria-label={t("knowledgeBases.renameFile")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openRenameFile(document);
+                }}
+              >
+                <PencilLine size={13} strokeWidth={2} aria-hidden />
+              </button>
+            </Tooltip>
+          ) : null}
+        </span>
+        {ext ? <span className={styles.docExtBadge}>{ext}</span> : null}
+      </>
+    );
+  };
+
   const showListPane = !isMobile || mobilePane === "list";
   const showDetailPane = !isMobile || mobilePane === "detail";
   const showListPanel = showListPane && (isMobile || !listPanelCollapsed);
@@ -2087,9 +2201,11 @@ export default function KnowledgeBasesPage() {
         </div>
       ) : (
         <div
-          className={`${styles.layout}${
-            isResizing ? ` ${styles.layoutResizing}` : ""
-          }${isMobile ? ` ${styles.layoutMobile}` : ""}`}
+          className={cx(
+            styles.layout,
+            isResizing && styles.layoutResizing,
+            isMobile && styles.layoutMobile,
+          )}
           style={
             {
               "--knowledge-bases-sidebar-width": `${sidebarWidth}px`,
@@ -2143,9 +2259,10 @@ export default function KnowledgeBasesPage() {
                       onClick={() => selectBase(base)}
                     >
                       <div
-                        className={`${styles.listItem} ${
-                          base.id === selected?.id ? styles.active : ""
-                        }`}
+                        className={cx(
+                          styles.listItem,
+                          base.id === selected?.id && styles.active,
+                        )}
                       >
                         <div className={styles.listName}>
                           <SharedAvatarMark
@@ -2233,7 +2350,10 @@ export default function KnowledgeBasesPage() {
                             {base.default_open ? (
                               <div className={styles.listMetaBadges}>
                                 <span
-                                  className={`${styles.listBadge} ${styles.listBadgeDefaultOpen}`}
+                                  className={cx(
+                                    styles.listBadge,
+                                    styles.listBadgeDefaultOpen,
+                                  )}
                                 >
                                   {t("knowledgeBases.defaultOpenBadge")}
                                 </span>
@@ -2251,9 +2371,10 @@ export default function KnowledgeBasesPage() {
           {!isMobile ? (
             <div
               data-split-divider=""
-              className={`${styles.splitDivider}${
-                listPanelCollapsed ? ` ${styles.splitDividerCollapsed}` : ""
-              }`}
+              className={cx(
+                styles.splitDivider,
+                listPanelCollapsed && styles.splitDividerCollapsed,
+              )}
             >
               {!listPanelCollapsed ? (
                 <div
@@ -2310,9 +2431,10 @@ export default function KnowledgeBasesPage() {
                 </div>
               ) : !selected ? null : (
                 <div
-                  className={`${styles.detailBody}${
-                    dragActive ? ` ${styles.detailBodyDropActive}` : ""
-                  }`}
+                  className={cx(
+                    styles.detailBody,
+                    dragActive && styles.detailBodyDropActive,
+                  )}
                   onDragEnter={handleDocsDragEnter}
                   onDragLeave={handleDocsDragLeave}
                   onDragOver={handleDocsDragOver}
@@ -2325,7 +2447,7 @@ export default function KnowledgeBasesPage() {
                     </div>
                   ) : null}
                   <div
-                    className={`${skillStyles.gridToolbar} ${styles.docsToolbar}`}
+                    className={cx(skillStyles.gridToolbar, styles.docsToolbar)}
                   >
                     <div className={styles.toolbarStart}>
                       {isMobile ? (
@@ -2560,9 +2682,10 @@ export default function KnowledgeBasesPage() {
                     ) : null}
                   </div>
                   <div
-                    className={`${styles.docsSplit}${
-                      isMobile ? "" : ` ${styles.docsSplitFramed}`
-                    }`}
+                    className={cx(
+                      styles.docsSplit,
+                      !isMobile && styles.docsSplitFramed,
+                    )}
                   >
                     {!isMobile && !docTreeCollapsed ? (
                       <aside
@@ -2596,11 +2719,10 @@ export default function KnowledgeBasesPage() {
                     {!isMobile ? (
                       <div
                         data-split-divider=""
-                        className={`${styles.docTreeDivider}${
-                          docTreeCollapsed
-                            ? ` ${styles.docTreeDividerCollapsed}`
-                            : ""
-                        }`}
+                        className={cx(
+                          styles.docTreeDivider,
+                          docTreeCollapsed && styles.docTreeDividerCollapsed,
+                        )}
                       >
                         {!docTreeCollapsed ? (
                           <div
@@ -2720,18 +2842,10 @@ export default function KnowledgeBasesPage() {
                                   />
                                   <div className={styles.docCardTitleBlock}>
                                     <div className={styles.docCardTitleRow}>
-                                      <div
-                                        className={styles.docCardName}
-                                        title={document.path || name}
-                                      >
-                                        {name}
-                                      </div>
-                                      {!document.is_dir &&
-                                      fileExtensionLabel(name) ? (
-                                        <span className={styles.docExtBadge}>
-                                          {fileExtensionLabel(name)}
-                                        </span>
-                                      ) : null}
+                                      {renderEntryName(
+                                        document,
+                                        styles.docCardName,
+                                      )}
                                     </div>
                                     <div className={styles.docCardMeta}>
                                       {document.is_dir
@@ -2832,15 +2946,7 @@ export default function KnowledgeBasesPage() {
                                       className={styles.docTableIcon}
                                       isDir={document.is_dir}
                                     />
-                                    <span title={document.path || name}>
-                                      {name}
-                                    </span>
-                                    {!document.is_dir &&
-                                    fileExtensionLabel(name) ? (
-                                      <span className={styles.docExtBadge}>
-                                        {fileExtensionLabel(name)}
-                                      </span>
-                                    ) : null}
+                                    {renderEntryName(document)}
                                   </span>
                                 );
                               },
@@ -2883,7 +2989,24 @@ export default function KnowledgeBasesPage() {
                               key: "chunk_count",
                               width: 80,
                               render: (chunkCount: number, document) =>
-                                document.is_dir ? "—" : chunkCount,
+                                document.is_dir ? (
+                                  "—"
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className={styles.chunkCountButton}
+                                    disabled={!chunkCount}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      void openDocumentPreview(
+                                        document,
+                                        "chunks",
+                                      );
+                                    }}
+                                  >
+                                    {chunkCount}
+                                  </button>
+                                ),
                             },
                             {
                               title: t("knowledgeBases.updatedAt"),
@@ -2928,6 +3051,30 @@ export default function KnowledgeBasesPage() {
             >
               {previewFilename || t("knowledgeBases.previewDocument")}
             </span>
+            <Segmented
+              size="small"
+              value={previewMode}
+              onChange={(value) => {
+                const next = value === "chunks" ? "chunks" : "file";
+                setPreviewMode(next);
+                if (
+                  next === "chunks" &&
+                  selected &&
+                  previewDocId &&
+                  chunkItems.length === 0
+                ) {
+                  void loadDocumentChunks(selected.id, previewDocId);
+                }
+              }}
+              options={[
+                {
+                  label: t("knowledgeBases.previewFile"),
+                  value: "file",
+                  disabled: !previewFileAvailable,
+                },
+                { label: t("knowledgeBases.previewChunks"), value: "chunks" },
+              ]}
+            />
             {previewNavIndex >= 0 ? (
               <span className={styles.previewModalNav}>
                 <Tooltip title={t("knowledgeBases.previewPrev")}>
@@ -3048,7 +3195,29 @@ export default function KnowledgeBasesPage() {
           },
         }}
       >
-        {previewKind && previewDocId ? (
+        {previewMode === "chunks" ? (
+          <div className={styles.chunkList}>
+            {chunkLoading ? (
+              <Spin />
+            ) : chunkError ? (
+              <Alert type="error" showIcon message={chunkError} />
+            ) : chunkItems.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={t("knowledgeBases.chunksEmpty")}
+              />
+            ) : (
+              chunkItems.map((chunk) => (
+                <article key={chunk.ordinal} className={styles.chunkCard}>
+                  <div className={styles.chunkCardLabel}>
+                    {t("knowledgeBases.chunkLabel", { n: chunk.ordinal + 1 })}
+                  </div>
+                  <pre className={styles.chunkCardText}>{chunk.text}</pre>
+                </article>
+              ))
+            )}
+          </div>
+        ) : previewKind && previewDocId ? (
           <div
             className={styles.richPreviewBody}
             data-preview-fullscreen-root=""
@@ -3180,14 +3349,11 @@ export default function KnowledgeBasesPage() {
                     <button
                       key={index}
                       type="button"
-                      className={[
+                      className={cx(
                         styles.mdOutlineItem,
-                        index === mdActiveOutlineIndex
-                          ? styles.mdOutlineItemActive
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
+                        index === mdActiveOutlineIndex &&
+                          styles.mdOutlineItemActive,
+                      )}
                       style={{ paddingLeft: 10 + (item.level - 1) * 14 }}
                       title={item.title}
                       onClick={() => scrollToMdHeading(item)}
@@ -3210,14 +3376,11 @@ export default function KnowledgeBasesPage() {
                     <button
                       key={index}
                       type="button"
-                      className={[
+                      className={cx(
                         styles.mdOutlineItem,
-                        index === mdActiveOutlineIndex
-                          ? styles.mdOutlineItemActive
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
+                        index === mdActiveOutlineIndex &&
+                          styles.mdOutlineItemActive,
+                      )}
                       style={{ paddingLeft: 10 + (item.level - 1) * 14 }}
                       title={item.title}
                       onClick={() => {
@@ -3271,20 +3434,36 @@ export default function KnowledgeBasesPage() {
       </Modal>
 
       <Modal
-        title={t("knowledgeBases.renameFolder")}
+        title={t(
+          renameTarget && !renameTarget.is_dir
+            ? "knowledgeBases.renameFile"
+            : "knowledgeBases.renameFolder",
+        )}
         open={renameModalOpen}
         onCancel={() => setRenameModalOpen(false)}
-        onOk={() => void renameFolder()}
+        onOk={() => void renameEntry()}
         okText={t("common.save")}
         cancelText={t("common.cancel")}
         destroyOnHidden
       >
         <Input
+          autoFocus
           value={renameName}
+          addonAfter={
+            renameTarget && !renameTarget.is_dir
+              ? knowledgeFileNameParts(
+                  renameTarget.path || renameTarget.filename,
+                ).suffix || undefined
+              : undefined
+          }
           onChange={(event) => setRenameName(event.target.value)}
-          placeholder={t("knowledgeBases.folderNamePlaceholder")}
+          placeholder={t(
+            renameTarget && !renameTarget.is_dir
+              ? "knowledgeBases.filenamePlaceholder"
+              : "knowledgeBases.folderNamePlaceholder",
+          )}
           onPressEnter={(event) => {
-            if (!isImeComposing(event)) void renameFolder();
+            if (!isImeComposing(event)) void renameEntry();
           }}
         />
       </Modal>
@@ -3612,9 +3791,10 @@ export default function KnowledgeBasesPage() {
                         <button
                           key={model.id}
                           type="button"
-                          className={`${styles.onnxModelItem}${
-                            selected ? ` ${styles.onnxModelItemActive}` : ""
-                          }`}
+                          className={cx(
+                            styles.onnxModelItem,
+                            selected && styles.onnxModelItemActive,
+                          )}
                           onClick={() => setFeatureModel(model.id)}
                         >
                           <span className={styles.onnxModelName}>
@@ -3646,9 +3826,10 @@ export default function KnowledgeBasesPage() {
                     return (
                       <div
                         key={model.id}
-                        className={`${styles.onnxModelItem}${
-                          selected ? ` ${styles.onnxModelItemActive}` : ""
-                        }`}
+                        className={cx(
+                          styles.onnxModelItem,
+                          selected && styles.onnxModelItemActive,
+                        )}
                         onClick={() => setFeatureModel(model.id)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
@@ -3805,7 +3986,10 @@ export default function KnowledgeBasesPage() {
                     </Radio.Group>
                     {ocrBackend === "onnx" ? (
                       <div
-                        className={`${styles.onnxModelItem} ${styles.onnxModelItemActive}`}
+                        className={cx(
+                          styles.onnxModelItem,
+                          styles.onnxModelItemActive,
+                        )}
                       >
                         <div className={styles.onnxModelInfo}>
                           <span className={styles.onnxModelName}>

@@ -26,7 +26,9 @@ class RestoreCustomizationTests(unittest.TestCase):
         self.repo, self.home = self.root / "repo", self.root / "home"
         self.packages = self.root / "portable" / "packages"
         self.source = self.repo / "customization" / "packages"
-        self.baseline = self.repo / "customization" / "baselines" / "original"
+        self.baseline = (
+            self.repo / "customization" / "baselines" / f"upstream-{recovery.BASE_VERSION}"
+        )
         for package in recovery.PACKAGE_NAMES:
             for base in (self.source, self.baseline, self.packages):
                 (base / package).mkdir(parents=True)
@@ -38,9 +40,9 @@ class RestoreCustomizationTests(unittest.TestCase):
         for base in (self.source, self.baseline):
             (base / "octop" / "unchanged.py").write_bytes(b"unchanged baseline")
         (self.packages / "octop" / "unchanged.py").write_bytes(b"unrelated local edit")
-        self.metadata = self.packages / "octop-1.0.3b2.dist-info" / "METADATA"
+        self.metadata = self.packages / "octop-1.0.3b3.dist-info" / "METADATA"
         self.metadata.parent.mkdir()
-        self.metadata.write_text("Name: octop\nVersion: 1.0.3b2\n", encoding="utf-8")
+        self.metadata.write_text("Name: octop\nVersion: 1.0.3b3\n", encoding="utf-8")
         self.database = self.home / ".octop" / "octop.db"
 
     def tearDown(self):
@@ -59,7 +61,7 @@ class RestoreCustomizationTests(unittest.TestCase):
 
     def test_new_upstream_metadata_is_refused_even_when_version_txt_claims_compatibility(self):
         self.metadata.write_text("Name: octop\nVersion: 1.0.3\n", encoding="utf-8")
-        (self.packages.parent / "VERSION.txt").write_text("octop_version=1.0.3b2", encoding="utf-8")
+        (self.packages.parent / "VERSION.txt").write_text("octop_version=1.0.3b3", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "METADATA"):
             self.restore(True)
         self.assertEqual(self.before.read_bytes(), b"original program")
@@ -102,7 +104,7 @@ class RestoreCustomizationTests(unittest.TestCase):
         state = self.packages.parent / recovery.INSTALL_MANIFEST
         previous = recovery.json_bytes(
             {
-                "upstream_version": "1.0.3b2",
+                "upstream_version": "1.0.3b3",
                 "package_file_sha256": {
                     "octop/program.py": hashlib.sha256(self.before.read_bytes()).hexdigest()
                 },
@@ -121,7 +123,7 @@ class RestoreCustomizationTests(unittest.TestCase):
         added.write_bytes(b"previous portable project feature")
         manifest = recovery.json_bytes(
             {
-                "upstream_version": "1.0.3b2",
+                "upstream_version": "1.0.3b3",
                 "package_file_sha256": {
                     "packages/octop/program.py": hashlib.sha256(
                         self.before.read_bytes()
@@ -133,7 +135,7 @@ class RestoreCustomizationTests(unittest.TestCase):
         (self.packages.parent / "custom-release-manifest.json").write_bytes(manifest)
         marker = recovery.json_bytes(
             {
-                "upstream_version": "1.0.3b2",
+                "upstream_version": "1.0.3b3",
                 "manifest": "custom-release-manifest.json",
                 "manifest_sha256": hashlib.sha256(manifest).hexdigest(),
             }
@@ -154,7 +156,7 @@ class RestoreCustomizationTests(unittest.TestCase):
         state = self.packages.parent / recovery.INSTALL_MANIFEST
         previous = recovery.json_bytes(
             {
-                "upstream_version": "1.0.3b2",
+                "upstream_version": "1.0.3b3",
                 "package_file_sha256": {
                     "octop_harness/new.py": hashlib.sha256(added.read_bytes()).hexdigest()
                 },
@@ -171,7 +173,7 @@ class RestoreCustomizationTests(unittest.TestCase):
         added = self.packages / "octop_harness" / "new.py"
         manifest = recovery.json_bytes(
             {
-                "upstream_version": "1.0.3b2",
+                "upstream_version": "1.0.3b3",
                 "package_file_sha256": {
                     "packages/octop_harness/new.py": hashlib.sha256(
                         b"previous reviewed feature"

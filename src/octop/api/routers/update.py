@@ -25,6 +25,8 @@ from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.server import OctopServer
 from octop.infra.setup.self_update import (
     UpgradeResult,
+    assert_in_place_upgrade_allowed,
+    custom_build_metadata,
     fetch_pypi_info,
     get_editable_path,
     get_local_version,
@@ -104,6 +106,10 @@ def _present_status(
     latest_stable = cached.get("latest_stable")
     latest = _channel_latest(latest_any, latest_stable, include_prerelease=include_prerelease)
     has_update = bool(latest and is_newer(latest, current))
+    custom = custom_build_metadata()
+    official_has_update = bool(
+        latest_any and is_newer(latest_any, str((custom or {}).get("upstream_version") or current))
+    )
     description = cached.get("description")
     notes = parse_changelog_for_version(description, latest) if has_update and latest else None
     return {
@@ -112,7 +118,13 @@ def _present_status(
         "latest_any": latest_any,
         "latest_stable": latest_stable,
         "description": description,
-        "has_update": has_update,
+        "has_update": has_update and custom is None,
+        "custom_build": custom is not None,
+        "custom_version": custom.get("custom_version") if custom else None,
+        "custom_repository_url": custom.get("repository_url") if custom else None,
+        "in_place_upgrade_allowed": custom is None,
+        "official_has_update": official_has_update,
+        "official_latest_version": latest_any,
         "is_editable": get_editable_path() is not None,
         "service_mode": detect_service_mode(),
         "desktop": _is_desktop_process(),
@@ -328,6 +340,7 @@ async def trigger_upgrade(
     server: Any = Depends(get_server),
     _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
+    assert_in_place_upgrade_allowed()
     if get_editable_path() is not None:
         raise OctopError(
             ErrorCode.FORBIDDEN,

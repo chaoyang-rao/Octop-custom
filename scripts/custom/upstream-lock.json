@@ -1,27 +1,27 @@
 {
-  "upstream_version": "1.0.3b2",
-  "custom_version": "1.0.3b2.post20261103",
-  "upstream_commit": "a40f54a8099b1faebc89c680ec1e1ece8b97a4e6",
+  "upstream_version": "1.0.3b3",
+  "custom_version": "1.0.3b3.post20261106",
+  "upstream_commit": "4811eb45996169e86006db1b6451264ff4758223",
   "upstream_repository": "https://github.com/TencentCloud/Octop",
   "license": "MIT",
   "assets": {
     "darwin-arm64": {
-      "name": "Octop-portable-darwin-arm64-1.0.3b2.zip",
-      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b2/Octop-portable-darwin-arm64-1.0.3b2.zip",
-      "sha256": "b67dda8a59c400e26c552412b8bfd84c929d6cf557219e76c5615f68fdf88c53",
-      "size": 227170787
+      "name": "Octop-portable-darwin-arm64-1.0.3b3.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b3/Octop-portable-darwin-arm64-1.0.3b3.zip",
+      "sha256": "2ded3a6422637567019acfb7a27e0e251a582fcc886ff946640f2168dfca78d4",
+      "size": 231148721
     },
     "darwin-amd64": {
-      "name": "Octop-portable-darwin-amd64-1.0.3b2.zip",
-      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b2/Octop-portable-darwin-amd64-1.0.3b2.zip",
-      "sha256": "6aeb3771ff5b8aa5308922a4b2e239c5f782008df267ed08ef7222e4e095b94b",
-      "size": 236757523
+      "name": "Octop-portable-darwin-amd64-1.0.3b3.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b3/Octop-portable-darwin-amd64-1.0.3b3.zip",
+      "sha256": "4d533e7474f6e136741dd3883f1eaddf406e2f80dab0add36413264bbe99783c",
+      "size": 239233323
     },
     "windows-amd64": {
-      "name": "Octop-portable-windows-amd64-1.0.3b2.zip",
-      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b2/Octop-portable-windows-amd64-1.0.3b2.zip",
-      "sha256": "205b2b7cd7c7b3afc16a5b8e23e5245662040df7d7a2bddfb4e468d309117ea5",
-      "size": 220833614
+      "name": "Octop-portable-windows-amd64-1.0.3b3.zip",
+      "url": "https://github.com/TencentCloud/Octop/releases/download/v1.0.3b3/Octop-portable-windows-amd64-1.0.3b3.zip",
+      "sha256": "b79d44b50a4d7e1f0256f0daddc90eff1f6c7dbfe8ab2fb073b00eb7b41659a2",
+      "size": 224834546
     }
   }
 }

@@ -1,4 +1,4 @@
-"""Freeze canonical Octop source with the three explicit portable-only adapters.
+"""Freeze canonical Octop source with the explicit portable-only adapters.
 
 Run --check after source changes, or --apply to regenerate the frozen backend.
 Dashboard builds and the separately patched runtime libraries are not touched.
@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parents[2]
 def portable_source(name: str, data: bytes, version: str) -> bytes:
     if name not in {
         "api/routers/health.py",
-        "infra/setup/self_update.py",
         "infra/agents/manager.py",
     }:
         return data
@@ -48,33 +47,6 @@ def portable_source(name: str, data: bytes, version: str) -> bytes:
         lines.insert(
             result.end_lineno - 1,
             f'        **({{"custom_release": {version!r}}} if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" else {{}}),\n',
-        )
-        text = "".join(lines)
-    elif name == "infra/setup/self_update.py":
-        tree = ast.parse(text)
-        function = next(
-            node
-            for node in tree.body
-            if isinstance(node, ast.FunctionDef) and node.name == "run_upgrade"
-        )
-        if "OCTOP_CUSTOM_BUILD" in ast.get_source_segment(text, function):
-            raise ValueError("Review the portable update guard after this upstream change")
-        first = function.body[0]
-        if (
-            isinstance(first, ast.Expr)
-            and isinstance(first.value, ast.Constant)
-            and isinstance(first.value.value, str)
-        ):
-            first = function.body[1]
-        lines = text.splitlines(keepends=True)
-        lines.insert(
-            first.lineno - 1,
-            """    # Replacing this reviewed distribution with PyPI would discard customizations.
-    if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" or (
-        Path(__file__).resolve().parents[3] / "octop-custom-release.json"
-    ).is_file():
-        return UpgradeResult(success=False, error=tr("update.custom_build_protected", locale))
-""",
         )
         text = "".join(lines)
     else:

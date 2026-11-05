@@ -32,6 +32,7 @@ import {
   Search,
 } from "../../../components/arcIcons";
 import { Tooltip, Popover } from "antd";
+import cx from "classnames";
 import { message } from "@/utils/antdMessage";
 import type { ResolvedModel } from "../../../api/types";
 import type { KnowledgeBase } from "../../../api/modules/knowledgeBases";
@@ -113,11 +114,7 @@ function PlusMenuCount({
 }) {
   if (count <= 0) return null;
   return (
-    <span
-      className={`${styles.mobileOverflowItemCount}${
-        className ? ` ${className}` : ""
-      }`}
-    >
+    <span className={cx(styles.mobileOverflowItemCount, className)}>
       <span className={styles.mobileOverflowItemCountText}>{count}</span>
     </span>
   );
@@ -553,9 +550,10 @@ export default function ChatInputActionsRow({
             <button
               key={mode}
               type="button"
-              className={`${styles.reasoningMenuChoice} ${
-                reasoningMode === mode ? styles.reasoningMenuChoiceActive : ""
-              }`}
+              className={cx(
+                styles.reasoningMenuChoice,
+                reasoningMode === mode && styles.reasoningMenuChoiceActive,
+              )}
               onClick={() => onReasoningChange?.(mode, reasoningEffort)}
             >
               <span>{reasoningModeLabel(mode)}</span>
@@ -572,11 +570,11 @@ export default function ChatInputActionsRow({
                 <button
                   key={effort}
                   type="button"
-                  className={`${styles.reasoningMenuChoice} ${
-                    reasoningEffort === effort
-                      ? styles.reasoningMenuChoiceActive
-                      : ""
-                  }`}
+                  className={cx(
+                    styles.reasoningMenuChoice,
+                    reasoningEffort === effort &&
+                      styles.reasoningMenuChoiceActive,
+                  )}
                   onClick={() =>
                     onReasoningChange?.(
                       reasoningMode === "disabled" ? "enabled" : reasoningMode,
@@ -617,9 +615,10 @@ export default function ChatInputActionsRow({
             {showAutoModel ? (
               <button
                 type="button"
-                className={`${styles.modelMenuItem} ${
-                  !selectedModel ? styles.modelMenuItemActive : ""
-                }`}
+                className={cx(
+                  styles.modelMenuItem,
+                  !selectedModel && styles.modelMenuItemActive,
+                )}
                 onClick={() => {
                   onModelChange?.(null);
                   closePlusMenu();
@@ -640,9 +639,10 @@ export default function ChatInputActionsRow({
               return (
                 <div
                   key={value}
-                  className={`${styles.modelMenuRow} ${
-                    active ? styles.modelMenuItemActive : ""
-                  }`}
+                  className={cx(
+                    styles.modelMenuRow,
+                    active && styles.modelMenuItemActive,
+                  )}
                 >
                   <button
                     type="button"
@@ -696,9 +696,10 @@ export default function ChatInputActionsRow({
           <div className={styles.modelMenuDivider} />
           <button
             type="button"
-            className={`${styles.modelMenuFooter} ${
-              remoteManaged ? styles.modelMenuFooterMuted : ""
-            }`}
+            className={cx(
+              styles.modelMenuFooter,
+              remoteManaged && styles.modelMenuFooterMuted,
+            )}
             onClick={() => {
               if (remoteManaged) {
                 message.info(t("chat.remoteExpert.manageToast"));
@@ -742,9 +743,10 @@ export default function ChatInputActionsRow({
           nameClassName={styles.skillPickerName}
           cmdClassName={styles.skillPickerDesc}
           iconWrapClassName={(tone) =>
-            `${styles.shortcutPickerIcon} ${
-              SHORTCUT_ICON_TONE_CLASS[tone] ?? styles.shortcutPickerIconBlue
-            }`
+            cx(
+              styles.shortcutPickerIcon,
+              SHORTCUT_ICON_TONE_CLASS[tone] ?? styles.shortcutPickerIconBlue,
+            )
           }
           onSelect={(command) => {
             setShortcutOpen(false);
@@ -763,9 +765,10 @@ export default function ChatInputActionsRow({
       {showModePicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "mode" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "mode" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("mode")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -783,9 +786,10 @@ export default function ChatInputActionsRow({
       {showConnectorPicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "connector" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "connector" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("connector")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -801,9 +805,10 @@ export default function ChatInputActionsRow({
       {showKnowledgePicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "knowledge" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "knowledge" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("knowledge")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -819,9 +824,10 @@ export default function ChatInputActionsRow({
       {showSkillPicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "skill" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "skill" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("skill")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -837,9 +843,10 @@ export default function ChatInputActionsRow({
       {showExpertPicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "expert" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "expert" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("expert")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -858,9 +865,10 @@ export default function ChatInputActionsRow({
       {showSubagentPicker && (
         <button
           type="button"
-          className={`${styles.mobileOverflowItem} ${
-            compactPicker === "subagent" ? styles.mobileOverflowItemActive : ""
-          }`}
+          className={cx(
+            styles.mobileOverflowItem,
+            compactPicker === "subagent" && styles.mobileOverflowItemActive,
+          )}
           onClick={() => openCompactPicker("subagent")}
         >
           <span className={styles.mobileOverflowItemMain}>
@@ -951,9 +959,10 @@ export default function ChatInputActionsRow({
   const renderSecondaryActions = () => {
     const plusButton = (
       <button
-        className={`${styles.secondaryBtn} ${
-          overflowBadgeCount > 0 ? styles.secondaryBtnActive : ""
-        }`}
+        className={cx(
+          styles.secondaryBtn,
+          overflowBadgeCount > 0 && styles.secondaryBtnActive,
+        )}
         type="button"
         aria-label={t("chat.composerMore", "更多工具")}
         data-testid="composer-plus"
@@ -984,15 +993,13 @@ export default function ChatInputActionsRow({
                 {compactPicker ? (
                   <div
                     ref={isMobile ? undefined : setPlusPanelEl}
-                    className={
-                      isMobile
-                        ? styles.plusFlyoutPanelInPlace
-                        : `${styles.plusFlyoutPanel}${
-                            plusPanelAlignBottom
-                              ? ` ${styles.plusFlyoutPanelAlignBottom}`
-                              : ""
-                          }`
-                    }
+                    className={cx(
+                      isMobile && styles.plusFlyoutPanelInPlace,
+                      !isMobile && styles.plusFlyoutPanel,
+                      !isMobile &&
+                        plusPanelAlignBottom &&
+                        styles.plusFlyoutPanelAlignBottom,
+                    )}
                     style={
                       !isMobile && plusPanelMaxHeight
                         ? { maxHeight: plusPanelMaxHeight }
@@ -1257,9 +1264,10 @@ export default function ChatInputActionsRow({
           mouseEnterDelay={0.4}
         >
           <button
-            className={`${styles.secondaryBtn} ${
-              recording || transcribing ? styles.secondaryBtnActive : ""
-            }`}
+            className={cx(
+              styles.secondaryBtn,
+              (recording || transcribing) && styles.secondaryBtnActive,
+            )}
             type="button"
             // Dictation only fills the composer, so it stays available while a
             // reply is still streaming.
@@ -1299,9 +1307,10 @@ export default function ChatInputActionsRow({
             mouseEnterDelay={0.4}
           >
             <button
-              className={`${styles.secondaryBtn} ${
-                browserRecording ? styles.secondaryBtnRecording : ""
-              }`}
+              className={cx(
+                styles.secondaryBtn,
+                browserRecording && styles.secondaryBtnRecording,
+              )}
               type="button"
               disabled={disabled || browserReplayBusy}
               onClick={
@@ -1331,9 +1340,10 @@ export default function ChatInputActionsRow({
             mouseEnterDelay={0.4}
           >
             <button
-              className={`${styles.secondaryBtn} ${
-                browserReplayBusy ? styles.secondaryBtnActive : ""
-              }`}
+              className={cx(
+                styles.secondaryBtn,
+                browserReplayBusy && styles.secondaryBtnActive,
+              )}
               type="button"
               disabled={
                 disabled ||

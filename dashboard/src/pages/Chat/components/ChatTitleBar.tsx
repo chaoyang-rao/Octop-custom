@@ -11,6 +11,7 @@ import {
   GitFork,
   Brain,
 } from "../../../components/arcIcons";
+import cx from "classnames";
 import { confirmDeleteConversation } from "../utils/deleteConversation";
 import type { Session } from "../hooks/useSessions";
 import SessionChannelIcon from "./SessionChannelIcon";
@@ -136,7 +137,7 @@ export default function ChatTitleBar({
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <div className={`${styles.chatTitleBar} ${DESKTOP_DRAG_REGION_CLASS}`}>
+    <div className={cx(styles.chatTitleBar, DESKTOP_DRAG_REGION_CLASS)}>
       <div className={styles.chatTitleLeft}>
         <SessionChannelIcon
           channelType={session.channelType}
@@ -191,9 +192,10 @@ export default function ChatTitleBar({
             >
               <button
                 type="button"
-                className={`${styles.chatTitleEditBtn} ${
-                  moreOpen ? styles.chatTitleHoverShown : ""
-                }`}
+                className={cx(
+                  styles.chatTitleEditBtn,
+                  moreOpen && styles.chatTitleHoverShown,
+                )}
                 aria-label={t("common.more", "更多")}
               >
                 <MoreVertical size={14} strokeWidth={2} aria-hidden />

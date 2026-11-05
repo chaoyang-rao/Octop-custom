@@ -8,8 +8,6 @@ import {
 
 type ExpertLike = {
   agent_id: string;
-  is_shared?: boolean;
-  is_owner?: boolean;
 };
 
 /**

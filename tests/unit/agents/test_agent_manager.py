@@ -18,7 +18,6 @@ import pytest
 
 from octop.config import OctopConfig
 from octop.i18n.domains.agents import NO_MODELS_CONFIGURED, format_agent_start_error
-from octop.infra.agents.experts.catalog import default_library_root
 from octop.infra.agents.manager import AgentManager, _memory_extract_settings
 from octop.infra.backend.resolver import default_agent_backend_spec
 from octop.infra.db.migrate import run_migrations
@@ -2291,17 +2290,33 @@ def test_resolve_workspace_dir_backfills_legacy_row(manager: AgentManager) -> No
 
 
 @pytest.mark.asyncio
-async def test_templated_agent_keeps_expert_soul_on_reload(manager: AgentManager) -> None:
+async def test_templated_agent_keeps_expert_soul_on_reload(
+    manager: AgentManager, tmp_path: Path
+) -> None:
     """Reload must not overwrite expert template SOUL.md with persona defaults."""
     from octop_harness import HarnessAgentManager
 
     from octop.infra.agents.experts.catalog import ExpertCatalog
     from octop.infra.agents.manager import AgentCreateSpec
 
-    catalog = ExpertCatalog(default_library_root())
+    expected_soul = "# Expert soul\n"
+    expert_dir = tmp_path / "demo"
+    expert_dir.mkdir()
+    (expert_dir / "SOUL.md").write_text(expected_soul, encoding="utf-8")
+    (expert_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "id": "demo",
+                "label": {"zh": "演示", "en": "Demo"},
+                "description": {"zh": "", "en": ""},
+                "prompt_files": ["SOUL.md"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalog = ExpertCatalog(tmp_path)
     catalog.refresh()
-    ga = catalog.get("general-assistant")
-    assert ga is not None
+    assert catalog.get("demo") is not None
 
     manager._expert_catalog = catalog
     _seed_test_provider(manager)
@@ -2312,14 +2327,11 @@ async def test_templated_agent_keeps_expert_soul_on_reload(manager: AgentManager
     row = await manager.create(
         AgentCreateSpec(
             name="tpl-bot",
-            template_name="general-assistant",
+            template_name="demo",
             config=dict(_MEMORY_OFF),
         ),
     )
     agent = manager.get_agent(row.agent_id)
-    expected_soul = (default_library_root() / "general-assistant" / "SOUL.md").read_text(
-        encoding="utf-8"
-    )
     soul_text = agent.workspace.read_text("SOUL.md") or ""
     assert expected_soul.strip() in soul_text.strip()
 
@@ -2945,7 +2957,7 @@ async def test_primary_login_reuses_bound_expert_without_resetting_configuration
 async def test_primary_login_provisions_once_even_with_other_experts(
     manager: AgentManager, monkeypatch: Any, tmp_path: Path
 ) -> None:
-    from octop.infra.agents.experts.catalog import ExpertCatalog
+    from octop.infra.agents.experts.catalog import ExpertCatalog, default_library_root
     from octop.infra.users.resource_policy import POLICY_WORKSPACE_ROOT_DIR
 
     catalog = ExpertCatalog(default_library_root())
@@ -2964,6 +2976,7 @@ async def test_primary_login_provisions_once_even_with_other_experts(
         await asyncio.sleep(0)  # Overlap callers before the row exists.
         assert kwargs["defer_bootstrap"] is True
         assert spec.name == "小通" and spec.user_id == uid
+        assert spec.template_name == "default"  # b3 keeps this seed locally, even offline.
         assert spec.config["backend"]["root_dir"] == root
         manager._repos.agent_repo.create(
             agent_id="NEW_MAIN", user_id=uid, name=spec.name, template_name=spec.template_name
@@ -2984,7 +2997,7 @@ async def test_primary_login_provisions_once_even_with_other_experts(
 
 
 async def test_primary_login_obeys_expert_quota(manager: AgentManager) -> None:
-    from octop.infra.agents.experts.catalog import ExpertCatalog
+    from octop.infra.agents.experts.catalog import ExpertCatalog, default_library_root
     from octop.infra.users.resource_policy import POLICY_MAX_AGENTS
 
     catalog = ExpertCatalog(default_library_root())

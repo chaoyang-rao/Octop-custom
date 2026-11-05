@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "antd";
+import cx from "classnames";
 import { useUpdateStatus } from "../../hooks/useUpdateStatus";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { userCan } from "../../utils/permissions";
@@ -22,10 +23,16 @@ export default function CurrentVersionBadge({
   if (!version) return null;
 
   const canUpdate = userCan(user, "update");
-  const tooltip = canUpdate
+  const tooltip = status?.custom_build
+    ? t("customUpdate.headerTooltip", {
+        version: status.custom_version || version,
+      })
+    : canUpdate
     ? t("header.currentVersionAdmin", { version })
     : t("header.currentVersion", { version });
-  const label = `v${version}`;
+  const label = `v${version}${
+    status?.custom_build ? ` · ${t("customUpdate.badge")}` : ""
+  }`;
   const tooltipContent = (
     <span>
       {tooltip}
@@ -45,9 +52,11 @@ export default function CurrentVersionBadge({
       <Tooltip title={tooltipContent} mouseEnterDelay={0.35}>
         <button
           type="button"
-          className={`${styles.versionBadge} ${
-            isMobile ? styles.versionBadgeMobile : ""
-          } ${styles.versionBadgeClickable}`}
+          className={cx(
+            styles.versionBadge,
+            isMobile && styles.versionBadgeMobile,
+            styles.versionBadgeClickable,
+          )}
           onClick={() => navigate("/admin/advanced?tab=updates")}
           aria-label={tooltip}
         >
@@ -60,9 +69,10 @@ export default function CurrentVersionBadge({
   return (
     <Tooltip title={tooltipContent} mouseEnterDelay={0.35}>
       <span
-        className={`${styles.versionBadge} ${
-          isMobile ? styles.versionBadgeMobile : ""
-        }`}
+        className={cx(
+          styles.versionBadge,
+          isMobile && styles.versionBadgeMobile,
+        )}
         aria-label={tooltip}
       >
         {label}

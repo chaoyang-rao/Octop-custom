@@ -38,6 +38,36 @@ _PROBE_TIMEOUT_S = 8
 _PROBE_PREFIX = "__OCTOP_PROBE__"
 _INSTALL_TIMEOUT_S = 90
 _TARGET_INSTALL_TIMEOUT_S = 900
+_CUSTOM_REPOSITORY_URL = "https://github.com/chaoyang-rao/Octop-custom"
+
+
+def is_custom_build() -> bool:
+    return (
+        os.environ.get("OCTOP_CUSTOM_BUILD") == "1"
+        or (Path(__file__).resolve().parents[3] / "octop-custom-release.json").is_file()
+    )
+
+
+def custom_build_metadata() -> dict[str, Any] | None:
+    if not is_custom_build():
+        return None
+    marker = Path(__file__).resolve().parents[3] / "octop-custom-release.json"
+    try:
+        value = json.loads(marker.read_text(encoding="utf-8"))
+        data = value if isinstance(value, dict) else {}
+    except (OSError, ValueError):
+        data = {}
+    return {
+        "custom_version": data.get("custom_version"),
+        "upstream_version": data.get("upstream_version"),
+        "repository_url": _CUSTOM_REPOSITORY_URL,
+    }
+
+
+def assert_in_place_upgrade_allowed() -> None:
+    if is_custom_build():
+        raise OctopError.localized(ErrorCode.UPDATE_CUSTOM_BUILD_PROTECTED)
+
 
 _MIRRORS = [
     "https://mirrors.cloud.tencent.com/pypi/simple",
@@ -975,6 +1005,8 @@ def run_upgrade(
     version: str | None = None,
     locale: str = DEFAULT_LOCALE,
 ) -> UpgradeResult:
+    if is_custom_build():
+        return UpgradeResult(success=False, error=tr("update.custom_build_protected", locale))
     try:
         validate_upgrade_target(version, get_local_version())
     except OctopError as exc:

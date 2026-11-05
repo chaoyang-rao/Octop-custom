@@ -54,7 +54,7 @@ def me_payload(user: Any, server: Any) -> dict[str, Any]:
 
     payload["avatar_icon"] = row.avatar_icon
     payload["avatar_url"] = profile_avatar_url(
-        server.services.paths.user_avatars_dir,
+        server.services.avatars("user"),
         str(user.id),
         f"/api/users/{user.id}/avatar",
     )
@@ -154,7 +154,7 @@ async def _authenticate_ldap(server: Any, username: str, password: str, client_i
         _raise_if_throttled(retry_after)
         return None
     throttle.clear(username, client_ip)
-    return await service.resolve_user(identity)
+    return await service.resolve_user(identity, login_name=username)
 
 
 def _raise_if_throttled(retry_after: int) -> None:
@@ -272,7 +272,7 @@ async def update_me(
         from octop.infra.users.profile_avatar import archive_profile_avatar, clean_avatar_icon
 
         icon = clean_avatar_icon(body.avatar_icon)
-        archive_profile_avatar(server.services.paths.user_avatars_dir, str(user.id))
+        archive_profile_avatar(server.services.avatars("user"), str(user.id))
         server.services.user_repo.set_avatar_icon(user.id, icon)
     updated = server.user_manager.get(user.username)
     assert updated is not None
@@ -288,14 +288,14 @@ async def upload_my_avatar(
     from octop.infra.users.profile_avatar import profile_avatar_url, write_profile_avatar
 
     write_profile_avatar(
-        server.services.paths.user_avatars_dir,
+        server.services.avatars("user"),
         str(user.id),
         await file.read(),
         preserve_previous=True,
     )
     return {
         "avatar_url": profile_avatar_url(
-            server.services.paths.user_avatars_dir,
+            server.services.avatars("user"),
             str(user.id),
             f"/api/users/{user.id}/avatar",
         )
@@ -309,5 +309,5 @@ async def delete_my_avatar(
 ) -> Response:
     from octop.infra.users.profile_avatar import archive_profile_avatar
 
-    archive_profile_avatar(server.services.paths.user_avatars_dir, str(user.id))
+    archive_profile_avatar(server.services.avatars("user"), str(user.id))
     return Response(status_code=204)

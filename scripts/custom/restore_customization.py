@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Restore reviewed Octop 1.0.2 program changes; check-only unless --apply."""
+"""Restore reviewed Octop custom program changes; check-only unless --apply."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from email.parser import Parser
 from pathlib import Path, PurePosixPath
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BASE_VERSION = "1.0.3b2"
+BASE_VERSION = "1.0.3b3"
 PACKAGE_NAMES = {"octop", "octop_harness", "octop_gateway"}
 MARKER = "octop-custom-release.json"
 INSTALL_MANIFEST = "custom-restore-manifest.json"
@@ -96,7 +96,7 @@ def previous_hashes(packages: Path) -> dict:
 def plan(packages: Path, repo: Path) -> list[dict]:
     validate_version(packages)
     source = repo / "customization" / "packages"
-    baseline = repo / "customization" / "baselines" / "original"
+    baseline = repo / "customization" / "baselines" / f"upstream-{BASE_VERSION}"
     known = previous_hashes(packages)
     rows = []
     for package in sorted(PACKAGE_NAMES):

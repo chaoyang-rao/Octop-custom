@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "v1.0.3b2-custom.20261103.1"
+        default: "custom-1.0.3b3-20261106.1"
         required: true
         type: string
       publish_release:
@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b2.post20261103"
-  RELEASE_TAG: ${{ inputs.release_tag || 'v1.0.3b2-custom.20261103.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post20261106"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261106.1' }}
 
 jobs:
   quality:
@@ -97,6 +97,7 @@ jobs:
           src/pages/TaskQueue/TaskCoordinationDetails.test.tsx
           src/pages/TaskQueue/dispatchPresentation.test.ts
           src/pages/TaskQueue/workflowValidation.test.ts
+          src/pages/Settings/AdvancedSettings/UpdateConfig.test.tsx
           src/utils/dashboardPushToast.test.ts
           src/hooks/useDashboardPushToast.test.tsx
           --maxWorkers=1 --minWorkers=1
@@ -141,7 +142,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .cache/custom-release
-          key: octop-upstream-1.0.3b2-${{ matrix.plat }}
+          key: octop-upstream-1.0.3b3-${{ matrix.plat }}
 
       - name: Verify locked portable HTTP/2 dependencies
         run: python scripts/custom/verify_http2_vendor.py
@@ -320,7 +321,11 @@ jobs:
           import os
           from pathlib import Path
           import re
-          assert re.fullmatch(r"v1\.0\.2-custom\.\d{8}\.\d+", os.environ["RELEASE_TAG"]), "Invalid custom release tag"
+          import json
+          base = json.loads(Path("scripts/custom/upstream-lock.json").read_text())["upstream_version"]
+          tag = os.environ["RELEASE_TAG"]
+          assert re.fullmatch(rf"(?:custom-{re.escape(base)}-|v{re.escape(base)}-custom\.)\d{{8}}\.\d+", tag), "Invalid custom release tag"
+          assert not tag.startswith("v") or os.environ["GITHUB_REF_NAME"] == "main", "Production v-tags must be published from main"
           version = os.environ["CUSTOM_VERSION"]
           root = Path("release-assets")
           for plat in ["darwin-arm64", "darwin-amd64", "windows-amd64"]:
@@ -350,13 +355,13 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom，基于官方 1.0.3b2，包含项目会话归类、ACP 项目目录绑定、动态表情头像、账号头像修复和全部已确认的界面调整。
+          Octop Custom，基于官方 1.0.3b3，包含项目会话归类、ACP 项目目录绑定、动态表情头像、账号头像修复和全部已确认的界面调整。
 
           Windows 使用 exe；Intel Mac 使用 darwin-amd64.dmg；M 芯片 Mac 使用 darwin-arm64.dmg。另附三个免安装 portable ZIP。SHA256SUMS.txt 可校验文件完整性。
 
           定制运行环境保存在 ~/.octop/custom-runtime/portable，独立于官方运行环境；账号和聊天继续使用 ~/.octop。首次使用前退出官方 Octop，避免同时运行两个实例。定制版禁止官方就地更新，以仓库内定制发行包升级。Mac 包采用 ad hoc 签名，未作 Developer ID 公证；Windows 包未作 Authenticode 签名。
           EOF
-            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --title "Octop Custom $RELEASE_TAG" --notes-file release-notes.md
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Octop Custom $RELEASE_TAG" --notes-file release-notes.md
           fi
           gh release upload "$RELEASE_TAG" release-assets/* --clobber
           gh release view "$RELEASE_TAG" --json assets > uploaded-assets.json
@@ -367,4 +372,4 @@ jobs:
           expected = {p.name: p.stat().st_size for p in Path("release-assets").iterdir() if p.is_file()}
           assert actual == expected, "Uploaded release is incomplete; leave it in draft"
           PY
-          gh release edit "$RELEASE_TAG" --draft=false --latest
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false

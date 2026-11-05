@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Official Octop 1.0.3b2 Intel portable bundles cryptography 46.0.3 with webauthn 3.0.1 and pyOpenSSL 26.3.0, which require cryptography >=49, but cryptography 49 removed Intel macOS support. This Intel-only downstream compatibility set retains all official WebAuthn 3.0.1 Python code and its security fixes, uses official cryptography 48.0.1 universal2 and pyOpenSSL 26.2.0 wheels, and explicitly adjusts only WebAuthn dependency METADATA and RECORD to the tested exact versions. No Octop dependency requirements are weakened.",
+  "reason": "Official Octop 1.0.3b3 Intel portable bundles cryptography 46.0.3 with webauthn 3.0.1 and pyOpenSSL 26.3.0, which require cryptography >=49, but cryptography 49 removed Intel macOS support. This Intel-only downstream compatibility set retains all official WebAuthn 3.0.1 Python code and its security fixes, uses official cryptography 48.0.1 universal2 and pyOpenSSL 26.2.0 wheels, and explicitly adjusts only WebAuthn dependency METADATA and RECORD to the tested exact versions. No Octop dependency requirements are weakened.",
   "sources": [
     "https://cryptography.io/en/49.0.0/changelog/",
     "https://pypi.org/pypi/cryptography/49.0.0/json",

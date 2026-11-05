@@ -1,6 +1,12 @@
 import { request } from "../request";
 
 export interface UpdateStatus {
+  custom_build?: boolean;
+  custom_version?: string | null;
+  custom_repository_url?: string | null;
+  in_place_upgrade_allowed?: boolean;
+  official_has_update?: boolean;
+  official_latest_version?: string | null;
   current_version: string;
   latest_version: string | null;
   has_update: boolean;

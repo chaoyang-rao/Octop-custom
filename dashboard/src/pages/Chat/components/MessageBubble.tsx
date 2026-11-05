@@ -16,6 +16,7 @@ import {
 } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import cx from "classnames";
 import type { ChatAttachment, ChatMessage } from "../hooks/useChat";
 import UserMessageComposerTags, {
   hasUserComposerTags,
@@ -697,9 +698,11 @@ function MessageBubble({
       const questions = extractAskQuestions(actions);
       return (
         <div
-          className={`${styles.messageBubble} ${styles.assistantBubble} ${
-            compact ? styles.compactBubble : ""
-          }`}
+          className={cx(
+            styles.messageBubble,
+            styles.assistantBubble,
+            compact && styles.compactBubble,
+          )}
         >
           <div className={styles.bubbleContent}>
             <AskQuestionCard questions={questions} status={hitlStatus} />
@@ -709,9 +712,11 @@ function MessageBubble({
     }
     return (
       <div
-        className={`${styles.messageBubble} ${styles.assistantBubble} ${
-          compact ? styles.compactBubble : ""
-        }`}
+        className={cx(
+          styles.messageBubble,
+          styles.assistantBubble,
+          compact && styles.compactBubble,
+        )}
       >
         <div className={styles.bubbleContent}>
           <HitlApprovalCard
@@ -829,11 +834,13 @@ function MessageBubble({
 
   return (
     <div
-      className={`${styles.messageBubble} ${
-        isUser ? styles.userBubble : styles.assistantBubble
-      } ${showUserComposerTags ? styles.userBubbleWithTags : ""} ${
-        isError ? styles.errorBubble : ""
-      } ${compact ? styles.compactBubble : ""}`}
+      className={cx(
+        styles.messageBubble,
+        isUser ? styles.userBubble : styles.assistantBubble,
+        showUserComposerTags && styles.userBubbleWithTags,
+        isError && styles.errorBubble,
+        compact && styles.compactBubble,
+      )}
     >
       {!isUser && senderAvatar ? (
         <div className={styles.avatarCol}>{senderAvatar}</div>
@@ -1076,9 +1083,10 @@ function MessageBubble({
                 message.content || onEditUserMessage || message.steerPending,
               ))) && (
             <div
-              className={`${styles.msgMetaRow} ${
-                isUser ? styles.msgMetaRowRight : ""
-              }`}
+              className={cx(
+                styles.msgMetaRow,
+                isUser && styles.msgMetaRowRight,
+              )}
             >
               {isUser &&
                 !isEditing &&
@@ -1125,9 +1133,7 @@ function MessageBubble({
                 )}
               {message.timestamp > 0 && (
                 <div
-                  className={`${styles.msgTime} ${
-                    isUser ? styles.msgTimeRight : ""
-                  }`}
+                  className={cx(styles.msgTime, isUser && styles.msgTimeRight)}
                 >
                   {formatMessageTime(message.timestamp, serverTimezone)}
                   {!isUser && !isStreaming && message.content && (
@@ -1141,11 +1147,11 @@ function MessageBubble({
                     <>
                       <CopyButton text={textContent} />
                       <button
-                        className={`${styles.msgActionBtn} ${
-                          speakingId === message.id
-                            ? styles.msgActionBtnActive
-                            : ""
-                        }`}
+                        className={cx(
+                          styles.msgActionBtn,
+                          speakingId === message.id &&
+                            styles.msgActionBtnActive,
+                        )}
                         onClick={(e) => {
                           e.stopPropagation();
                           speak(message.id, textContent);

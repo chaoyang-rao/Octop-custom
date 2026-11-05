@@ -11,6 +11,7 @@ import {
   Power,
   Sparkles,
 } from "lucide-react";
+import cx from "classnames";
 import {
   updateApi,
   UpdateStatus,
@@ -27,8 +28,8 @@ import styles from "./UpdateConfig.module.less";
 
 /** Shell snippets shown in the manual upgrade guide (commands are locale-agnostic). */
 const UPGRADE_GUIDE_CODE = {
-  installerUnix: `curl -fsSL https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.sh | bash`,
-  installerWin: `irm https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.ps1 | iex`,
+  installerUnix: `curl -fsSL https://download.octop.cloud/octop/scripts/install.sh | bash`,
+  installerWin: `irm https://download.octop.cloud/octop/scripts/install.ps1 | iex`,
   cli: `octop update
 # or non-interactive:
 octop update --yes
@@ -110,7 +111,7 @@ function UpgradeGuide() {
 
   return (
     <section
-      className={`${styles.panel} ${styles.guide}`}
+      className={cx(styles.panel, styles.guide)}
       aria-label={t("advancedSettings.update.guideTitle")}
     >
       <div className={styles.panelTitleRow}>
@@ -282,6 +283,7 @@ export default function UpdateConfig() {
   }, [pollProgress, status?.latest_version]);
 
   const handleUpgrade = useCallback(() => {
+    if (status?.custom_build) return;
     if (status?.latest_is_prerelease) {
       modal.confirm({
         title: t("advancedSettings.update.prereleaseConfirmTitle"),
@@ -323,7 +325,14 @@ export default function UpdateConfig() {
         description={t("advancedSettings.update.description")}
       />
 
-      <div className={styles.layout}>
+      <div
+        className={styles.layout}
+        style={
+          status?.custom_build
+            ? { gridTemplateColumns: "minmax(0, 1fr)" }
+            : undefined
+        }
+      >
         {/* In-place version check & upgrade */}
         <section
           className={styles.panel}
@@ -338,51 +347,69 @@ export default function UpdateConfig() {
             </h3>
           </div>
           <p className={styles.panelDesc}>
-            {t("advancedSettings.update.panelDesc")}
+            {t(
+              status?.custom_build
+                ? "customUpdate.description"
+                : "advancedSettings.update.panelDesc",
+            )}
           </p>
 
-          <div className={styles.stableOnlyRow}>
-            <Switch
-              checked={status?.stable_only !== false}
-              onChange={(checked) => void handleStableOnlyChange(checked)}
-              disabled={savingStableOnly || checking || upgrading}
-            />
-            <div className={styles.stableOnlyCopy}>
-              <p className={styles.stableOnlyLabel}>
-                {t("advancedSettings.update.stableOnlyLabel")}
-              </p>
-              <p className={styles.stableOnlyHint}>
-                {t("advancedSettings.update.stableOnlyHint")}
-              </p>
+          {!status?.custom_build && (
+            <div className={styles.stableOnlyRow}>
+              <Switch
+                checked={status?.stable_only !== false}
+                onChange={(checked) => void handleStableOnlyChange(checked)}
+                disabled={savingStableOnly || checking || upgrading}
+              />
+              <div className={styles.stableOnlyCopy}>
+                <p className={styles.stableOnlyLabel}>
+                  {t("advancedSettings.update.stableOnlyLabel")}
+                </p>
+                <p className={styles.stableOnlyHint}>
+                  {t("advancedSettings.update.stableOnlyHint")}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className={styles.versionGrid}>
             <div className={styles.versionCard}>
               <span className={styles.versionLabel}>
-                {t("advancedSettings.update.currentVersion")}
+                {t(
+                  status?.custom_build
+                    ? "customUpdate.currentVersion"
+                    : "advancedSettings.update.currentVersion",
+                )}
               </span>
               <span className={styles.versionValue}>
-                {status?.current_version ?? "—"}
+                {status?.custom_version ?? status?.current_version ?? "—"}
               </span>
             </div>
             <div className={styles.versionCard}>
               <span className={styles.versionLabel}>
-                {t("advancedSettings.update.latestVersion")}
+                {t(
+                  status?.custom_build
+                    ? "customUpdate.officialVersion"
+                    : "advancedSettings.update.latestVersion",
+                )}
               </span>
               <span className={styles.versionValue}>
-                {status?.latest_version ?? (
+                {(status?.custom_build
+                  ? status?.official_latest_version
+                  : status?.latest_version) ?? (
                   <span className={styles.notChecked}>
                     {t("advancedSettings.update.notChecked")}
                   </span>
                 )}
               </span>
               <div className={styles.versionBadges}>
-                {status?.latest_is_prerelease && status?.latest_version && (
-                  <span className={styles.betaBadge}>
-                    {t("advancedSettings.update.prereleaseBadge")}
-                  </span>
-                )}
+                {!status?.custom_build &&
+                  status?.latest_is_prerelease &&
+                  status?.latest_version && (
+                    <span className={styles.betaBadge}>
+                      {t("advancedSettings.update.prereleaseBadge")}
+                    </span>
+                  )}
                 {status?.has_update && (
                   <span className={styles.badge}>
                     {t("advancedSettings.update.updateAvailable")}
@@ -392,26 +419,34 @@ export default function UpdateConfig() {
             </div>
           </div>
 
-          {status?.latest_is_prerelease && status.latest_version && (
-            <div className={`${styles.alert} ${styles.alertWarn}`}>
-              <AlertTriangle size={15} />
-              <span>
-                {t("advancedSettings.update.prereleaseHint", {
-                  version: status.latest_version,
-                })}
-              </span>
+          {status?.custom_build && (
+            <div className={`${styles.alert} ${styles.alertInfo}`}>
+              <Info size={15} />
+              <span>{t("customUpdate.notice")}</span>
             </div>
           )}
+          {!status?.custom_build &&
+            status?.latest_is_prerelease &&
+            status.latest_version && (
+              <div className={cx(styles.alert, styles.alertWarn)}>
+                <AlertTriangle size={15} />
+                <span>
+                  {t("advancedSettings.update.prereleaseHint", {
+                    version: status.latest_version,
+                  })}
+                </span>
+              </div>
+            )}
 
           {status?.is_editable && (
-            <div className={`${styles.alert} ${styles.alertWarn}`}>
+            <div className={cx(styles.alert, styles.alertWarn)}>
               <AlertTriangle size={15} />
               <span>{t("advancedSettings.update.editableHint")}</span>
             </div>
           )}
 
           {status?.error && (
-            <div className={`${styles.alert} ${styles.alertError}`}>
+            <div className={cx(styles.alert, styles.alertError)}>
               <XCircle size={15} />
               <span>
                 {status.error_code
@@ -424,7 +459,7 @@ export default function UpdateConfig() {
           )}
 
           {status?.source && status.source !== "pypi.org" && !status.error && (
-            <div className={`${styles.alert} ${styles.alertInfo}`}>
+            <div className={cx(styles.alert, styles.alertInfo)}>
               <Info size={15} />
               <span>
                 {t("advancedSettings.update.mirrorSource", {
@@ -464,18 +499,31 @@ export default function UpdateConfig() {
               </button>
             )}
 
-            {status?.has_update && !status.is_editable && !upgradeFinished && (
-              <button
-                type="button"
+            {status?.custom_build && status.custom_repository_url && (
+              <a
                 className={styles.btnPrimary}
-                onClick={handleUpgrade}
-                disabled={upgrading}
+                href={status.custom_repository_url}
+                target="_blank"
+                rel="noreferrer"
               >
-                {upgrading
-                  ? t("advancedSettings.update.upgrading")
-                  : t("advancedSettings.update.upgradeButton")}
-              </button>
+                {t("customUpdate.openRepository")}
+              </a>
             )}
+            {status?.has_update &&
+              !status.custom_build &&
+              !status.is_editable &&
+              !upgradeFinished && (
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleUpgrade}
+                  disabled={upgrading}
+                >
+                  {upgrading
+                    ? t("advancedSettings.update.upgrading")
+                    : t("advancedSettings.update.upgradeButton")}
+                </button>
+              )}
           </div>
 
           {progress && (
@@ -497,7 +545,7 @@ export default function UpdateConfig() {
 
               {progress.status === "complete" && (
                 <>
-                  <div className={`${styles.alert} ${styles.alertSuccess}`}>
+                  <div className={cx(styles.alert, styles.alertSuccess)}>
                     <CheckCircle size={15} />
                     <span>
                       {t("advancedSettings.update.upgradeSuccess")}
@@ -508,7 +556,7 @@ export default function UpdateConfig() {
                   {restartPhase === "idle" &&
                     !status?.desktop &&
                     (isServiceMode ? (
-                      <div className={`${styles.alert} ${styles.alertInfo}`}>
+                      <div className={cx(styles.alert, styles.alertInfo)}>
                         <AlertTriangle size={15} />
                         <div className={styles.restartRow}>
                           <p>{t("advancedSettings.update.restartHint")}</p>
@@ -523,7 +571,7 @@ export default function UpdateConfig() {
                         </div>
                       </div>
                     ) : (
-                      <div className={`${styles.alert} ${styles.alertInfo}`}>
+                      <div className={cx(styles.alert, styles.alertInfo)}>
                         <AlertTriangle size={15} />
                         <div>
                           <p>{t("advancedSettings.update.restartHint")}</p>
@@ -539,7 +587,7 @@ export default function UpdateConfig() {
               )}
 
               {progress.status === "error" && (
-                <div className={`${styles.alert} ${styles.alertError}`}>
+                <div className={cx(styles.alert, styles.alertError)}>
                   <XCircle size={15} />
                   <div>
                     <p>
@@ -585,7 +633,7 @@ export default function UpdateConfig() {
           )}
         </section>
 
-        <UpgradeGuide />
+        {!status?.custom_build && <UpgradeGuide />}
       </div>
     </div>
   );
