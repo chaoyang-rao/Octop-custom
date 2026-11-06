@@ -37,6 +37,13 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
     """Deny management by default, including raw Bridge peer and config surfaces."""
     scopes = set(session.scopes)
     read = method in {"GET", "HEAD"}
+    if "enterprise" in scopes:
+        if scopes == {"enterprise"} and (
+            (read and path == "/api/enterprise/session")
+            or (method == "POST" and path == "/api/enterprise/session/revoke")
+        ):
+            return
+        raise OctopError(ErrorCode.FORBIDDEN, "enterprise identity credential is purpose-limited")
     allowed = False
     if session.kind == "share":
         allowed = read and path in {

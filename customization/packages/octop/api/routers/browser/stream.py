@@ -40,7 +40,7 @@ from typing import Any
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
-from octop.api.deps import resolve_user_from_token
+from octop.api.deps import resolve_websocket_user
 from octop.api.routers.browser.harness import (
     control_owner_for,
     harness_list_tabs,
@@ -397,7 +397,7 @@ async def browser_stream_ws(
         await websocket.close(code=4001, reason="missing token")
         return
     try:
-        user = resolve_user_from_token(server, token)
+        user = await resolve_websocket_user(server, token)
     except Exception as exc:
         await websocket.close(code=4001, reason=f"auth failed: {exc}")
         return

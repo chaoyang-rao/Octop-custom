@@ -348,6 +348,8 @@ async def create_user(
     actor: Any = Depends(require_permission("users")),
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
+    if server.services.config.enterprise_center_enabled and body.create_default_expert:
+        raise OctopError.localized(ErrorCode.FORBIDDEN)
     template_id = _expert_template_id(body)
     role_id, template_name, template_perms, template_policies = _resolve_role_template(
         server, body.role

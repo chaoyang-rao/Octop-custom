@@ -17,7 +17,14 @@ from octop.infra.bridge.peer_auth import (
 from octop.infra.errors import ErrorCode, OctopError
 
 
-def test_normalize_accepts_https_host() -> None:
+def test_normalize_accepts_https_host(monkeypatch) -> None:
+    import socket
+
+    monkeypatch.setattr(
+        socket,
+        "getaddrinfo",
+        lambda *args: [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("203.0.113.10", 0))],
+    )
     assert normalize_peer_base_url("https://demo.octop.chat/") == "https://demo.octop.chat"
 
 

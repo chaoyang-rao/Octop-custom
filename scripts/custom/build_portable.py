@@ -18,6 +18,7 @@ import stat
 import struct
 import subprocess
 import urllib.request
+from urllib.parse import urlsplit
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -188,14 +189,35 @@ def collect_overlay(overlay_root: Path) -> dict[str, Path]:
     return dict(sorted(files.items()))
 
 
-def custom_launch(original: bytes) -> bytes:
+def enterprise_origin(value: str) -> str:
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("Enterprise authority must be a public HTTPS origin without credentials")
+    parsed.port  # Validate malformed ports before producing an installer.
+    return value.rstrip("/")
+
+
+def custom_launch(original: bytes, enterprise_authority_url: str = "") -> bytes:
     newline = b"\r\n" if b"\r\n" in original else b"\n"
     anchor = b"def main() -> None:" + newline
     if original.count(anchor) != 1 or b"import os" + newline not in original:
         raise ValueError("Official launch.py layout changed; review the custom launch patch")
-    return original.replace(
-        anchor, anchor + b'    os.environ["OCTOP_CUSTOM_BUILD"] = "1"' + newline, 1
-    )
+    inserted = b'    os.environ["OCTOP_CUSTOM_BUILD"] = "1"' + newline
+    if enterprise_authority_url:
+        origin = enterprise_origin(enterprise_authority_url)
+        inserted += (
+            f'    os.environ.setdefault("OCTOP_ENTERPRISE_AUTHORITY_URL", {origin!r})'.encode()
+            + newline
+        )
+    return original.replace(anchor, anchor + inserted, 1)
 
 
 def json_bytes(value: Any) -> bytes:
@@ -250,7 +272,10 @@ def build_archive(
     git_dirty: bool = False,
     *,
     dependency_overlay: RuntimeDependencyOverlay | None = None,
+    enterprise_authority_url: str = "",
 ) -> dict[str, Any]:
+    if enterprise_authority_url:
+        enterprise_authority_url = enterprise_origin(enterprise_authority_url)
     asset = lock["assets"][platform]
     verify_source(source_zip, asset)
     files = collect_overlay(overlay_root)
@@ -275,6 +300,8 @@ def build_archive(
         "runtime_dependencies": dependencies.provenance,
         "runtime_dependency_file_sha256": dependency_hashes,
     }
+    if enterprise_authority_url:
+        manifest["enterprise_authority_url"] = enterprise_authority_url
     manifest_data = json_bytes(manifest)
     marker = {
         "upstream_version": lock["upstream_version"],
@@ -284,6 +311,8 @@ def build_archive(
         "manifest": "custom-release-manifest.json",
         "manifest_sha256": hashlib.sha256(manifest_data).hexdigest(),
     }
+    if enterprise_authority_url:
+        marker["enterprise_authority_url"] = enterprise_authority_url
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(".zip.part")
     retained: dict[str, tuple[int, int, int]] = {}
@@ -291,7 +320,9 @@ def build_archive(
         with zipfile.ZipFile(source_zip) as original:
             validate_archive(original, platform, lock["upstream_version"])
             replacement = {
-                "launch.py": custom_launch(original.read(f"{root}/launch.py")),
+                "launch.py": custom_launch(
+                    original.read(f"{root}/launch.py"), enterprise_authority_url
+                ),
                 "VERSION.txt": original.read(f"{root}/VERSION.txt").replace(
                     f"octop_version={lock['upstream_version']}".encode(),
                     f"octop_version={lock['custom_version']}".encode(),
@@ -323,7 +354,9 @@ def build_archive(
                 for name, data in dependencies.files.items():
                     entry = zipfile.ZipInfo(f"{root}/{name}")
                     entry.create_system = 3
-                    entry.external_attr = (stat.S_IFREG | dependencies.file_modes.get(name, 0o644)) << 16
+                    entry.external_attr = (
+                        stat.S_IFREG | dependencies.file_modes.get(name, 0o644)
+                    ) << 16
                     entry.compress_type = zipfile.ZIP_DEFLATED
                     output.writestr(entry, data)
         with zipfile.ZipFile(temporary) as output:
@@ -377,6 +410,8 @@ def build_archive(
             "manifest_sha256": marker["manifest_sha256"],
         },
     }
+    if enterprise_authority_url:
+        report["enterprise_authority_url"] = enterprise_authority_url
     destination.with_suffix(".json").write_bytes(json_bytes(report))
     return report
 
@@ -391,6 +426,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--download-only", action="store_true", help="Only fetch/verify the official ZIP"
+    )
+    parser.add_argument(
+        "--enterprise-authority-url",
+        default="",
+        help="Preset the public HTTPS company login origin; never include an App Secret",
     )
     args = parser.parse_args()
     try:
@@ -416,6 +456,7 @@ def main() -> None:
             git_revision(REPO_ROOT),
             git_is_dirty(REPO_ROOT),
             dependency_overlay=dependencies,
+            enterprise_authority_url=args.enterprise_authority_url,
         )
         print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
     except (OSError, ValueError, KeyError, zipfile.BadZipFile, subprocess.SubprocessError) as error:

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from octop.config import OctopConfig
 from octop.infra.agents.manager import AgentCreateSpec, validate_custom_agent_id
 from octop.infra.errors import ErrorCode, OctopError
 
@@ -58,6 +59,7 @@ def _make_manager(*, existing_agent_ids: set[str]):
         raise WorkspaceReached(agent_id)
 
     mgr = object.__new__(manager_mod.AgentManager)
+    mgr._config = OctopConfig()
     mgr._repos = SimpleNamespace(
         agent_repo=SimpleNamespace(get=repo_get),
         user_policy_repo=SimpleNamespace(get=lambda *args, **kwargs: None),

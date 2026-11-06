@@ -28,6 +28,15 @@ class SettingsRepo:
         with self._db.transaction() as conn:
             conn.execute("DELETE FROM settings WHERE key = ?", (key,))
 
+    def set_if_missing(self, key: str, value: str) -> str:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO settings(key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING",
+                (key, value),
+            )
+            row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        return str(row["value"])
+
     def get_active_model(self) -> tuple[str, str]:
         """Return (provider_name, model_id); empty strings if not set."""
         raw = self.get(self._KEY_ACTIVE_MODEL) or ""

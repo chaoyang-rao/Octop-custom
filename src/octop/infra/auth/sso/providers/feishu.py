@@ -156,4 +156,7 @@ class FeishuAdapter:
             claims["name"] = name.strip()
         if isinstance(email, str) and email.strip():
             claims["email"] = email.strip()
+        tenant = identity.get("tenant_key")
+        if isinstance(tenant, str) and tenant.strip():
+            claims["tenant_key"] = tenant.strip()
         return claims

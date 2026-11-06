@@ -5,7 +5,24 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from octop.infra.errors import ErrorCode, OctopError
+
+
+@pytest.fixture(autouse=True)
+def peer_dns(monkeypatch):
+    """The mocked peer must not depend on the public demo's DNS availability."""
+    import socket
+
+    original = socket.getaddrinfo
+
+    def resolve(host, *args, **kwargs):
+        if host == "demo.octop.chat":
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("203.0.113.10", 0))]
+        return original(host, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "getaddrinfo", resolve)
 
 
 async def test_bridge_list_empty(env: Any) -> None:

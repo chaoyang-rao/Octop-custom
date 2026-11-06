@@ -50,6 +50,11 @@ _JWT_EXEMPT_PREFIXES = (
 _JWT_EXEMPT_EXACT = (
     "/api/health",
     "/api/auth/login",
+    "/api/auth/enterprise/status",
+    "/api/auth/enterprise/start",
+    "/api/auth/enterprise/poll",
+    "/api/enterprise/pairings",
+    "/api/enterprise/pairings/exchange",
     "/api/mobile-access/identity",
     "/api/mobile-access/pairings/request",
     "/api/mobile-access/pairings/exchange",
@@ -238,6 +243,20 @@ async def current_user(
     if not raw:
         raise OctopError(ErrorCode.AUTH_FAILED, "missing credentials")
     return resolve_user_from_token(server, raw)
+
+
+async def resolve_websocket_user(server: OctopServer, token: str) -> User:
+    """Apply enterprise permissions before a WebSocket feature checks its permissions."""
+    from octop.infra.auth.enterprise import CURRENT_ENTERPRISE_SOCKET, client_for
+
+    user = resolve_user_from_token(server, token)
+    enterprise = client_for(server)
+    if enterprise is not None:
+        user = await enterprise.authorize(user)
+        context = CURRENT_ENTERPRISE_SOCKET.get()
+        if context is not None:
+            context.user = user
+    return user
 
 
 def require_permission(key: str) -> Callable[..., Awaitable[User]]:

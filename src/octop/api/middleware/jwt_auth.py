@@ -23,6 +23,7 @@ from octop.api.deps import (
     is_jwt_exempt_request,
     maybe_sliding_renew_token,
 )
+from octop.infra.auth.enterprise import client_for
 from octop.infra.errors import OctopError
 from octop.infra.utils.locale import resolve_request_locale
 
@@ -50,6 +51,9 @@ def install(app: Any, server: Any) -> None:
         )
         try:
             request.state.octop_user = authenticate_request(request, server)
+            enterprise = client_for(server)
+            if enterprise is not None and path != "/api/auth/logout":
+                request.state.octop_user = await enterprise.authorize(request.state.octop_user)
         except OctopError as exc:
             # Middleware returns directly (skips FastAPI exception handlers).
             if exc.status >= 500:

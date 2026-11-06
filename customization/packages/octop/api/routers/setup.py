@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -243,11 +244,31 @@ async def status(server: Any = Depends(get_server)) -> dict[str, Any]:
     password_required = _setup_password_required(server)
     um = server.user_manager
     setup_required = um is None or um.count() == 0
+    from octop.infra.auth.enterprise import client_for, has_local_password_account
+
+    enterprise = client_for(server)
+    if enterprise is not None:
+        setup_required = False
+        password_required = False
     database_driver = None
     if server.database_bound and server.services is not None:
         database_driver = server.services.config.database.driver
+    deployment: dict[str, Any] = {}
+    if enterprise is not None:
+        deployment = {
+            "enterprise_login": True,
+            "enterprise_authority_url": enterprise.authority,
+            "enterprise_local_login": await asyncio.to_thread(has_local_password_account, server),
+        }
+    elif getattr(
+        server.services.config if server.services else server.config,
+        "enterprise_center_enabled",
+        False,
+    ):
+        deployment = {"enterprise_center": True}
     return {
         "setup_required": setup_required,
+        **deployment,
         "wizard_password_required": password_required,
         "wizard_password_exists": (
             password_required
@@ -451,7 +472,9 @@ async def finish(
             ) from exc
     users = server.user_manager.list()
     admin = next((u for u in users if u.is_admin), users[0] if users else None)
-    if admin is not None:
+    if admin is not None and not getattr(
+        server.services.config, "enterprise_center_enabled", False
+    ):
         try:
             await _bootstrap_default_agent(server, user_id=admin.id, locale=admin.locale)
         except Exception as exc:  # pragma: no cover

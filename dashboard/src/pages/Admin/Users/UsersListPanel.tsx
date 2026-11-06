@@ -1523,7 +1523,11 @@ function UserLoginLock({
   );
 }
 
-export default function UsersListPanel() {
+export default function UsersListPanel({
+  identityOnly = false,
+}: {
+  identityOnly?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const setCurrentUser = useSetCurrentUser();
   const timeZone = useServerTimezone();
@@ -1837,6 +1841,10 @@ export default function UsersListPanel() {
   }, [hasLockedUser, nowSec, rows, refreshUsers]);
 
   const refreshAgents = useCallback(async () => {
+    if (identityOnly) {
+      setAgentsLoading(false);
+      return;
+    }
     setAgentsLoading(true);
     try {
       const data = await request<OctopAgent[]>("/agents?scope=all");
@@ -1849,7 +1857,7 @@ export default function UsersListPanel() {
     } finally {
       setAgentsLoading(false);
     }
-  }, [t]);
+  }, [identityOnly, t]);
 
   const patchAgent = useCallback(
     (agentId: string, patch: Partial<OctopAgent>) => {
@@ -1916,6 +1924,10 @@ export default function UsersListPanel() {
       .list()
       .then(setUserRoles)
       .catch(() => setUserRoles([]));
+    if (identityOnly) {
+      setWorkspaceRootAllowed(false);
+      return;
+    }
     fetchFilesystemDefaults()
       .then((defaults) => {
         setFsTreeRoots(
@@ -1929,10 +1941,10 @@ export default function UsersListPanel() {
         setFsTreeRoots([HOST_FS_ROOT]);
         setWorkspaceRootAllowed(true);
       });
-  }, [refreshAll]);
+  }, [identityOnly, refreshAll]);
 
   useEffect(() => {
-    if (!createOpen) return;
+    if (!createOpen || identityOnly) return;
     let cancelled = false;
     const lang = i18n.language.startsWith("zh") ? "zh" : "en";
     void request<{
@@ -1972,7 +1984,7 @@ export default function UsersListPanel() {
     return () => {
       cancelled = true;
     };
-  }, [createOpen, form, i18n.language]);
+  }, [createOpen, form, i18n.language, identityOnly]);
 
   const onCreate = async (values: CreateValues) => {
     setSubmitting(true);
@@ -1990,7 +2002,8 @@ export default function UsersListPanel() {
           permissions: values.role === "admin" ? [] : values.permissions ?? [],
           role_name: values.role_name?.trim() || null,
           ...policyPayload(values, { workspaceRootAllowed }),
-          create_default_expert: Boolean(values.create_default_expert),
+          create_default_expert:
+            !identityOnly && Boolean(values.create_default_expert),
           expert_template_id: values.create_default_expert
             ? values.expert_template_id || DEFAULT_EXPERT_TEMPLATE_ID
             : null,
@@ -2053,7 +2066,7 @@ export default function UsersListPanel() {
       token_quota: undefined,
       limit_max_agents: false,
       max_agents: undefined,
-      create_default_expert: true,
+      create_default_expert: !identityOnly,
       expert_template_id: DEFAULT_EXPERT_TEMPLATE_ID,
       ...(userRole ? policyFieldsFromRole(userRole, workspaceRootAllowed) : {}),
     });
@@ -2691,7 +2704,7 @@ export default function UsersListPanel() {
             limit_workspace_root: false,
             limit_token_quota: false,
             limit_max_agents: false,
-            create_default_expert: true,
+            create_default_expert: !identityOnly,
             expert_template_id: DEFAULT_EXPERT_TEMPLATE_ID,
           }}
           className={styles.createUserForm}
@@ -2841,7 +2854,7 @@ export default function UsersListPanel() {
               valuePropName="checked"
               extra={t("adminUsers.createDefaultExpertHint")}
             >
-              <Switch />
+              <Switch disabled={identityOnly} />
             </Form.Item>
             <Form.Item
               noStyle

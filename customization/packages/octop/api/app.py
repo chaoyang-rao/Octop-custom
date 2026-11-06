@@ -80,6 +80,9 @@ def _dashboard_fallback(index_file: Path, full_path: str) -> FileResponse:
 
 def _mount_routers(app: FastAPI, mounts: Sequence[_RouterMount]) -> None:
     for spec in mounts:
+        allowed = getattr(app.state, "enterprise_routers", None)
+        if allowed is not None and not any(spec.router is router for router in allowed):
+            continue
         app.include_router(spec.router, prefix=spec.prefix, tags=list(spec.tags))
 
 
@@ -142,14 +145,22 @@ def build_app(server: OctopServer) -> FastAPI:
 
     # Bridge proxy must sit inside JWT auth so ``request.state.octop_user`` is set
     # (Starlette runs the last-added middleware first).
-    install_bridge_proxy(app, server)
+    if not (cfg and cfg.enterprise_center_enabled):
+        install_bridge_proxy(app, server)
     install_jwt_auth(app, server)
     install_setup_lockdown(app, server)
     from octop.api.middleware.mobile_device import MobileDeviceAccessMiddleware
 
     app.add_middleware(MobileDeviceAccessMiddleware, server=server)
+    from octop.api.middleware.enterprise import EnterpriseSocketMiddleware
 
-    if server.app_runtime is not None and server.app_runtime.bridge_manager is not None:
+    app.add_middleware(EnterpriseSocketMiddleware, server=server)
+
+    if (
+        not (cfg and cfg.enterprise_center_enabled)
+        and server.app_runtime is not None
+        and server.app_runtime.bridge_manager is not None
+    ):
         from octop.api.bridge_peer import prepare_peer_dashboard_turn
         from octop.api.routers.browser.stream import run_browser_stream_session
 
@@ -190,6 +201,7 @@ def build_app(server: OctopServer) -> FastAPI:
         conversations,
         cron,
         desktop,
+        enterprise,
         envs,
         experts,
         health,
@@ -243,6 +255,39 @@ def build_app(server: OctopServer) -> FastAPI:
     from octop.api.routers.tls import router as tls_router
     from octop.api.routers.voice import admin_router as admin_voice_router
 
+    if cfg and cfg.enterprise_center_enabled:
+        app.state.enterprise_routers = (
+            setup.router,
+            auth.router,
+            auth_mfa.router,
+            auth_oidc.router,
+            auth_oauth.router,
+            auth_ldap.router,
+            preferences.router,
+            i18n.router,
+            health.router,
+            user_roles.router,
+            user_groups.router,
+            users.router,
+            enterprise.router,
+        )
+        app.add_api_route(
+            "/api/settings/timezone",
+            settings.get_timezone_settings,
+            methods=["GET"],
+            response_model=settings.TimezoneSettingsResponse,
+            tags=["settings"],
+            summary="Server default timezone",
+        )
+        app.add_api_route(
+            "/api/settings/upload",
+            settings.get_upload_settings,
+            methods=["GET"],
+            response_model=settings.UploadSettingsResponse,
+            tags=["settings"],
+            summary="Server upload size limit",
+        )
+
     _mount_routers(
         app,
         [
@@ -251,6 +296,7 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(auth_mfa.router, "/api/auth", ["auth"]),
             _RouterMount(auth_oidc.router, "/api/auth", ["auth"]),
             _RouterMount(auth_oauth.router, "/api/auth", ["auth"]),
+            _RouterMount(enterprise.router, "/api", ["auth"]),
             _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),
             _RouterMount(invites.public_router, "/api/auth/invite", ["auth"]),
             _RouterMount(preferences.router, "/api", ["auth"]),

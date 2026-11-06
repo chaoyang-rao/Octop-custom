@@ -528,7 +528,13 @@ export function mapBridgeAgent(
   };
 }
 
-export function AgentProvider({ children }: { children: ReactNode }) {
+export function AgentProvider({
+  children,
+  disabled = false,
+}: {
+  children: ReactNode;
+  disabled?: boolean;
+}) {
   const user = useCurrentUser();
   const includeBridge = userCan(user, "bridge");
   const [agents, setAgents] = useState<OctopAgent[]>([]);
@@ -552,6 +558,10 @@ export function AgentProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(
     async (options?: { silent?: boolean; force?: boolean }): Promise<void> => {
+      if (disabled) {
+        setLoading(false);
+        return;
+      }
       if (!options?.silent) {
         setLoading(true);
       }
@@ -605,13 +615,17 @@ export function AgentProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [includeBridge, persistAndApply],
+    [includeBridge, persistAndApply, disabled],
   );
 
   // Initial fetch — fire once on mount. Login flow lives elsewhere; this
   // provider sits inside AuthGuard so by the time we mount, the JWT is
   // already in localStorage.
   useEffect(() => {
+    if (disabled) {
+      setLoading(false);
+      return;
+    }
     let disposed = false;
     void (async () => {
       let initializationError: unknown;
@@ -629,7 +643,7 @@ export function AgentProvider({ children }: { children: ReactNode }) {
     return () => {
       disposed = true;
     };
-  }, [refresh]);
+  }, [refresh, disabled]);
 
   // One activity refresh loop for chat and non-chat navigation alike.
   useEffect(() => {

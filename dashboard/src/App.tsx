@@ -15,6 +15,8 @@ import { routerBasename } from "./utils/publicUrl";
 import { useTranslation } from "react-i18next";
 import MainLayout from "./layouts/MainLayout";
 import LoginPage from "./pages/Login";
+import EnterpriseApprove from "./pages/Login/EnterpriseApprove";
+import EnterpriseAdmin from "./pages/Login/EnterpriseAdmin";
 import OidcComplete from "./pages/Login/OidcComplete";
 import SetupPage from "./pages/Setup";
 import InvitePage from "./pages/Invite";
@@ -139,7 +141,25 @@ function ThemedApp() {
           ) : null}
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/enterprise/approve"
+              element={
+                <AuthGuard loginPath="/login?enterprise=1">
+                  <EnterpriseApprove />
+                </AuthGuard>
+              }
+            />
             <Route path="/login/oidc/complete" element={<OidcComplete />} />
+            <Route
+              path="/enterprise/admin"
+              element={
+                <AuthGuard loginPath="/login?enterprise=1">
+                  <AgentProvider disabled>
+                    <EnterpriseAdmin />
+                  </AgentProvider>
+                </AuthGuard>
+              }
+            />
             <Route path="/setup" element={<SetupPage />} />
             <Route path="/invite" element={<InvitePage />} />
             <Route

@@ -75,10 +75,10 @@ async def run_foreground(
 
     srv = OctopServer()
     await srv.start()
-    bwrap_task = _schedule_linux_bubblewrap_ensure()
     # Greenfield deferral leaves services unset until /setup/database binds.
     cfg = srv.services.config if srv.services is not None else srv.config
     assert cfg is not None
+    bwrap_task = None if cfg.enterprise_center_enabled else _schedule_linux_bubblewrap_ensure()
     bind_host = host or cfg.bind_host
     bind_port = port or cfg.port
     if ssl_certfile is None and ssl_keyfile is None:

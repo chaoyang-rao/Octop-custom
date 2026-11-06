@@ -107,7 +107,11 @@ function OauthTabPanel({ kind }: { kind: OauthAppKind }) {
   );
 }
 
-export default function AdminUsersPage() {
+export default function AdminUsersPage({
+  identityOnly = false,
+}: {
+  identityOnly?: boolean;
+}) {
   const { t } = useTranslation();
   const { allowedTabs, activeTab, forbidden, selectTab } = useGatedSearchTabs({
     tabs: TABS,
@@ -118,7 +122,7 @@ export default function AdminUsersPage() {
 
   if (forbidden) return <ForbiddenPage />;
 
-  let body: ReactNode = <UsersListPanel />;
+  let body: ReactNode = <UsersListPanel identityOnly={identityOnly} />;
   if (activeTab === "roles") {
     body = <RolesPanel />;
   } else if (activeTab === "groups") {

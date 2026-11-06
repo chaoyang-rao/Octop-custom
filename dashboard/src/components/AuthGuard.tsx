@@ -10,6 +10,7 @@ import BootOfflinePanel from "./BootOfflinePanel";
 
 interface AuthGuardProps {
   children: React.ReactNode;
+  loginPath?: string;
 }
 
 /**
@@ -34,10 +35,15 @@ interface AuthGuardProps {
  * navigate identity changes with the location, which would re-run the gate
  * on every sidebar click and flash a full-page spinner.
  */
-export default function AuthGuard({ children }: AuthGuardProps) {
+export default function AuthGuard({
+  children,
+  loginPath = "/login",
+}: AuthGuardProps) {
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const loginPathRef = useRef(loginPath);
+  loginPathRef.current = loginPath;
 
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
@@ -68,7 +74,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             setAuthed(false);
             // Stay on the spinner until navigation away completes — do not
             // flip ``checking`` off or children would mount and 401→/login.
-            navigateRef.current("/login", { replace: true });
+            navigateRef.current(loginPathRef.current, { replace: true });
           }
           return;
         }
@@ -93,7 +99,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
             return;
           }
           setAuthed(false);
-          navigateRef.current("/login", { replace: true });
+          navigateRef.current(loginPathRef.current, { replace: true });
         }
       } catch (err) {
         if (cancelled) return;

@@ -39,3 +39,15 @@ class SecretRepo:
                 "UPDATE secrets SET v = ?, rotated_at = ? WHERE k = ?",
                 (new_value, now_ts(), k),
             )
+
+    def set(self, k: str, value: bytes) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "INSERT INTO secrets(k, v, created_at) VALUES (?, ?, ?) "
+                "ON CONFLICT(k) DO UPDATE SET v = excluded.v, rotated_at = excluded.created_at",
+                (k, value, now_ts()),
+            )
+
+    def delete(self, k: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute("DELETE FROM secrets WHERE k = ?", (k,))

@@ -50,6 +50,7 @@ import wecomIcon from "../../assets/channels/wecom.svg";
 import googleIcon from "../../assets/providers/google.svg";
 import CaptchaField, { type CaptchaFieldHandle } from "./CaptchaField";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import EnterpriseLogin from "./EnterpriseLogin";
 import { type PublicCaptchaConfig } from "./captchaAdapters";
 
 type MfaStepMode = "totp" | "recovery" | "passkey";
@@ -115,6 +116,17 @@ export default function LoginPage() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [enterpriseAuthority, setEnterpriseAuthority] = useState<string | null>(
+    null,
+  );
+  const [enterpriseCenter, setEnterpriseCenter] = useState(false);
+  const [enterpriseLocalLogin, setEnterpriseLocalLogin] = useState(false);
+  const localLink = searchParams.get("local_link") === "1";
+  const loginTarget = localLink
+    ? "/login"
+    : enterpriseCenter || searchParams.get("enterprise") === "1"
+    ? "/enterprise/approve"
+    : "/chat";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -162,6 +174,12 @@ export default function LoginPage() {
       .getAuthStatus()
       .then((status) => {
         if (cancelled) return;
+        if (status.enterprise_login && status.enterprise_authority_url) {
+          setEnterpriseAuthority(status.enterprise_authority_url);
+          setEnterpriseLocalLogin(status.enterprise_local_login === true);
+          if (!localLink) return;
+        }
+        setEnterpriseCenter(status.enterprise_center === true);
         if (status.setup_required) {
           clearAuthToken();
           navigate("/setup", { replace: true });
@@ -207,7 +225,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, localLink]);
 
   useEffect(() => {
     const code = searchParams.get("oidc_error");
@@ -260,9 +278,9 @@ export default function LoginPage() {
       setMfaCode("");
       const applied = await applyUserLocale(locale);
       void refreshServerLabels(applied);
-      navigate("/chat", { replace: true });
+      navigate(loginTarget, { replace: true });
     },
-    [navigate, remember],
+    [navigate, remember, loginTarget],
   );
 
   // Conditional UI: passkeys appear in the username autofill when available.
@@ -338,7 +356,7 @@ export default function LoginPage() {
       popup = openSsoPopup();
     }
     try {
-      const { authorization_url } = await authApi.startOauth(kind, "/chat");
+      const { authorization_url } = await authApi.startOauth(kind, loginTarget);
       if (kind === "oidc") {
         window.location.href = authorization_url;
         return;
@@ -497,6 +515,16 @@ export default function LoginPage() {
       }}
     />
   );
+
+  if (enterpriseAuthority && !localLink) {
+    return (
+      <EnterpriseLogin
+        authority={enterpriseAuthority}
+        localLoginAvailable={enterpriseLocalLogin}
+        onSuccess={finishLogin}
+      />
+    );
+  }
 
   if (mfaChallenge) {
     const methods = mfaChallenge.methods;

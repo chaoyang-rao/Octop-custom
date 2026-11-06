@@ -31,6 +31,10 @@ import type {
  */
 
 export interface AuthStatus {
+  enterprise_login?: boolean;
+  enterprise_center?: boolean;
+  enterprise_authority_url?: string | null;
+  enterprise_local_login?: boolean;
   /** True when no admin exists yet — UI must redirect to /setup. */
   setup_required: boolean;
   /** Legacy alias of ``!setup_required`` kept for compat. */
@@ -269,6 +273,10 @@ export interface SetupBody {
 }
 
 interface RawSetupStatus {
+  enterprise_login?: boolean;
+  enterprise_center?: boolean;
+  enterprise_authority_url?: string | null;
+  enterprise_local_login?: boolean;
   setup_required: boolean;
   wizard_password_required?: boolean;
   wizard_password_exists?: boolean;
@@ -337,6 +345,10 @@ export const authApi = {
       try {
         const raw = await request<RawSetupStatus>("/setup/status");
         const value: AuthStatus = {
+          enterprise_login: raw.enterprise_login,
+          enterprise_center: raw.enterprise_center,
+          enterprise_authority_url: raw.enterprise_authority_url,
+          enterprise_local_login: raw.enterprise_local_login,
           setup_required: raw.setup_required,
           setup_done: !raw.setup_required,
           enabled: true,
