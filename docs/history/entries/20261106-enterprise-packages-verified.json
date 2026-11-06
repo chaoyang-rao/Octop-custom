@@ -1,0 +1,25 @@
+{
+  "id": "20261106-enterprise-packages-verified",
+  "date": "2026-11-06T18:24:02+08:00",
+  "kind": "构建验证",
+  "modules": [
+    "企业版三平台安装包",
+    "GitHub草稿发行"
+  ],
+  "reason": "核对同一源码构建的企业安装包，并保存可供配置验收的发行结果。",
+  "summary": [
+    "GitHub Actions 42197247768全部必需检查成功；Windows x64、Intel Mac、M芯片Mac均生成原生安装器和portable ZIP，版本1.0.3b3.post2026110602。",
+    "三个portable的ZIP CRC、构建SHA256、2457个程序文件清单、预置企业地址与客户端配置延续源码均已核对；构建提交为d63cdfc1e72dc13c14195875f193540d1f4f0c6b，源码无未提交标记。",
+    "企业草稿发行已上传13个附件，所有远端SHA256和大小与本地发行文件一致。草稿暂不公开分发，等待公网端口放行、管理员及飞书应用配置和真实OAuth验收。服务器部署源码另由deploy-enterprise-center-20261106.1标签保存。"
+  ],
+  "validation": "CI make all为5874 passed、36 skipped，mypy检查723文件通过；前端专项24文件174测试通过；三平台原生运行时及定制回归均成功。已在修改前8fc8ad78源码上复现完整前端的6处失败和1处lint未使用导入错误，确认不由本轮引入。授权中心进程active、重启次数0，服务端到飞书API的HTTPS可达；公网TCP18443仍超时，setup_required仍为true，真实飞书OAuth未验收。",
+  "status": "三平台安装包与源码已保存GitHub，企业发行保留草稿；待用户完成云防火墙和账号应用配置后继续实际登录验收。",
+  "evidence": [
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42197247768",
+    "https://github.com/chaoyang-rao/Octop-custom/releases/tag/untagged-3462edff65b38d13ca4e",
+    ".cache/enterprise-20261106/release-verification.json",
+    ".cache/enterprise-20261106/package-verification.json",
+    ".cache/enterprise-20261106/frontend-baseline-comparison.json"
+  ],
+  "files": {}
+}
