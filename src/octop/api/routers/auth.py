@@ -216,6 +216,11 @@ async def login(
 async def logout(user: Any = Depends(current_user), server: Any = Depends(get_server)) -> Response:
     """Record an audit event for the current session. JWTs are stateless and not revoked server-side."""
     server.services.audit_repo.write(actor=user.username, action="auth.logout")
+    from octop.infra.auth.enterprise import client_for
+
+    enterprise = client_for(server)
+    if enterprise is not None:
+        await enterprise.logout(user.id)
     return Response(status_code=204)
 
 

@@ -14,7 +14,7 @@ import contextlib
 import json
 import os
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import WebSocketDisconnect
@@ -217,8 +217,10 @@ def _sent_messages(ws: _FakeWS) -> list[dict[str, object]]:
 def _patch_user(monkeypatch, user_id: int = 1) -> None:
     monkeypatch.setattr(
         terminal,
-        "resolve_user_from_token",
-        lambda _s, _t: SimpleNamespace(id=user_id, is_admin=False, permissions=["terminal"]),
+        "resolve_websocket_user",
+        AsyncMock(
+            return_value=SimpleNamespace(id=user_id, is_admin=False, permissions=["terminal"])
+        ),
     )
 
 
@@ -247,10 +249,10 @@ async def test_ws_missing_token_closes_4001(monkeypatch) -> None:
 async def test_ws_bad_token_closes_4001(monkeypatch) -> None:
     server, _ = _make_server()
 
-    def _bad(_server, _token):
+    async def _bad(_server, _token):
         raise OctopError(ErrorCode.AUTH_FAILED, "nope")
 
-    monkeypatch.setattr(terminal, "resolve_user_from_token", _bad)
+    monkeypatch.setattr(terminal, "resolve_websocket_user", _bad)
     ws = _FakeWS(server)
     await terminal.terminal_ws(ws, agent_id="a1", token="bad", cols=80, rows=24)
     assert ws.close_code == 4001

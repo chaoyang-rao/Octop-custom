@@ -468,6 +468,8 @@ class OctopServer:
         install_shell_output_decoding()
         config = ensure_mobile_capabilities_probed(self.paths.config)
         self.config = config
+        if config.enterprise_center_enabled:
+            self._serve_background = False
 
         self.expert_catalog = ExpertCatalog(
             default_library_root(),
@@ -575,6 +577,11 @@ class OctopServer:
             expert_catalog=self.expert_catalog,
             plugin_manager=self.plugin_manager,
         )
+        from octop.infra.auth.enterprise import client_for  # noqa: PLC0415
+
+        enterprise = client_for(self)
+        if enterprise is not None:
+            registry.enterprise_authorizer = enterprise.authorize_id
 
         from octop.infra.history.trajectory.live import TrajectoryLiveBus  # noqa: PLC0415
         from octop.infra.history.trajectory.service import TrajectoryService  # noqa: PLC0415
@@ -679,13 +686,15 @@ class OctopServer:
         )
         registry.set_proactive_scheduler(proactive_scheduler)
 
-        await registry.boot()
-        registry.schedule_idle_reclaim_sweep()
-        await gateway.refresh_media_backends()
+        if not config.enterprise_center_enabled:
+            await registry.boot()
+            registry.schedule_idle_reclaim_sweep()
+            await gateway.refresh_media_backends()
 
         user_mgr = UserManager(self.services)
         await user_mgr.boot()
-        await proactive_scheduler.start_all()
+        if not config.enterprise_center_enabled:
+            await proactive_scheduler.start_all()
 
         from octop.infra.auth.mfa import MfaService
 
@@ -748,29 +757,32 @@ class OctopServer:
         gateway.ws_hub.set_user_frame_observer(push_for(self).emit)
         gateway.set_dashboard_task_admission(task_manager.admit_turn)
         gateway.processor.hitl_coordinator.set_task_binding_resolver(task_manager.task_binding)
-        await task_manager.start()
+        if not config.enterprise_center_enabled:
+            await task_manager.start()
         from octop.infra.knowledge.gate import (  # noqa: PLC0415
             warn_if_local_embedding_deps_missing,
         )
         from octop.infra.knowledge.jobs import resume_pending_index_jobs  # noqa: PLC0415
         from octop.infra.knowledge.ocr import warn_if_local_ocr_deps_missing  # noqa: PLC0415
 
-        warn_if_local_embedding_deps_missing(
-            self.services.settings_repo.get,
-            self.services.provider_repo,
-        )
-        warn_if_local_ocr_deps_missing(
-            self.services.settings_repo.get,
-            self.services.provider_repo,
-        )
-        resume_pending_index_jobs(self.services)
+        if not config.enterprise_center_enabled:
+            warn_if_local_embedding_deps_missing(
+                self.services.settings_repo.get,
+                self.services.provider_repo,
+            )
+            warn_if_local_ocr_deps_missing(
+                self.services.settings_repo.get,
+                self.services.provider_repo,
+            )
+            resume_pending_index_jobs(self.services)
 
         # Resume Bridge links that opted into auto-reconnect (best-effort).
         async def _resume_bridges() -> None:
             with suppress(Exception):
                 await bridge_mgr.resume_auto_connections()
 
-        asyncio.create_task(_resume_bridges(), name="bridge-auto-resume")
+        if not config.enterprise_center_enabled:
+            asyncio.create_task(_resume_bridges(), name="bridge-auto-resume")
 
     async def refresh_plugin_channels(self) -> None:
         """Reconcile only changed kinds and report registration failures to callers."""

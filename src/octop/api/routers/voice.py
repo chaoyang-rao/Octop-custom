@@ -27,7 +27,7 @@ from octop.api.deps import (
     current_user,
     get_server,
     require_permission,
-    resolve_user_from_token,
+    resolve_websocket_user,
 )
 from octop.i18n.domains.voice import realtime_error_message
 from octop.infra.errors import ErrorCode, OctopError
@@ -270,7 +270,7 @@ async def stream_transcription(
         await websocket.close(code=4001, reason="missing token")
         return
     try:
-        resolve_user_from_token(server, token)
+        await resolve_websocket_user(server, token)
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth failed: {exc.code.value}")
         return

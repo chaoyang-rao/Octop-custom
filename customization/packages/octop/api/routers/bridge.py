@@ -13,7 +13,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from starlette.websockets import WebSocketState
 
-from octop.api.deps import get_server, require_permission, resolve_user_from_token
+from octop.api.deps import get_server, require_permission, resolve_websocket_user
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.groups import RESOURCE_BRIDGE, GroupAccess
 from octop.infra.users.permissions import user_has_permission
@@ -659,7 +659,7 @@ async def bridge_browser_stream_ws(
         await websocket.close(code=4001, reason="missing token")
         return
     try:
-        user = resolve_user_from_token(server, raw_token)
+        user = await resolve_websocket_user(server, raw_token)
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return
@@ -755,7 +755,7 @@ async def bridge_inbound_ws(
         await websocket.close(code=4001, reason="missing token")
         return
     try:
-        user = resolve_user_from_token(server, raw)
+        user = await resolve_websocket_user(server, raw)
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return

@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
 
-from octop.api.deps import resolve_user_from_token
+from octop.api.deps import resolve_websocket_user
 from octop.infra.control.desktop.input import canvas_to_screen, run_desktop_action
 from octop.infra.control.desktop.session import (
     DesktopSession,
@@ -278,7 +278,7 @@ async def desktop_stream_ws(
             await websocket.close(code=4001, reason="missing token")
             return
         try:
-            user = resolve_user_from_token(server, auth_token)
+            user = await resolve_websocket_user(server, auth_token)
         except Exception as exc:
             await _send_json(
                 websocket, {"type": "error", "code": "AUTH_FAILED", "message": str(exc)}

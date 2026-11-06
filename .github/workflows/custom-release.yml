@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261106.1"
+        default: "custom-1.0.3b3-20261106.2"
         required: true
         type: string
       publish_release:
@@ -15,6 +15,11 @@ on:
         default: true
         required: true
         type: boolean
+      enterprise_authority_url:
+        description: "Optional public HTTPS company login origin; no credentials"
+        default: ""
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -24,8 +29,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post20261106"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261106.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026110602"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261106.2' }}
+  ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || '' }}
 
 jobs:
   quality:
@@ -100,6 +106,8 @@ jobs:
           src/pages/Settings/AdvancedSettings/UpdateConfig.test.tsx
           src/utils/dashboardPushToast.test.ts
           src/hooks/useDashboardPushToast.test.tsx
+          src/pages/Login/EnterpriseLogin.test.tsx
+          src/pages/Login/EnterpriseApprove.test.tsx
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
@@ -148,7 +156,16 @@ jobs:
         run: python scripts/custom/verify_http2_vendor.py
 
       - name: Assemble the complete customized portable runtime
-        run: python scripts/custom/build_portable.py --platform "${{ matrix.plat }}" --output dist
+        env:
+          CUSTOM_PLATFORM: ${{ matrix.plat }}
+        run: |
+          python - <<'PY'
+          import os, subprocess, sys
+          command = [sys.executable, 'scripts/custom/build_portable.py', '--platform', os.environ['CUSTOM_PLATFORM'], '--output', 'dist']
+          if os.environ.get('ENTERPRISE_AUTHORITY_URL'):
+              command += ['--enterprise-authority-url', os.environ['ENTERPRISE_AUTHORITY_URL']]
+          subprocess.run(command, check=True)
+          PY
 
       - name: Native Python smoke and customization regressions
         env:

@@ -305,6 +305,25 @@ class SsoService:
 
         if not subject:
             return self._error_redirect(frontend, "invalid_token")
+        company_tenant: str | None = None
+        if self._services.config.enterprise_center_enabled and provider.kind == "feishu":
+            from octop.infra.auth.enterprise import verify_company_tenant
+
+            try:
+                company_tenant = await asyncio.to_thread(
+                    verify_company_tenant,
+                    self._services,
+                    self._user_manager,
+                    claims,
+                    login_state.user_id,
+                )
+            except OctopError as exc:
+                return self._error_redirect(
+                    frontend,
+                    "enterprise_setup"
+                    if exc.code is ErrorCode.ENTERPRISE_FEISHU_REQUIRED
+                    else "enterprise_denied",
+                )
         try:
             if login_state.user_id is not None:
                 user = await self._user_manager.bind_sso_identity(
@@ -316,6 +335,17 @@ class SsoService:
             else:
                 user = await self._user_manager.resolve_or_create_sso_user(
                     provider_id=provider.id, subject=subject, claims=claims
+                )
+            if company_tenant is not None:
+                from octop.infra.auth.enterprise import record_company_identity
+
+                await asyncio.to_thread(
+                    record_company_identity,
+                    self._services,
+                    user.id,
+                    provider.client_id,
+                    subject,
+                    company_tenant,
                 )
         except OctopError as exc:
             if exc.code is ErrorCode.USER_DISABLED:

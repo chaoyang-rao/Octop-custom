@@ -180,15 +180,21 @@ class MobileAccessService:
         )
         return hashlib.sha256(key).hexdigest()
 
-    async def begin_pairing(self, *, name: str, platform: str, network_key: str) -> dict[str, Any]:
+    async def begin_pairing(
+        self, *, name: str, platform: str, network_key: str, kind: str = "mobile"
+    ) -> dict[str, Any]:
+        if kind not in {"mobile", "enterprise"}:
+            raise ValueError("mobile_access.invalid_device")
         async with self._lock:
-            return await asyncio.to_thread(self._begin_pairing, name, platform, network_key)
+            return await asyncio.to_thread(self._begin_pairing, name, platform, network_key, kind)
 
-    def _begin_pairing(self, name: str, platform: str, network_key: str) -> dict[str, Any]:
-        self._rate_limit(f"begin:{network_key}", 6)
-        self._rate_limit("begin:global", 30)
+    def _begin_pairing(
+        self, name: str, platform: str, network_key: str, kind: str = "mobile"
+    ) -> dict[str, Any]:
+        self._rate_limit(f"begin:{network_key}", 30 if kind == "enterprise" else 6)
+        self._rate_limit("begin:global", 120 if kind == "enterprise" else 30)
         rows = self._pending()
-        if len(rows) >= 64:
+        if len(rows) >= (256 if kind == "enterprise" else 64):
             raise OctopError(ErrorCode.AUTH_FAILED, "mobile pairing capacity reached", status=429)
         name = name.strip()[:80]
         if not name or platform not in {"ios", "android", "web"}:
@@ -207,6 +213,7 @@ class MobileAccessService:
                 "platform": platform,
                 "expires_at": expires,
                 "state": "pending",
+                "kind": kind,
             }
         )
         self._write(_PAIRINGS_KEY, rows)
@@ -218,17 +225,19 @@ class MobileAccessService:
             "interval": 3,
         }
 
-    async def inspect_pairing(self, *, user_id: int, code: str) -> dict[str, Any]:
+    async def inspect_pairing(
+        self, *, user_id: int, code: str, kind: str = "mobile"
+    ) -> dict[str, Any]:
         async with self._lock:
-            return await asyncio.to_thread(self._inspect_pairing, user_id, code)
+            return await asyncio.to_thread(self._inspect_pairing, user_id, code, kind)
 
-    def _inspect_pairing(self, user_id: int, code: str) -> dict[str, Any]:
+    def _inspect_pairing(self, user_id: int, code: str, kind: str = "mobile") -> dict[str, Any]:
         self._rate_limit(f"inspect:{user_id}", 12)
         digest = _hash(normalize_code(code))
         row = next(
             (r for r in self._pending() if secrets.compare_digest(r["code_hash"], digest)), None
         )
-        if row is None or row["state"] != "pending":
+        if row is None or row["state"] != "pending" or row.get("kind", "mobile") != kind:
             raise _error()
         return {
             "name": row["name"],
@@ -238,18 +247,25 @@ class MobileAccessService:
         }
 
     async def approve_pairing(
-        self, *, user_id: int, code: str, scopes: list[str]
+        self, *, user_id: int, code: str, scopes: list[str], kind: str = "mobile"
     ) -> dict[str, Any]:
-        selected = normalize_scopes(scopes)
+        if kind == "enterprise":
+            if scopes != ["enterprise"]:
+                raise _error()
+            selected = scopes
+        else:
+            selected = normalize_scopes(scopes)
         async with self._lock:
-            return await asyncio.to_thread(self._approve_pairing, user_id, code, selected)
+            return await asyncio.to_thread(self._approve_pairing, user_id, code, selected, kind)
 
-    def _approve_pairing(self, user_id: int, code: str, scopes: list[str]) -> dict[str, Any]:
+    def _approve_pairing(
+        self, user_id: int, code: str, scopes: list[str], kind: str = "mobile"
+    ) -> dict[str, Any]:
         self._rate_limit(f"approve:{user_id}", 12)
         rows = self._pending()
         digest = _hash(normalize_code(code))
         row = next((r for r in rows if secrets.compare_digest(r["code_hash"], digest)), None)
-        if row is None or row["state"] != "pending":
+        if row is None or row["state"] != "pending" or row.get("kind", "mobile") != kind:
             raise _error()
         versions = self._account_versions(user_id)
         if versions is None:
@@ -292,22 +308,33 @@ class MobileAccessService:
         self._write(_PAIRINGS_KEY, rows)
         return self._public_device(device)
 
-    async def exchange_pairing(self, *, pairing_secret: str, network_key: str) -> dict[str, Any]:
+    async def exchange_pairing(
+        self, *, pairing_secret: str, network_key: str, kind: str = "mobile"
+    ) -> dict[str, Any]:
         async with self._lock:
-            return await asyncio.to_thread(self._exchange_pairing, pairing_secret, network_key)
+            return await asyncio.to_thread(
+                self._exchange_pairing, pairing_secret, network_key, kind
+            )
 
-    def _exchange_pairing(self, credential: str, network_key: str) -> dict[str, Any]:
-        self._rate_limit(f"poll:{network_key}", 120)
+    def _exchange_pairing(
+        self, credential: str, network_key: str, kind: str = "mobile"
+    ) -> dict[str, Any]:
         digest = _hash(credential)
+        poll_key = (
+            f"poll:{network_key}:{digest[:12]}" if kind == "enterprise" else f"poll:{network_key}"
+        )
+        self._rate_limit(poll_key, 120)
         rows = self._pending()
         row = next((r for r in rows if secrets.compare_digest(r["credential_hash"], digest)), None)
-        if row is None:
+        if row is None or row.get("kind", "mobile") != kind:
             raise _error()
         if row["state"] == "pending":
             return {"status": "pending", "expires_at": row["expires_at"]}
         session = self._open(row["result"])
         # A revoked device cannot be resurrected by retrying an old exchange.
         self.authenticate(session["access_token"])
+        if kind == "enterprise":
+            self._write(_PAIRINGS_KEY, [r for r in rows if r is not row])
         return {"status": "approved", **session, "host_fingerprint": self._host_fingerprint()}
 
     def authenticate(self, token: str) -> DeviceSession:
@@ -646,7 +673,11 @@ class MobileAccessService:
 
 def service_for(server: Any) -> MobileAccessService:
     service = getattr(server, "_mobile_access_service", None)
-    if not isinstance(service, MobileAccessService):
+    if (
+        not isinstance(service, MobileAccessService)
+        or service._settings is not getattr(server.services, "settings_repo", service._settings)
+        or service._secrets is not getattr(server.services, "secret_repo", service._secrets)
+    ):
         service = MobileAccessService(
             server.services.settings_repo,
             server.services.secret_repo,

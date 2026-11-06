@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Segmented, Steps, Typography } from "antd";
+import { Alert, Segmented, Steps, Typography } from "antd";
+import { getAuthToken } from "../../api/request";
+import { apiErrorMessage } from "../../utils/apiError";
 import { Lock, UserCog, Cpu, CheckCircle, Wand2, Database } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import cx from "classnames";
@@ -37,6 +39,8 @@ export default function SetupPage() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [enterpriseCenter, setEnterpriseCenter] = useState(false);
+  const [enterpriseError, setEnterpriseError] = useState("");
   const [offline, setOffline] = useState(false);
   const [statusRetryKey, setStatusRetryKey] = useState(0);
   const [passwordRequired, setPasswordRequired] = useState(true);
@@ -77,6 +81,7 @@ export default function SetupPage() {
       .getAuthStatus()
       .then(async (status) => {
         if (cancelled) return;
+        setEnterpriseCenter(status.enterprise_center === true);
         if (!status.setup_required) {
           wizardSession.clearAll();
           navigate("/login", { replace: true });
@@ -315,6 +320,9 @@ export default function SetupPage() {
               onBack={passwordRequired ? handleBackFromDatabase : undefined}
             />
           )}
+          {enterpriseError && (
+            <Alert role="alert" type="error" message={enterpriseError} />
+          )}
           {current === STEP_ADMIN && (
             <AdminStep
               createdCreds={adminCreds}
@@ -322,6 +330,24 @@ export default function SetupPage() {
               onCreated={(creds) => {
                 setAdminCreds(creds);
                 wizardSession.saveDraft({ adminUsername: creds.username });
+                if (enterpriseCenter) {
+                  setEnterpriseError("");
+                  void wizardApi
+                    .finish(
+                      { provider_draft: null },
+                      getAuthToken() || wizardSession.loadToken() || "",
+                    )
+                    .then(() => {
+                      wizardSession.clearAll();
+                      navigate("/login?enterprise=1", { replace: true });
+                    })
+                    .catch((err) =>
+                      setEnterpriseError(
+                        apiErrorMessage(err, t("enterprise.failed"), t),
+                      ),
+                    );
+                  return;
+                }
                 goToStep(STEP_MODEL);
               }}
             />

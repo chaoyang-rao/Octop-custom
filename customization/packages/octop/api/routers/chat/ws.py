@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from starlette.websockets import WebSocketState
 
 from octop.api.common.agent import assert_agent_access
-from octop.api.deps import extract_raw_token, resolve_user_from_token
+from octop.api.deps import extract_raw_token, resolve_websocket_user
 from octop.api.routers.chat.models import UserTurnWsFrame
 from octop.api.routers.chat.sse import json_chunk_default
 from octop.api.routers.chat.turn import (
@@ -48,7 +48,7 @@ async def dashboard_chat_ws(
         return
 
     try:
-        user = resolve_user_from_token(server, token)
+        user = await resolve_websocket_user(server, token)
     except OctopError as exc:
         await websocket.close(code=4001, reason=f"auth: {exc.code.value}")
         return

@@ -26,6 +26,8 @@ def should_defer_control_plane_db(config: OctopConfig, paths: PathLayout) -> boo
     """
     if config.database.is_postgresql:
         return False
+    if config.enterprise_authority_url:
+        return False
     if database_env_configured():
         return False
     return not resolve_sqlite_db_path(config, paths).exists()

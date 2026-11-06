@@ -484,6 +484,7 @@ class AgentManager:
         plugin_manager: PluginManager | None = None,
     ) -> None:
         self._repos = repos
+        self.enterprise_authorizer: Callable[[int], Awaitable[None]] | None = None
         self._paths = paths
         from octop.config import OctopConfig as _OctopConfig  # noqa: PLC0415
 
@@ -837,6 +838,8 @@ class AgentManager:
         workspace_initializer: Callable[[AgentRow, Any], Awaitable[None]] | None = None,
     ) -> AgentRow:
         """Create a new agent, persist to DB, and register with harness."""
+        if getattr(self._config, "enterprise_center_enabled", False):
+            raise OctopError.localized(ErrorCode.FORBIDDEN)
         async with self._lock:
             self._assert_agent_name_available(spec.user_id, spec.name)
             if spec.agent_id:
@@ -2212,12 +2215,24 @@ class AgentManager:
                 async for chunk in self.stream(primary_id, req):
                     yield stamp_primary_chunk(chunk, room)
 
+    async def _authorize_enterprise_owner(self, agent_id: str) -> None:
+        if getattr(getattr(self, "_config", None), "enterprise_center_enabled", False):
+            raise OctopError.localized(ErrorCode.FORBIDDEN)
+        guard = getattr(self, "enterprise_authorizer", None)
+        if guard is None:
+            return
+        row = await asyncio.to_thread(self.get_row, agent_id)
+        if row is None or row.user_id is None:
+            raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+        await guard(row.user_id)
+
     async def stream(self, agent_id: str, request: dict[str, Any]) -> AsyncIterator[Any]:
         """Stream harness chunks (Langfuse tracing handled inside octop-harness)."""
         from octop.infra.connectors.accounts.actor import actor_stream, current_vault_actor
 
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        await self._authorize_enterprise_owner(agent_id)
         primary = await self._primary_for_room(agent_id)
         if primary is not None:
             async for chunk in self._primary_room_stream(agent_id, primary.agent_id, request):
@@ -2251,6 +2266,7 @@ class AgentManager:
 
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        await self._authorize_enterprise_owner(agent_id)
         primary = await self._primary_for_room(agent_id)
         if primary is not None:
             from octop.infra.agents.teams.primary import (
@@ -2305,6 +2321,7 @@ class AgentManager:
 
         if self._harness_manager is None:
             raise self._unavailable_error(agent_id)
+        await self._authorize_enterprise_owner(agent_id)
         primary = await self._primary_for_room(agent_id)
         if primary is not None:
             from octop.infra.agents.teams.primary import (

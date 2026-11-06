@@ -135,6 +135,8 @@ class OctopConfig:
     enable_api_docs: bool = False
     history_v2_enabled: bool = False
     require_setup_password: bool = True
+    enterprise_center_enabled: bool = False
+    enterprise_authority_url: str = ""
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     # False when config.json omits ``database`` (use PathLayout.db unless env overrides).
     database_in_file: bool = False
@@ -615,6 +617,16 @@ def load_config(path: Path) -> OctopConfig:
             False,
         ),
         require_setup_password=bool(merged["require_setup_password"]),
+        enterprise_center_enabled=_coerce_bool(
+            "OCTOP_ENTERPRISE_CENTER_ENABLED",
+            os.environ.get(
+                "OCTOP_ENTERPRISE_CENTER_ENABLED", str(merged["enterprise_center_enabled"])
+            ),
+            False,
+        ),
+        enterprise_authority_url=str(
+            os.environ.get("OCTOP_ENTERPRISE_AUTHORITY_URL", merged["enterprise_authority_url"])
+        ).strip(),
         database=parse_database_config(merged_db),
         database_in_file=database_in_file,
         tls=_parse_tls_section(raw.get("tls")),

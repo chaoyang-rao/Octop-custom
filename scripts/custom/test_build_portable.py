@@ -108,6 +108,41 @@ class PortableBuilderTests(unittest.TestCase):
             self.source, self.destination, self.platform, self.overlay, lock, "custom-commit"
         )
 
+    def test_enterprise_preset_is_public_only_and_personal_build_stays_opt_in(self) -> None:
+        lock = self.fixture()
+        origin = "https://120.79.0.171:18443"
+        report = builder.build_archive(
+            self.source,
+            self.destination,
+            self.platform,
+            self.overlay,
+            lock,
+            "custom-commit",
+            enterprise_authority_url=origin + "/",
+        )
+        root = f"Octop-{self.platform}"
+        with zipfile.ZipFile(self.destination) as archive:
+            launch = archive.read(f"{root}/launch.py").decode()
+            env = {}
+            with mock.patch.dict(os.environ, env, clear=True), mock.patch("runpy.run_module"):
+                namespace = {}
+                exec(compile(launch, "launch.py", "exec"), namespace)
+                namespace["main"]()
+                self.assertEqual(os.environ["OCTOP_ENTERPRISE_AUTHORITY_URL"], origin)
+            marker = json.loads(archive.read(f"{root}/packages/octop-custom-release.json"))
+            self.assertEqual(marker["enterprise_authority_url"], origin)
+        self.assertEqual(report["enterprise_authority_url"], origin)
+        personal = builder.custom_launch(b"import os\n\ndef main() -> None:\n    pass\n")
+        self.assertNotIn(b"ENTERPRISE", personal)
+        for invalid in [
+            "http://company.example",
+            "https://user:secret@company.example",
+            "https://company.example/path",
+            "https://company.example?token=x",
+        ]:
+            with self.assertRaises(ValueError):
+                builder.custom_launch(b"import os\n\ndef main() -> None:\n    pass\n", invalid)
+
     def test_full_overlay_metadata_symlinks_and_no_user_data(self) -> None:
         lock = self.fixture()
         package = self.overlay / "octop"
