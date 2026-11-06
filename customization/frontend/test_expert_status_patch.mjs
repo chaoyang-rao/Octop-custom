@@ -103,6 +103,7 @@ const signedInUser = Object.freeze({ id: 7, role: 'user', permissions: Object.fr
 const permissions = compile(read('../../dashboard/src/utils/permissions.ts'), 'ts');
 const context = compile(sourceContext, 'tsx', {
   '../api/request': { setActiveAgentId() {} }, '../api/modules/agent': { agentApi: {} },
+  '../api/modules/octopAgents': { octopAgentsApi: {} },
   '../hooks/useCurrentUser': { useCurrentUser: () => signedInUser },
   '../utils/permissions': permissions,
   '../utils/remoteExpert': { retainDisconnectedBridgeAgents: (prev, next) => next, toBridgeShadowAgentId: (connection, id) => `${connection}:${id}` },

@@ -25,14 +25,15 @@ const Popover = ({ children, open, onOpenChange, content }) => h(React.Fragment,
   h('span', { onClick: () => onOpenChange?.(!open) }, children), open ? content : null);
 const Tooltip = ({ children }) => children;
 const source = fs.readFileSync(new URL('../../dashboard/src/pages/Chat/components/ChatInputActionsRow.tsx', import.meta.url), 'utf8');
-const icons = Object.fromEntries(source.match(/import \{([^{}]*)\} from "lucide-react";/)[1].split(',').map(name => [name.trim(), Icon]));
+const icons = Object.fromEntries(source.match(/import \{([^{}]*)\} from "[^\"]*\/arcIcons";/)[1].split(',').map(name => [name.trim(), Icon]));
 const dependencies = {
   react: React,
   'react/jsx-runtime': require('react/jsx-runtime'),
   'react-dom': require('react-dom'),
   'react-i18next': { useTranslation: () => ({ t }) },
   'react-router-dom': { useNavigate: () => path => navigation.push(path) },
-  'lucide-react': icons,
+  '../../../components/arcIcons': icons,
+  classnames: require('classnames'),
   antd: { Popover, Tooltip },
 };
 const sourceRequire = name => {

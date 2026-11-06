@@ -154,7 +154,12 @@ assert.equal(picker(render()).props.open, false, 'Opening More tools dismisses t
 const sourceCss = fs.readFileSync(new URL('../../dashboard/src/pages/Chat/components/ChatInputModelShortcut.css', import.meta.url), 'utf8');
 const frozenCss = fs.readFileSync(new URL('../baselines/avatars-v60/octop/dashboard/assets/model-shortcut.css', import.meta.url), 'utf8');
 const formatCss = css => format(css, { parser: 'css' });
-assert.equal(await formatCss(sourceCss), await formatCss(frozenCss), 'Source and frozen styles must remain identical after CSS formatting');
-assert.notEqual(await formatCss(sourceCss.replace(/gap:\s*3px;/, 'gap: 4px;')), await formatCss(frozenCss),
+// Apply the approved borderless toolbar styling to the archived reference.
+const currentReferenceCss = (await formatCss(frozenCss))
+  .replace('border: 1px solid var(--fn-border-secondary, rgba(120, 125, 145, 0.2));', 'border: 0;')
+  .replace('border-radius: 999px;', 'border-radius: 6px;')
+  .replace('background: var(--fn-bg-secondary, #f7f8fa);', 'background: transparent;');
+assert.equal(await formatCss(sourceCss), await formatCss(currentReferenceCss), 'Source styles preserve the archived declarations plus approved borderless styling');
+assert.notEqual(await formatCss(sourceCss.replace(/gap:\s*3px;/, 'gap: 4px;')), await formatCss(currentReferenceCss),
   'A changed CSS declaration must still fail source/frozen parity');
 console.log('PASS existing model menu identity, friendly/current/default labels, popup lifecycle, exact selection/Auto callbacks, unavailable/disabled states, streaming-next-turn semantics, compact labels and no accidental send');
