@@ -26,4 +26,13 @@
 - macOS ARM、macOS Intel、Windows x64 三份 portable ZIP 已生成，校验 ZIP CRC、目标架构及 2454 个程序文件的 SHA256。Intel 的兼容依赖覆盖也已验证。
 - 2026-11-06 本机桌面与 portable 运行时已替换并启动；健康接口正常，更新页显示上述定制版本。升级前后账号、专家配置、会话和任务数据核对一致；旧程序及数据库备份保留在本机。
 
-Windows、Intel 的实际设备运行和原生安装器未在本机验证。本次生成 portable 构建，不表示已发布新的 GitHub Release；源代码推送与生产发布分开进行。
+Windows、Intel 的全面人工体验尚未验收；云端原生运行检查与安装器构建结果见下方发行记录。
+
+## GitHub 发行（2026-11-06）
+
+[下载定制版预发布](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261106.1)。发布标签为 `custom-1.0.3b3-20261106.1`，目标提交为 `006292c438d6415f88e15e2e44eca62c3d708028`。
+
+- [完整发行检查](https://github.com/chaoyang-rao/Octop-custom/actions/runs/42142384254)全部成功：Linux 完整测试 5854 passed、36 skipped；前端 22 个文件、167 项测试通过。
+- Windows x64、Mac Intel、Mac ARM 三平台均通过 127 项定制回归与打包工具检查。Windows 工具检查按平台条件跳过 8 项；两个 Mac 平台的 58 项工具检查全部通过。
+- 发行包含 3 个安装包（EXE／DMG）、3 个 portable ZIP、6 个 JSON 报告与 `SHA256SUMS.txt`，共 13 个附件。远端附件 SHA256 与清单全部一致，每个平台的 2454 个程序文件、版本、架构及源码提交均已核对。
+- 修复已退役的 macOS 14 构建机配置，改用 macOS 15；同步归档回归测试中的图标路径、API 模块和已确认的无边框样式。应用程序内容保持本轮已验收版本。

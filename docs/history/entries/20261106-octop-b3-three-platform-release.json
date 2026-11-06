@@ -1,0 +1,31 @@
+{
+  "id": "20261106-octop-b3-three-platform-release",
+  "date": "2026-11-06T09:41:38+08:00",
+  "kind": "版本发布",
+  "modules": [
+    "GitHub发行",
+    "三平台打包",
+    "发布检查修复"
+  ],
+  "reason": "用户要求将已验收的1.0.3b3定制版发布为可下载安装包。",
+  "summary": [
+    "GitHub预发布custom-1.0.3b3-20261106.1已公开，包含Windows x64、Mac Intel、Mac ARM安装包及各自portable ZIP，版本1.0.3b3.post20261106。",
+    "修复已退役macOS 14构建机配置；同步归档测试的Solar Arc导入、拆分API和已确认的无边框样式，保留原交互断言。",
+    "13个发行附件的远端SHA256与校验清单一致；发布页经匿名访问验证，无需GitHub登录。"
+  ],
+  "validation": "GitHub Actions 42142384254全部成功：完整测试5854 passed、36 skipped；前端22文件167测试通过；三平台各127项定制回归通过，58项工具检查完成（Windows按平台条件跳过8项）。每个平台2454个程序文件、ZIP CRC、版本、架构、干净源码提交006292c438d6415f88e15e2e44eca62c3d708028及附件完整性均已核对。Mac未做Developer ID公证、Windows未做Authenticode签名，全面人工体验尚未验收。",
+  "status": "GitHub预发布已公开；三平台下载齐全；本轮发行源码与修正已保存Git；项目记录同步中。",
+  "evidence": [
+    "https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261106.1",
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42142384254",
+    "https://github.com/chaoyang-rao/Octop-custom/commit/006292c438d6415f88e15e2e44eca62c3d708028",
+    "docs/custom-upgrade-1.0.3b3.md"
+  ],
+  "files": {
+    "customization/frontend/test_expert_status_patch.mjs": "b302c8e33c35f493d285b5f9bcd68e3fb94150b0de8f39e822189372e3f47b3a",
+    "customization/frontend/test_model_shortcut_patch.mjs": "754c98fb7b5c1ba4517aef652f064f89980a8e98558e53b6bf6281e115e5d254",
+    "customization/frontend/test_model_shortcut_source.mjs": "d026b5f7a4601ee3f2ed7e556f0b71602b5d0f1826eb206eaca843538f491ac5",
+    "customization/frontend/test_team_experience.mjs": "29537d2cab3c6c106832eeff359f48bd90819e2bcfaf21ecfc84d89e5c91023f",
+    "docs/custom-upgrade-1.0.3b3.md": "5dc92795366232cf3d711459906af7364e54eceed20e2385cc18eab783439abe"
+  }
+}
