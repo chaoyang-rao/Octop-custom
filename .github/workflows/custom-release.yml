@@ -117,7 +117,7 @@ jobs:
         include:
           - plat: darwin-arm64
             arch: arm64
-            os: macos-14
+            os: macos-15
             ext: dmg
           - plat: darwin-amd64
             arch: amd64
