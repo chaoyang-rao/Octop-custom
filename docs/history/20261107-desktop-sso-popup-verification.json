@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-11-07T22:34:46+08:00",
+  "issue": "desktop SSO stopped when popup was blocked or already closed",
+  "fix": "continue authorization in the same window when no usable popup exists",
+  "normal_popup_flow_preserved": true,
+  "regression_before": {
+    "failed": 2,
+    "passed": 1
+  },
+  "regression_after": {
+    "files": 4,
+    "passed": 18
+  },
+  "make_all": {
+    "passed": 5869,
+    "skipped": 41,
+    "exit_code": 0
+  },
+  "mypy_source_files": 723,
+  "typescript_passed": true,
+  "vite_production_build_passed": true,
+  "dashboard_resources_verified": 689,
+  "frozen_backend_files": 1301,
+  "frozen_backend_drift": 0,
+  "tracked_program_files": 2457,
+  "packaging_tool_tests_passed": 59,
+  "desktop_feishu_login_verified": true,
+  "desktop_returned_to_original_experts": true,
+  "backend_process_restarted": false,
+  "local_data_index_hashes_unchanged": true,
+  "initial_users": 2,
+  "initial_experts": 16,
+  "initial_threads": 26,
+  "existing_enterprise_release_assets_rebuilt": false
+}

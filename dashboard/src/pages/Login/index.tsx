@@ -357,23 +357,17 @@ export default function LoginPage() {
     }
     try {
       const { authorization_url } = await authApi.startOauth(kind, loginTarget);
-      if (kind === "oidc") {
+      if (kind === "oidc" || !popup || popup.closed) {
         window.location.href = authorization_url;
         return;
       }
-      if (popup && !popup.closed) {
-        popup.location.href = authorization_url;
-        const timer = window.setInterval(() => {
-          if (!popup || popup.closed) {
-            window.clearInterval(timer);
-            setSsoLoadingKind((current) => (current === kind ? null : current));
-          }
-        }, 400);
-      } else {
-        popup?.close();
-        message.error(t("account.ssoPopupBlocked"));
-        setSsoLoadingKind(null);
-      }
+      popup.location.href = authorization_url;
+      const timer = window.setInterval(() => {
+        if (!popup || popup.closed) {
+          window.clearInterval(timer);
+          setSsoLoadingKind((current) => (current === kind ? null : current));
+        }
+      }, 400);
     } catch (err) {
       popup?.close();
       message.error(apiErrorMessage(err, t("login.oidcStartFailed"), t));
