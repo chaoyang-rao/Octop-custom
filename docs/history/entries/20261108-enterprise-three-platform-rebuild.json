@@ -1,0 +1,32 @@
+{
+  "id": "20261108-enterprise-three-platform-rebuild",
+  "date": "2026-11-08T03:48:31+08:00",
+  "kind": "重新构建与验收",
+  "modules": [
+    "企业版三平台安装包",
+    "桌面单点登录",
+    "GitHub草稿发行"
+  ],
+  "reason": "用户要求重新构建，使Windows、Intel Mac和M芯片Mac安装包包含已修复的桌面单点登录流程。",
+  "summary": [
+    "将定制版本递增为1.0.3b3.post2026110801，更新工作流、版本锁和冻结版本标识；构建检查新增弹窗失败回退、记住登录及认证回调回归。",
+    "从4736fb00固定源码在三种对应操作系统的云端构建机完成原生运行、桌面回归及安装器校验，生成3个安装器、3个portable ZIP和6份JSON报告。企业包仅预设公开授权中心地址。",
+    "逐包检查CRC、版本、源码提交、企业预设以及每个平台全部2457个程序文件哈希。13个附件已上传新的企业版草稿，远端SHA256与大小全部匹配；旧公开发行和旧企业草稿均保留。"
+  ],
+  "validation": "GitHub Actions 42403473647全部必需检查成功。CI后端5874 passed、36 skipped，mypy检查723文件通过；前端27文件186测试通过。三平台原生Python、定制及桌面回归通过，Mac磁盘映像与签名、Windows PE校验通过。本地打包工具59项通过。3个ZIP CRC和完整程序哈希核对通过，13个远端附件校验一致。",
+  "status": "企业版重新构建完成并保存GitHub草稿，尚未公开发布；本轮未执行本机安装或服务器替换。Windows/Intel Mac的完整手工登录体验仍待实机试用。",
+  "evidence": [
+    "docs/history/20261108-enterprise-rebuild-verification.json",
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42403473647",
+    "https://github.com/chaoyang-rao/Octop-custom/releases/tag/untagged-64414ab6002892a2e4f3",
+    "4736fb00c1fa5b0153cde584044adbbf05e90f84",
+    ".github/workflows/custom-release.yml",
+    ".cache/enterprise-20261108/release-verification.json"
+  ],
+  "files": {
+    "customization/packages/octop/api/routers/health.py": "de3605f151c5b395dd7fbb14b4da5a36d2296bad4b123427aa4143931de6475c",
+    "customization/tracked-program-manifest.json": "c5b454da84dcd4a5b97fd3829b6feb5570c6bb95287c1fe56d5ab1976a66f077",
+    "scripts/custom/test_update_guard.py": "cdadc297780bd4c6592b2d6a07553ffbc04ca390ea15290607341bf22e297e57",
+    "scripts/custom/upstream-lock.json": "15904e882c11d824e73e81158857d0aca3c162025d71343055350d838590edbb"
+  }
+}
