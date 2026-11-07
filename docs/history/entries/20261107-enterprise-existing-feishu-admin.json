@@ -1,0 +1,24 @@
+{
+  "id": "20261107-enterprise-existing-feishu-admin",
+  "date": "2026-11-07T14:22:17+08:00",
+  "kind": "配置与验收",
+  "modules": [
+    "企业授权中心",
+    "既有飞书管理员复用"
+  ],
+  "reason": "用户明确要求复用本机已有的飞书账号作为超级管理员，无需再次创建初始账号。",
+  "summary": [
+    "从本机只读识别已有飞书管理员及现行登录配置，经SSH导入空的服务器授权中心。仅迁移该身份和飞书应用配置；未创建新密码，应用密钥使用服务器独立密钥重新加密。",
+    "按用户本次确认，在现有飞书应用中新增授权中心HTTPS回调；原10条回调完整保留。通过真实飞书OAuth重新授权并核验身份，固定企业范围。",
+    "实际管理页面显示全部管理员权限。本机账号与SSO配置三张表的哈希前后完全一致，授权中心未导入专家、项目或聊天。一次性初始化登录通道已使用完毕并关闭，迁移前备份保留。"
+  ],
+  "validation": "公网setup_required=false，飞书登录入口enabled=true。服务器向飞书验证应用凭据成功；新鲜OAuth身份与导入身份相同且tenant一致；管理页面显示全部（管理员）。服务器用户数1、托管专家0、外键校验通过，无未消费的有效初始化登录码。公网初始化写仍403；原站点200，本机个人服务运行正常。",
+  "status": "授权中心管理员和真实飞书登录已验收；当前个人桌面端未切换企业模式，企业安装包仍为草稿，桌面设备授权与分发待后续验收。",
+  "evidence": [
+    ".cache/enterprise-20261107/identity-import-receipt.json",
+    ".cache/enterprise-20261107/identity-live-verification.json",
+    ".cache/enterprise-20261106/deployment-receipt.json",
+    "docs/enterprise-feishu-local.md"
+  ],
+  "files": {}
+}
