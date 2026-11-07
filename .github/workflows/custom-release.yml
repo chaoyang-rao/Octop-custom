@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261106.2"
+        default: "custom-1.0.3b3-20261108.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026110602"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261106.2' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026110801"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261108.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || '' }}
 
 jobs:
@@ -108,6 +108,9 @@ jobs:
           src/hooks/useDashboardPushToast.test.tsx
           src/pages/Login/EnterpriseLogin.test.tsx
           src/pages/Login/EnterpriseApprove.test.tsx
+          src/pages/Login/Login.sso.test.tsx
+          src/pages/Login/Login.remember.test.tsx
+          src/pages/Login/OidcComplete.test.tsx
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard

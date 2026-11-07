@@ -703,7 +703,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "f1b6422c8af139ec31fb5469a360864cf3b484a3843b3daf1f092beb13ab6181",
+      "sha256": "de3605f151c5b395dd7fbb14b4da5a36d2296bad4b123427aa4143931de6475c",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
