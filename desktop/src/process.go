@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -126,23 +127,66 @@ func clearDesktopPort() {
 	_ = os.Remove(desktopPortPath())
 }
 
-// findRunningDashboard returns a live Octop URL. The saved port wins. When that
-// port is not the custom runtime, this shell's custom-desktop-port is checked
-// so a second launch attaches without reusing an official Octop server.
-func findRunningDashboard(host string, preferred int) string {
-	preferredURL := dashboardURL(host, preferred)
-	if customOctopAlreadyRunning(preferredURL) {
-		return preferredURL
+var errIncompatibleDashboard = errors.New("another Octop runtime is using the account data")
+
+// Probe before extracting: replacing a live runtime may fail on Windows and
+// changes files beneath an active agent on other systems.
+func prepareDesktopRuntime(locale Locale, status func(string)) (string, error) {
+	expected, err := bundledPortableIdentity()
+	if err != nil {
+		return "", err
 	}
-	port, ok := readDesktopPort()
-	if !ok || port == preferred {
-		return ""
+	host, preferred := resolveListen()
+	existing, err := findRunningDashboard(host, preferred, expected)
+	if err != nil {
+		return "", fmt.Errorf("%s", desktopText(locale, copyErrorRuntimeConflict))
 	}
-	remembered := dashboardURL(host, port)
-	if customOctopAlreadyRunning(remembered) {
-		return remembered
+	if existing != "" {
+		return existing, nil
 	}
-	return ""
+	return "", ensurePortable(locale, status)
+}
+
+// Reuse only a compatible custom backend at the configured or remembered port.
+// A conflicting backend must be quit by its owner, never killed by this shell.
+func findRunningDashboard(host string, preferred int, expected runtimeIdentity) (string, error) {
+	ports := []int{preferred}
+	if port, ok := readDesktopPort(); ok && port != preferred {
+		ports = append(ports, port)
+	}
+	for _, port := range ports {
+		base := dashboardURL(host, port)
+		running, version := dashboardHealth(base)
+		if !running {
+			continue
+		}
+		if version == "" || compareVersions(version, expected.Version) < 0 || !dashboardLoginMatches(base, expected.Authority) {
+			return "", errIncompatibleDashboard
+		}
+		return base, nil
+	}
+	return "", nil
+}
+
+func dashboardLoginMatches(base, authority string) bool {
+	client := &http.Client{Timeout: 800 * time.Millisecond}
+	resp, err := client.Get(strings.TrimRight(base, "/") + "/api/setup/status")
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+	var payload struct {
+		EnterpriseLogin bool   `json:"enterprise_login"`
+		Authority       string `json:"enterprise_authority_url"`
+	}
+	if json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&payload) != nil {
+		return false
+	}
+	return payload.EnterpriseLogin == (authority != "") &&
+		strings.TrimRight(payload.Authority, "/") == strings.TrimRight(authority, "/")
 }
 
 func resolveDashboardURL() string {
@@ -231,23 +275,23 @@ func octopAlreadyRunning(base string) bool {
 
 func customOctopAlreadyRunning(base string) bool {
 	_, custom := dashboardHealth(base)
-	return custom
+	return custom != ""
 }
 
-func dashboardHealth(base string) (bool, bool) {
+func dashboardHealth(base string) (bool, string) {
 	client := &http.Client{Timeout: 800 * time.Millisecond}
 	url := strings.TrimRight(base, "/") + "/api/health"
 	resp, err := client.Get(url)
 	if err != nil {
-		return false, false
+		return false, ""
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return false, false
+		return false, ""
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return false, false
+		return false, ""
 	}
 	var payload struct {
 		OK            bool            `json:"ok"`
@@ -256,10 +300,13 @@ func dashboardHealth(base string) (bool, bool) {
 		CustomRelease string          `json:"custom_release"`
 	}
 	if json.Unmarshal(body, &payload) != nil {
-		return false, false
+		return false, ""
 	}
 	running := payload.OK && len(payload.UsersLoaded) > 0 && len(payload.AgentsRunning) > 0
-	return running, running && payload.CustomRelease != ""
+	if !running {
+		return false, ""
+	}
+	return true, payload.CustomRelease
 }
 
 func probeHost(host string) string {

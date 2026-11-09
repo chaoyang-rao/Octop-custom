@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,16 +36,24 @@ func pythonExe(root string) string {
 
 func ensurePortable(locale Locale, status func(string)) error {
 	root := portableDir()
+	bundled, err := bundledPortableIdentity()
+	if err != nil {
+		return fmt.Errorf("%s: %w", desktopText(locale, copyErrorUpgradeFailed), err)
+	}
 	if launchReady(root) {
-		currentVersion := portableVersion(root)
-		bundledVersion, err := bundledPortableVersion()
-		if err != nil || bundledVersion == "" ||
-			(currentVersion != "" && compareVersions(bundledVersion, currentVersion) <= 0) {
+		current, err := portableIdentity(root)
+		if err != nil {
+			return err
+		}
+		if current.compatibleWith(bundled) {
 			status(desktopText(locale, copyStatusUsingRuntime))
 			return nil
 		}
-		status(desktopText(locale, copyStatusBackupDatabase, bundledVersion))
-		if _, err := backupSQLiteBeforeUpgrade(root, currentVersion, bundledVersion); err != nil {
+		if compareVersions(current.Version, bundled.Version) > 0 {
+			return fmt.Errorf("%s", desktopText(locale, copyErrorRuntimeMode))
+		}
+		status(desktopText(locale, copyStatusBackupDatabase, bundled.Version))
+		if _, err := backupSQLiteBeforeUpgrade(root, current.Version, bundled.Version); err != nil {
 			return fmt.Errorf("%s: %w", desktopText(locale, copyErrorBackupFailed), err)
 		}
 		status(desktopText(locale, copyStatusUpdatingRuntime))
@@ -52,11 +61,7 @@ func ensurePortable(locale Locale, status func(string)) error {
 		status(desktopText(locale, copyStatusFirstExtract))
 	}
 	if err := replacePortable(root); err != nil {
-		if launchReady(root) {
-			status(desktopText(locale, copyStatusUpdateFailedKeep))
-			return nil
-		}
-		return err
+		return fmt.Errorf("%s: %w", desktopText(locale, copyErrorUpgradeFailed), err)
 	}
 	if runtime.GOOS == "darwin" {
 		_ = exec.Command("xattr", "-dr", "com.apple.quarantine", root).Run()
@@ -131,23 +136,80 @@ func installedPackageVersion(root string) string {
 }
 
 func bundledPortableVersion() (string, error) {
+	identity, err := bundledPortableIdentity()
+	return identity.Version, err
+}
+
+// The existing release manifest identifies company and personal packages even
+// when they share a version number. Never silently switch the login authority.
+type runtimeIdentity struct {
+	Version   string `json:"-"`
+	Authority string `json:"enterprise_authority_url"`
+}
+
+func (current runtimeIdentity) compatibleWith(expected runtimeIdentity) bool {
+	return current.Version != "" && compareVersions(current.Version, expected.Version) >= 0 &&
+		strings.TrimRight(current.Authority, "/") == strings.TrimRight(expected.Authority, "/")
+}
+
+func portableIdentity(root string) (runtimeIdentity, error) {
+	identity := runtimeIdentity{Version: portableVersion(root)}
+	data, err := os.ReadFile(filepath.Join(root, "custom-release-manifest.json"))
+	if os.IsNotExist(err) {
+		return identity, nil
+	}
+	if err == nil {
+		err = json.Unmarshal(data, &identity)
+	}
+	return identity, err
+}
+
+func bundledPortableIdentity() (runtimeIdentity, error) {
 	if os.Getenv("OCTOP_DESKTOP_PORTABLE_ZIP") == "" && len(embeddedPortable) > 0 {
 		reader, err := zip.NewReader(bytes.NewReader(embeddedPortable), int64(len(embeddedPortable)))
 		if err != nil {
-			return "", err
+			return runtimeIdentity{}, err
 		}
-		return versionFromZip(reader.File)
+		return identityFromZip(reader.File)
 	}
 	zipPath, err := bundledPortableZip()
 	if err != nil {
-		return "", err
+		return runtimeIdentity{}, err
 	}
 	reader, err := zip.OpenReader(zipPath)
 	if err != nil {
-		return "", err
+		return runtimeIdentity{}, err
 	}
 	defer reader.Close()
-	return versionFromZip(reader.File)
+	return identityFromZip(reader.File)
+}
+
+func identityFromZip(files []*zip.File) (runtimeIdentity, error) {
+	version, err := versionFromZip(files)
+	identity := runtimeIdentity{Version: version}
+	if err != nil {
+		return identity, err
+	}
+	for _, file := range files {
+		if filepath.Base(filepath.FromSlash(file.Name)) != "custom-release-manifest.json" {
+			continue
+		}
+		reader, err := file.Open()
+		if err != nil {
+			return identity, err
+		}
+		data, readErr := io.ReadAll(reader)
+		closeErr := reader.Close()
+		if readErr != nil {
+			return identity, readErr
+		}
+		if closeErr != nil {
+			return identity, closeErr
+		}
+		err = json.Unmarshal(data, &identity)
+		return identity, err
+	}
+	return identity, nil
 }
 
 func versionFromZip(files []*zip.File) (string, error) {

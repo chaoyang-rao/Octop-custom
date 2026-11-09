@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -302,7 +303,7 @@ func TestPortableVersionPrefersNewerMetadataOverVersionTxt(t *testing.T) {
 	}
 }
 
-func TestEnsurePortableKeepsCurrentRuntimeWhenReplacementIsInvalid(t *testing.T) {
+func TestEnsurePortablePreservesRuntimeButReportsFailedReplacement(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("OCTOP_HOME", home)
 	root := portableDir()
@@ -317,8 +318,8 @@ func TestEnsurePortableKeepsCurrentRuntimeWhenReplacementIsInvalid(t *testing.T)
 	writeVersionOnlyZip(t, invalidZip, "0.9.32")
 	t.Setenv("OCTOP_DESKTOP_PORTABLE_ZIP", invalidZip)
 	var statuses []string
-	if err := ensurePortable(LocaleZH, func(status string) { statuses = append(statuses, status) }); err != nil {
-		t.Fatalf("existing runtime should still boot after a failed replacement: %v", err)
+	if err := ensurePortable(LocaleZH, func(status string) { statuses = append(statuses, status) }); err == nil {
+		t.Fatal("a failed update must not silently start the old login interface")
 	}
 
 	if !launchReady(root) {
@@ -327,7 +328,7 @@ func TestEnsurePortableKeepsCurrentRuntimeWhenReplacementIsInvalid(t *testing.T)
 	if got := portableVersion(root); got != "0.9.31" {
 		t.Fatalf("portable version = %q, want 0.9.31", got)
 	}
-	if len(statuses) == 0 || statuses[len(statuses)-1] != "更新内置运行环境失败，继续使用已有运行环境…" {
+	if len(statuses) == 0 || statuses[len(statuses)-1] == "更新内置运行环境失败，继续使用已有运行环境…" {
 		t.Fatalf("unexpected statuses: %v", statuses)
 	}
 }
@@ -600,7 +601,7 @@ func TestWaitHealthTimesOutWithFriendlyMessage(t *testing.T) {
 	}
 }
 
-func writeTestGreenZip(t *testing.T, path, version string) {
+func writeTestGreenZip(t *testing.T, path, version string, authority ...string) {
 	t.Helper()
 	f, err := os.Create(path)
 	if err != nil {
@@ -611,6 +612,9 @@ func writeTestGreenZip(t *testing.T, path, version string) {
 		"Octop-test/launch.py",
 		"Octop-test/VERSION.txt",
 		"Octop-test/packages/octop-" + version + ".dist-info/METADATA",
+	}
+	if len(authority) > 0 {
+		files = append(files, "Octop-test/custom-release-manifest.json")
 	}
 	if runtime.GOOS == "windows" {
 		files = append(files, "Octop-test/runtime/python.exe")
@@ -623,7 +627,12 @@ func writeTestGreenZip(t *testing.T, path, version string) {
 	for _, name := range files {
 		header := &zip.FileHeader{Name: name, Method: zip.Store}
 		content := []byte("test executable payload")
-		if strings.HasSuffix(name, "/VERSION.txt") {
+		if strings.HasSuffix(name, "/custom-release-manifest.json") {
+			content, err = json.Marshal(runtimeIdentity{Authority: authority[0]})
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else if strings.HasSuffix(name, "/VERSION.txt") {
 			content = []byte("platform=test\noctop_version=" + version + "\n")
 		} else if strings.HasSuffix(name, "/METADATA") {
 			content = []byte("Name: octop\nVersion: " + version + "\n")

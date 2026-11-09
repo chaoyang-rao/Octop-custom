@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261108.1"
+        default: "custom-1.0.3b3-20261109.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026110801"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261108.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026110901"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261109.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || '' }}
 
 jobs:
@@ -244,6 +244,9 @@ jobs:
                           str(Path("scripts/custom").resolve()), "-p", "test_*.py", "-v"], env=child_env, check=True)
           report["customization_tests"] = "passed"
           report["release_tooling_tests"] = "passed"
+          report["startup"] = json.loads(subprocess.check_output(
+              [sys.executable, "scripts/custom/smoke_portable_startup.py", str(root.resolve())],
+              text=True))
           Path(f"dist/native-smoke-{plat}.json").write_text(json.dumps(report, indent=2) + "\n")
           PY
 

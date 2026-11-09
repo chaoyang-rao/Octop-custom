@@ -205,7 +205,7 @@ func TestCustomDashboardRejectsOfficialRuntime(t *testing.T) {
 	}
 	t.Setenv("OCTOP_HOME", t.TempDir())
 	port := srv.Listener.Addr().(*net.TCPAddr).Port
-	if got := findRunningDashboard("127.0.0.1", port); got != "" {
+	if got, err := findRunningDashboard("127.0.0.1", port, runtimeIdentity{Version: "1.0.2.post20261029"}); got != "" || !errors.Is(err, errIncompatibleDashboard) {
 		t.Fatalf("attached to official dashboard %q", got)
 	}
 }
@@ -218,7 +218,10 @@ func TestFindRunningDashboardUsesRememberedPort(t *testing.T) {
 	if err := writeDesktopPort(port); err != nil {
 		t.Fatal(err)
 	}
-	got := findRunningDashboard("127.0.0.1", 1)
+	got, err := findRunningDashboard("127.0.0.1", 1, runtimeIdentity{Version: "1.0.2.post20261029"})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if got != dashboardURL("127.0.0.1", port) {
 		t.Fatalf("dashboard = %q", got)
 	}
@@ -235,7 +238,10 @@ func TestFindRunningDashboardPrefersConfiguredPort(t *testing.T) {
 	if err := writeDesktopPort(otherPort); err != nil {
 		t.Fatal(err)
 	}
-	got := findRunningDashboard("127.0.0.1", preferredPort)
+	got, err := findRunningDashboard("127.0.0.1", preferredPort, runtimeIdentity{Version: "1.0.2.post20261029"})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if got != dashboardURL("127.0.0.1", preferredPort) {
 		t.Fatalf("dashboard = %q", got)
 	}
@@ -253,13 +259,17 @@ func TestFindRunningDashboardIgnoresDeadRememberedPort(t *testing.T) {
 	if err := writeDesktopPort(1); err != nil {
 		t.Fatal(err)
 	}
-	if got := findRunningDashboard("127.0.0.1", 2); got != "" {
+	if got, err := findRunningDashboard("127.0.0.1", 2, runtimeIdentity{Version: "1.0.2.post20261029"}); got != "" || err != nil {
 		t.Fatalf("dashboard = %q", got)
 	}
 }
 
 func octopHealthHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/setup/status" {
+			_, _ = w.Write([]byte(`{"database_bound":true}`))
+			return
+		}
 		if r.URL.Path != "/api/health" {
 			http.NotFound(w, r)
 			return

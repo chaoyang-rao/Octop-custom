@@ -12,10 +12,11 @@ const (
 	copyStatusInstallingUpdate = "status.installing_update"
 	copyStatusUpdatingRuntime  = "status.updating_runtime"
 	copyStatusFirstExtract     = "status.first_extract"
-	copyStatusUpdateFailedKeep = "status.update_failed_keep"
 	copyStatusUsingExisting    = "status.using_existing"
 	copyErrorBackupFailed      = "error.backup_failed"
 	copyErrorUpgradeFailed     = "error.upgrade_failed"
+	copyErrorRuntimeConflict   = "error.runtime_conflict"
+	copyErrorRuntimeMode       = "error.runtime_mode"
 	copyErrorNoFreePort        = "error.no_free_port"
 	copyErrorCannotBind        = "error.cannot_bind"
 	copyWait1Minute            = "wait.1_minute"
@@ -41,10 +42,11 @@ var desktopCopy = map[Locale]map[string]string{
 		copyStatusInstallingUpdate: "Installing the bundled desktop update…",
 		copyStatusUpdatingRuntime:  "Updating the bundled runtime…",
 		copyStatusFirstExtract:     "First launch: unpacking the bundled runtime…",
-		copyStatusUpdateFailedKeep: "Runtime update failed; using the existing runtime…",
 		copyStatusUsingExisting:    "Octop is already running. Opening it…",
 		copyErrorBackupFailed:      "Database backup failed before upgrade; the current version was preserved",
 		copyErrorUpgradeFailed:     "Desktop runtime upgrade failed; the current version was preserved",
+		copyErrorRuntimeConflict:   "Another Octop backend has a different version or login configuration. Save your work, fully quit the old Octop from the system tray, then restart Octop Custom. Closing its window may only minimise it to the tray.",
+		copyErrorRuntimeMode:       "The installed runtime is newer but uses a different login authority. Install the matching Octop Custom package; the current runtime and data were preserved.",
 		copyErrorNoFreePort:        "No free port from %d to %d. Close the program using these ports and try again.",
 		copyErrorCannotBind:        "Cannot listen on %s:%d (%s). Check bind_host in config.json.",
 		copyWait1Minute:            "1 minute",
@@ -68,10 +70,11 @@ var desktopCopy = map[Locale]map[string]string{
 		copyStatusInstallingUpdate: "正在安装客户端内置新版…",
 		copyStatusUpdatingRuntime:  "正在更新内置运行环境…",
 		copyStatusFirstExtract:     "首次启动，正在解压内置运行环境…",
-		copyStatusUpdateFailedKeep: "更新内置运行环境失败，继续使用已有运行环境…",
 		copyStatusUsingExisting:    "Octop 已在运行，正在打开…",
 		copyErrorBackupFailed:      "升级前数据库备份失败，已保留当前版本",
 		copyErrorUpgradeFailed:     "客户端运行环境升级失败，已保留当前版本",
+		copyErrorRuntimeConflict:   "检测到版本或登录配置不兼容的 Octop 后台。请先保存任务，从系统托盘完全退出旧 Octop，再重新启动 Octop Custom。关闭窗口可能只是最小化到托盘。",
+		copyErrorRuntimeMode:       "已有运行环境版本更高，但登录中心不同。请安装对应的 Octop Custom 安装包；已保留当前运行环境与数据。",
 		copyErrorNoFreePort:        "从 %d 到 %d 没有空闲端口，请关闭占用这些端口的程序后再试。",
 		copyErrorCannotBind:        "无法在 %s:%d 上监听（%s）。请检查 config.json 里的 bind_host。",
 		copyWait1Minute:            "1 分钟",

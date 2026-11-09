@@ -188,17 +188,16 @@ func (a *App) boot() {
 		return
 	}
 	a.setStatus(desktopText(locale, copyStatusCheckingRuntime))
-	if err := ensurePortable(locale, a.setStatus); err != nil {
-		a.setStatus(err.Error())
-		return
-	}
-	root := portableDir()
 	a.mu.Lock()
 	stopOctop(a.cmd)
 	a.cmd = nil
 	a.mu.Unlock()
-	host, preferred := resolveListen()
-	if existing := findRunningDashboard(host, preferred); existing != "" {
+	existing, err := prepareDesktopRuntime(locale, a.setStatus)
+	if err != nil {
+		a.setStatus(err.Error())
+		return
+	}
+	if existing != "" {
 		a.setStatus(desktopText(locale, copyStatusUsingExisting))
 		if err := waitHealth(locale, existing, 30*time.Second); err != nil {
 			a.setStatus(err.Error())
@@ -207,14 +206,8 @@ func (a *App) boot() {
 		a.showDashboard(existing)
 		return
 	}
-	if octopAlreadyRunning(dashboardURL(host, preferred)) {
-		if locale == LocaleZH {
-			a.setStatus("官方 Octop 正在使用当前账户数据。请先退出官方客户端，再启动 Octop Custom。")
-		} else {
-			a.setStatus("Official Octop is using this account data. Quit it before starting Octop Custom.")
-		}
-		return
-	}
+	root := portableDir()
+	host, preferred := resolveListen()
 	port, err := chooseFreePort(host, preferred)
 	if err != nil {
 		var busy noFreePortError
