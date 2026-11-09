@@ -1,0 +1,31 @@
+{
+  "id": "20261109-stale-runtime-enterprise-login",
+  "date": "2026-11-09T15:12:45+08:00",
+  "kind": "故障修复",
+  "modules": [
+    "桌面端启动与升级",
+    "企业飞书登录",
+    "三平台打包验收"
+  ],
+  "reason": "同事确认下载了0801企业安装器，但诊断显示实际8088后台仍为1106个人版，企业开关和授权中心为空。",
+  "summary": [
+    "确认发布的Windows安装器包含正确企业便携包；修正桌面端无条件复用旧定制后台及更新失败静默回退的启动逻辑。",
+    "启动时先检查配置端口与记忆端口的后台版本和登录中心。遇到旧版、官方版或其他登录中心时，提示用户保存任务并从系统托盘完全退出；保留原进程、账号和聊天。",
+    "相同版本的个人版与企业版按已有发行清单区分；补入三平台真实启动器冷启动检查，并启动0901版重新构建。"
+  ],
+  "validation": "Go全量测试与vet通过；在隔离的旧提交中复现更新失败仍返回成功的问题。便携包构建13项、冻结16项、源码同步2项及冻结运行时升级保护3项通过。已发布Mac便携包的真实启动器冷启动返回企业登录及已绑定数据库；新增Windows原生冷启动检查随CI执行。完整make all及三平台CI尚在执行，同事实机退出旧后台后的结果未验收。",
+  "status": "修复已提交并推送GitHub；新版三平台构建与完整检查进行中，尚未发布新安装包。",
+  "evidence": [
+    "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+    "docs/history/20261109-stale-runtime-login-verification.json",
+    "desktop/src/startup_test.go",
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42577461798"
+  ],
+  "files": {
+    "customization/packages/octop/api/routers/health.py": "56de54b6cdc883bfe73b42ae3e21b7193fcb2835f5aa0d8872ed871a264881b7",
+    "customization/tracked-program-manifest.json": "5fe3f320a1a4b74ff3ba25a240a6a113579cb00289f4bbe0f6b5701434c905cc",
+    "scripts/custom/smoke_portable_startup.py": "fe24eba16493950e078406e72edd646ddf8a78eba6df7a4edfbc0eb4e646e609",
+    "scripts/custom/test_update_guard.py": "3cd2e1daaaf1eb9a6c6c76d34063c9521a6a2c3ecafe6a3b744ae520d726d01d",
+    "scripts/custom/upstream-lock.json": "1ab9461e4ee07e926a3e3a15e696b59e61ceb8a0e4a3f8157273b5e9eaccfb2e"
+  }
+}

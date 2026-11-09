@@ -1,0 +1,44 @@
+{
+  "observed_windows_status": {
+    "version": "1.0.3b3.post20261106",
+    "enterprise_login": null,
+    "authority": null,
+    "database_ready": true
+  },
+  "downloaded_filename_confirmed": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110801.exe",
+  "published_installer_payload": {
+    "published_installer_contains_exact_enterprise_portable": true,
+    "portable_sha256": "64835303f790e4d582d2e9e82d6164a1468ba06383f784ccb6ecbfe4e05e528c",
+    "payload_offset": 11786112,
+    "version": "1.0.3b3.post2026110801",
+    "enterprise_authority_url": "https://120.79.0.171:18443"
+  },
+  "published_portable_cold_start": {
+    "custom_release": "1.0.3b3.post2026110801",
+    "enterprise_login": true,
+    "enterprise_authority_url": "https://120.79.0.171:18443",
+    "database_bound": true,
+    "actual_launcher_cold_start": "passed"
+  },
+  "source_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+  "fix": [
+    "probe configured and remembered ports before runtime replacement",
+    "reuse only matching version floor and company authority",
+    "do not kill or replace an incompatible running backend",
+    "failed upgrade preserves old runtime and reports failure instead of opening old login",
+    "same-version personal/company presets are distinguished using existing manifest"
+  ],
+  "verification": {
+    "go_test_all": "passed",
+    "go_vet": "passed",
+    "baseline_failed_upgrade_regression": "confirmed on previous commit",
+    "portable_builder_tests": 13,
+    "freeze_tests": 16,
+    "source_sync_tests": 2,
+    "frozen_update_guard_tests": 3,
+    "full_make_all": "in progress",
+    "three_platform_ci": "in progress",
+    "colleague_windows_after_quit": "not yet verified"
+  },
+  "ci_url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42577461798"
+}

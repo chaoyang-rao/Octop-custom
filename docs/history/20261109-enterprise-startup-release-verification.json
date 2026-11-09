@@ -1,0 +1,221 @@
+{
+  "custom_version": "1.0.3b3.post2026110901",
+  "release": {
+    "release_id": 438835602,
+    "release_tag": "enterprise-1.0.3b3-20261109.1",
+    "source_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+    "draft": false,
+    "prerelease": true,
+    "url": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261109.1",
+    "assets": [
+      {
+        "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026110901.json",
+        "size": 5917,
+        "sha256": "0cee91b7d7e372510116fdc4654aae4240218f32c305f3ad904ce9e045a47ab5",
+        "asset_id": 726627549
+      },
+      {
+        "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026110901.zip",
+        "size": 252385119,
+        "sha256": "af98a943654ffa0e69a012f5a9a37e4105fee537c0fbb6b3cac43d8e72abafd8",
+        "asset_id": 726627539
+      },
+      {
+        "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026110901.json",
+        "size": 1061,
+        "sha256": "c309cdd7066687b3f8c00c2f56400fa38020d129ffbc44caedb1e8128796b460",
+        "asset_id": 726625050
+      },
+      {
+        "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026110901.zip",
+        "size": 243687602,
+        "sha256": "a5a90ef99032ea4dc33e2af57c762959779c9c490f9def7763cc4f42804850e3",
+        "asset_id": 726625048
+      },
+      {
+        "name": "Octop-portable-windows-amd64-1.0.3b3.post2026110901.json",
+        "size": 1065,
+        "sha256": "77f8fa89fc14002eff52d9520ba3e92f0b9c30bcdc65a116f6c5781cd5d43b46",
+        "asset_id": 726620588
+      },
+      {
+        "name": "Octop-portable-windows-amd64-1.0.3b3.post2026110901.zip",
+        "size": 237700836,
+        "sha256": "f8a81351a0f2808ef5b35969f18cae2a768e838c8ebead5b69ce9750e6b0596e",
+        "asset_id": 726620590
+      },
+      {
+        "name": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026110901.dmg",
+        "size": 267474720,
+        "sha256": "ae83d90b7efce91c461e4a34981aba2ea7a19f87dcfa8c30a6d0cbba06f3788a",
+        "asset_id": 726627550
+      },
+      {
+        "name": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026110901.dmg",
+        "size": 257804064,
+        "sha256": "03cd88354fbf8ef6e106c723dfff03778f36f541126ecb2827ee4ab4783f8aab",
+        "asset_id": 726625061
+      },
+      {
+        "name": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110901.exe",
+        "size": 229968510,
+        "sha256": "ce4a9b1d76277a3d63003db6d2b06f8aa27bb7b8235be3942086c50be8d26652",
+        "asset_id": 726620589
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "size": 1402,
+        "sha256": "036107698fd682de1a3227b574a780839a889ae76c8816e81c779de8c1eecbc7",
+        "asset_id": 726627541
+      },
+      {
+        "name": "native-smoke-darwin-amd64.json",
+        "size": 5675,
+        "sha256": "1ca073bb485fc643ecadc343ce963efd734232155b657505a61363628d11c3d3",
+        "asset_id": 726627538
+      },
+      {
+        "name": "native-smoke-darwin-arm64.json",
+        "size": 820,
+        "sha256": "2d8e5fcaa40de75c81546cb9ce5f792923b5a818d550ec2dcfb53f6ff4c1e507",
+        "asset_id": 726625049
+      },
+      {
+        "name": "native-smoke-windows-amd64.json",
+        "size": 851,
+        "sha256": "7fa13d1b2083607c1f88f8d393b6b1e55a6dd3aa04febdb7735283ceef92cb3e",
+        "asset_id": 726620592
+      }
+    ],
+    "all_remote_digests_match": true
+  },
+  "quality": {
+    "run_id": 42577461798,
+    "source_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+    "all_required_jobs": "success",
+    "publish_job": "skipped by explicit publish_release=false; manual immutable release",
+    "ci_backend_passed": 5874,
+    "ci_backend_skipped": 36,
+    "ci_frontend_files": 27,
+    "ci_frontend_passed": 186,
+    "mypy_files": 723,
+    "native_platforms": [
+      "darwin-arm64",
+      "darwin-amd64",
+      "windows-amd64"
+    ],
+    "native_launcher_cold_start": "passed all three platforms",
+    "go_desktop_regressions": "passed all three platforms"
+  },
+  "local_quality": {
+    "source_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+    "make_all": "passed",
+    "backend_passed": 5869,
+    "backend_skipped": 41,
+    "mypy_files": 723,
+    "go_test_all": "passed",
+    "go_vet": "passed",
+    "pre_commit_hook": "passed including TypeScript and Vite production build",
+    "portable_builder_tests": 13,
+    "frozen_guard_tests": 3
+  },
+  "packages": {
+    "run_id": 42577461798,
+    "source_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+    "version": "1.0.3b3.post2026110901",
+    "packages": [
+      {
+        "platform": "darwin-arm64",
+        "git_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+        "version": "1.0.3b3.post2026110901",
+        "enterprise_authority_url": "https://120.79.0.171:18443",
+        "zip_sha256": "a5a90ef99032ea4dc33e2af57c762959779c9c490f9def7763cc4f42804850e3",
+        "zip_crc": "passed",
+        "all_program_file_hashes": "passed",
+        "source_files": 2457,
+        "native_size": 257804064,
+        "native_sha256": "03cd88354fbf8ef6e106c723dfff03778f36f541126ecb2827ee4ab4783f8aab",
+        "native_smoke": "passed",
+        "sso_popup_fix_included": true,
+        "stale_runtime_guard_included": true,
+        "actual_launcher_startup": "passed"
+      },
+      {
+        "platform": "darwin-amd64",
+        "git_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+        "version": "1.0.3b3.post2026110901",
+        "enterprise_authority_url": "https://120.79.0.171:18443",
+        "zip_sha256": "af98a943654ffa0e69a012f5a9a37e4105fee537c0fbb6b3cac43d8e72abafd8",
+        "zip_crc": "passed",
+        "all_program_file_hashes": "passed",
+        "source_files": 2457,
+        "native_size": 267474720,
+        "native_sha256": "ae83d90b7efce91c461e4a34981aba2ea7a19f87dcfa8c30a6d0cbba06f3788a",
+        "native_smoke": "passed",
+        "sso_popup_fix_included": true,
+        "stale_runtime_guard_included": true,
+        "actual_launcher_startup": "passed"
+      },
+      {
+        "platform": "windows-amd64",
+        "git_commit": "4a7976acff2938ac48bebf3c1fdd498c590e3a20",
+        "version": "1.0.3b3.post2026110901",
+        "enterprise_authority_url": "https://120.79.0.171:18443",
+        "zip_sha256": "f8a81351a0f2808ef5b35969f18cae2a768e838c8ebead5b69ce9750e6b0596e",
+        "zip_crc": "passed",
+        "all_program_file_hashes": "passed",
+        "source_files": 2457,
+        "native_size": 229968510,
+        "native_sha256": "ce4a9b1d76277a3d63003db6d2b06f8aa27bb7b8235be3942086c50be8d26652",
+        "native_smoke": "passed",
+        "sso_popup_fix_included": true,
+        "stale_runtime_guard_included": true,
+        "actual_launcher_startup": "passed"
+      }
+    ],
+    "release_assets": 13,
+    "checksum_file": "SHA256SUMS.txt",
+    "old_published_release_modified": false
+  },
+  "windows_installer_payload": {
+    "version": "1.0.3b3.post2026110901",
+    "published_installer_contains_exact_enterprise_portable": true,
+    "portable_sha256": "f8a81351a0f2808ef5b35969f18cae2a768e838c8ebead5b69ce9750e6b0596e",
+    "payload_offset": 11796352,
+    "enterprise_authority_url": "https://120.79.0.171:18443"
+  },
+  "anonymous_access": {
+    "release_tag": "enterprise-1.0.3b3-20261109.1",
+    "authenticated": false,
+    "checks": [
+      {
+        "check": "release_page",
+        "url": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261109.1",
+        "status": 200
+      },
+      {
+        "check": "checksums",
+        "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261109.1/SHA256SUMS.txt",
+        "status": 200,
+        "sha256": "036107698fd682de1a3227b574a780839a889ae76c8816e81c779de8c1eecbc7"
+      },
+      {
+        "check": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026110901.dmg",
+        "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261109.1/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026110901.dmg",
+        "status": 200
+      },
+      {
+        "check": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026110901.dmg",
+        "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261109.1/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026110901.dmg",
+        "status": 200
+      },
+      {
+        "check": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110901.exe",
+        "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261109.1/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110901.exe",
+        "status": 200
+      }
+    ],
+    "result": "passed"
+  },
+  "colleague_windows_manual_login": "not yet verified"
+}

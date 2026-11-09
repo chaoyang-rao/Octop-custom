@@ -1,0 +1,25 @@
+{
+  "id": "20261109-enterprise-startup-release",
+  "date": "2026-11-09T15:42:11+08:00",
+  "kind": "构建验收与发布",
+  "modules": [
+    "Windows企业登录修复",
+    "三平台企业安装包",
+    "GitHub公开发行"
+  ],
+  "reason": "将已提交的旧后台兼容检查交付给同事，确保企业安装器启动时不会继续进入不兼容的旧登录页。",
+  "summary": [
+    "从固定源码4a7976ac构建并公开企业版1.0.3b3.post2026110901，标签enterprise-1.0.3b3-20261109.1；既有0801版继续保留。",
+    "三平台原生运行环境、真实启动器冷启动及桌面端回归均通过；每个平台2457项程序哈希均与固定源码一致，Windows安装器内嵌ZIP与企业便携包逐字节哈希一致。",
+    "13个远端附件的大小与SHA256全部匹配。匿名发布页、校验文件及三个安装器下载入口均验证通过，下载无需GitHub账号。"
+  ],
+  "validation": "本地make all：5869 passed、41 skipped，mypy723文件；GitHub Actions42577461798全部四项必需任务成功，后端5874 passed、36 skipped，前端27文件186测试通过。三平台Go回归、实际启动器企业配置与数据库绑定检查通过。13附件远端摘要匹配，5项匿名访问检查通过；同事Windows的手工飞书登录仍待复测。",
+  "status": "新版企业预发布已公开并完成下载核验；本轮未替换当前Mac客户端或授权中心。",
+  "evidence": [
+    "docs/history/20261109-enterprise-startup-release-verification.json",
+    "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261109.1",
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42577461798",
+    "4a7976acff2938ac48bebf3c1fdd498c590e3a20"
+  ],
+  "files": {}
+}
