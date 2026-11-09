@@ -1,0 +1,35 @@
+{
+  "release_id": 437794731,
+  "tag": "enterprise-1.0.3b3-20261108.1",
+  "url": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261108.1",
+  "published_at": "2026-11-09T05:49:33Z",
+  "draft": false,
+  "prerelease": true,
+  "target_commit": "4736fb00c1fa5b0153cde584044adbbf05e90f84",
+  "assets": 13,
+  "anonymous_release_api_http": 200,
+  "anonymous_release_page_http": 200,
+  "anonymous_checksum_sha256": "matched",
+  "anonymous_installer_links": [
+    {
+      "name": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026110801.dmg",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261108.1/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026110801.dmg",
+      "http_status": 200
+    },
+    {
+      "name": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026110801.dmg",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261108.1/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026110801.dmg",
+      "http_status": 200
+    },
+    {
+      "name": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110801.exe",
+      "url": "https://github.com/chaoyang-rao/Octop-custom/releases/download/enterprise-1.0.3b3-20261108.1/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026110801.exe",
+      "http_status": 200
+    }
+  ],
+  "all_installer_links_verified": true,
+  "github_account_required_for_download": false,
+  "version": "1.0.3b3.post2026110801",
+  "asset_hashes_unchanged_since_verified_build": true,
+  "publicly_published": true
+}

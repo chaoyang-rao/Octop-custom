@@ -1,0 +1,24 @@
+{
+  "id": "20261109-enterprise-public-release",
+  "date": "2026-11-09T14:03:30+08:00",
+  "kind": "公开发布",
+  "modules": [
+    "企业版GitHub发行",
+    "公开下载与飞书登录"
+  ],
+  "reason": "用户确认发布已完成校验的企业版，让同事可公开下载并使用公司飞书登录。",
+  "summary": [
+    "将企业版1.0.3b3.post2026110801由草稿公开为预发布，标签enterprise-1.0.3b3-20261108.1固定到已验收源码4736fb00。保留既有个人版和旧发行，企业版不替换个人版最新标记。",
+    "发布前后13个附件的ID、大小及SHA256全部一致，没有重新构建或替换安装包；发行说明已更新为公开发布状态。",
+    "匿名访问发布页、公开API和三个安装器链接均返回200；匿名下载的SHA256SUMS内容与已校验文件一致，同事下载无需GitHub账号。运行时仍使用公司飞书身份，并受企业范围与应用可用范围限制。"
+  ],
+  "validation": "draft=false、prerelease=true；公开Git标签指向4736fb00c1fa5b0153cde584044adbbf05e90f84。13个远端附件保持已验收哈希。未携带GitHub身份的发布页、API、Windows/Intel Mac/M芯片Mac下载链接检查通过，校验文件下载哈希匹配。",
+  "status": "企业版预发布已公开，可向同事分享下载链接；本轮未执行本机安装或授权中心程序替换。",
+  "evidence": [
+    "docs/history/20261109-enterprise-publication-verification.json",
+    "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261108.1",
+    "https://github.com/chaoyang-rao/Octop-custom/actions/runs/42403473647",
+    ".cache/enterprise-20261109/publication-verification.json"
+  ],
+  "files": {}
+}
