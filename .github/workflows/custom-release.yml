@@ -109,6 +109,7 @@ jobs:
           src/pages/Login/EnterpriseLogin.test.tsx
           src/pages/Login/EnterpriseApprove.test.tsx
           src/pages/Login/Login.sso.test.tsx
+          src/pages/Login/Login.configuration.test.tsx
           src/pages/Login/Login.remember.test.tsx
           src/pages/Login/OidcComplete.test.tsx
           --maxWorkers=1 --minWorkers=1

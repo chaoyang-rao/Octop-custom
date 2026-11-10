@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Input, Button, Checkbox } from "antd";
+import { Alert, Input, Button, Checkbox, Spin } from "antd";
 import { message } from "@/utils/antdMessage";
 
 import { Fingerprint, KeyRound, Lock, User } from "lucide-react";
@@ -116,6 +116,10 @@ export default function LoginPage() {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [configurationState, setConfigurationState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+  const [configurationAttempt, setConfigurationAttempt] = useState(0);
   const [enterpriseAuthority, setEnterpriseAuthority] = useState<string | null>(
     null,
   );
@@ -170,10 +174,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     let cancelled = false;
+    setConfigurationState("loading");
     authApi
       .getAuthStatus()
       .then((status) => {
         if (cancelled) return;
+        setConfigurationState("ready");
         if (status.enterprise_login && status.enterprise_authority_url) {
           setEnterpriseAuthority(status.enterprise_authority_url);
           setEnterpriseLocalLogin(status.enterprise_local_login === true);
@@ -218,14 +224,12 @@ export default function LoginPage() {
           });
       })
       .catch(() => {
-        // Backend unreachable — let the user attempt login and show a real
-        // error from the request itself; redirecting blindly to /setup
-        // would mask the actual problem.
+        if (!cancelled) setConfigurationState("error");
       });
     return () => {
       cancelled = true;
     };
-  }, [navigate, localLink]);
+  }, [navigate, localLink, configurationAttempt]);
 
   useEffect(() => {
     const code = searchParams.get("oidc_error");
@@ -496,8 +500,8 @@ export default function LoginPage() {
     <img
       src={
         isDark
-          ? publicUrl("logo_horizontal_white.png")
-          : publicUrl("logo_horizontal_dark.png")
+          ? publicUrl("logo_horizontal_white_mono.png")
+          : publicUrl("logo_horizontal_dark_mono.png")
       }
       alt="Octop"
       style={{
@@ -509,6 +513,45 @@ export default function LoginPage() {
       }}
     />
   );
+
+  if (configurationState !== "ready") {
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--fn-bg-layout)",
+        }}
+      >
+        <div style={cardStyle}>
+          {logo}
+          {configurationState === "loading" ? (
+            <div role="status" aria-live="polite">
+              <Spin size="small" /> {t("login.checkingConfiguration")}
+            </div>
+          ) : (
+            <>
+              <Alert
+                role="alert"
+                type="error"
+                message={t("login.configurationUnavailable")}
+                description={t("login.configurationRetryHint")}
+              />
+              <Button
+                onClick={() =>
+                  setConfigurationAttempt((attempt) => attempt + 1)
+                }
+              >
+                {t("common.retry")}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (enterpriseAuthority && !localLink) {
     return (

@@ -1,0 +1,35 @@
+{
+  "scope": "另一台Windows登录页缺少飞书入口；本机运行中的客户端不在变更范围",
+  "source_baseline_commit": "b7a7bbf3",
+  "published_package_inspected": "1.0.3b3.post2026110901",
+  "confirmed_findings": [
+    "发布包仅包含logo_horizontal_dark_mono.png与white_mono.png，登录页却引用缺失的无mono文件名",
+    "登录方式探测请求失败时原代码吞掉错误，继续显示普通账号表单"
+  ],
+  "implemented": [
+    "使用实际存在的浅色/深色Logo并同步PWA预缓存",
+    "登录方式未确认时显示加载状态，读取失败时显示错误和重试入口",
+    "保留已确认的普通登录、企业飞书登录以及显式本地账号验证路径"
+  ],
+  "verification": {
+    "make_all": "passed",
+    "backend_passed": 5869,
+    "backend_skipped": 41,
+    "login_test_files": 10,
+    "login_tests_passed": 41,
+    "configuration_cases": 7,
+    "typescript": "passed",
+    "affected_eslint": "passed",
+    "production_build": "passed",
+    "dashboard_files": 687,
+    "source_backend_files_unchanged": 1301,
+    "other_program_files_unchanged": 1768,
+    "freeze_safety_tests": 16,
+    "visual_browser_verification": "未完成，浏览器控制工具连接超时"
+  },
+  "windows_actual_status_output": "用户尚未提供另一台Windows的版本和企业开关输出，根因仍待核验",
+  "windows_manual_login_verified": false,
+  "new_package_published_this_task": false,
+  "owner_mac_client_modified": false,
+  "authorization_center_modified": false
+}

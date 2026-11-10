@@ -6052,6 +6052,9 @@
     "manage": "管理账号与权限"
   },
   "login": {
+    "checkingConfiguration": "正在确认登录方式…",
+    "configurationUnavailable": "无法读取登录方式",
+    "configurationRetryHint": "请重试；若仍然失败，请确认 Octop 服务正在运行。",
     "title": "登录",
     "subtitle": "懂你、帮你、陪你成长的智能伙伴",
     "username": "用户名或邮箱",

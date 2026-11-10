@@ -6052,6 +6052,9 @@
     "manage": "Manage accounts and permissions"
   },
   "login": {
+    "checkingConfiguration": "Checking sign-in options…",
+    "configurationUnavailable": "Could not load sign-in options",
+    "configurationRetryHint": "Try again. If this continues, check that the Octop service is running.",
     "title": "Sign in",
     "subtitle": "An intelligent partner that understands you, helps you, and grows with you",
     "username": "Username or email",

@@ -40,7 +40,7 @@ describe("Login forgot-password hint", () => {
     expect(screen.queryByTestId("login-forgot-password")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
 
-    await user.click(screen.getByTestId("login-forgot-password-toggle"));
+    await user.click(await screen.findByTestId("login-forgot-password-toggle"));
 
     const dialog = await screen.findByRole("dialog");
     const hint = screen.getByTestId("login-forgot-password");
