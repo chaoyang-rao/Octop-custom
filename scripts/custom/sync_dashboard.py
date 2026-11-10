@@ -68,6 +68,18 @@ def verify(directory: Path) -> dict[str, str]:
     }
 
 
+def verify_release(directory: Path) -> dict[str, str]:
+    files = verify(directory)
+    for name in ("sw.js", "logo_horizontal_dark_mono.png", "logo_horizontal_white_mono.png"):
+        if name not in files:
+            raise ValueError(f"Incomplete production dashboard: missing {name}")
+    worker = (directory / "sw.js").read_text(encoding="utf-8")
+    for module in re.findall(r"""["'](?:\./)?(workbox-[\w-]+)(?:\.js)?["']""", worker):
+        if module + ".js" not in files:
+            raise ValueError(f"Incomplete production dashboard: missing {module}.js")
+    return files
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
@@ -82,12 +94,12 @@ if __name__ == "__main__":
         if ancestor.is_symlink():
             raise SystemExit(f"Dashboard target contains a symlink: {ancestor}")
     if options.apply:
-        expected = verify(source)
+        expected = verify_release(source)
         temporary = target.with_name("dashboard.building")
         if temporary.exists():
             raise SystemExit("Review the previous unfinished dashboard.building directory")
         shutil.copytree(source, temporary)
-        if verify(temporary) != expected:
+        if verify_release(temporary) != expected:
             raise SystemExit("Copied dashboard does not match its verified source")
         shutil.rmtree(target)
         temporary.rename(target)
@@ -105,6 +117,6 @@ if __name__ == "__main__":
         expected = json.loads(
             (ROOT / "customization/frontend/source-asset-release.json").read_text()
         )["files"]
-        if verify(target) != expected:
+        if verify_release(target) != expected:
             raise SystemExit("Frozen dashboard has drifted from its source-build manifest")
     print(json.dumps({"dashboard_files": len(expected), "verified": True}))

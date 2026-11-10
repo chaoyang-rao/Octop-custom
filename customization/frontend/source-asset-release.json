@@ -688,6 +688,8 @@
     "pcm-processor.js": "e47e1fd3165d602a66e4ef18bfc470c19512bdef4c8cc316e6dc4df03b3f8e74",
     "pwa-192.png": "8ea0c735e7458a69e4809bd0e362054de97452ee2aeae6bc07c9d85b2f4e2367",
     "pwa-512.png": "c6bec68c23ce2efe0ea4625a702a0f26c13e26517ca4462fe103be6c02a55c00",
-    "third-party-notices/solar-icons.html": "f275aa7b7e25c65e81384e6bd4a29523d3e3d67085b6f703120ea35062e31ee1"
+    "sw.js": "ae4daf02bd337184f670b555720da71e4a2387f68f96d980c00b488e0dfb4c79",
+    "third-party-notices/solar-icons.html": "f275aa7b7e25c65e81384e6bd4a29523d3e3d67085b6f703120ea35062e31ee1",
+    "workbox-f0bb1bde.js": "182dfac48f6434ceccaef3f8d215d564a1e2a95241819a1b963372e066658e45"
   }
 }

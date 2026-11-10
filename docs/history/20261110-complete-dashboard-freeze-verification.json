@@ -1,0 +1,23 @@
+{
+  "correction": "前一条记录的687是提前冻结的中间快照，缺少两个PWA文件；完整发行产物应为689。",
+  "cause": "冻结目录在完整Vite/PWA构建进程退出前被复制。最终审查已发现并纠正，期间没有发布安装包。",
+  "dashboard_files": 689,
+  "program_files": 2457,
+  "source_backend_files_unchanged": 1301,
+  "other_program_files_unchanged": 1768,
+  "required_assets_verified": [
+    "logo_horizontal_dark_mono.png",
+    "logo_horizontal_white_mono.png",
+    "sw.js",
+    "workbox-f0bb1bde.js"
+  ],
+  "guard": "生产冻结和检查同时校验Logo、服务工作线程及其引用的Workbox文件；缺失时拒绝生成发行快照。",
+  "validation": {
+    "freeze_guard_tests_passed": 17,
+    "ruff": "passed",
+    "complete_vite_pwa_build": "passed",
+    "source_and_frozen_dashboard": "same verified inventory"
+  },
+  "windows_actual_status": "仍待另一台Windows的检查输出，原故障未验收",
+  "new_package_published": false
+}

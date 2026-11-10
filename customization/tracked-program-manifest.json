@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.3b3",
   "upstream_commit": "4811eb45996169e86006db1b6451264ff4758223",
-  "program_files": 2455,
-  "changed_program_files": 514,
+  "program_files": 2457,
+  "changed_program_files": 515,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -5406,10 +5406,22 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop/dashboard/sw.js",
+      "sha256": "ae4daf02bd337184f670b555720da71e4a2387f68f96d980c00b488e0dfb4c79",
+      "upstream_program_sha256": "a188aed1b99ecfcef8aecc000c28b950d271ae8e581289034bd3813edcf4fe66",
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop/dashboard/third-party-notices/solar-icons.html",
       "sha256": "f275aa7b7e25c65e81384e6bd4a29523d3e3d67085b6f703120ea35062e31ee1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/dashboard/workbox-f0bb1bde.js",
+      "sha256": "182dfac48f6434ceccaef3f8d215d564a1e2a95241819a1b963372e066658e45",
+      "upstream_program_sha256": "182dfac48f6434ceccaef3f8d215d564a1e2a95241819a1b963372e066658e45",
+      "changed_from_saved_original": false
     },
     {
       "path": "octop/i18n/__init__.py",

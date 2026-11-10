@@ -1,0 +1,30 @@
+{
+  "id": "20261110-complete-dashboard-freeze-correction",
+  "date": "2026-11-10T12:21:53+08:00",
+  "kind": "构建验证更正",
+  "modules": [
+    "前端产物完整性",
+    "PWA功能保留"
+  ],
+  "reason": "最终审查发现前一条记录的687个文件是提前冻结的中间快照，缺少服务工作线程及Workbox文件；完整发行产物应为689个文件。",
+  "summary": [
+    "等待完整Vite和PWA构建进程成功退出后重新冻结，补齐两个文件；最终目录为689个前端文件、2457个程序文件，现有离线功能保留。",
+    "生产冻结校验新增浅深色Logo、服务工作线程及其Workbox引用检查；缺失时拒绝生成快照，防止再次采集未完成的构建。"
+  ],
+  "validation": "17项冻结安全回归和修改脚本Ruff通过；完整构建目录与冻结清单哈希一致，1301个后端源码与1768项非前端程序记录未改动。本轮没有发布过不完整安装包。",
+  "status": "已纠正本地冻结快照；尚未重新发布安装包，另一台Windows仍待实际诊断输出和手工登录验收。",
+  "evidence": [
+    "docs/history/20261110-complete-dashboard-freeze-verification.json",
+    "scripts/custom/sync_dashboard.py",
+    "scripts/custom/test_freeze_safety.py",
+    "docs/history/entries/20261110-login-mode-discovery-recovery.json"
+  ],
+  "files": {
+    "customization/frontend/source-asset-release.json": "c0b76cbdaf30e55b226f0fd424deefd05319fd1c2e9f7027412af313966b5856",
+    "customization/packages/octop/dashboard/sw.js": "ae4daf02bd337184f670b555720da71e4a2387f68f96d980c00b488e0dfb4c79",
+    "customization/packages/octop/dashboard/workbox-f0bb1bde.js": "182dfac48f6434ceccaef3f8d215d564a1e2a95241819a1b963372e066658e45",
+    "customization/tracked-program-manifest.json": "76fee7a4c9faf0d725fbafa9647312e01fc040314145c36125a519b24512249b",
+    "scripts/custom/sync_dashboard.py": "0668f7d5858c4c33485a77b187e1c36e3b3e9425908f0ec639dfc16d2fcca735",
+    "scripts/custom/test_freeze_safety.py": "452b7be900c942a2634f78ee3ebb7fdf9131055b23686ca3a0d0c93d6ad30556"
+  }
+}

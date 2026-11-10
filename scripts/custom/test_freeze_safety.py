@@ -181,6 +181,24 @@ class DashboardAssetSafetyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Missing local dashboard resource"):
             dashboard_freeze.verify(self.dashboard)
 
+    def test_release_requires_login_logos_and_the_complete_service_worker(self):
+        required = {
+            "sw.js": 'define(["./workbox-12345678"], () => {});',
+            "workbox-12345678.js": "export {};",
+            "logo_horizontal_dark_mono.png": "synthetic dark logo",
+            "logo_horizontal_white_mono.png": "synthetic light logo",
+        }
+        for name, content in required.items():
+            (self.dashboard / name).write_text(content)
+        self.assertEqual(len(dashboard_freeze.verify_release(self.dashboard)), 6)
+        for name, content in required.items():
+            with self.subTest(missing=name):
+                (self.dashboard / name).unlink()
+                with self.assertRaises(ValueError) as error:
+                    dashboard_freeze.verify_release(self.dashboard)
+                self.assertIn(name, str(error.exception))
+                (self.dashboard / name).write_text(content)
+
     def test_missing_named_import_is_refused(self):
         self.main.write_text('import { value } from "./missing-12345678.js";')
         with self.assertRaisesRegex(ValueError, "Missing local dashboard resource"):
