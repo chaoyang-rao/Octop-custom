@@ -59,6 +59,7 @@ import { ConnectorCard } from "./ConnectorCard";
 import { AgentlyAuth } from "./AgentlyAuth";
 import { ConnectorInstanceCard } from "./ConnectorInstanceCard";
 import { CustomMcpTab } from "./CustomMcpTab";
+import EnterpriseMcpTab from "./EnterpriseMcpTab";
 import {
   INLINE_CREDENTIAL_GUIDE_KINDS,
   HIDE_INLINE_FIELD_GUIDE_KINDS,
@@ -2348,12 +2349,13 @@ function ConnectorConfigDrawer({
   );
 }
 
-type ConnectorTab = "enabled" | "builtin" | "custom";
+type ConnectorTab = "enabled" | "builtin" | "custom" | "enterprise";
 
 const CONNECTOR_TABS: TabBarItem<ConnectorTab>[] = [
   { key: "enabled", labelKey: "connectors.tabEnabled", icon: Link2 },
   { key: "builtin", labelKey: "connectors.tabBuiltin", icon: Blocks },
   { key: "custom", labelKey: "connectors.tabCustom", icon: Wrench },
+  { key: "enterprise", labelKey: "enterpriseMcp.title", icon: Blocks },
 ];
 
 export default function ConnectorsPage() {
@@ -2373,7 +2375,12 @@ export default function ConnectorsPage() {
   const visibleConnectorTabs = useMemo(
     () =>
       CONNECTOR_TABS.filter((tab) =>
-        userCan(user, CONNECTOR_TAB_PERMISSIONS[tab.key]),
+        userCan(
+          user,
+          CONNECTOR_TAB_PERMISSIONS[
+            tab.key === "enterprise" ? "enabled" : tab.key
+          ],
+        ),
       ),
     [user],
   );
@@ -2474,7 +2481,9 @@ export default function ConnectorsPage() {
         />
       }
     >
-      {resolvedConnectorTab === "custom" ? (
+      {resolvedConnectorTab === "enterprise" ? (
+        <EnterpriseMcpTab />
+      ) : resolvedConnectorTab === "custom" ? (
         <CustomMcpTab focusServerName={customFocusServerName} />
       ) : resolvedConnectorTab === "enabled" ? (
         loading ? (
@@ -2561,6 +2570,10 @@ export default function ConnectorsPage() {
                           (entry) => entry.kind === instance.kind,
                         )}
                         onEdit={(item) => {
+                          if (item.kind === "enterprise-mcp") {
+                            setActiveTab("enterprise");
+                            return;
+                          }
                           if (item.kind === "custom-mcp") {
                             setCustomFocusServerName(item.mcp_server_name);
                             setActiveTab("custom");

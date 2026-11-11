@@ -9,6 +9,10 @@ import pytest
 from langchain_core.messages import HumanMessage
 from octop_gateway.models import ChannelSubject, InboundMessage, TextContent
 
+from octop.infra.connectors.accounts.actor import (
+    authenticated_vault_actor,
+    current_vault_actor,
+)
 from octop.infra.gateway.process.processor import GlobalProcessor, _overwrite_last_user_text
 from octop.infra.gateway.slash.dispatcher import SlashDispatcher
 
@@ -148,3 +152,85 @@ async def test_dashboard_turn_applies_hitl_policy() -> None:
         meta={"hitl_policy": {"mode": "allow_all"}},
     )
     assert processor.hitl_coordinator.session_policies.get("thr").mode == "allow_all"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("channel", ["dashboard", "cli", "mcp", "feishu"])
+async def test_auto_approved_resume_preserves_only_trusted_ingress_actor(channel) -> None:
+    processor = _processor(
+        thread=SimpleNamespace(conversation_mode="craft", pending_plan_path=None, model_ref=None)
+    )
+    processor._agent_repo.get.return_value.user_id = 1
+    actors = []
+
+    async def stream(*_args, **_kwargs):
+        actors.append(current_vault_actor())
+        yield {
+            "type": "hitl_required",
+            "request": {"action_requests": [{"name": "execute", "args": {}}]},
+        }
+
+    async def resume(*_args, **_kwargs):
+        actors.append(current_vault_actor())
+        yield {"type": "token", "content": "approved result"}
+
+    processor._agent_manager.stream = stream
+    processor._agent_manager.resume_hitl = resume
+    msg = InboundMessage(
+        channel_id="ws",
+        channel_type=channel,
+        tenant_id="agent-1",
+        channel_subject=ChannelSubject(subject_id="1"),
+        content=[TextContent(text="run")],
+        metadata={"thread_id": "thr", "hitl_policy": {"mode": "allow_all"}},
+    )
+    with authenticated_vault_actor(99):
+        chunks = [chunk async for chunk in processor.iter_turn_chunks(msg)]
+        assert current_vault_actor() == (True, 99)
+
+    expected = 1 if channel in ("dashboard", "cli", "mcp") else None
+    assert actors == [(True, expected), (True, expected)]
+    assert any(chunk.get("content") == "approved result" for chunk in chunks)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("channel", ["dashboard", "feishu"])
+async def test_chat_answer_resume_preserves_only_trusted_ingress_actor(channel) -> None:
+    processor = _processor(thread=None)
+    processor._agent_repo.get.return_value.user_id = 1
+    actors = []
+
+    async def resume(*_args, **_kwargs):
+        actors.append(current_vault_actor())
+        yield {"type": "token", "content": "answered result"}
+
+    processor._agent_manager.resume_hitl = resume
+    processor.hitl_coordinator.store.register(
+        thread_id="thr",
+        agent_id="agent-1",
+        user_id=1,
+        session_key="sk",
+        channel_type=channel,
+        action_requests=[
+            {
+                "name": "ask_user_question",
+                "args": {"questions": [{"header": "Q1", "question": "Continue?"}]},
+            }
+        ],
+        review_configs=[{"action_name": "ask_user_question", "allowed_decisions": ["respond"]}],
+    )
+    msg = InboundMessage(
+        channel_id="ws",
+        channel_type=channel,
+        tenant_id="agent-1",
+        channel_subject=ChannelSubject(subject_id="1"),
+        content=[TextContent(text="continue")],
+        metadata={"session_key": "sk", "thread_id": "thr"},
+    )
+    with authenticated_vault_actor(99):
+        chunks = [chunk async for chunk in processor.iter_turn_chunks(msg)]
+        assert current_vault_actor() == (True, 99)
+
+    assert actors == [(True, 1 if channel == "dashboard" else None)]
+    assert any(chunk.get("content") == "answered result" for chunk in chunks)
+    processor._agent_manager.stream.assert_not_called()

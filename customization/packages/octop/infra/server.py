@@ -752,6 +752,12 @@ class OctopServer:
             bridge_manager=bridge_mgr,
             task_manager=task_manager,
         )
+        from octop.infra.connectors.enterprise_mcp_sync import sync_for
+
+        company_mcp = sync_for(self)
+        registry.set_enterprise_mcp_authorizer(company_mcp.check_call)
+        if self._serve_background and config.enterprise_authority_url:
+            company_mcp.start()
         from octop.infra.mobile_access.push import push_for
 
         gateway.ws_hub.set_user_frame_observer(push_for(self).emit)
@@ -871,6 +877,9 @@ class OctopServer:
         if not self._started:
             return
         try:
+            company_mcp = getattr(self, "_enterprise_mcp_sync", None)
+            if company_mcp is not None:
+                await company_mcp.stop()
             from octop.infra.connectors.gateway import agently_auth
 
             await agently_auth.close()

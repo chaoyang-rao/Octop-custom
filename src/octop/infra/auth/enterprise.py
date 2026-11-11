@@ -267,6 +267,11 @@ class EnterpriseClient:
             config["enterprise_authority_url"] = self.authority
             write_json_atomic(path, config)
         repo = self.services.secret_repo
+        from octop.infra.connectors.enterprise_mcp_store import EnterpriseMcpStore
+
+        EnterpriseMcpStore(self.services.settings_repo, repo, self.authority).reset_subject(
+            user_id, str(state["subject"])
+        )
         repo.set(f"enterprise.identity.{user_id}", encrypt_json(repo, _SECRET_PURPOSE, state))
 
     @staticmethod
@@ -396,6 +401,15 @@ class EnterpriseClient:
         if user is None:
             raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         await self.authorize(user, force=True)
+
+    async def fetch_mcp_catalog(self, user: User) -> tuple[str, dict[str, Any]]:
+        """Use the company credential only for its dedicated read-only directory."""
+        current = await self.authorize(user, force=True)
+        if not user_has_permission(current, "connector_enabled"):
+            raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+        state = await asyncio.to_thread(self._state, user.id)
+        snapshot = await self._remote("GET", CENTER_PATH + "/mcp/catalog", token=state["token"])
+        return str(state["subject"]), snapshot
 
     async def logout(self, user_id: int) -> None:
         async with self._lock:

@@ -21,6 +21,7 @@ from octop.infra.auth.enterprise import (
     record_company_identity,
 )
 from octop.infra.auth.sso.crypto import encrypt_secret
+from octop.infra.connectors.accounts.actor import authenticated_vault_actor
 from octop.infra.db.migrate import run_migrations
 from octop.infra.db.pool import SqlitePool
 from octop.infra.db.services import build_shared_services
@@ -649,3 +650,45 @@ async def test_logout_during_inflight_authorization_cannot_restore_cached_access
     with pytest.raises(OctopError) as exc:
         await client.authorize(local)
     assert exc.value.code is ErrorCode.ENTERPRISE_LOGIN_REQUIRED
+
+
+@pytest.mark.asyncio
+async def test_shared_expert_enterprise_admission_uses_trusted_actor():
+    manager = object.__new__(AgentManager)
+    manager._config = OctopConfig()
+    manager.enterprise_authorizer = AsyncMock()
+    manager.get_row = Mock(return_value=SimpleNamespace(user_id=None))
+
+    with authenticated_vault_actor(42):
+        await manager._authorize_enterprise_owner("shared")
+
+    manager.enterprise_authorizer.assert_awaited_once_with(42)
+
+
+@pytest.mark.asyncio
+async def test_shared_expert_enterprise_admission_rejects_missing_or_denied_actor():
+    manager = object.__new__(AgentManager)
+    manager._config = OctopConfig()
+    manager.enterprise_authorizer = AsyncMock()
+    manager.get_row = Mock(return_value=SimpleNamespace(user_id=None))
+
+    with pytest.raises(OctopError) as absent:
+        await manager._authorize_enterprise_owner("shared")
+    assert absent.value.code is ErrorCode.ENTERPRISE_ACCESS_DENIED
+    with authenticated_vault_actor(None), pytest.raises(OctopError) as denied:
+        await manager._authorize_enterprise_owner("shared")
+    assert denied.value.code is ErrorCode.ENTERPRISE_ACCESS_DENIED
+    manager.enterprise_authorizer.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_private_expert_enterprise_admission_preserves_owner_validation():
+    manager = object.__new__(AgentManager)
+    manager._config = OctopConfig()
+    manager.enterprise_authorizer = AsyncMock()
+    manager.get_row = Mock(return_value=SimpleNamespace(user_id=7))
+
+    with authenticated_vault_actor(42):
+        await manager._authorize_enterprise_owner("private")
+
+    manager.enterprise_authorizer.assert_awaited_once_with(7)

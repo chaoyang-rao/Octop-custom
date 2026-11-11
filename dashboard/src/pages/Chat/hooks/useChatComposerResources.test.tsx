@@ -142,6 +142,70 @@ beforeEach(() => {
 });
 
 describe("team model persistence", () => {
+  it("keeps usable personal/company connections and excludes company entries awaiting authorization or application", async () => {
+    agentState.agents = [
+      {
+        agent_id: "expertA",
+        mcp_servers: [
+          "corp__pending",
+          "corp__unusable",
+          "corp__ready",
+          "personal",
+        ],
+      },
+    ];
+    vi.mocked(connectorsApi.listInstances).mockResolvedValue([
+      {
+        status: "active",
+        has_credentials: true,
+        mcp_server_name: "personal",
+        display_name: "Personal",
+        owner_user_id: 7,
+        kind: "custom-mcp",
+      },
+      {
+        status: "active",
+        has_credentials: false,
+        usable: false,
+        mcp_server_name: "corp__pending",
+        display_name: "Needs authorization",
+        owner_user_id: 7,
+        kind: "enterprise-mcp",
+      },
+      {
+        status: "active",
+        has_credentials: true,
+        usable: false,
+        mcp_server_name: "corp__unusable",
+        display_name: "Pending runtime update",
+        owner_user_id: 7,
+        kind: "enterprise-mcp",
+      },
+      {
+        status: "active",
+        has_credentials: true,
+        usable: true,
+        mcp_server_name: "corp__ready",
+        display_name: "Ready company",
+        owner_user_id: 7,
+        kind: "enterprise-mcp",
+      },
+    ] as never);
+    const { result } = renderHook(() =>
+      useChatComposerResources("expertA", "thread-one"),
+    );
+    await waitFor(() =>
+      expect(
+        result.current.chatConnectors.map((item) => item.mcp_server_name),
+      ).toEqual(["personal", "corp__ready"]),
+    );
+    expect(result.current.selectedConnectors).toEqual(
+      expect.arrayContaining(["personal", "corp__ready"]),
+    );
+    expect(result.current.selectedConnectors).not.toContain("corp__pending");
+    expect(result.current.selectedConnectors).not.toContain("corp__unusable");
+  });
+
   it("restores an explicit model in the next room round", async () => {
     agentState.agents = [
       { agent_id: "team", kind: "team", default_model: "prov/expert" },

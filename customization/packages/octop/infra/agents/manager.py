@@ -569,6 +569,7 @@ class AgentManager:
         self._mcp_tool_cache: dict[tuple[int, str, str], list[Any]] = {}
         self._mcp_tool_cache_locks: dict[tuple[int, str], asyncio.Lock] = {}
         self._mcp_tool_cache_guard = asyncio.Lock()
+        self._enterprise_mcp_authorizer: Callable[[int, str, str], Awaitable[None]] | None = None
         # Sanitized plugin tool name → original label (per agent, rebuilt on reload).
         self._plugin_tool_labels: dict[str, dict[str, str]] = {}
 
@@ -2223,9 +2224,16 @@ class AgentManager:
         if guard is None:
             return
         row = await asyncio.to_thread(self.get_row, agent_id)
-        if row is None or row.user_id is None:
+        if row is None:
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
-        await guard(row.user_id)
+        owner_id = row.user_id
+        if owner_id is None:
+            from octop.infra.connectors.accounts.actor import current_vault_actor
+
+            scoped, owner_id = current_vault_actor()
+            if not scoped or owner_id is None:
+                raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+        await guard(owner_id)
 
     async def stream(self, agent_id: str, request: dict[str, Any]) -> AsyncIterator[Any]:
         """Stream harness chunks (Langfuse tracing handled inside octop-harness)."""
@@ -2611,15 +2619,25 @@ class AgentManager:
                 continue
             await self.reload_connectors(row.agent_id, connector_user_id=user_id)
 
-    def invalidate_mcp_tool_cache(self, user_id: int | None = None) -> None:
+    def invalidate_mcp_tool_cache(
+        self, user_id: int | None = None, *, server_names: set[str] | None = None
+    ) -> None:
         """Drop cached custom MCP tools (one user, or all users when ``user_id`` is None)."""
         if user_id is None:
             self._mcp_tool_cache.clear()
             self._mcp_tool_cache_locks.clear()
             return
-        for cache_key in [k for k in self._mcp_tool_cache if k[0] == user_id]:
+        for cache_key in [
+            k
+            for k in self._mcp_tool_cache
+            if k[0] == user_id and (server_names is None or k[1] in server_names)
+        ]:
             del self._mcp_tool_cache[cache_key]
-        for lock_key in [k for k in self._mcp_tool_cache_locks if k[0] == user_id]:
+        for lock_key in [
+            k
+            for k in self._mcp_tool_cache_locks
+            if k[0] == user_id and (server_names is None or k[1] in server_names)
+        ]:
             del self._mcp_tool_cache_locks[lock_key]
 
     def mcp_server_labels_for_user(self, user_id: int) -> dict[str, str]:
@@ -2661,6 +2679,11 @@ class AgentManager:
                 self._mcp_tool_cache_locks[key] = lock
             return lock
 
+    def set_enterprise_mcp_authorizer(
+        self, callback: Callable[[int, str, str], Awaitable[None]]
+    ) -> None:
+        self._enterprise_mcp_authorizer = callback
+
     async def _get_or_load_mcp_tools(
         self,
         user_id: int,
@@ -2675,8 +2698,14 @@ class AgentManager:
             wrap_tools_for_shared_use,
         )
 
+        managed_fingerprint = await asyncio.to_thread(
+            self._connector_svc.enterprise_mcp_fingerprint, user_id, server_name, spec
+        )
+        if managed_fingerprint == "":
+            raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         fp = fingerprint_mcp_spec(spec)
-        cache_key = (user_id, server_name, fp)
+        cache_fingerprint = f"{fp}:{managed_fingerprint}" if managed_fingerprint else fp
+        cache_key = (user_id, server_name, cache_fingerprint)
         cached = self._mcp_tool_cache.get(cache_key)
         if cached is not None:
             return cached
@@ -2709,12 +2738,24 @@ class AgentManager:
 
             sanitize_plugin_tool_names(raw)
             server_lock = await self._server_lock(user_id, server_name)
-            wrapped = wrap_tools_for_shared_use(raw, server_lock)
+            before_call: Callable[[], Awaitable[None]] | None = None
+            if managed_fingerprint is not None:
+                authorizer = getattr(self, "_enterprise_mcp_authorizer", None)
+
+                async def check_managed() -> None:
+                    if authorizer is None:
+                        from octop.infra.errors import ErrorCode, OctopError
+
+                        raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+                    await authorizer(user_id, server_name, managed_fingerprint)
+
+                before_call = check_managed
+            wrapped = wrap_tools_for_shared_use(raw, server_lock, before_call=before_call)
             self._mcp_tool_cache[cache_key] = wrapped
             stale = [
                 key
                 for key in self._mcp_tool_cache
-                if key[0] == user_id and key[1] == server_name and key[2] != fp
+                if key[0] == user_id and key[1] == server_name and key[2] != cache_fingerprint
             ]
             for key in stale:
                 del self._mcp_tool_cache[key]

@@ -1,4 +1,4 @@
-import { App, Switch, Tooltip, Typography } from "antd";
+import { App, Button, Switch, Tooltip, Typography } from "antd";
 import {
   SharedAvatarMark,
   SharedResourceBadge,
@@ -36,9 +36,11 @@ export function ConnectorInstanceCard({
   const isOwner = user?.id === instance.owner_user_id;
   const ownerLabel =
     instance.owner_display_name || instance.owner_username || "";
+  const isEnterprise = instance.kind === "enterprise-mcp";
   const editable =
-    instance.can_manage &&
-    (catalogEntry != null || (instance.kind === "custom-mcp" && isOwner));
+    isEnterprise ||
+    (instance.can_manage &&
+      (catalogEntry != null || (instance.kind === "custom-mcp" && isOwner)));
 
   const handleDelete = () => {
     modal.confirm({
@@ -113,7 +115,7 @@ export function ConnectorInstanceCard({
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
           >
-            {instance.can_manage ? (
+            {!isEnterprise && instance.can_manage ? (
               <Switch
                 size="small"
                 checked={instance.status === "active"}
@@ -133,13 +135,25 @@ export function ConnectorInstanceCard({
 
       <div className={styles.typeCardFooter}>
         <div className={styles.typeCardHint}>
-          {!instance.has_credentials
+          {isEnterprise
+            ? t("enterpriseMcp.managedDefinition")
+            : !instance.has_credentials
             ? t("connectors.noCredentials", "缺少凭证")
             : editable
             ? t("connectors.clickToManage", "点击管理连接")
             : t("connectors.sharedReadonly", "共享连接器，仅所有者可管理")}
         </div>
-        {instance.can_manage ? (
+        {isEnterprise ? (
+          <Button
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(instance);
+            }}
+          >
+            {t("enterpriseMcp.manageAuthorization")}
+          </Button>
+        ) : instance.can_manage ? (
           <div
             className={styles.instanceCardActions}
             onClick={(e) => e.stopPropagation()}

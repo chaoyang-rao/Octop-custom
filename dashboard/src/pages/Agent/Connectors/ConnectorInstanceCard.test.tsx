@@ -10,8 +10,8 @@
  *   - non-shared instances render no tag
  */
 
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { App } from "antd";
 
 import type { ConnectorInstance } from "../../../api/modules/connectors";
@@ -41,13 +41,16 @@ function makeInstance(
   };
 }
 
-function renderCard(instance: ConnectorInstance) {
+function renderCard(
+  instance: ConnectorInstance,
+  onEdit = (_instance: ConnectorInstance) => undefined,
+) {
   return render(
     <App>
       <ConnectorInstanceCard
         instance={instance}
         catalogEntry={undefined}
-        onEdit={() => undefined}
+        onEdit={onEdit}
         onChanged={() => undefined}
       />
     </App>,
@@ -55,6 +58,21 @@ function renderCard(instance: ConnectorInstance) {
 }
 
 describe("<ConnectorInstanceCard />", () => {
+  it("routes company connections to personal authorization without offering catalog deletion or toggles", () => {
+    const onEdit = vi.fn();
+    const instance = makeInstance({
+      kind: "enterprise-mcp",
+      instance_id: "enterprise:quality",
+      can_manage: true,
+    });
+    renderCard(instance, onEdit);
+    expect(screen.queryByRole("switch")).toBeNull();
+    expect(screen.queryByRole("button", { name: "common.delete" })).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "enterpriseMcp.manageAuthorization" }),
+    );
+    expect(onEdit).toHaveBeenCalledExactlyOnceWith(instance);
+  });
   it("keeps long titles ellipsis-enabled so hover shows the full title", () => {
     renderCard(makeInstance());
 

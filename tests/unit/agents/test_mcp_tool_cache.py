@@ -83,6 +83,8 @@ async def test_get_or_load_caches_and_reuses() -> None:
     mgr._mcp_tool_cache_locks = {}
     mgr._mcp_tool_cache_guard = asyncio.Lock()
     mgr._paths = MagicMock(root=MagicMock())
+    mgr._connector_svc = MagicMock()
+    mgr._connector_svc.enterprise_mcp_fingerprint.return_value = None
 
     fake = MagicMock()
     fake.name = "s_tool1"
@@ -112,6 +114,8 @@ async def test_get_or_load_misses_on_fingerprint_change() -> None:
     mgr._mcp_tool_cache_locks = {}
     mgr._mcp_tool_cache_guard = asyncio.Lock()
     mgr._paths = MagicMock(root=MagicMock())
+    mgr._connector_svc = MagicMock()
+    mgr._connector_svc.enterprise_mcp_fingerprint.return_value = None
 
     def _tool(name: str) -> MagicMock:
         t = MagicMock()
@@ -172,6 +176,7 @@ async def test_prepare_chat_mcp_injects_custom_from_cache() -> None:
     mgr.get_row = MagicMock(return_value=row)
     mgr._connector_uid_for = MagicMock(return_value=7)
     mgr._connector_svc = MagicMock()
+    mgr._connector_svc.enterprise_mcp_fingerprint.return_value = None
     mgr._connector_svc.custom_harness_configs.return_value = {
         "deepwiki": {
             "transport": "streamable_http",

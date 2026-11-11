@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from weakref import WeakKeyDictionary
 
 from octop.config import OctopConfig
@@ -47,6 +48,9 @@ from octop.infra.db.repos.secrets import SecretRepo
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.utils.paths import PathLayout
 from octop.infra.utils.ulid import new_ulid
+
+if TYPE_CHECKING:
+    from octop.infra.connectors.enterprise_mcp_store import EnterpriseMcpStore
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +94,24 @@ class ConnectorService:
         self._secret_repo = secret_repo
         self._settings_repo = settings_repo
         self._config = config
+
+    def enterprise_mcp_store(self) -> EnterpriseMcpStore:
+        from octop.infra.connectors.enterprise_mcp_store import EnterpriseMcpStore
+
+        return EnterpriseMcpStore(
+            self._settings_repo,
+            self._secret_repo,
+            str(getattr(self._config, "enterprise_authority_url", "")),
+        )
+
+    def enterprise_mcp_fingerprint(
+        self, user_id: int, server_name: str, spec: dict[str, Any]
+    ) -> str | None:
+        if server_name in self.get_custom_servers(user_id):
+            return None
+        if re.fullmatch(r"corp_[a-f0-9]{16}", server_name) is None:
+            return None
+        return self.enterprise_mcp_store().binding_for_spec(user_id, server_name, spec)
 
     def list_user_instances(
         self,
@@ -304,9 +326,11 @@ class ConnectorService:
         return self._save_custom_servers(user_id, merged)
 
     def _save_custom_servers(self, user_id: int, servers: dict[str, Any]) -> dict[str, Any]:
+        existing = set(self.get_custom_servers(user_id))
+        managed_reserved = self.enterprise_mcp_store().known_names(user_id) - existing
         normalized = validate_servers_map(
             servers,
-            reserved_names=self.reserved_builtin_mcp_names(user_id),
+            reserved_names=self.reserved_builtin_mcp_names(user_id) | managed_reserved,
         )
         display_names: set[str] = set()
         for name, spec in normalized.items():
@@ -511,6 +535,8 @@ class ConnectorService:
             item.setdefault("shared", False)
             # list_visible already applied the per-instance group layer.
             item["usable"] = True
+        existing_names = {str(item["mcp_server_name"]) for item in out}
+        out.extend(self.enterprise_mcp_store().instances(user_id, existing_names))
         return out
 
     def list_active_mcp_server_names(self, user_id: int) -> list[str]:
@@ -532,6 +558,12 @@ class ConnectorService:
             for name, spec in extract_servers(self.decrypt(parent.instance_id)).items():
                 if isinstance(spec, dict) and spec.get("shared") is True and server_enabled(spec):
                     names.append(shared_mcp_server_name(parent.instance_id, name))
+        reserved = set(self.get_custom_servers(user_id))
+        names.extend(
+            name
+            for name in self.enterprise_mcp_store().harness_configs(user_id)
+            if name not in names and name not in reserved
+        )
         return sorted(names)
 
     def list_default_open_mcp_server_names(self, user_id: int) -> list[str]:
@@ -607,6 +639,10 @@ class ConnectorService:
                 built = enabled_harness_configs({name: spec}).get(name)
                 if built is not None:
                     configs[shared_mcp_server_name(parent.instance_id, name)] = built
+        reserved = set(self.get_custom_servers(user_id))
+        for name, spec in self.enterprise_mcp_store().harness_configs(user_id).items():
+            if name not in configs and name not in reserved:
+                configs[name] = spec
         return configs
 
     async def mcp_configs_for_user(self, user_id: int) -> dict[str, Any]:

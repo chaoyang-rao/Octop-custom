@@ -1313,15 +1313,25 @@ class GlobalProcessor:
                 )
                 answer_outcome = HitlAnswerOutcome()
                 try:
-                    async for ev in self._hitl.iter_answer_resolution(
-                        ask_record,
-                        msg.text,
-                        agent_manager=self._agent_manager,
-                        locale=locale,
-                        usage_tracker=usage_tracker,
-                        history_tracker=history_tracker,
-                        outcome=answer_outcome,
-                        member_hitl=self.teams.deliver_member_hitl,
+                    async for ev in actor_stream(
+                        self._hitl.iter_answer_resolution(
+                            ask_record,
+                            msg.text,
+                            agent_manager=self._agent_manager,
+                            locale=locale,
+                            usage_tracker=usage_tracker,
+                            history_tracker=history_tracker,
+                            outcome=answer_outcome,
+                            member_hitl=self.teams.deliver_member_hitl,
+                        ),
+                        user_id
+                        if msg.channel_type
+                        in (
+                            ThreadRegistry.CHANNEL_DASHBOARD,
+                            ThreadRegistry.CHANNEL_CLI,
+                            ThreadRegistry.CHANNEL_MCP,
+                        )
+                        else None,
                     ):
                         for frame in message_event_to_cli_chunks(ev):
                             yield _maybe_stamp_team_host(frame, agent_id, team_host)
@@ -1488,23 +1498,23 @@ class GlobalProcessor:
         emitted_tool_error_ids: set[str] = set()
 
         try:
-            async for chunk in iter_with_session_auto_approve(
-                actor_stream(
+            async for chunk in actor_stream(
+                iter_with_session_auto_approve(
                     self._agent_manager.stream(agent_id, request),
-                    user_id
-                    if msg.channel_type
-                    in (
-                        ThreadRegistry.CHANNEL_DASHBOARD,
-                        ThreadRegistry.CHANNEL_CLI,
-                        ThreadRegistry.CHANNEL_MCP,
-                    )
-                    else None,
+                    thread_id=thread_id,
+                    policies=self._hitl.session_policies,
+                    resume=lambda next_decisions: self._agent_manager.resume_hitl(
+                        agent_id, thread_id, next_decisions
+                    ),
                 ),
-                thread_id=thread_id,
-                policies=self._hitl.session_policies,
-                resume=lambda next_decisions: self._agent_manager.resume_hitl(
-                    agent_id, thread_id, next_decisions
-                ),
+                user_id
+                if msg.channel_type
+                in (
+                    ThreadRegistry.CHANNEL_DASHBOARD,
+                    ThreadRegistry.CHANNEL_CLI,
+                    ThreadRegistry.CHANNEL_MCP,
+                )
+                else None,
             ):
                 usage_tracker.observe(chunk)
                 if coordinator is not None:

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from langchain_core.messages import AIMessage, HumanMessage
 
 from octop.i18n import tr
+from octop.infra.connectors.accounts.actor import actor_stream
 from octop.infra.cron.task_type import CronTaskType, normalize_cron_task_type
 from octop.infra.gateway.process import build_harness_request
 from octop.infra.gateway.process.message_keys import COMPOSER_CTX_KEY, build_composer_context
@@ -147,7 +148,9 @@ class CronDeliveryService:
             from octop.infra.connectors.gateway.adapters.agently_cli import write_scope
 
             with write_scope(allowed=False):
-                async for chunk in self._agent_manager.stream(command.agent_id, request):
+                async for chunk in actor_stream(
+                    self._agent_manager.stream(command.agent_id, request), command.user_id
+                ):
                     tracker.observe(chunk)
                     usage.observe(chunk)
                     kind = chunk.get("type")

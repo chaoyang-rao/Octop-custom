@@ -9,6 +9,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
+from octop.infra.connectors.accounts.actor import (
+    authenticated_vault_actor,
+    current_vault_actor,
+)
 from octop.infra.cron.delivery import CronDeliveryCommand, CronDeliveryService
 from octop.infra.db.migrate import run_migrations
 from octop.infra.db.pool import SqlitePool
@@ -333,6 +337,34 @@ async def test_wrong_user_rejects_session() -> None:
     with pytest.raises(ValueError, match="does not belong to user"):
         await service.deliver(_command())
     gateway.push_session_text.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_agent_cron_runs_as_verified_job_owner_and_restores_caller_actor() -> None:
+    session = _session(channel_type="feishu")
+    actors = []
+
+    async def stream(*_args, **_kwargs):
+        actors.append(current_vault_actor())
+        yield {"type": "token", "content": "scheduled result"}
+        actors.append(current_vault_actor())
+
+    manager = MagicMock()
+    manager.stream = stream
+    gateway = MagicMock()
+    gateway.run_in_session = _run_locked
+    gateway.require_session.return_value = session
+    gateway.push_session_text = AsyncMock()
+    service = CronDeliveryService(gateway=gateway, agent_manager=manager, repos=MagicMock())
+    service._build_agent_request = AsyncMock(
+        return_value={"messages": [HumanMessage(content="scheduled task")]}
+    )
+    with authenticated_vault_actor(99):
+        await service.deliver(_command(task_type="agent"))
+        assert current_vault_actor() == (True, 99)
+
+    assert actors == [(True, 1), (True, 1)]
+    gateway.push_session_text.assert_awaited_once()
 
 
 @pytest.mark.asyncio

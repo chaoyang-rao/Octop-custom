@@ -37,6 +37,22 @@ class SettingsRepo:
             row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
         return str(row["value"])
 
+    def compare_and_set(self, key: str, expected_value: str | None, value: str) -> bool:
+        """Atomically insert an absent key or replace exactly the expected value."""
+        with self._db.transaction() as conn:
+            if expected_value is None:
+                row = conn.execute(
+                    "INSERT INTO settings(key, value) VALUES (?, ?)"
+                    " ON CONFLICT(key) DO NOTHING RETURNING key",
+                    (key, value),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "UPDATE settings SET value = ? WHERE key = ? AND value = ? RETURNING key",
+                    (value, key, expected_value),
+                ).fetchone()
+        return row is not None
+
     def get_active_model(self) -> tuple[str, str]:
         """Return (provider_name, model_id); empty strings if not set."""
         raw = self.get(self._KEY_ACTIVE_MODEL) or ""
