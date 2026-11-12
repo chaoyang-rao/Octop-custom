@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "feature": "enterprise_mcp_catalog_and_member_authorization",
+  "source_commit": "f8c653206e3b973b7f4d2305dcbb1f916e2a3f5a",
+  "custom_version": "1.0.3b3.post2026111201",
+  "release": {
+    "published": true,
+    "release_id": 442049768,
+    "source_commit": "f8c653206e3b973b7f4d2305dcbb1f916e2a3f5a",
+    "release_url": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/enterprise-1.0.3b3-20261112.1",
+    "published_at": "2026-11-12T01:45:20Z",
+    "all_13_asset_digests_match": true,
+    "anonymous_release_page_status": 200,
+    "anonymous_downloads": [
+      {
+        "name": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111201.dmg",
+        "anonymous_status": 200,
+        "bytes": 267274139
+      },
+      {
+        "name": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111201.dmg",
+        "anonymous_status": 200,
+        "bytes": 257832736
+      },
+      {
+        "name": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111201.exe",
+        "anonymous_status": 200,
+        "bytes": 229997724
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "anonymous_status": 200,
+        "bytes": 1402
+      }
+    ],
+    "github_credentials_used": false
+  },
+  "ci": {
+    "run_id": 43072276350,
+    "url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/43072276350",
+    "required_jobs": "all five success",
+    "backend_make_all": "5970 passed, 36 skipped",
+    "windows_mcp": "138 passed",
+    "frontend": "33 files, 223 passed",
+    "mypy": "728 source files",
+    "local_normal_precommit": "997 passed, 1 skipped; complete PWA build passed"
+  },
+  "packaging": {
+    "platforms": [
+      "windows-amd64",
+      "darwin-amd64",
+      "darwin-arm64"
+    ],
+    "program_files_per_platform": 2465,
+    "sha_crc_source_enterprise_marker_and_native_cold_start": "passed",
+    "assets": [
+      {
+        "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026111201.json",
+        "size": 5917,
+        "sha256": "7f35b4053eaea8739416241060b837f82e042db3c2023555fbc7f35df78489a5",
+        "asset_id": 737550561
+      },
+      {
+        "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026111201.zip",
+        "size": 252413705,
+        "sha256": "f6c2e4cab04301222836f79112ed2b2d3a37b74c54b7748e6f474a0fa0e5da03",
+        "asset_id": 737564627
+      },
+      {
+        "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026111201.json",
+        "size": 1061,
+        "sha256": "4187f74fe63a62101253ad11c3ab8c9e735a6fb6be5f49324837032d3a176641",
+        "asset_id": 737550559
+      },
+      {
+        "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026111201.zip",
+        "size": 243716192,
+        "sha256": "ae9627e7fc1709bc6ef7d2372d4ae204c4694744eb3da26e28fc65a2724ed1c0",
+        "asset_id": 737564618
+      },
+      {
+        "name": "Octop-portable-windows-amd64-1.0.3b3.post2026111201.json",
+        "size": 1065,
+        "sha256": "fc07c0c4eafe0e8e4cebc0517158b27a4b94fdd7df8f2befde11b54f987fe2f4",
+        "asset_id": 737550563
+      },
+      {
+        "name": "Octop-portable-windows-amd64-1.0.3b3.post2026111201.zip",
+        "size": 237729441,
+        "sha256": "5a6b95fd8da8ff623e198fa49c0c4cb469423fb6c98a6621b4e8f5dda6e195be",
+        "asset_id": 737564607
+      },
+      {
+        "name": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111201.dmg",
+        "size": 267274139,
+        "sha256": "b5353d4585ca95db0f5302b38f658646d884dcbdb5ffc18d775d1f87656c8152",
+        "asset_id": 737564629
+      },
+      {
+        "name": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111201.dmg",
+        "size": 257832736,
+        "sha256": "432ecc47628f310033358abfa7f384b82a49c6d0e315de332a1dd247d51b2d3b",
+        "asset_id": 737564606
+      },
+      {
+        "name": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111201.exe",
+        "size": 229997724,
+        "sha256": "41a254436adf3a0eeb23c5c8ef5c6f19f0228b76ed366a4032236082fe3dde5c",
+        "asset_id": 737616360
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "size": 1402,
+        "sha256": "4b9bc5d4acaf3a20239ab55acf1024b0e47ada8190c7b4b1272a1f890e3fb6d1",
+        "asset_id": 737617994
+      },
+      {
+        "name": "native-smoke-darwin-amd64.json",
+        "size": 5675,
+        "sha256": "413ae2c33205bfe92d05cc12d7c786b390f27312f4a44a5e84cd2dab5ef5a714",
+        "asset_id": 737618092
+      },
+      {
+        "name": "native-smoke-darwin-arm64.json",
+        "size": 820,
+        "sha256": "72e171ebc289595195afc70a7057adab50fd76775faf885aaa302422bc1d0b38",
+        "asset_id": 737618251
+      },
+      {
+        "name": "native-smoke-windows-amd64.json",
+        "size": 851,
+        "sha256": "9bca097efa72e23d1a311910d90c63dfc7c8403ad2b8a0ebbc961234e56c0dd7",
+        "asset_id": 737618372
+      }
+    ]
+  },
+  "business_mcp": {
+    "aftersales": {
+      "url": "https://120.79.0.171:18443/team-mcp/aftersales",
+      "authorization": "per-member restricted Bearer token",
+      "real_read": "get_data_freshness: ok, B scope, 4 sources",
+      "unauthorized_scope_and_revoked_token": "denied; revoked token returned 401"
+    },
+    "workbench": {
+      "url": "https://120.79.0.171:18443/team-mcp/workbench",
+      "authorization": "member own Basic business account",
+      "real_read": "ledger_me_page passed as existing owner; 27 tools discovered"
+    },
+    "original_private_service_and_business_application_preserved": true,
+    "aftersales_tests": "112 passed",
+    "workbench_tests": "42 passed",
+    "local_git_commits": {
+      "aftersales": "38ae117f1c9eb0dc3ba5df5ed94f36039dfdce77",
+      "workbench_baseline": "a9128f2ccfe468bd661507cfa9eb03091d1b8b7f",
+      "workbench_member_auth": "606cef117f7b46bf85ea12a3fb0caf27eeacd398"
+    }
+  },
+  "automatic_update": {
+    "manual_sync_requests": 0,
+    "nodes": [
+      {
+        "node": "A",
+        "observed_seconds_since_publication": 3.62,
+        "other_node_received_no_credentials": false,
+        "own_quota_authorization_preserved": true,
+        "personal_configuration_unchanged": true,
+        "revision": 2
+      },
+      {
+        "node": "B",
+        "observed_seconds_since_publication": 3.66,
+        "other_node_received_no_credentials": true,
+        "own_quota_authorization_preserved": false,
+        "personal_configuration_unchanged": true,
+        "revision": 2
+      }
+    ],
+    "owner_test_devices_only": true,
+    "passed": true,
+    "real_colleague_or_windows_acceptance": false,
+    "revision": 2
+  },
+  "member_api_authorization": {
+    "owner_only": true,
+    "node_a_quota_authorized_and_usable": true,
+    "node_a_restricted_aftersales_real_read": {
+      "tool": "get_data_freshness",
+      "end_type": "b",
+      "status": "ok",
+      "source_count": 4,
+      "tools_visible": 1
+    },
+    "temporary_aftersales_revoked_and_local_grant_removed": true,
+    "node_b_never_received_credentials": true,
+    "personal_configuration_unchanged": {
+      "A": true,
+      "B": true
+    }
+  },
+  "center_preservation": {
+    "audited_at": 1794417909,
+    "protected_tables_unchanged": {
+      "agents": true,
+      "secrets": true,
+      "sso_providers": true,
+      "thread_messages": true,
+      "thread_projects": true,
+      "threads": true,
+      "user_policies": true,
+      "user_role": true,
+      "user_sso_identities": true,
+      "users": true
+    },
+    "config_unchanged": true,
+    "schema_unchanged": true,
+    "original_devices_unchanged": true,
+    "only_expected_setting_changes": [
+      "enterprise.mcp.catalog.v1",
+      "mobile_access.devices.1"
+    ],
+    "temporary_devices_revoked": true
+  },
+  "cleanup": {
+    "temporary_device_grants_revoked": true,
+    "isolated_processes_and_homes_removed": true,
+    "business_credentials_written_to_directory_or_logs": false,
+    "personal_desktop_forced_restart": false
+  },
+  "limits": [
+    "Same authorized owner on two isolated local client instances; not two real coworkers or a live Windows colleague computer.",
+    "Members must install this release once, authorize their own business account/token, and select the enterprise MCP for their experts."
+  ],
+  "project_record": {
+    "markdown_word_synchronized": true,
+    "old_pages": 16,
+    "final_pages": 17,
+    "old_pages_pixel_identical": true,
+    "new_page_visually_reviewed": 17,
+    "layout_check": "passed; no clipping or overflow",
+    "markdown_sha256": "88673e23f9f47354303d701a12dafa1e4367cb037999222c9ff6ebcd3064d617",
+    "word_sha256": "d3e1f6eb5a9233d2e4f481c2fe0abda7d10f05657ab5cb53dad4a93d4806ca44"
+  }
+}
