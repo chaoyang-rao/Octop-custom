@@ -13,7 +13,10 @@ export default function EnterpriseAdmin() {
   return (
     <main
       style={{
-        minHeight: "100dvh",
+        height: "100%",
+        minHeight: 0,
+        overflowY: "auto",
+        boxSizing: "border-box",
         padding: 16,
         background: "var(--fn-bg-layout)",
       }}

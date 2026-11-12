@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "page": "https://120.79.0.171:18443/enterprise/admin",
+  "bug": "Standalone admin content clipped by locked root viewport without an internal scroll container",
+  "fix": "Only EnterpriseAdmin main gets bounded height, vertical scrolling and border-box sizing",
+  "browser": {
+    "page": "/enterprise/admin",
+    "root_cause": "global document/root scroll locked; standalone page had no bounded scroll container",
+    "change": "main height100%, minHeight0, overflowYauto, border-box",
+    "fixture_fictional_data_only": true,
+    "real_accounts_or_credentials_used": false,
+    "before": {
+      "height": 3209,
+      "scrollHeight": 3209,
+      "scrollTop": 0,
+      "overflowY": "visible",
+      "bottomButtonVisible": false
+    },
+    "desktop_1280x600": {
+      "top": {
+        "height": 600,
+        "scrollHeight": 3209,
+        "scrollTop": 0,
+        "overflowY": "auto",
+        "bottomButtonFound": true,
+        "bottomButtonVisible": false
+      },
+      "wheel": {
+        "height": 600,
+        "scrollHeight": 3209,
+        "scrollTop": 2609,
+        "overflowY": "auto",
+        "bottomButtonVisible": true
+      }
+    },
+    "mobile_390x600": {
+      "top": {
+        "height": 600,
+        "scrollHeight": 11665,
+        "scrollTop": 0,
+        "overflowY": "auto",
+        "bottomButtonVisible": false
+      },
+      "wheel": {
+        "height": 600,
+        "scrollHeight": 11665,
+        "scrollTop": 11065,
+        "overflowY": "auto",
+        "bottomButtonVisible": true,
+        "buttonRect": {
+          "top": 471.046875,
+          "bottom": 507.046875
+        }
+      }
+    },
+    "members49_mobile": {
+      "height": 600,
+      "scrollHeight": 3766,
+      "scrollTop": 3166,
+      "rowFound": true,
+      "lastMemberVisible": true
+    },
+    "members49_desktop": {
+      "height": 600,
+      "scrollHeight": 3625,
+      "scrollTop": 3025,
+      "rowFound": true,
+      "lastMemberVisible": true
+    },
+    "after_console_errors": 0,
+    "frontend_checks": "2 role tests, ESLint, Prettier, full tsc and Vite/PWA build passed",
+    "wheel_simulated_in_browser": true,
+    "scrollTop_or_scrollIntoView_injection": false
+  },
+  "frontend_checks": {
+    "vitest": "2 passed",
+    "tsc": "passed as complete production build",
+    "eslint": "passed",
+    "prettier": "passed",
+    "vite_and_pwa": "complete exit0"
+  },
+  "deployment": {
+    "deployed": true,
+    "all_static_hashes_verified": true,
+    "config_nginx_unit_unchanged": true,
+    "index_sha256": "cf2f95e3f36a610cc2e4030ca733083975df341b53de36b58cf4df382ad92f00",
+    "non_dashboard_unchanged": true,
+    "old_assets_preserved": true,
+    "pid_unchanged": true,
+    "public_payload_files_verified": 119,
+    "public_readiness": true,
+    "data_comparison": {
+      "changed_setting_keys": [],
+      "changed_tables": [],
+      "config_unchanged": true,
+      "note": "Transient login/audit changes are reported, never restored automatically.",
+      "ok": true,
+      "protected_table_changes": [],
+      "schema_unchanged": true,
+      "unexpected_setting_changes": []
+    }
+  },
+  "backend_code_changed": false,
+  "last_unchanged_backend_full_ci": {
+    "run_id": 43072276350,
+    "tests": "5970 passed, 36 skipped"
+  },
+  "real_user_browser_automation": "CUA unavailable; isolated fake-user browser fixture used; public production hashes separately verified",
+  "project_record": {
+    "word_pages": 18,
+    "previous_17_pages_pixel_identical": true,
+    "page_18_visually_reviewed": true,
+    "layout": "passed",
+    "markdown_sha256": "46411450c74a6a714a5b7d0a6bcf1ac8ac6e56772656ae2f2ae39554c38a24fb",
+    "word_sha256": "cd768cf21d6feadd1f84aa0ec2e2d652d00ca66b37610a5c8d8661bfc70c6d55"
+  }
+}
