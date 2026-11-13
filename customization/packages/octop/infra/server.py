@@ -758,6 +758,9 @@ class OctopServer:
         registry.set_enterprise_mcp_authorizer(company_mcp.check_call)
         if self._serve_background and config.enterprise_authority_url:
             company_mcp.start()
+            from octop.infra.enterprise_resources.node import resources_for
+
+            resources_for(self).start()
         from octop.infra.mobile_access.push import push_for
 
         gateway.ws_hub.set_user_frame_observer(push_for(self).emit)
@@ -877,6 +880,9 @@ class OctopServer:
         if not self._started:
             return
         try:
+            company_resources = getattr(self, "_enterprise_resources", None)
+            if company_resources is not None:
+                await company_resources.stop()
             company_mcp = getattr(self, "_enterprise_mcp_sync", None)
             if company_mcp is not None:
                 await company_mcp.stop()

@@ -160,6 +160,32 @@ class SkillPackageRepo:
                 (package_id,),
             )
 
+    def compare_and_update(
+        self,
+        package_id: str,
+        created_by: str,
+        before_name: str,
+        before_description: str,
+        name: str,
+        description: str,
+    ) -> bool:
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                "UPDATE skill_packages SET name = ?, description = ?, updated_at = ? "
+                "WHERE skill_package_id = ? AND created_by = ? AND name = ? AND description = ? "
+                "RETURNING skill_package_id",
+                (
+                    name,
+                    description,
+                    str(now_ts()),
+                    package_id,
+                    created_by,
+                    before_name,
+                    before_description,
+                ),
+            ).fetchone()
+        return row is not None
+
     def update_skill_count(self, package_id: str, count: int) -> None:
         with self._db.transaction() as conn:
             conn.execute(

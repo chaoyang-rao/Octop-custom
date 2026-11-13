@@ -561,7 +561,10 @@
     "MFA_LAST_FACTOR": "Cannot remove the last MFA factor.",
     "WEBAUTHN_CONFIG_INVALID": "Passkeys are not available on this address yet. An administrator needs to enter this site’s domain and full URL under App settings → Passkeys. If that is already saved, open the exact URL that was registered. localhost does not need this setup.",
     "WEBAUTHN_INVALID_DOMAIN": "Passkeys need a hostname. Open Octop via http://localhost (not an IP address such as 127.0.0.1).",
-    "WEBAUTHN_LOGIN_DISABLED": "Passkey sign-in on the login page is turned off. An administrator can enable it under App settings → Passkeys."
+    "WEBAUTHN_LOGIN_DISABLED": "Passkey sign-in on the login page is turned off. An administrator can enable it under App settings → Passkeys.",
+    "ENTERPRISE_RESOURCE_INVALID": "The company resource bundle is invalid or contains private paths.",
+    "ENTERPRISE_RESOURCE_CONFLICT": "The version or local content changed. Review the current changes before continuing.",
+    "ENTERPRISE_RESOURCE_SYNC_FAILED": "The company resource update could not be applied. Your previous content was retained."
   },
   "desktop": {
     "install_log_deps": "Installing Python dependencies…",

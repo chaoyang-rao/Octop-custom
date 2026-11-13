@@ -26,6 +26,8 @@ from octop.infra.utils.locale import resolve_request_locale
 
 
 class _CatalogRoute(APIRoute):
+    validation_error = ErrorCode.ENTERPRISE_MCP_CATALOG_INVALID
+
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         original = super().get_route_handler()
 
@@ -34,7 +36,7 @@ class _CatalogRoute(APIRoute):
                 return await original(request)
             except RequestValidationError:
                 # Rejected extra fields may contain credentials; never echo them.
-                error = OctopError.localized(ErrorCode.ENTERPRISE_MCP_CATALOG_INVALID)
+                error = OctopError.localized(self.validation_error)
                 return JSONResponse(
                     status_code=error.status,
                     content=error.to_envelope(locale=resolve_request_locale(request)),

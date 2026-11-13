@@ -204,6 +204,8 @@ def build_app(server: OctopServer) -> FastAPI:
         enterprise,
         enterprise_mcp,
         enterprise_mcp_admin,
+        enterprise_resources,
+        enterprise_resources_admin,
         envs,
         experts,
         health,
@@ -273,6 +275,7 @@ def build_app(server: OctopServer) -> FastAPI:
             users.router,
             enterprise.router,
             enterprise_mcp_admin.router,
+            enterprise_resources_admin.router,
         )
         app.add_api_route(
             "/api/settings/timezone",
@@ -302,6 +305,8 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(enterprise.router, "/api", ["auth"]),
             _RouterMount(enterprise_mcp.router, "/api", ["connectors"]),
             _RouterMount(enterprise_mcp_admin.router, "/api", ["connectors"]),
+            _RouterMount(enterprise_resources.router, "/api", ["experts"]),
+            _RouterMount(enterprise_resources_admin.router, "/api", ["experts"]),
             _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),
             _RouterMount(invites.public_router, "/api/auth/invite", ["auth"]),
             _RouterMount(preferences.router, "/api", ["auth"]),

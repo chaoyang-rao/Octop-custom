@@ -768,6 +768,14 @@ export default function ExpertsPage() {
     <PageShell.FillTabs
       title={t("pageShell.experts.title")}
       subtitle={t("pageShell.experts.subtitle")}
+      actions={
+        <button
+          className={styles.toolbarBtn}
+          onClick={() => navigate("/enterprise-resources")}
+        >
+          {t("enterpriseResources.title")}
+        </button>
+      }
     >
       <Tabs
         className={styles.shellTabs}

@@ -2428,6 +2428,10 @@ class AgentManager:
         """Rebuild harness runtime for one agent (e.g. after plugin install)."""
         await self._reload_agent(agent_id)
 
+    async def reload_resource_content(self, agent_id: str) -> None:
+        """Propagate rebuild failures so content publication can restore its backup."""
+        await self._reload_agent(agent_id, raise_on_failure=True)
+
     async def reload_all(self) -> None:
         """Rebuild harness runtime for every enabled agent (bounded parallel)."""
         agent_ids = [
@@ -4199,7 +4203,7 @@ class AgentManager:
     # Internal — background reload worker
     # ------------------------------------------------------------------
 
-    async def _reload_agent(self, agent_id: str) -> None:
+    async def _reload_agent(self, agent_id: str, *, raise_on_failure: bool = False) -> None:
         assert self._harness_manager is not None
         async with self._lifecycle_lock_for(agent_id):
             self._bootstrap_graph_refresh_pending.discard(agent_id)
@@ -4236,6 +4240,8 @@ class AgentManager:
                     "failed",
                     error=format_agent_start_error(exc),
                 )
+                if raise_on_failure:
+                    raise
 
     def _schedule_reload(self, agent_id: str) -> None:
         """Queue a background harness reload; coalesces rapid successive updates."""

@@ -7,6 +7,10 @@ const EnterpriseMcpAdmin = lazy(
   () => import("../EnterpriseMcp/EnterpriseMcpAdmin"),
 );
 
+const EnterpriseResourceAdmin = lazy(
+  () => import("../EnterpriseResources/Admin"),
+);
+
 export default function EnterpriseAdmin() {
   const { t } = useTranslation();
   const user = useCurrentUser();
@@ -40,6 +44,15 @@ export default function EnterpriseAdmin() {
           },
           ...(user?.role === "admin"
             ? [
+                {
+                  key: "resources",
+                  label: t("enterpriseResources.title"),
+                  children: (
+                    <Suspense fallback={<Spin />}>
+                      <EnterpriseResourceAdmin />
+                    </Suspense>
+                  ),
+                },
                 {
                   key: "mcp",
                   label: t("enterpriseMcp.adminTitle"),

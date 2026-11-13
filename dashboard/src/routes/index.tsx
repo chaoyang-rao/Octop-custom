@@ -2,6 +2,9 @@ import { lazy } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 // Lazy-loaded pages — Common
+const EnterpriseResourcesPage = lazy(
+  () => import("../pages/EnterpriseResources"),
+);
 const ExpertsPage = lazy(() => import("../pages/Experts"));
 const ConversationLibraryPage = lazy(
   () => import("../pages/ConversationLibrary"),
@@ -59,6 +62,7 @@ export const pathToKey: Record<string, string> = {
   // Common
   "/conversations": "conversations",
   "/experts": "experts",
+  "/enterprise-resources": "experts",
   "/tasks": "tasks",
   "/task-queue": "task-queue",
   "/account-connections": "account-connections",
@@ -164,6 +168,7 @@ export const routeConfigs: RouteConfig[] = [
   // Common
   { path: "/conversations", element: <ConversationLibraryPage /> },
   { path: "/experts", element: <ExpertsPage /> },
+  { path: "/enterprise-resources", element: <EnterpriseResourcesPage /> },
   { path: "/tasks", element: <CronJobsPage /> },
   { path: "/task-queue", element: <TaskQueuePage /> },
   { path: "/account-connections", element: <AccountConnectionsPage /> },

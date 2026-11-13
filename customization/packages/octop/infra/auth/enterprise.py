@@ -411,6 +411,22 @@ class EnterpriseClient:
         snapshot = await self._remote("GET", CENTER_PATH + "/mcp/catalog", token=state["token"])
         return str(state["subject"]), snapshot
 
+    async def fetch_resource_catalog(self, user: User) -> tuple[str, dict[str, Any]]:
+        current = await self.authorize(user, force=True)
+        if not any(user_has_permission(current, key) for key in ("experts", "skills")):
+            raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+        state = await asyncio.to_thread(self._state, user.id)
+        value = await self._remote("GET", CENTER_PATH + "/resources/catalog", token=state["token"])
+        return str(state["subject"]), value
+
+    async def fetch_resource_bundle(self, user: User, content_digest: str) -> dict[str, Any]:
+        if len(content_digest) != 64 or any(c not in "0123456789abcdef" for c in content_digest):
+            raise enterprise_error(ErrorCode.ENTERPRISE_RESOURCE_INVALID)
+        state = await asyncio.to_thread(self._state, user.id)
+        return await self._remote(
+            "GET", CENTER_PATH + "/resources/bundles/" + content_digest, token=state["token"]
+        )
+
     async def logout(self, user_id: int) -> None:
         async with self._lock:
             try:

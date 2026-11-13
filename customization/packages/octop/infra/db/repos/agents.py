@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 from octop.infra.db.pool import DatabasePool
 from octop.infra.db.repos._base import UNSET, DbRow, bool_int, map_rows, now_ts, optional_updates
@@ -314,6 +315,37 @@ class AgentRepo:
         params.append(agent_id)
         with self._db.transaction() as conn:
             conn.execute(f"UPDATE agents SET {', '.join(fields)} WHERE agent_id = ?", params)
+
+    def compare_and_update(
+        self, agent_id: str, expected: dict[str, Any], changes: dict[str, Any]
+    ) -> bool:
+        """Conditional metadata update; concurrent owner edits are never overwritten."""
+        allowed = {
+            "user_id",
+            "name",
+            "description",
+            "config_json",
+            "skill_package_ids",
+            "mcp_servers",
+        }
+        if not changes or not set(expected) <= allowed or not set(changes) <= allowed:
+            raise ValueError("invalid conditional agent columns")
+        fields = [f"{key} = ?" for key in changes]
+        values = list(changes.values())
+        conditions = ["agent_id = ?"]
+        values.extend([now_ts(), agent_id])
+        for key, value in expected.items():
+            if value is None:
+                conditions.append(f"{key} IS NULL")
+            else:
+                conditions.append(f"{key} = ?")
+                values.append(value)
+        with self._db.transaction() as conn:
+            row = conn.execute(
+                f"UPDATE agents SET {', '.join(fields)}, updated_at = ? WHERE {' AND '.join(conditions)} RETURNING agent_id",
+                values,
+            ).fetchone()
+        return row is not None
 
     def delete(self, agent_id: str) -> None:
         with self._db.transaction() as conn:

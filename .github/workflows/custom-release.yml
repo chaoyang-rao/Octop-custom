@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261112.1"
+        default: "custom-1.0.3b3-20261114.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026111201"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261112.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026111401"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261114.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || '' }}
 
 jobs:
@@ -117,6 +117,7 @@ jobs:
           src/pages/Agent/Connectors/EnterpriseMcpTab.test.tsx
           src/pages/Agent/Connectors/ConnectorInstanceCard.test.tsx
           src/pages/Login/EnterpriseAdmin.test.tsx
+          src/pages/EnterpriseResources/Resources.test.tsx
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
@@ -145,6 +146,7 @@ jobs:
           tests/unit/auth/test_enterprise_mcp_catalog.py
           tests/unit/connectors/test_enterprise_mcp_sync.py
           tests/unit/api/test_enterprise_mcp_node.py
+          tests/unit/enterprise_resources
           tests/unit/agents/test_mcp_tool_cache.py
           tests/unit/cron/test_cron_delivery.py
           tests/unit/gateway/test_processor_conversation_mode.py

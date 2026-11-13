@@ -124,6 +124,17 @@ class SkillPackageStore:
         self._hydrate_package(pack_id)
         return self.root / pack_id / "skills"
 
+    def list_skill_slugs(self, pack_id: str) -> list[str]:
+        """List export candidates without parsing or repairing member files."""
+        root = self.package_skills_dir(pack_id)
+        if not root.is_dir():
+            return []
+        return sorted(
+            path.name
+            for path in root.iterdir()
+            if path.is_dir() and not path.is_symlink() and (path / "SKILL.md").is_file()
+        )
+
     def list_skill_summaries(
         self,
         pack_id: str,
@@ -225,8 +236,37 @@ class SkillPackageStore:
         self._persist_package(pack_id)
         self._update_skill_count(pack_id)
 
+    def seed_empty_skill(self, pack_id: str, slug: str, files: dict[str, bytes]) -> bool:
+        """Finish interrupted provisioning only if no local content exists."""
+        from octop.infra.skills.revisions import library_lock
+
+        with library_lock(self.root, pack_id, slug):
+            safe_slug = validate_skill_slug(slug)
+            directory = self.package_skills_dir(pack_id) / safe_slug
+            if directory.is_symlink() or (directory.exists() and any(directory.iterdir())):
+                return False
+            self._write_skill(pack_id, slug, list(files.items()))
+        return True
+
+    def compare_and_write_skill(
+        self, pack_id: str, slug: str, before: dict[str, bytes], after: dict[str, bytes]
+    ) -> bool:
+        from octop.infra.skills.revisions import library_lock
+
+        with library_lock(self.root, pack_id, slug):
+            if dict(self.read_skill_files(pack_id, slug)) != before:
+                return False
+            self._write_skill(pack_id, slug, list(after.items()))
+        return True
+
     def write_skill_manifest(self, pack_id: str, slug: str, content: str) -> None:
         """Overwrite SKILL.md in place, preserving sibling files and directories."""
+        from octop.infra.skills.revisions import library_lock
+
+        with library_lock(self.root, pack_id, slug):
+            self._write_skill_manifest(pack_id, slug, content)
+
+    def _write_skill_manifest(self, pack_id: str, slug: str, content: str) -> None:
         try:
             safe_slug = validate_skill_slug(slug)
         except SkillPackageError as exc:
@@ -345,6 +385,12 @@ class SkillPackageStore:
             raise OctopError(ErrorCode.NOT_FOUND, f"cannot read {relative_path!r}") from exc
 
     def delete_skill(self, pack_id: str, slug: str) -> None:
+        from octop.infra.skills.revisions import library_lock
+
+        with library_lock(self.root, pack_id, slug):
+            self._delete_skill(pack_id, slug)
+
+    def _delete_skill(self, pack_id: str, slug: str) -> None:
         try:
             safe_slug = validate_skill_slug(slug)
         except SkillPackageError as exc:

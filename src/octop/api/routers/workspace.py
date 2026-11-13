@@ -25,6 +25,7 @@ from octop.api.deps import current_user, get_server
 from octop.infra.backend.mention_index import collect_mention_paths
 from octop.infra.backend.tree_listing import dedupe_tree_rows
 from octop.infra.backup.workspace_archive import export_workspace_zip, import_workspace_zip
+from octop.infra.enterprise_resources.node import workspace_edit
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.media.backend_files import (
     backend_workspace_path,
@@ -209,7 +210,8 @@ async def write_file(
     else:
         data = body.content.encode("utf-8")
     try:
-        await ws.aupload_bytes(_workspace_io_path(path, from_workspace=from_workspace), data)
+        async with workspace_edit(server, agent_id):
+            await ws.aupload_bytes(_workspace_io_path(path, from_workspace=from_workspace), data)
     except Exception as exc:
         raise OctopError(ErrorCode.NOT_FOUND, f"cannot write {path!r}: {exc}") from exc
     return {"path": path, "size": len(data)}
@@ -273,7 +275,8 @@ async def delete_workspace_file(
         agent_id, user=user, as_user=as_user, server=server, owner_only=True
     )
     try:
-        await ws.adelete(rel)
+        async with workspace_edit(server, agent_id):
+            await ws.adelete(rel)
     except Exception as exc:
         raise _map_workspace_fs_error(exc, operation="delete", path=path) from exc
     return Response(status_code=204)
@@ -303,7 +306,8 @@ async def move_workspace_file(
         agent_id, user=user, as_user=as_user, server=server, owner_only=True
     )
     try:
-        await ws.amove(src, dest)
+        async with workspace_edit(server, agent_id):
+            await ws.amove(src, dest)
     except Exception as exc:
         raise _map_workspace_fs_error(exc, operation="move", path=path) from exc
     dest_api = body.destination if body.destination.startswith("/") else f"/{body.destination}"
@@ -327,10 +331,11 @@ async def upload_file(
     target = path or f"/{file.filename or 'upload.bin'}"
     data = await file.read()
     try:
-        await ws.aupload_bytes(
-            _workspace_io_path(target, from_workspace=from_workspace),
-            data,
-        )
+        async with workspace_edit(server, agent_id):
+            await ws.aupload_bytes(
+                _workspace_io_path(target, from_workspace=from_workspace),
+                data,
+            )
     except Exception as exc:
         raise OctopError(ErrorCode.NOT_FOUND, f"cannot upload to {target!r}: {exc}") from exc
     return {"path": target, "size": len(data)}
@@ -427,7 +432,8 @@ async def write_doc(
             f"cannot build document for {path!r}: {exc}",
         ) from exc
     try:
-        await ws.aupload_bytes(rel, data)
+        async with workspace_edit(server, agent_id):
+            await ws.aupload_bytes(rel, data)
     except Exception as exc:
         raise _map_workspace_fs_error(exc, operation="write", path=path) from exc
     return {"path": path, "size": len(data)}

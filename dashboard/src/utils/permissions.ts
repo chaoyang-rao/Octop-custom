@@ -199,6 +199,7 @@ export function userCanKey(
  * ``null`` means no special gate.
  */
 export function pathPermissionKeys(pathname: string): PermissionKeys | null {
+  if (pathname === "/enterprise-resources") return ["experts", "skills"];
   if (pathname === "/native-cli") return "admin";
   if (pathname === "/task-queue") return PERM.tasks;
   if (pathname === "/account-connections") return PERM.connectors;

@@ -1,0 +1,82 @@
+{
+  "feature": "Company expert and Skill distribution",
+  "source_branch": "codex/enterprise-feishu-local",
+  "validation": {
+    "backend_full": {
+      "command": "make all PYTEST_JOBS=2",
+      "passed": 5997,
+      "skipped": 41,
+      "note": "Full run before additional feature-only safeguards; latest changed feature paths retested below."
+    },
+    "backend_current_targeted": {
+      "passed": 200,
+      "command": "uv run pytest tests/unit/enterprise_resources tests/unit/i18n tests/unit/auth/test_enterprise_mcp_catalog.py tests/unit/connectors/test_enterprise_mcp_sync.py -q"
+    },
+    "mypy": {
+      "source_files": 736,
+      "result": "passed"
+    },
+    "ruff": "passed",
+    "frontend_relevant": {
+      "passed": 36,
+      "files": 5
+    },
+    "frontend_typecheck": "passed",
+    "frontend_production_build": {
+      "result": "passed including PWA",
+      "node_heap_mb": 3072,
+      "output_files": 695,
+      "note": "Initial 2048 MB build reached the Vite output stage but failed at PWA generation; complete rerun with 3072 MB exited 0."
+    },
+    "freeze_checks": {
+      "backend_files": 1314,
+      "dashboard_files": 695,
+      "unittest_passed": 22
+    },
+    "frontend_full": {
+      "passed": 1690,
+      "failed_tests": 4,
+      "failed_files": 7,
+      "total_files": 314
+    },
+    "frontend_baseline": {
+      "commit": "79bb5c85580a35a4c40ca802b8cfd9ae7007ecf2",
+      "confirmed_existing_failed_files": [
+        "src/components/DocumentPreviewCore.docxSanitize.test.ts",
+        "src/pages/Agent/Skills/skillMarkdown.test.ts",
+        "src/pages/Agent/Skills/components/SkillDrawer.test.ts",
+        "src/api/modules/knowledgeBases.test.ts",
+        "src/api/modules/publishedExperts.test.ts",
+        "src/pages/Settings/Models/components/modals/ModelListEditor.test.tsx"
+      ],
+      "remaining_flaky_file": "src/pages/Agent/Personalization/components/MBTISelector.test.tsx",
+      "remaining_flaky_recheck": "3 passed on unchanged current and baseline source"
+    },
+    "browser": "Actual dashboard modules exercised using synthetic API fixtures; admin draft, editor, member conflict dialog and narrow viewport inspected. Development/notification WebSocket errors came from the fixture, not a live login acceptance."
+  },
+  "guarantees_tested": [
+    "separate member copies",
+    "private chat archive and project thread retained",
+    "USER.md and memory retained",
+    "personal model/CLI configuration and credentials retained",
+    "idle update boundaries",
+    "local and remote conflict choices",
+    "stale ticket rejection",
+    "skill edit CAS and profile CAS",
+    "reload failure restoration",
+    "interrupted journal recovery",
+    "identity changes",
+    "Windows paths and macOS normalization collisions",
+    "read-only export candidate enumeration",
+    "no private validation input echo"
+  ],
+  "deployment": {
+    "center": "not deployed yet",
+    "desktop": "not installed or published yet",
+    "member_windows": "not connected; native CI remains to run"
+  },
+  "center_bundle": {
+    "release_id": "resources-20261114-a9cc7bba5fc0",
+    "archive_sha256": "a9cc7bba5fc02d5449d1bcdf0d06f21cef00d6c1900d5b916ece5c54ce81a025"
+  }
+}

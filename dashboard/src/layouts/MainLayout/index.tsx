@@ -7,6 +7,7 @@ import RailEdgeControl from "../../components/RailEdgeControl";
 import PageLoading from "../../components/PageLoading";
 import { ServiceRestartProvider } from "../../context/ServiceRestartContext";
 import { BackupOperationProvider } from "../../context/BackupOperationContext";
+import EnterpriseResourceNotice from "../../pages/EnterpriseResources/Notice";
 import PwaUpdatePrompt from "../../components/PwaUpdatePrompt";
 import { PwaAutoPrompt } from "../../components/PwaInstallPrompt";
 import {
@@ -306,6 +307,7 @@ export default function MainLayout() {
                 }}
               >
                 <PwaUpdatePrompt />
+                <EnterpriseResourceNotice />
                 <PwaAutoPrompt />
 
                 {workbenchMounted && (

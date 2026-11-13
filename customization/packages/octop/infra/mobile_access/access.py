@@ -39,7 +39,18 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
     read = method in {"GET", "HEAD"}
     if "enterprise" in scopes:
         if scopes == {"enterprise"} and (
-            (read and path in {"/api/enterprise/session", "/api/enterprise/mcp/catalog"})
+            (
+                read
+                and (
+                    path
+                    in {
+                        "/api/enterprise/session",
+                        "/api/enterprise/mcp/catalog",
+                        "/api/enterprise/resources/catalog",
+                    }
+                    or bool(re.fullmatch(r"/api/enterprise/resources/bundles/[0-9a-f]{64}", path))
+                )
+            )
             or (method == "POST" and path == "/api/enterprise/session/revoke")
         ):
             return
