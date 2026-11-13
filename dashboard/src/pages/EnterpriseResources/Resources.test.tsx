@@ -205,3 +205,42 @@ describe("company resource draft publishing", { timeout: 15000 }, () => {
     expect(resourcesApi.publish).not.toHaveBeenCalled();
   });
 });
+
+it("requires a deliberate choice for a file named constructor", async () => {
+  vi.mocked(resourcesApi.status).mockResolvedValue({
+    ...state,
+    resources: [
+      { ...state.resources[0], kind: "skill", conflicts: ["constructor"] },
+    ],
+  });
+  vi.mocked(resourcesApi.detail).mockResolvedValue({
+    resource_id: "quality",
+    ticket: "observed",
+    local_files: { constructor: btoa("personal") },
+    conflicts: [
+      {
+        path: "constructor",
+        base: btoa("base"),
+        local: btoa("personal"),
+        remote: btoa("company update"),
+      },
+    ],
+  });
+  render(
+    <MemoryRouter>
+      <EnterpriseResources />
+    </MemoryRouter>,
+  );
+  fireEvent.click(
+    await screen.findByRole("button", { name: "enterpriseResources.resolve" }),
+  );
+  await screen.findByText("company update");
+  expect(screen.getByText("constructor")).toBeInTheDocument();
+  const apply = screen.getByRole("button", {
+    name: "enterpriseResources.applyChoices",
+  });
+  expect(apply).toBeDisabled();
+  expect(resourcesApi.resolve).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByLabelText("enterpriseResources.keepLocal"));
+  expect(apply).not.toBeDisabled();
+});

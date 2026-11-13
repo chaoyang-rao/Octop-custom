@@ -356,7 +356,8 @@ class ResourceSync:
         # Only fields managed by the incoming template participate; e.g. an
         # omitted avatar leaves the member's random/personal portrait alone.
         def encoded_profile(values: dict[str, Any]) -> dict[str, bytes]:
-            return {"@" + key: canonical(values[key]).encode() for key in desired if key in values}
+            # Colons are forbidden in portable paths, so fields cannot shadow files.
+            return {":" + key: canonical(values[key]).encode() for key in desired if key in values}
 
         combined_base = {**base, **encoded_profile(base_profile)}
         combined_local = {**local, **encoded_profile(current_profile)}
@@ -375,9 +376,9 @@ class ResourceSync:
             "local_files": local,
             "local_profile": current_profile,
             "remote_profile": desired,
-            "merged_files": {p: v for p, v in merged.items() if not p.startswith("@")},
+            "merged_files": {p: v for p, v in merged.items() if not p.startswith(":")},
             "merged_profile": {
-                p[1:]: json.loads(v) for p, v in merged.items() if p.startswith("@")
+                p[1:]: json.loads(v) for p, v in merged.items() if p.startswith(":")
             },
             "conflicts": conflicts,
             "definition": definition,

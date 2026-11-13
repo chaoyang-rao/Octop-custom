@@ -28,7 +28,7 @@ def definition(kind="expert", resource_id="quality", files=None, **changes):
     return ResourceDefinition(
         resource_id=resource_id,
         kind=kind,
-        display_name=resource_id,
+        display_name=changes.pop("display_name", resource_id),
         files=[
             ResourceFile(path=p, content_base64=base64.b64encode(v).decode())
             for p, v in contents.items()
@@ -702,3 +702,52 @@ async def test_real_company_login_http_catalog_and_node_sync(company, monkeypatc
         len(json.loads(node.server.services.agent_repo.get(expert["target_id"]).skill_package_ids))
         == 1
     )
+
+
+@pytest.mark.parametrize("filename", ["@name", "@notes.md", "constructor", "__proto__"])
+async def test_skill_local_at_sign_files_are_not_treated_as_metadata(company, filename):
+    node = company.nodes[0]
+    publish(company, definition("skill", "qa"))
+    await node.sync.sync(node.user)
+    record = local(node, "qa")
+    directory = node.sync.packages.package_skills_dir(record["target_id"]) / record["slug"]
+    (directory / filename).write_bytes(b"personal file; keep exact bytes")
+    publish(company, definition("skill", "qa", files={"SKILL.md": b"company update"}))
+    result = await node.sync.sync(node.user)
+    assert result["resources"][0]["status"] == "current"
+    assert (directory / filename).read_bytes() == b"personal file; keep exact bytes"
+
+
+async def test_skill_file_and_profile_name_conflicts_have_distinct_choices(company):
+    node = company.nodes[0]
+    publish(company, definition("skill", "qa", files={"SKILL.md": b"base", "@name": b"base note"}))
+    await node.sync.sync(node.user)
+    record = local(node, "qa")
+    directory = node.sync.packages.package_skills_dir(record["target_id"]) / record["slug"]
+    (directory / "@name").write_bytes(b"personal note")
+    package = node.server.services.skill_package_repo.get(record["target_id"])
+    assert node.server.services.skill_package_repo.compare_and_update(
+        package.id,
+        str(node.user.id),
+        package.name,
+        package.description,
+        "Personal name",
+        package.description,
+    )
+    publish(
+        company,
+        definition(
+            "skill",
+            "qa",
+            display_name="Company name",
+            files={"SKILL.md": b"updated", "@name": b"company note"},
+        ),
+    )
+    await node.sync.sync(node.user)
+    detail = await node.sync.detail(node.user, "qa")
+    assert {c["path"] for c in detail["conflicts"]} == {"@name", ":name"}
+    await node.sync.resolve(
+        node.user, "qa", detail["ticket"], {"@name": "local", ":name": "remote"}
+    )
+    assert (directory / "@name").read_bytes() == b"personal note"
+    assert node.server.services.skill_package_repo.get(package.id).name.startswith("Company name")

@@ -72,13 +72,17 @@ export default function EnterpriseResources() {
   }, [t]);
   function pathLabel(path: string) {
     const labels: Record<string, string> = {
-      "@name": t("enterpriseResources.name"),
-      "@description": t("enterpriseResources.description"),
-      "@avatar": t("enterpriseResources.avatar"),
-      "@skill_package_ids": t("enterpriseResources.skills"),
-      "@mcp_servers": t("enterpriseResources.mcp"),
+      ":name": t("enterpriseResources.name"),
+      ":description": t("enterpriseResources.description"),
+      ":avatar": t("enterpriseResources.avatar"),
+      ":skill_package_ids": t("enterpriseResources.skills"),
+      ":mcp_servers": t("enterpriseResources.mcp"),
     };
-    return labels[path] ?? path;
+    return path.startsWith(":") ? labels[path] ?? path : path;
+  }
+  function chosen(path: string) {
+    const value = choices[path];
+    return value === "local" || value === "remote" ? value : undefined;
   }
   function preview(value: string | null) {
     if (value === null) return t("enterpriseResources.absent");
@@ -290,7 +294,7 @@ export default function EnterpriseResources() {
         okButtonProps={{
           disabled:
             !detail?.conflicts.length ||
-            detail.conflicts.some((c) => !choices[c.path]),
+            detail.conflicts.some((c) => !chosen(c.path)),
         }}
         onOk={() =>
           void run(async () => {
@@ -362,7 +366,7 @@ export default function EnterpriseResources() {
             </div>
             <Radio.Group
               aria-label={c.path}
-              value={choices[c.path]}
+              value={chosen(c.path)}
               disabled={busy}
               onChange={(e) =>
                 setChoices((current) => ({
