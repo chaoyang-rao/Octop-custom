@@ -1,0 +1,220 @@
+{
+  "source_commit": "6b0b82ccf7e9ebc6dd94dc4081fd077bc4141116",
+  "source_branch": "codex/enterprise-feishu-local",
+  "custom_version": "1.0.3b3.post2026111401",
+  "member_private_state": "chat archive, project thread, USER.md, memory, personal model/CLI configuration and business credentials retained in isolated regression tests",
+  "current_regressions": {
+    "backend_targeted": 230,
+    "feature_cases": 51,
+    "frontend_resource_cases": 4,
+    "frontend_related_pages": 6,
+    "mypy_source_files": 736,
+    "production_build": "complete including PWA",
+    "frozen_backend_files": 1314,
+    "frozen_dashboard_files": 695
+  },
+  "corrections": [
+    "The enterprise device credential remains read-only and cannot publish. Catalogue eligibility is derived from the current employee owner, so eligible Skills are not filtered by the device management permission set.",
+    "Portable file paths and managed profile fields use disjoint merge keys. Local @name and @notes files survive; metadata conflicts have separate decisions.",
+    "Files named constructor or __proto__ remain ordinary files; UI requires explicit literal local/remote choices."
+  ],
+  "ci": {
+    "run_id": 43518620988,
+    "url": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/43518620988",
+    "head_sha": "6b0b82ccf7e9ebc6dd94dc4081fd077bc4141116",
+    "status": "completed",
+    "release_publishing_requested": false,
+    "conclusion": "success",
+    "backend_passed": 6027,
+    "backend_skipped": 30,
+    "frontend_passed": 227,
+    "frontend_files": 34,
+    "windows_native_regressions": 189,
+    "platform_builds": {
+      "windows-amd64": "success",
+      "darwin-amd64": "success",
+      "darwin-arm64": "success"
+    },
+    "release_job": "skipped as requested by publish_release=false"
+  },
+  "deployment": {
+    "nginx_before_sha256": "370bb0382df6c7032c2b37ffee08848925cee5fb61a8204904147db344ef44ca",
+    "original_unit_sha256": "67b59a6f647b15422b8ecf740375385b74cf780dc51100d8db4935f392c16543",
+    "promoted": true,
+    "release": "/opt/octop-enterprise/releases/resources-20261114-ed85ebf441fc",
+    "steps": [
+      {
+        "new_index_sha256": "756e3d971c5d58b3efbb1b4e763840fae3c49d9b128b36ada446bc0dd95a6d57",
+        "nginx_sha256": "8545d69ac52081b0125a393301aff1ac53431a5c149e64a1d3beba58485012b6",
+        "public_upstream": 18089,
+        "ready": true,
+        "step": 1
+      },
+      {
+        "data_comparison": {
+          "changed_setting_keys": [],
+          "changed_tables": [],
+          "config_unchanged": true,
+          "note": "Transient login/audit changes are reported, never restored automatically.",
+          "ok": true,
+          "protected_table_changes": [],
+          "schema_unchanged": true,
+          "unexpected_setting_changes": []
+        },
+        "new_primary_pid": 3844432,
+        "primary_health_ok": true,
+        "primary_source_verified": true,
+        "step": 2,
+        "unit_sha256": "83636ac331a60e93e49150d47c1f009fef5895ebe406d67c7a5de19b51c3a12c"
+      },
+      {
+        "data_comparison": {
+          "changed_setting_keys": [],
+          "changed_tables": [],
+          "config_unchanged": true,
+          "note": "Transient login/audit changes are reported, never restored automatically.",
+          "ok": true,
+          "protected_table_changes": [],
+          "schema_unchanged": true,
+          "unexpected_setting_changes": []
+        },
+        "green_stopped": true,
+        "nginx_sha256": "370bb0382df6c7032c2b37ffee08848925cee5fb61a8204904147db344ef44ca",
+        "primary_enabled": true,
+        "public_ready": true,
+        "public_upstream": 18088,
+        "step": 3
+      }
+    ]
+  },
+  "public_assets": {
+    "verified_files": 16,
+    "all_match": true,
+    "files": [
+      {
+        "path": "apple-touch-icon.png",
+        "bytes": 30747,
+        "sha256": "91f90a99f63cc1fe911519bd4bf8e97d3e8a1b1a1c2830433879b820828f401b",
+        "matches": true
+      },
+      {
+        "path": "assets/Admin.BnYIOswL.js",
+        "bytes": 12049,
+        "sha256": "ea4ddbfb0073691836a8d5d034b70bad990d417d3798c1bf1218407578638261",
+        "matches": true
+      },
+      {
+        "path": "assets/index.8eocee3f.js",
+        "bytes": 919734,
+        "sha256": "3304a9738b2a57223d10f4e40a21f5edead32848e154743090825a1664379d2e",
+        "matches": true
+      },
+      {
+        "path": "assets/index.CPCGrNxa.css",
+        "bytes": 340011,
+        "sha256": "96470abed1d99d4a2630c27f0aada8915e3787cdb83abf7faac5f69aecd952de",
+        "matches": true
+      },
+      {
+        "path": "assets/index.DdCzKU0a.js",
+        "bytes": 8458,
+        "sha256": "dbcef02559375f630f52e2182ca828058bad7039823d0e4d1773cb7e6ad20418",
+        "matches": true
+      },
+      {
+        "path": "assets/vendor-antd.BwCVYzIe.js",
+        "bytes": 2197298,
+        "sha256": "1e91cef9cb228b254c8f6f55a7a29598fb3d2bacbbfc0f96a740c90b9721a4eb",
+        "matches": true
+      },
+      {
+        "path": "assets/vendor-icons.O-GRsYzz.js",
+        "bytes": 107938,
+        "sha256": "8ff96b4243f59b1235da12bc58010928e73359d14706f0ed2f3f583ab510207f",
+        "matches": true
+      },
+      {
+        "path": "assets/vendor-react.C1SbL11b.js",
+        "bytes": 209042,
+        "sha256": "feb09eeb4b35f0bf80cf1cde653773f6ebca9263137754430ae3f5d3eb7327c9",
+        "matches": true
+      },
+      {
+        "path": "assets/vendor-utils.CGe6c69I.js",
+        "bytes": 175244,
+        "sha256": "642b147776944a9648966715f15f5dc7ed278b7563a972926407f5a1e08f31e0",
+        "matches": true
+      },
+      {
+        "path": "favico.svg",
+        "bytes": 3528,
+        "sha256": "6b30fd6f2d47e5bf4f8c83c15258ae99239edd050ebe1d31e983e1816c768dcb",
+        "matches": true
+      },
+      {
+        "path": "index.html",
+        "bytes": 10310,
+        "sha256": "756e3d971c5d58b3efbb1b4e763840fae3c49d9b128b36ada446bc0dd95a6d57",
+        "matches": true
+      },
+      {
+        "path": "logo_vertical_dark.svg",
+        "bytes": 7928,
+        "sha256": "56b114441afd3b99c994bf8c3f0be2dd83cc02c0bf600080f74596836d87ae6c",
+        "matches": true
+      },
+      {
+        "path": "logo_vertical_white.svg",
+        "bytes": 7928,
+        "sha256": "c6290c573781d3cbbcbcbd213ded24469f1091af4bb7fcf8a56e6f5bbf9ae485",
+        "matches": true
+      },
+      {
+        "path": "manifest.json",
+        "bytes": 898,
+        "sha256": "d2de6c9e9959979c9a2e2f6df695ca404a3fc3757bfaf6d5fede2e73899c26f8",
+        "matches": true
+      },
+      {
+        "path": "sw.js",
+        "bytes": 7755,
+        "sha256": "eb88adeb50b10effe0df2d367f10d7becedd45a1cb76a3637fddc9b5657839f8",
+        "matches": true
+      },
+      {
+        "path": "workbox-f0bb1bde.js",
+        "bytes": 21966,
+        "sha256": "182dfac48f6434ceccaef3f8d215d564a1e2a95241819a1b963372e066658e45",
+        "matches": true
+      }
+    ]
+  },
+  "desktop_rollout": {
+    "owner_app_restarted": false,
+    "colleague_windows_connected": false,
+    "new_installers_published": false,
+    "requirement": "Install a compatible new client once; later expert and Skill publications synchronize automatically."
+  },
+  "full_frontend_baseline_note": "The earlier full frontend run had six unchanged baseline failure files and one timing-sensitive MBTI failure that passed standalone on current and baseline source; see the initial verification record. No unrelated files were changed.",
+  "artifacts": [
+    {
+      "id": 14083065189,
+      "name": "custom-package-windows-amd64",
+      "bytes": 459711339,
+      "sha256": "6361eedd7b3f8923310b842a37ae1b702d1820fdbad47943cf57fc80b43a1fd2"
+    },
+    {
+      "id": 14082776901,
+      "name": "custom-package-darwin-amd64",
+      "bytes": 492029892,
+      "sha256": "75efce0bb5b4b86b7fb199062b8e9c1dd971c8252fc10b9472fa0569d3d4c0ca"
+    },
+    {
+      "id": 14081777979,
+      "name": "custom-package-darwin-arm64",
+      "bytes": 474031604,
+      "sha256": "ecb1b7ac1498788b6f8e6475afedd724526ef8073cc768da086ae0277fece70b"
+    }
+  ],
+  "artifact_retention_note": "Workflow artifacts have one-day retention; no public Release was created in this task."
+}
