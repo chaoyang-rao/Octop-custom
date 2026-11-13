@@ -619,3 +619,86 @@ async def test_export_candidate_listing_does_not_repair_invalid_member_content(c
     choices = export_options(node.server, node.user)
     assert any(row["slug"] == record["slug"] for row in choices)
     assert manifest.read_bytes() == b"\xffpersonal data"
+
+
+async def test_real_enterprise_device_reads_skills_using_current_owner_permissions(company):
+    from octop.infra.mobile_access.access import resolve_mobile_user
+
+    center = company.catalog.center
+    await company.center.user_manager.set_permissions(company.alice.username, ["experts", "skills"])
+    publish(company, definition("skill", "qa"), definition(skill_refs=["qa"]))
+    challenge = await center.begin("Isolated resource device", "test-network")
+    await center.approve(company.alice, challenge["user_code"])
+    result = await center.exchange(challenge["pairing_secret"], "test-network")
+    device = resolve_mobile_user(
+        company.center,
+        result["access_token"],
+        path="/api/enterprise/resources/catalog",
+        method="GET",
+    )
+    assert "skills" not in device.permissions  # purpose-limited device, not a management session
+    received = company.catalog.member(device)
+    assert {e.kind for e in received.entries} == {"expert", "skill"}
+    skill = next(e for e in received.entries if e.kind == "skill")
+    assert company.catalog.bundle(device, skill.digest).resource_id == "qa"
+    with pytest.raises(OctopError):
+        company.catalog.admin(device)
+    await company.center.user_manager.set_permissions(company.alice.username, ["experts"])
+    assert {e.kind for e in company.catalog.member(device).entries} == {"expert"}
+    with pytest.raises(OctopError):
+        company.catalog.bundle(device, skill.digest)
+
+
+async def test_real_company_login_http_catalog_and_node_sync(company, monkeypatch):
+    from fastapi import Request
+
+    from octop.api.routers.enterprise import router as identity_router
+    from octop.infra.auth.enterprise import EnterpriseClient
+    from octop.infra.enterprise_resources import node as sync_module
+    from octop.infra.mobile_access.access import resolve_mobile_user
+
+    await company.center.user_manager.set_permissions(company.alice.username, ["experts", "skills"])
+    publish(company, definition("skill", "qa"), definition(skill_refs=["qa"]))
+    app = FastAPI()
+    app.include_router(identity_router, prefix="/api")
+    app.include_router(router, prefix="/api")
+    app.dependency_overrides[get_server] = lambda: company.center
+
+    def device_user(request: Request):
+        return resolve_mobile_user(
+            company.center,
+            request.headers["Authorization"][7:],
+            path=request.url.path,
+            method=request.method,
+        )
+
+    app.dependency_overrides[current_user] = device_user
+
+    @app.exception_handler(OctopError)
+    async def error(_request, exc):
+        return JSONResponse(status_code=exc.status, content=exc.to_envelope())
+
+    original_client = httpx.AsyncClient
+
+    class LocalClient(original_client):
+        def __init__(self, *args, **kwargs):
+            kwargs.setdefault("transport", httpx.ASGITransport(app))
+            super().__init__(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", LocalClient)
+    node = company.nodes[0]
+    client = EnterpriseClient(node.server)
+    challenge = await client.begin("Isolated HTTP device")
+    await company.catalog.center.approve(company.alice, challenge["user_code"])
+    _, user = await client.poll(challenge["login_id"])
+    assert user is not None
+    monkeypatch.setattr(sync_module, "client_for", lambda _: client)
+    state = await node.sync.sync(user)
+    assert {item["kind"] for item in state["resources"]} == {"expert", "skill"}
+    assert all(item["status"] == "current" for item in state["resources"])
+    expert = next(item for item in state["resources"] if item["kind"] == "expert")
+    assert node.registry.workspaces[expert["target_id"]].files["SOUL.md"] == b"company v1"
+    assert (
+        len(json.loads(node.server.services.agent_repo.get(expert["target_id"]).skill_package_ids))
+        == 1
+    )

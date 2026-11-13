@@ -212,12 +212,23 @@ class ResourceCatalog:
 
     def member(self, user: User) -> ResourceSnapshot:
         subject = self.center.require_employee(user)
+        principal = user
+        if isinstance(user, MobileUser):
+            if user.device_scopes != ("enterprise",):
+                raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+            owner = self.server.user_manager.get_by_id(user.id)
+            if owner is None:
+                raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
+            # Device permissions intentionally exclude management capabilities.
+            # Directory eligibility follows its current owner without widening
+            # the credential's strictly read-only HTTP scope.
+            principal = owner
         _, doc = self._read()
         entries = [
             e.model_copy(update={"allowed_subjects": []})
             for e in doc.published.entries
             if (not e.allowed_subjects or subject in e.allowed_subjects)
-            and user_has_permission(user, "experts" if e.kind == "expert" else "skills")
+            and user_has_permission(principal, "experts" if e.kind == "expert" else "skills")
         ]
         return snapshot(doc.published.revision, doc.published.published_at, entries)
 

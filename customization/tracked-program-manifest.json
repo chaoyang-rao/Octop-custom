@@ -14101,7 +14101,7 @@
     },
     {
       "path": "octop/infra/enterprise_resources/catalog.py",
-      "sha256": "fcefc2daf5fb913afb075607cbeb7ea4c308258690aa9767e388fb45455dc00c",
+      "sha256": "c4d4802249ad64a28d51dbd8e9697aacb6e6a699876af7759d2d530b6f4ac273",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
