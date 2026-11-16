@@ -63,19 +63,11 @@ class BusinessAccountAuth:
         )
         if identity is None:
             raise _denied()
-        helper = os.environ.get("OCTOP_MCP_ACCOUNT_HELPER", "")
-        if helper != "/usr/local/libexec/octop-mcp-account-helper":
+        socket = os.environ.get("OCTOP_MCP_ACCOUNT_SOCKET", "")
+        if socket != "/run/octop-mcp-accounts/broker.sock":
             if action == "list":
                 return {"accounts": []}
             raise _denied()
-        process = await asyncio.create_subprocess_exec(
-            "/usr/bin/sudo",
-            "-n",
-            helper,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
         payload = json.dumps(
             {
                 "action": action,
@@ -85,18 +77,26 @@ class BusinessAccountAuth:
                 "account_id": account_id,
             }
         ).encode()
+
+        async def exchange() -> dict[str, Any]:
+            reader, writer = await asyncio.open_unix_connection(socket, limit=65537)
+            try:
+                writer.write(payload + b"\n")
+                await writer.drain()
+                output = await reader.readline()
+                if len(output) > 65536:
+                    raise ValueError
+                result = json.loads(output)
+                if not isinstance(result, dict) or "error" in result:
+                    raise ValueError
+                return result
+            finally:
+                writer.close()
+                await writer.wait_closed()
+
         try:
-            output, _ = await asyncio.wait_for(process.communicate(payload), 20)
-            if process.returncode or len(output) > 65536:
-                raise ValueError
-            result = json.loads(output)
-            if not isinstance(result, dict):
-                raise ValueError
-            return result
-        except (ValueError, TimeoutError):
-            if process.returncode is None:
-                process.kill()
-                await process.wait()
+            return await asyncio.wait_for(exchange(), 20)
+        except (OSError, ValueError, TimeoutError):
             raise OctopError.localized(ErrorCode.ENTERPRISE_UNAVAILABLE) from None
 
     async def choices(self, user: User, entry_id: str) -> dict[str, Any]:

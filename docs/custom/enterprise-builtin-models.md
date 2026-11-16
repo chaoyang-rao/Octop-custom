@@ -23,7 +23,7 @@ MCP 的售后质量令牌、词元工作台账号仍需成员分别完成个人�
 
 ## 构建与数据边界
 
-主程序的 Windows、Mac Intel 和 M 芯片安装包使用 `custom-release.yml`。独立哆啦使用 `dora-macos-package.yml`，生成同时包含 Intel 和 M 芯片引擎的通用 Mac 安装包。
+主程序的 Windows、Mac Intel 和 M 芯片安装包使用 `custom-release.yml`。独立哆啦在本机构建同时包含 Intel 和 M 芯片引擎的通用 Mac 安装包。`dora-macos-package.yml` 仅检查公开程序源码，不上传内部角色素材和含图安装包。
 
 安装包只包含程序、固定运行时和公共企业登录地址，不包含模型主密钥、个人设备授权、MCP 凭据、聊天数据库或个人知识库。哆啦角色素材的来源与单独权利说明见 `desktop-companion/README.md` 和包内 `ASSET-NOTICE.txt`。
 
@@ -34,3 +34,5 @@ MCP 的售后质量令牌、词元工作台账号仍需成员分别完成个人�
 售后 MCP 需要独立的业务账号绑定，默认不授权。既有业务所有者可由服务器管理员显式绑定；其他成员不会因为是本机管理员或公司管理员就自动取得售后所有者权限。旧的个人令牌和密码授权入口仍可使用，其他成员原授权不变。
 
 服务器部署脚本位于 `scripts/enterprise_mcp/`，只针对经过哈希核对的既有网关进行增量安装。`install_account_auth.py` 默认不建立售后所有者绑定；仅在已核实该成员就是业务所有者时使用显式参数 `--quality-owner-user-id`。绑定策略保存在服务器私有目录，不进入源码和安装包。
+
+授权中心保留 `NoNewPrivileges`、只读系统和主目录隔离。业务授权代理使用受限的本机 Unix Socket，只接受授权中心专用系统用户；不会开放额外公网端口，也不依赖在 Web 服务中执行 sudo。先部署 `install_account_auth.py`，再部署 `install_account_broker.py`，并在授权中心环境中设置 `OCTOP_MCP_ACCOUNT_SOCKET=/run/octop-mcp-accounts/broker.sock` 与已核对的 `OCTOP_MCP_ACCOUNT_ORIGIN`。

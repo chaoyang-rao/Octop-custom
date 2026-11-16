@@ -8099,7 +8099,8 @@
     "useAccount": "Authorize this account",
     "accountIdentity": "Signed-in Feishu identity: {{name}}. Only verified linked business accounts are shown. Existing business permissions apply.",
     "noLinkedAccount": "No linked business account is available. Link it through business Feishu sign-in, or keep using your personal credential.",
-    "chooseAccount": "Choose my linked business account"
+    "chooseAccount": "Choose my linked business account",
+    "accountLookupFailed": "Account authorization is temporarily unavailable. Retry later, or use your existing personal credential."
   },
   "enterpriseResources": {
     "title": "Company experts & Skills",

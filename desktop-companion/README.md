@@ -1,6 +1,6 @@
 # 哆啦 · Mac 独立桌宠
 
-独立的 macOS 应用，自带所需问答引擎与 Python 运行环境，无需另外安装或启动 Octop。当前按用户选择采用哆啦 A 梦形象本机预览。基于 Octop 开源引擎复用已有权限、MCP、专家、Skill 和知识检索能力，不要求用户运行另一款桌面软件。
+独立的 macOS 应用，自带所需问答引擎与 Python 运行环境，无需另外安装或启动 Octop。当前采用用户确认的新绘立体版哆啦A梦，仅供内部小团队使用。基于 Octop 开源引擎复用已有权限、MCP、专家、Skill 和知识检索能力，不要求用户运行另一款桌面软件。
 
 ## 当前能力
 
@@ -33,9 +33,9 @@
 cd desktop-companion
 npm ci
 npm test
-python3 scripts/fetch_pet.py
+uv run --project .. python scripts/prepare_internal_pet.py
 uv run --project .. python scripts/prepare_engine.py
-python3 scripts/build_macos.py
+python3 scripts/build_macos.py --pet-dir assets/internal/dora3d/frames
 ```
 
 构建需要 Node.js 24、Xcode 命令行工具和 uv/Python 3.12+。默认构建包含 arm64 和 x86_64 运行引擎及通用 Mac App 与 DMG，也支持单架构构建。引擎输入来自固定版本、大小与 SHA256 的官方运行时及本仓库源代码，不读取已安装 Octop 的用户数据。
@@ -60,11 +60,12 @@ open dist/哆啦.app --args --show-chat
 
 ## 角色素材与许可
 
-此阶段仅生成本机形象预览。哆啦 A 梦角色和第三方素材的权利独立于程序代码；没有给这些素材另行授予 MIT、CC BY 或公共领域许可。
+当前内部帧集由内置 imagegen 工具新绘，经用户确认立体材质和飞行动作后编译为统一 RGBA 帧；未在安装包中复用早先第三方图包的像素。图片、提示词与生成记录保存在被 Git 忽略的 `assets/internal/dora3d/`，生成预览在 `output/`；含图安装包仅保留在本机 `dist/`。
 
-- 素材项目：<https://github.com/AlleyBo55/doraemon>
-- 固定源版本及逐文件 SHA256：`asset-lock.json`
-- 上游原画署名：Cachomon，Doraemon Shimeji FREE
-- 角色权利：Fujiko F. Fujio / Shogakukan 及相应权利方
+哆啦A梦角色权利仍属于 Fujiko F. Fujio / Shogakukan 及相应权利方，重绘不赋予该角色授权；不把内部素材标为 MIT、CC0 或无限制商用素材。安装包附 `ASSET-NOTICE.txt`。历史第三方来源记录 `asset-lock.json` 与 `fetch_pet.py` 仅保留用于追溯，不由新构建自动调用。
 
-图像位于被 Git 忽略的 `assets/downloaded/` 中，安装包内附 `ASSET-NOTICE.txt`。公开或企业分发该角色素材前，应单独核对相应分发条款。界面、接口和窗口实现不依赖特定角色；可通过更换本地素材包替换形象。
+公开的 `dora-macos-package.yml` 只检查前端和双架构原生源码，既不生成也不上传内部含图包。其他开发者构建时须自行提供已批准的 `--pet-dir`。
+
+## 内部立体素材
+
+用户已确认新绘立体版哆啦A梦与拖动起飞、悬停、松手落地效果，限定内部小团队使用。生成素材和含图安装包存放在本机忽略目录，不上传公开仓库；公开工作流仅验证程序源码。原生拖动采用独立状态机，后台工作/语音状态在拖动期间保留，松手后恢复最新状态；起飞和落地片段播放一次，悬停循环，减少动态效果设置保留。

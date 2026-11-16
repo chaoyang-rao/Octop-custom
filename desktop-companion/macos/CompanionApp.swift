@@ -504,6 +504,18 @@ struct Main {
                 for url in ["octop-companion://open?token=bad", "octop-companion://size/evil", "octop-companion://open#token", "octop-companion://user@open", "https://open", "octop-companion://login"] { precondition(CompanionLaunchAction(url: URL(string: url)!) == nil) }
                 let manifest = try JSONDecoder().decode(PetManifest.self, from: Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("Pet/pet.json")))
                 for animation in manifest.animations.values { guard !animation.frames.isEmpty else { fatalError("Empty animation") } }
+                var flight = PetDragMotion()
+                flight.begin(at: 10)
+                precondition(flight.presentation(activity: "working") == "takeoff")
+                flight.advance(at: 10.2)
+                precondition(flight.phase == .takeoff)
+                flight.advance(at: 10.4)
+                precondition(flight.presentation(activity: "listening") == "dragging")
+                precondition(flight.lift(at: 10.5, reducedMotion: true) == 0)
+                flight.release(at: 11)
+                precondition(flight.presentation(activity: "speaking") == "landing")
+                flight.advance(at: 11.4)
+                precondition(flight.presentation(activity: "speaking") == "speaking")
                 print("{\"endpoint_policy\":\"passed\",\"session_only_credentials\":\"passed\",\"launcher_policy\":\"passed\",\"continuous_sizing_geometry\":\"passed\",\"pet_states\":\(manifest.animations.count),\"speech_voices\":\(AVSpeechSynthesisVoice.speechVoices().count),\"microphone_requested\":false}")
                 exit(0)
             } catch { fputs("Self test failed: \(error.localizedDescription)\n", stderr); exit(1) }

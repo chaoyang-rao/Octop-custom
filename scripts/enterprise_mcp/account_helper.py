@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import pwd
 import secrets
+import stat
 import subprocess
 import sys
 import time
@@ -39,10 +40,39 @@ with session(settings.db_path) as db:
 print(json.dumps(result,ensure_ascii=False))
 '''
 
+NODE_ISSUER = r'''
+const fs = require('node:fs'), path = require('node:path');
+const p = JSON.parse(fs.readFileSync(0, 'utf8'));
+const originalOpen = fs.openSync;
+// Give newly created private files to the gateway before its atomic rename.
+// No setuid executable or elevated user-switching capability is needed.
+fs.openSync = function(filename, flags, mode) {
+  const fd = originalOpen.apply(fs, arguments);
+  if (typeof filename === 'string' && typeof flags === 'number'
+      && path.dirname(filename) === p.state
+      && (flags & fs.constants.O_CREAT) && (flags & fs.constants.O_EXCL)) {
+    fs.fchownSync(fd, p.uid, p.gid);
+  }
+  return fd;
+};
+const issuer = require(p.module);
+const result = issuer.issueCredential(p.state, p.options);
+process.stdout.write(JSON.stringify(result));
+'''
+
+
+def read_private(path, owner, limit):
+    descriptor=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    with os.fdopen(descriptor,"r") as stream:
+        info=os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=owner or info.st_mode&0o077 or info.st_size>limit:
+            raise ValueError("Invalid private credential file")
+        return stream.read(limit)
+
 
 def workbench(payload):
     result = subprocess.run(
-        ["/usr/bin/docker", "exec", "-i", "aiq-ledger", "python", "-c", WORKBENCH],
+        ["/usr/bin/docker", "--host", "unix:///var/run/docker.sock", "exec", "-i", "aiq-ledger", "python", "-c", WORKBENCH],
         input=json.dumps(payload).encode(), capture_output=True, timeout=12, check=True,
     )
     data = json.loads(result.stdout)
@@ -84,32 +114,27 @@ def quality(payload):
     if row is None:
         raise ValueError("Account is not bound")
     root = Path("/opt/aftersales-team-mcp/current/server/mcp")
+    account = pwd.getpwnam("aftersales-team-mcp")
     tools = [r["name"] for r in json.loads((root/"contracts.json").read_text())["tools"]]
     state = Path("/var/lib/aftersales-team-mcp")
     registry_file = state/"credentials.json"
-    entries = json.loads(registry_file.read_text())["clients"] if registry_file.exists() else []
+    entries = json.loads(read_private(registry_file,account.pw_uid,1024*1024))["clients"] if registry_file.exists() else []
     prefix = "octop-u"+str(payload["company_user_id"])+"-"
     from datetime import datetime, timezone
     for old in entries:
         if (old["clientId"].startswith(prefix) and old["principalId"] == row["principal_id"]
             and not old["revokedAt"] and datetime.fromisoformat(old["expiresAt"].replace("Z","+00:00")) > datetime.now(timezone.utc)
             and set(old["tools"]) == set(tools) and set(old["endTypes"]) == set(row["end_types"])):
-            return {"token": (state/(old["clientId"]+".token")).read_text().strip()}
+            return {"token": read_private(state/(old["clientId"]+".token"),account.pw_uid,16384).strip()}
     if len(entries) >= 90:
         raise ValueError("Credential registry needs administrator rotation")
-    result = subprocess.run([
-        "/usr/bin/node", str(root/"personal-auth.cjs"), "issue-member",
-        "--state-dir", str(state), "--client-id", prefix+secrets.token_hex(12),
-        "--principal-id", row["principal_id"], "--tools", ",".join(tools),
-        "--end-types", ",".join(row["end_types"]), "--days", "30",
-    ], capture_output=True, timeout=12, check=True)
+    request={"module":str(root/"personal-auth.cjs"),"state":str(state),"uid":account.pw_uid,"gid":account.pw_gid,
+        "options":{"clientId":prefix+secrets.token_hex(12),"principalId":row["principal_id"],"tools":tools,"endTypes":row["end_types"],"days":30}}
+    result = subprocess.run(["/usr/bin/node","-e",NODE_ISSUER],input=json.dumps(request).encode(),capture_output=True,timeout=12,check=True)
     token_path = Path(json.loads(result.stdout)["tokenFile"])
     if token_path.parent != Path("/var/lib/aftersales-team-mcp"):
         raise ValueError("Invalid credential path")
-    token = token_path.read_text().strip()
-    account = pwd.getpwnam("aftersales-team-mcp")
-    for path in (token_path, token_path.parent/"credentials.json"):
-        os.chown(path,account.pw_uid,account.pw_gid)
+    token = read_private(token_path,account.pw_uid,16384).strip()
     return {"token": token}
 
 

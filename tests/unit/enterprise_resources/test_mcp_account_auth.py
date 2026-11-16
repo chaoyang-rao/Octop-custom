@@ -92,3 +92,44 @@ async def test_member_grant_uses_existing_probe_and_private_storage_in_correct_o
     )
     save.assert_awaited_once_with(node.user, "quota-workbench", credentials, "a" * 64)
     assert "password" not in result
+
+
+@pytest.mark.asyncio
+async def test_identity_sandbox_uses_fixed_unix_broker_without_sudo(company, monkeypatch):
+    import json
+
+    from octop.infra.connectors import enterprise_account_auth as module
+
+    sent = []
+
+    class Writer:
+        def write(self, data):
+            sent.append(json.loads(data))
+
+        async def drain(self):
+            pass
+
+        def close(self):
+            pass
+
+        async def wait_closed(self):
+            pass
+
+    async def read():
+        return b'{"accounts":[{"account_id":"13","label":"Alice"}]}\n'
+
+    async def connect(path, **kwargs):
+        assert path == "/run/octop-mcp-accounts/broker.sock"
+        return SimpleNamespace(readline=read), Writer()
+
+    monkeypatch.setenv("OCTOP_MCP_ACCOUNT_SOCKET", "/run/octop-mcp-accounts/broker.sock")
+    monkeypatch.setattr(module.asyncio, "open_unix_connection", connect, raising=False)
+    value = await BusinessAccountAuth(company.center)._helper(
+        company.alice, "quota-workbench", "list"
+    )
+    assert value["accounts"][0]["account_id"] == "13"
+    assert sent[0]["company_user_id"] == company.alice.id
+    assert (
+        sent[0]["subject"]
+        == company.center.user_manager.list_sso_identities(company.alice.id)[0].subject
+    )

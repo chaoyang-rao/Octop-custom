@@ -119,9 +119,14 @@ export default function EnterpriseMcpTab() {
         setAccounts(next);
         if (next.accounts.length === 1) setAccount(next.accounts[0].account_id);
       })
-      .catch(() => {
+      .catch((error) => {
         // Manual member credentials remain available on older company servers.
-        if (current) setAccounts({ identity_name: "", accounts: [] });
+        if (current) {
+          setAccounts(undefined);
+          setAuthorizationError(
+            apiErrorMessage(error, t("enterpriseMcp.accountLookupFailed"), t),
+          );
+        }
       })
       .finally(() => {
         if (current) setAccountsLoading(false);

@@ -8099,7 +8099,8 @@
     "useAccount": "使用此账号授权",
     "accountIdentity": "当前飞书身份：{{name}}。仅显示已验证属于此身份的业务账号，确认后沿用该账号原有权限。",
     "noLinkedAccount": "暂未找到已关联的业务账号。可先通过业务系统的飞书登录完成关联，或沿用原有个人令牌授权。",
-    "chooseAccount": "选择已登录的本人业务账号"
+    "chooseAccount": "选择已登录的本人业务账号",
+    "accountLookupFailed": "账号授权服务暂时不可用，请稍后重试。原有个人令牌和密码授权仍可使用。"
   },
   "enterpriseResources": {
     "title": "企业专家与 Skill",

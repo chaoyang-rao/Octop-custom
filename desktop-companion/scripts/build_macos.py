@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.3.0"
+VERSION = "0.3.2"
 
 
 def run(*args: str, **kwargs: object) -> None:
@@ -25,8 +25,15 @@ def main() -> None:
     parser.add_argument("--no-dmg", action="store_true")
     parser.add_argument("--skip-web", action="store_true")
     parser.add_argument("--engine-dir", type=Path, default=ROOT / "build/engine")
+    parser.add_argument("--pet-dir", type=Path, default=ROOT / "assets/internal/dora3d/frames")
     args = parser.parse_args()
-    run(sys.executable, "scripts/fetch_pet.py")
+    if not args.pet_dir.is_dir() or not (args.pet_dir / "pet.json").is_file():
+        parser.error("Provide the approved internal character pack with --pet-dir; artwork is not downloaded or published automatically")
+    pet_manifest=json.loads((args.pet_dir/"pet.json").read_text())
+    for animation in pet_manifest["animations"].values():
+        for name in animation["frames"]:
+            if Path(name).name!=name or not name.endswith('.png') or not (args.pet_dir/name).is_file():
+                parser.error("Invalid internal sprite frame path")
     if not args.skip_web:
         if not (ROOT / "node_modules").is_dir():
             run("npm", "ci", "--no-audit", "--no-fund")
@@ -87,9 +94,9 @@ def main() -> None:
         parser.error("Prepare the matching engine archives with scripts/prepare_engine.py first")
     shutil.copytree(args.engine_dir, resources / "Engine")
     shutil.copy2(ROOT / "scripts/engine_entry.py", resources / "engine_entry.py")
-    shutil.copytree(ROOT / "assets/downloaded/doraemon", resources / "Pet")
+    shutil.copytree(args.pet_dir, resources / "Pet")
     shutil.copy2(
-        ROOT / "assets/downloaded/doraemon/ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt"
+        args.pet_dir / "ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt"
     )
     info = {
         "CFBundleName": "哆啦",
@@ -98,7 +105,7 @@ def main() -> None:
         "CFBundleExecutable": "OctopCompanion",
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": VERSION,
-        "CFBundleVersion": "2026111607",
+        "CFBundleVersion": "2026111609",
         "CFBundleURLTypes": [{"CFBundleURLName": "Dora desktop companion", "CFBundleURLSchemes": ["octop-companion"], "CFBundleTypeRole": "Viewer"}],
         "LSMinimumSystemVersion": "13.0",
         "LSUIElement": True,
@@ -119,7 +126,7 @@ def main() -> None:
         stage.mkdir()
         shutil.copytree(app, stage / app.name)
         (stage / "Applications").symlink_to("/Applications", target_is_directory=True)
-        dmg = ROOT / "dist" / f"Dora-macos-{args.arch}-{VERSION}-preview.dmg"
+        dmg = ROOT / "dist" / f"Dora-macos-{args.arch}-{VERSION}-internal.dmg"
         run(
             "hdiutil",
             "create",
@@ -148,8 +155,8 @@ def main() -> None:
         "backend_included": True,
         "external_octop_required": False,
         "engine_data_directory": "~/Library/Application Support/OctopCompanion/Data",
-        "character": "Doraemon local preview",
-        "artwork_distribution_terms": "not verified; not published",
+        "character": pet_manifest["name"],
+        "artwork_distribution_terms": "internal small-team use; generated artwork; character rights remain separate",
         "artifacts": artifacts,
     }
     (ROOT / "dist/build-report.json").write_text(json.dumps(report, indent=2) + "\n")
