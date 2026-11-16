@@ -1,4 +1,4 @@
-"""Outbound HTTPS URL validation — mitigates SSRF (CWE-918)."""
+"""Outbound HTTP(S) URL validation — mitigates SSRF (CWE-918)."""
 
 from __future__ import annotations
 
@@ -99,13 +99,25 @@ def host_allowed_for_issuer(host: str, issuer: str) -> bool:
     return normalized.endswith(f".{base}")
 
 
-def validate_https_url(url: str, *, field: str = "url") -> str:
-    """Reject non-https URLs and literal private/reserved IPs."""
-    host, _ = _parse_https_host(url)
+def validate_http_url(url: str, *, field: str = "url") -> str:
+    """Allow HTTP(S) URLs while rejecting literal private/reserved IPs."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        raise UnsafeOutboundUrl("only http or https URLs are allowed")
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if not host:
+        raise UnsafeOutboundUrl("missing hostname")
+    _ = parsed.port  # Validate malformed ports before accepting the URL.
     if host == "localhost":
         raise UnsafeOutboundUrl(f"{field}: localhost is not allowed")
     _check_ip_literal(host)
     return url
+
+
+def validate_https_url(url: str, *, field: str = "url") -> str:
+    """Reject non-https URLs and literal private/reserved IPs."""
+    _parse_https_host(url)
+    return validate_http_url(url, field=field)
 
 
 async def validate_https_url_resolved(url: str, *, field: str = "url") -> str:
@@ -115,19 +127,24 @@ async def validate_https_url_resolved(url: str, *, field: str = "url") -> str:
     return url
 
 
-async def _resolve_validated_ip(url: str) -> str:
+async def _resolve_validated_ip(url: str, *, allow_http: bool = False) -> str:
     """Resolve ``url`` and return one validated (public) IP.
 
     Raises :class:`UnsafeOutboundUrl` if the host cannot be resolved or any
     resolved address is private/reserved.  The caller should pin the returned
     IP for the actual connection to defeat DNS-rebinding (TOCTOU).
     """
-    host, port = _parse_https_host(url)
+    if allow_http:
+        validate_http_url(url)
+        parsed = urlparse(url)
+        host, port = (parsed.hostname or "").lower().rstrip("."), parsed.port
+    else:
+        host, port = _parse_https_host(url)
     loop = asyncio.get_running_loop()
     try:
         infos = await loop.getaddrinfo(
             host,
-            port or 443,
+            port or (80 if allow_http and urlparse(url).scheme == "http" else 443),
             type=socket.SOCK_STREAM,
             proto=socket.IPPROTO_TCP,
         )
@@ -191,6 +208,12 @@ class PinnedIPTransport(httpx.AsyncHTTPTransport):
     def __init__(self, target_host: str, pin_ip: str) -> None:
         super().__init__()
         self._pool._network_backend = _PinnedNetworkBackend(target_host, pin_ip)
+
+
+async def public_http_transport(url: str) -> PinnedIPTransport:
+    """Pin a public HTTP(S) MCP upstream without changing HTTPS-only callers."""
+    ip = await _resolve_validated_ip(url, allow_http=True)
+    return PinnedIPTransport((urlparse(url).hostname or "").lower().rstrip("."), ip)
 
 
 async def safe_request(

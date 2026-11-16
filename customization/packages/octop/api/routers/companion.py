@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import os
-from typing import Any
+from typing import Any, Literal
 
-from fastapi import APIRouter, Body, Depends, Query, Response
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import APIRouter, Body, Depends, Query, Request, Response
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, SecretStr
 
 from octop.api.deps import current_user, get_server
@@ -21,10 +22,13 @@ from octop.infra.enterprise_resources.companion import (
     companion_agents,
     companion_mode,
 )
+from octop.infra.enterprise_resources.companion_installers import installer_for
 from octop.infra.enterprise_resources.inference import InferenceConfig, inference_for
 from octop.infra.enterprise_resources.inference_node import company_model_usage
 from octop.infra.enterprise_resources.models import StrictModel
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.setup.companion import companion_access, launcher_for
+from octop.infra.setup.companion_package import CompanionInstaller
 from octop.infra.users.identity import User
 
 router = APIRouter(route_class=ResourceRoute)
@@ -39,6 +43,81 @@ class PolicyUpdate(StrictModel):
 class EngineHealth(BaseModel):
     companion: bool
     instance: str
+
+
+class LaunchRequest(StrictModel):
+    action: Literal["open", "size"] = "open"
+
+
+class CompanionAccessState(StrictModel):
+    allowed: bool
+    managed: bool
+    supported: bool
+
+
+@router.get(
+    "/companion/access",
+    response_model=CompanionAccessState,
+    summary="Read this member's server-controlled desktop pet access",
+)
+async def access(
+    user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> dict[str, Any]:
+    return await companion_access(server, user)
+
+
+@router.post(
+    "/companion/launch",
+    summary="Prepare and open the independent Mac desktop pet",
+    description="Requires the logged-in member to have server-granted pet access. Available only on the Mac's own loopback interface. A pinned publisher signature and SHA-256 are verified before installing a missing component; user data is retained.",
+)
+async def launch(
+    body: LaunchRequest,
+    request: Request,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    try:
+        local = request.client is not None and ipaddress.ip_address(request.client.host).is_loopback
+    except ValueError:
+        local = False
+    if (
+        not local
+        or request.url.hostname not in {"127.0.0.1", "localhost", "::1"}
+        or any(name in request.headers for name in ("forwarded", "x-forwarded-for"))
+    ):
+        raise OctopError.localized(ErrorCode.FORBIDDEN)
+    return await launcher_for(server).launch(user, body.action)
+
+
+@center_router.get(
+    "/enterprise/companion/installer",
+    response_model=CompanionInstaller,
+    summary="Read the signed private desktop-pet component manifest",
+)
+async def installer_manifest(
+    response: Response, user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> CompanionInstaller:
+    _no_store(response)
+    metadata, _ = await asyncio.to_thread(installer_for, server, user)
+    return metadata
+
+
+@center_router.get(
+    "/enterprise/companion/installer/file",
+    response_class=FileResponse,
+    summary="Download the private desktop-pet component for an enabled member",
+)
+async def installer_file(
+    user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> FileResponse:
+    metadata, path = await asyncio.to_thread(installer_for, server, user)
+    return FileResponse(
+        path,
+        filename=metadata.filename,
+        media_type="application/zip",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.get(

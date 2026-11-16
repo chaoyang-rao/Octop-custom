@@ -84,6 +84,19 @@ class CompanionCatalog:
         return self.admin(user)
 
     def member(self, user: User) -> dict[str, Any]:
+        from octop.infra.enterprise_resources.member_access import access_for
+
+        access = access_for(self.server)
+        if access.configured:
+            if not access.allows_companion(user):
+                return {"expert_ids": []}
+            return {
+                "expert_ids": [
+                    e.resource_id
+                    for e in self.catalog.member(user).entries
+                    if e.kind == "expert" and e.enabled
+                ]
+            }
         _, policy = self._read()
         eligible = self.catalog.member(user)
         return {
@@ -104,6 +117,25 @@ async def allowed_companion_agents(server: Any, user: User, *, sync: bool = Fals
     if client is None:
         raise OctopError.localized(ErrorCode.ENTERPRISE_NOT_CONFIGURED)
     await client.authorize(user)
+    cached_access = getattr(client, "cached_member_access", None)
+    member_access = cached_access(user.id) if callable(cached_access) else None
+    if isinstance(member_access, dict) and member_access.get("configured"):
+        assert callable(cached_access)
+        await client.authorize(user, force=True)
+        member_access = cached_access(user.id)
+        if not isinstance(member_access, dict) or not member_access.get("companion"):
+            raise OctopError.localized(ErrorCode.COMPANION_ACCESS_DENIED)
+        node = resources_for(server)
+        local = await node.sync(user) if sync else await asyncio.to_thread(node.status, user)
+        managed = {
+            str(item["target_id"]): item["enabled"]
+            for item in local["resources"]
+            if item["kind"] == "expert" and item.get("target_id")
+        }
+        rows = await asyncio.to_thread(
+            server.services.agent_repo.list_by_user, user.id, include_disabled=False
+        )
+        return {row.agent_id for row in rows if managed.get(row.agent_id, True)}
     state = await asyncio.to_thread(client._state, user.id)
     # Always read current policy before admitting a new turn. No stale-policy
     # fallback when the authority is unavailable, and no local admin override.

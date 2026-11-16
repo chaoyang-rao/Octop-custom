@@ -55,6 +55,7 @@ type Status = {
   backendRunning?: boolean;
   standalone?: boolean;
   storageScope?: string;
+  companionAllowed?: boolean;
 };
 type Room = {
   binding: Binding;
@@ -540,13 +541,15 @@ function App() {
       if (running) return;
       running = true;
       try {
-        const [agentResult, connectionResult, knowledgeResult] =
+        const [agentResult, connectionResult, knowledgeResult, accessResult] =
           await Promise.allSettled([
             api("/api/agents"),
             api("/api/connector-instances"),
             api("/api/knowledge-bases"),
+            api<{allowed:boolean}>("/api/companion/access"),
           ]);
         if (!live || ownerRef.current !== owner) return;
+        setStatus(value=>({...value,companionAllowed:accessResult.status === "fulfilled" && accessResult.value.allowed === true}));
         if (agentResult.status === "fulfilled")
           setAgents(normalizeAgents(agentResult.value, userId));
         if (connectionResult.status === "fulfilled")
@@ -747,7 +750,7 @@ function App() {
     const owner = ownerRef.current;
     if (
       !user ||
-      !status.authenticated ||
+      !status.authenticated || status.companionAllowed === false ||
       current.busy ||
       uploading ||
       (!current.draft.trim() && !current.files.length)
@@ -999,7 +1002,7 @@ function App() {
             <ShieldCheck size={30} />
           </div>
           <h1>登录桌宠</h1>
-          <p>使用企业飞书账号，获取管理员开放的专家，再完成本人的 MCP 授权。</p>
+          <p>使用企业飞书登录，超级管理员开放的 MCP 将自动连接。</p>
           <button
             className="primary"
             disabled={!isNative() || loading}
@@ -1022,6 +1025,8 @@ function App() {
           )}
           <small>内置问答引擎 · 无需另装 Octop</small>
         </section>
+      ) : status.companionAllowed === false ? (
+        <section className="login-state"><ShieldCheck size={30}/><h1>桌宠尚未开放</h1><p>请联系超级管理员，在企业中心的成员名单中为你勾选桌宠。已有聊天和个人配置继续保留。</p><button className="primary" onClick={()=>void refresh()}>重新检查权限</button></section>
       ) : (
         <>
           {showSettings && (
@@ -1263,7 +1268,7 @@ function App() {
               : "登录后开始提问"
           }
           value={room.draft}
-          disabled={!status.authenticated || loading}
+          disabled={!status.authenticated || status.companionAllowed === false || loading}
           rows={2}
           onChange={(event) =>
             updateRoom(active, { draft: event.target.value })
@@ -1292,7 +1297,7 @@ function App() {
               aria-label="添加图片"
               title="添加图片，也可拖入或粘贴"
               disabled={
-                !status.authenticated ||
+                !status.authenticated || status.companionAllowed === false ||
                 room.busy ||
                 uploading ||
                 room.files.length >= 4
@@ -1310,7 +1315,7 @@ function App() {
               title={listening ? "结束录音，文字保留在输入框" : "语音输入"}
               aria-pressed={listening}
               className={listening ? "recording" : ""}
-              disabled={!status.authenticated || room.busy}
+              disabled={!status.authenticated || status.companionAllowed === false || room.busy}
               onClick={() =>
                 void toggleMic().catch((e) => setNotice(errorText(e)))
               }
@@ -1354,7 +1359,7 @@ function App() {
               className="send"
               aria-label="发送消息"
               disabled={
-                !status.authenticated ||
+                !status.authenticated || status.companionAllowed === false ||
                 uploading ||
                 listening ||
                 (!room.draft.trim() && !room.files.length)

@@ -86,6 +86,11 @@ def is_jwt_exempt_path(path: str) -> bool:
 
 def is_jwt_exempt_request(request: Request) -> bool:
     path = request.url.path
+    # The MCP gateway validates a revocable, member-and-service-scoped grant.
+    if request.method in {"GET", "POST", "DELETE"} and re.fullmatch(
+        r"/api/enterprise/mcp/gateway/[A-Za-z0-9_-]{1,64}", path
+    ):
+        return True
     # These routes validate their own narrowly scoped capability credentials.
     if request.method == "POST" and re.fullmatch(r"/api/task-hooks/[0-9A-HJKMNP-TV-Z]{26}", path):
         return True

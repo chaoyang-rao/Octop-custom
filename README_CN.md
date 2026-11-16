@@ -1,3 +1,5 @@
+> 企业定制版：超级管理员在企业中心“成员开放权限”按登录名单勾选三个 MCP 和桌宠。Mac 用户点击左侧“桌宠”，首次自动准备组件，之后可独立运行；含内部角色素材的组件仅经企业中心授权分发。详见 [统一成员开放权限](docs/custom/central-member-access.md)。
+
 <p align="center">
   <img src="docs/assets/readme-banner-zh.png" alt="Octop Banner" width="600" />
 </p>

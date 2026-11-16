@@ -43,7 +43,7 @@ def _validate_url(value: str) -> str:
     except UnicodeError:
         raise ValueError("invalid catalog host") from None
     if (
-        parsed.scheme != "https"
+        parsed.scheme not in {"http", "https"}
         or not host
         or parsed.username is not None
         or parsed.password is not None
@@ -360,13 +360,41 @@ class EnterpriseMcpCatalog:
         # Rolling back published configuration does not erase an unpublished draft.
         return self._publish(user, raw, document, previous.snapshot.entries, "rollback")
 
-    def snapshot_for(self, user: User) -> CatalogSnapshot:
+    def snapshot_for(
+        self, user: User, *, include_http: bool = True, include_gateway: bool = True
+    ) -> CatalogSnapshot:
         subject = self.center.require_employee(user)
         _, document = self._read()
+        from octop.infra.enterprise_resources.member_access import MCP_IDS, access_for
+
+        access = access_for(self.server)
+        member_access = access.status(user) if access.configured else None
+        source = document.published.entries
+        if not include_gateway:
+            import os
+
+            from octop.infra.connectors.enterprise_mcp_gateway import gateway_for
+            from octop.infra.connectors.enterprise_mcp_protocol import is_gateway_entry
+
+            targets = gateway_for(self.server).targets()
+            origin = os.environ.get("OCTOP_MCP_ACCOUNT_ORIGIN", "")
+            source = [
+                targets[e.entry_id].model_copy(
+                    update={"enabled": e.enabled, "allowed_subjects": e.allowed_subjects}
+                )
+                if is_gateway_entry(e, origin) and e.entry_id in targets
+                else e
+                for e in source
+            ]
         entries = [
             entry.model_copy(update={"allowed_subjects": []}, deep=True)
-            for entry in document.published.entries
-            if not entry.allowed_subjects or subject in entry.allowed_subjects
+            for entry in source
+            if (include_http or urlsplit(entry.url).scheme == "https")
+            and (
+                entry.entry_id in member_access["mcp_ids"]
+                if member_access is not None and entry.entry_id in MCP_IDS
+                else (not entry.allowed_subjects or subject in entry.allowed_subjects)
+            )
         ]
         return build_snapshot(
             revision=document.published.revision,

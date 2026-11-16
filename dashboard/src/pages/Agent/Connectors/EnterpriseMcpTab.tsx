@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Card,
+  Checkbox,
   Empty,
   Form,
   Input,
@@ -21,6 +22,7 @@ import {
   type EnterpriseMcpMemberEntry,
   type EnterpriseMcpNodeState,
   type EnterpriseMcpAccountChoices,
+  type EnterpriseMcpAuthKind,
 } from "../../../api/modules/enterpriseMcp";
 import { useServerTimezone } from "../../../hooks/useServerTimezone";
 import { formatServerDateTime } from "../../../utils/formatMessageTime";
@@ -44,6 +46,9 @@ export default function EnterpriseMcpTab() {
   const [accounts, setAccounts] = useState<EnterpriseMcpAccountChoices>();
   const [account, setAccount] = useState<string>();
   const [accountsLoading, setAccountsLoading] = useState(false);
+  const [authMode, setAuthMode] = useState<EnterpriseMcpAuthKind>("none");
+  const [useCompanyIdentity, setUseCompanyIdentity] = useState(true);
+  const gateway = (entry?.auth_modes?.length ?? 0) > 1;
   const accountEntryId = entry?.entry_id;
   const accountFingerprint = entry?.fingerprint;
   const requestRevision = useRef(0);
@@ -108,6 +113,7 @@ export default function EnterpriseMcpTab() {
     if (
       !accountEntryId ||
       !accountFingerprint ||
+      gateway ||
       !["aftersales-quality", "quota-workbench"].includes(accountEntryId)
     )
       return;
@@ -134,7 +140,7 @@ export default function EnterpriseMcpTab() {
     return () => {
       current = false;
     };
-  }, [accountEntryId, accountFingerprint]);
+  }, [accountEntryId, accountFingerprint, gateway]);
 
   useEffect(() => {
     if (!entry || !state) return;
@@ -158,7 +164,7 @@ export default function EnterpriseMcpTab() {
   const authorize = async () => {
     if (!entry) return;
     let values: EnterpriseMcpCredentials = {};
-    if (!account) {
+    if (gateway ? authMode !== "none" && !useCompanyIdentity : !account) {
       try {
         values = await form.validateFields();
       } catch {
@@ -169,10 +175,18 @@ export default function EnterpriseMcpTab() {
     requestRevision.current += 1;
     try {
       const credentials: EnterpriseMcpCredentials =
-        entry.auth_kind === "bearer"
+        (gateway ? authMode : entry.auth_kind) === "bearer"
           ? { token: values.token?.trim() }
           : { username: values.username?.trim(), password: values.password };
-      const next = account
+      const next = gateway
+        ? await enterpriseMcpApi.authorize(entry.entry_id, {
+            ...credentials,
+            auth_mode: authMode,
+            use_company_identity: authMode === "none" || useCompanyIdentity,
+            account_id: account || "",
+            expected_fingerprint: entry.fingerprint,
+          })
+        : account
         ? await enterpriseMcpApi.authorizeAccount(
             entry.entry_id,
             account,
@@ -397,8 +411,17 @@ export default function EnterpriseMcpTab() {
                       style={{ marginTop: 12 }}
                     />
                   )}
+                  {current.authorization_error && (
+                    <Alert
+                      role="alert"
+                      type="warning"
+                      message={current.authorization_error}
+                      style={{ marginTop: 12 }}
+                    />
+                  )}
                   <Space wrap style={{ marginTop: 16 }}>
-                    {current.auth_kind !== "none" && (
+                    {(current.auth_kind !== "none" ||
+                      (current.auth_modes?.length ?? 0) > 1) && (
                       <Button
                         disabled={
                           !current.enabled ||
@@ -409,6 +432,10 @@ export default function EnterpriseMcpTab() {
                         onClick={() => {
                           form.resetFields();
                           setAuthorizationError("");
+                          setAuthMode(
+                            current.selected_auth_mode || current.auth_kind,
+                          );
+                          setUseCompanyIdentity(true);
                           setEntry(current);
                         }}
                       >
@@ -419,20 +446,22 @@ export default function EnterpriseMcpTab() {
                         )}
                       </Button>
                     )}
-                    {current.auth_kind === "none" && !current.authorized && (
-                      <Button
-                        loading={enabling === current.entry_id}
-                        disabled={
-                          !current.enabled ||
-                          !!current.configuration_error ||
-                          !!state.configuration_error ||
-                          mutating
-                        }
-                        onClick={() => void enableConnection(current)}
-                      >
-                        {t("enterpriseMcp.enableConnection")}
-                      </Button>
-                    )}
+                    {current.auth_kind === "none" &&
+                      !current.authorized &&
+                      (current.auth_modes?.length ?? 0) <= 1 && (
+                        <Button
+                          loading={enabling === current.entry_id}
+                          disabled={
+                            !current.enabled ||
+                            !!current.configuration_error ||
+                            !!state.configuration_error ||
+                            mutating
+                          }
+                          onClick={() => void enableConnection(current)}
+                        >
+                          {t("enterpriseMcp.enableConnection")}
+                        </Button>
+                      )}
                     {
                       <Button
                         danger
@@ -447,10 +476,22 @@ export default function EnterpriseMcpTab() {
                         )}
                       </Button>
                     }
-                    {current.auth_kind === "none" && (
+                    {(current.auth_modes?.length ?? 0) > 1 ? (
                       <Typography.Text type="secondary">
-                        {t("enterpriseMcp.noCredentialsRequired")}
+                        {t(
+                          current.selected_auth_mode === "basic"
+                            ? "enterpriseMcp.gatewayBasic"
+                            : current.selected_auth_mode === "bearer"
+                            ? "enterpriseMcp.authBearer"
+                            : "enterpriseMcp.companyNoInput",
+                        )}
                       </Typography.Text>
+                    ) : (
+                      current.auth_kind === "none" && (
+                        <Typography.Text type="secondary">
+                          {t("enterpriseMcp.noCredentialsRequired")}
+                        </Typography.Text>
+                      )
                     )}
                   </Space>
                 </Card>
@@ -469,7 +510,7 @@ export default function EnterpriseMcpTab() {
         onCancel={closeAuthorization}
         onOk={() => void authorize()}
         okText={t(
-          account
+          !gateway && account
             ? "enterpriseMcp.useAccount"
             : "enterpriseMcp.saveAuthorization",
         )}
@@ -489,9 +530,46 @@ export default function EnterpriseMcpTab() {
         )}
         <Alert
           type="info"
-          message={t("enterpriseMcp.personalAuthorizationHint")}
+          message={t(
+            gateway
+              ? "enterpriseMcp.gatewayHint"
+              : "enterpriseMcp.personalAuthorizationHint",
+          )}
           style={{ marginBottom: 16 }}
         />
+        {gateway && (
+          <Space
+            direction="vertical"
+            style={{ width: "100%", marginBottom: 16 }}
+          >
+            <Select
+              style={{ width: "100%" }}
+              aria-label={t("enterpriseMcp.connectionAuthMode")}
+              value={authMode}
+              options={[
+                { value: "none", label: t("enterpriseMcp.companyNoInput") },
+                { value: "bearer", label: t("enterpriseMcp.authBearer") },
+                { value: "basic", label: t("enterpriseMcp.gatewayBasic") },
+              ]}
+              onChange={(mode: EnterpriseMcpAuthKind) => {
+                setAuthMode(mode);
+                form.resetFields();
+                setAuthorizationError("");
+              }}
+            />
+            {authMode !== "none" && (
+              <Checkbox
+                checked={useCompanyIdentity}
+                onChange={(event) => {
+                  setUseCompanyIdentity(event.target.checked);
+                  form.resetFields();
+                }}
+              >
+                {t("enterpriseMcp.useCompanyCredential")}
+              </Checkbox>
+            )}
+          </Space>
+        )}
         {authorizationError && (
           <Alert
             role="alert"
@@ -529,9 +607,11 @@ export default function EnterpriseMcpTab() {
               }))}
             />
           )}
-          {!account && (
+          {(gateway
+            ? authMode !== "none" && !useCompanyIdentity
+            : !account) && (
             <Form form={form} layout="vertical" preserve={false}>
-              {entry?.auth_kind === "bearer" ? (
+              {(gateway ? authMode : entry?.auth_kind) === "bearer" ? (
                 <Form.Item
                   name="token"
                   label={t("enterpriseMcp.token")}

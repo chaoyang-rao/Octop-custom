@@ -9,6 +9,8 @@ from octop.infra.utils.ssrf_guard import (
     host_allowed_for_issuer,
     is_private_or_local_host,
     issuer_base_domain,
+    public_http_transport,
+    validate_http_url,
     validate_https_url,
 )
 
@@ -68,3 +70,33 @@ def test_validate_https_url_accepts_public_host() -> None:
         validate_https_url("https://mcp.notion.com/.well-known/oauth-authorization-server")
         == "https://mcp.notion.com/.well-known/oauth-authorization-server"
     )
+
+
+@pytest.mark.parametrize("scheme", ["http", "https"])
+def test_validate_http_url_accepts_both_protocols(scheme: str) -> None:
+    url = f"{scheme}://101.33.215.112:8092/mcp"
+    assert validate_http_url(url) == url
+
+
+@pytest.mark.parametrize("scheme", ["http", "https"])
+async def test_mcp_upstream_transport_never_pins_private_addresses(scheme):
+    with pytest.raises(UnsafeOutboundUrl):
+        await public_http_transport(scheme + "://127.0.0.1/mcp")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "ftp://example.com/mcp",
+        "http:///mcp",
+        "http://127.0.0.1/mcp",
+        "https://10.0.0.1/mcp",
+        "http://localhost/mcp",
+        "http://169.254.169.254/latest/meta-data",
+        "http://224.0.0.1/mcp",
+        "https://224.0.0.1/mcp",
+    ],
+)
+def test_validate_http_url_preserves_outbound_host_guards(url: str) -> None:
+    with pytest.raises(UnsafeOutboundUrl):
+        validate_http_url(url)

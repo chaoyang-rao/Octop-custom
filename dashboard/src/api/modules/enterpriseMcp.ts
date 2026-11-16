@@ -46,6 +46,9 @@ export interface EnterpriseMcpMemberEntry extends EnterpriseMcpEntry {
   needs_reauthorization: boolean;
   configuration_error?: string | null;
   local_disabled?: boolean;
+  auth_modes?: EnterpriseMcpAuthKind[];
+  selected_auth_mode?: EnterpriseMcpAuthKind;
+  authorization_error?: string | null;
 }
 
 export interface EnterpriseMcpNodeState {
@@ -67,6 +70,9 @@ export interface EnterpriseMcpCredentials {
 
 export interface EnterpriseMcpAuthorization extends EnterpriseMcpCredentials {
   expected_fingerprint: string;
+  auth_mode?: EnterpriseMcpAuthKind;
+  use_company_identity?: boolean;
+  account_id?: string;
 }
 export interface EnterpriseMcpAccountChoices {
   identity_name: string;

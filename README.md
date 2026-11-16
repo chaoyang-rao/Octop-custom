@@ -1,3 +1,5 @@
+> Company edition: super-administrators enable the three MCPs and desktop pet from one signed-in member list. The Mac sidebar pet entry prepares a private signed component that runs independently. Internal character assets are delivered only by the company authority. See [member access](docs/custom/central-member-access.md).
+
 # Octop Custom 定制版
 
 这是 `chaoyang-rao/Octop-custom` 私有定制仓库，保留官方 **v1.0.2** 提交与此前全部已确认的本地改动。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。定制程序版本为 `1.0.2.post20261102`。

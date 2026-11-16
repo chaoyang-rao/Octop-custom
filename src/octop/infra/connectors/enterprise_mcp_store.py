@@ -19,6 +19,7 @@ from octop.infra.connectors.enterprise_catalog import (
     entry_fingerprint,
     validate_snapshot,
 )
+from octop.infra.connectors.enterprise_mcp_protocol import is_gateway_entry
 from octop.infra.crypto.fernet import decrypt_json, encrypt_json
 from octop.infra.db.repos.secrets import SecretRepo
 from octop.infra.db.repos.settings import SettingsRepo
@@ -27,10 +28,15 @@ from octop.infra.errors import ErrorCode, OctopError
 _PURPOSE = "enterprise_mcp_member_fernet"
 
 
-def authorization_headers(entry: CatalogEntry, credentials: dict[str, str]) -> dict[str, str]:
-    if entry.auth_kind == "none":
+def authorization_headers(
+    entry: CatalogEntry, credentials: dict[str, str], *, gateway: bool = False
+) -> dict[str, str]:
+    kind = credentials.get("auth_mode", entry.auth_kind) if gateway else entry.auth_kind
+    if kind not in {"none", "bearer", "basic"}:
+        raise OctopError.localized(ErrorCode.CONNECTOR_INVALID_CREDENTIALS)
+    if kind == "none" and not gateway:
         return {}
-    if entry.auth_kind == "bearer":
+    if kind in {"none", "bearer"}:
         token = credentials.get("token", "").strip()
         if not token or len(token) > 16384 or any(c in token for c in "\r\n\0"):
             raise OctopError.localized(ErrorCode.CONNECTOR_INVALID_CREDENTIALS)
@@ -48,6 +54,12 @@ class EnterpriseMcpStore:
         self.secrets = secrets
         self.authority = authority.rstrip("/")
         self.source_id = hashlib.sha256(self.authority.encode()).hexdigest()[:16]
+
+    def gateway_entry(self, entry: CatalogEntry) -> bool:
+        return is_gateway_entry(entry, self.authority)
+
+    def headers(self, entry: CatalogEntry, credentials: dict[str, str]) -> dict[str, str]:
+        return authorization_headers(entry, credentials, gateway=self.gateway_entry(entry))
 
     def server_name(self, entry_id: str, *, user_id: int, subject: str | None = None) -> str:
         if subject is None:
@@ -152,7 +164,7 @@ class EnterpriseMcpStore:
     def _credential(
         self, user_id: int, state: dict[str, Any], entry: CatalogEntry, which: str
     ) -> dict[str, str] | None:
-        if entry.auth_kind == "none":
+        if entry.auth_kind == "none" and not self.gateway_entry(entry):
             return {}
         ref = state[which].get(entry.entry_id)
         if not isinstance(ref, dict) or ref.get("fingerprint") != entry_fingerprint(entry):
@@ -172,7 +184,12 @@ class EnterpriseMcpStore:
             credentials = payload["credentials"]
             if not isinstance(credentials, dict):
                 return None
-            authorization_headers(entry, credentials)
+            self.headers(entry, credentials)
+            if (
+                credentials.get("expires_at")
+                and float(credentials["expires_at"]) <= time.time() + 60
+            ):
+                return None
             return {str(k): str(v) for k, v in credentials.items()}
         except (InvalidToken, ValueError, KeyError, TypeError, OctopError):
             return None
@@ -203,7 +220,7 @@ class EnterpriseMcpStore:
     def stage_credentials(
         self, user_id: int, entry: CatalogEntry, credentials: dict[str, str]
     ) -> None:
-        authorization_headers(entry, credentials)
+        self.headers(entry, credentials)
         state = self.state(user_id)
         subject_hash = hashlib.sha256(str(state["subject"]).encode()).hexdigest()[:16]
         key = f"enterprise.mcp.auth.{self.source_id}.{user_id}.{subject_hash}.{uuid.uuid4().hex}"
@@ -226,6 +243,13 @@ class EnterpriseMcpStore:
             "key": key,
             "fingerprint": entry_fingerprint(entry),
         }
+        if self.gateway_entry(entry):
+            state["desired_auth"][entry.entry_id]["auth_mode"] = credentials.get(
+                "auth_mode", "none"
+            )
+            state["desired_auth"][entry.entry_id]["company_identity"] = (
+                credentials.get("company_identity") == "true"
+            )
         state["auth_revision"] += 1
         state["sync_error"] = None
         self._save(user_id, state)
@@ -337,7 +361,7 @@ class EnterpriseMcpStore:
         if credentials is None or spec != {
             "transport": "streamable_http",
             "url": entry.url,
-            "headers": authorization_headers(entry, credentials),
+            "headers": self.headers(entry, credentials),
         }:
             return ""
         return self._runtime_binding(state, entry.entry_id)
@@ -367,7 +391,7 @@ class EnterpriseMcpStore:
             configs[name] = {
                 "transport": "streamable_http",
                 "url": entry.url,
-                "headers": authorization_headers(entry, credentials),
+                "headers": self.headers(entry, credentials),
             }
         return configs
 

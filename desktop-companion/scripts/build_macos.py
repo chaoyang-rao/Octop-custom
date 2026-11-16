@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.3.2"
+VERSION = "0.4.0"
 
 
 def run(*args: str, **kwargs: object) -> None:
@@ -105,7 +105,7 @@ def main() -> None:
         "CFBundleExecutable": "OctopCompanion",
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": VERSION,
-        "CFBundleVersion": "2026111609",
+        "CFBundleVersion": "2026111701",
         "CFBundleURLTypes": [{"CFBundleURLName": "Dora desktop companion", "CFBundleURLSchemes": ["octop-companion"], "CFBundleTypeRole": "Viewer"}],
         "LSMinimumSystemVersion": "13.0",
         "LSUIElement": True,

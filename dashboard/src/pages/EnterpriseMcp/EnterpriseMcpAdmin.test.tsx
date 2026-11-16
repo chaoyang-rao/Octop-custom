@@ -157,13 +157,39 @@ describe("company MCP catalog publishing", { timeout: 15_000 }, () => {
   it("rejects an invalid URL before saving", async () => {
     render(<EnterpriseMcpAdmin />);
     const url = await screen.findByLabelText("enterpriseMcp.url");
-    fireEvent.change(url, { target: { value: "http://quality.example/mcp" } });
+    fireEvent.change(url, { target: { value: "ftp://quality.example/mcp" } });
     fireEvent.click(
       screen.getByRole("button", { name: "enterpriseMcp.saveDraft" }),
     );
     await screen.findByText("enterpriseMcp.validationHint");
     expect(enterpriseMcpApi.saveDraft).not.toHaveBeenCalled();
-    expect(url).toHaveValue("http://quality.example/mcp");
+    expect(url).toHaveValue("ftp://quality.example/mcp");
+  });
+
+  it.each([
+    "http://101.33.215.112:8092/mcp",
+    "https://quality.example/new-mcp",
+  ])("saves an HTTP(S) MCP URL: %s", async (url) => {
+    const changed = [{ ...entries[0], url }];
+    vi.mocked(enterpriseMcpApi.saveDraft).mockResolvedValue({
+      ...state,
+      etag: "saved-url",
+      draft: { entries: changed },
+    });
+    render(<EnterpriseMcpAdmin />);
+    fireEvent.change(await screen.findByLabelText("enterpriseMcp.url"), {
+      target: { value: url },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "enterpriseMcp.saveDraft" }),
+    );
+    await waitFor(() =>
+      expect(enterpriseMcpApi.saveDraft).toHaveBeenCalledWith(
+        changed,
+        "etag-2",
+      ),
+    );
+    expect(enterpriseMcpApi.publish).not.toHaveBeenCalled();
   });
 
   it("lets administrators choose member names while saving only stable subjects", async () => {

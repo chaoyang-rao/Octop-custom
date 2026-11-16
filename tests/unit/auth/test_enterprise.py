@@ -32,6 +32,40 @@ from octop.infra.users.manager import UserManager
 from octop.infra.utils.paths import PathLayout
 
 
+async def test_mcp_capability_header_is_limited_to_catalog_requests(monkeypatch):
+    seen = []
+
+    async def handler(request):
+        seen.append(
+            (
+                request.url.path,
+                request.headers.get("X-Octop-MCP-Protocols"),
+                request.headers.get("Authorization"),
+            )
+        )
+        return httpx.Response(200, json={"ok": True})
+
+    original = httpx.AsyncClient
+    monkeypatch.setattr(
+        enterprise.httpx,
+        "AsyncClient",
+        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    client = EnterpriseClient(
+        SimpleNamespace(
+            services=SimpleNamespace(
+                config=OctopConfig(enterprise_authority_url="https://company.example")
+            )
+        )
+    )
+    await client._remote("GET", enterprise.CENTER_PATH + "/mcp/catalog", token="synthetic-token")
+    await client._remote("GET", enterprise.CENTER_PATH + "/session", token="synthetic-token")
+    assert seen == [
+        ("/api/enterprise/mcp/catalog", "http,https", "Bearer synthetic-token"),
+        ("/api/enterprise/session", None, "Bearer synthetic-token"),
+    ]
+
+
 @pytest.fixture
 def servers(tmp_path, monkeypatch):
     monkeypatch.setenv("OCTOP_HOME", str(tmp_path))

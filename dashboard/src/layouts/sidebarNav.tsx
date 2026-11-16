@@ -206,6 +206,12 @@ export function buildNavSections(
     });
   }
   const sections: NavSection[] = [{ items: topItems }];
+  topItems.push({
+    key: "companion",
+    path: "/companion?autostart=1",
+    icon: <Sparkles size={iconSize} strokeWidth={iconStroke} />,
+    labelKey: "nav.companion",
+  });
 
   const settingsItems: NavItem[] = [];
   if (navAllowed(user, "personalization")) {

@@ -48,6 +48,8 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
                         "/api/enterprise/mcp/catalog",
                         "/api/enterprise/resources/catalog",
                         "/api/enterprise/companion/experts",
+                        "/api/enterprise/companion/installer",
+                        "/api/enterprise/companion/installer/file",
                         "/api/enterprise/companion/inference/profile",
                         "/api/enterprise/companion/inference/usage",
                         "/api/enterprise/companion/inference/v1/models",
@@ -66,6 +68,10 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
                 and bool(
                     re.fullmatch(
                         r"/api/enterprise/mcp/accounts/(?:aftersales-quality|quota-workbench)", path
+                    )
+                    or re.fullmatch(
+                        r"/api/enterprise/mcp/grants/(?:aftersales-quality|quota-workbench|negative-profit)",
+                        path,
                     )
                 )
             )

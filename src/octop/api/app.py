@@ -217,6 +217,7 @@ def build_app(server: OctopServer) -> FastAPI:
         links,
         mbti,
         media_generation,
+        member_access,
         memory,
         memory_portable,
         memory_scopes,
@@ -276,6 +277,7 @@ def build_app(server: OctopServer) -> FastAPI:
             users.router,
             enterprise.router,
             enterprise_mcp_admin.router,
+            member_access.router,
             enterprise_resources_admin.router,
             companion.center_router,
         )
@@ -309,6 +311,7 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(companion.center_router, "/api", ["experts"]),
             _RouterMount(enterprise_mcp.router, "/api", ["connectors"]),
             _RouterMount(enterprise_mcp_admin.router, "/api", ["connectors"]),
+            _RouterMount(member_access.router, "/api", ["connectors"]),
             _RouterMount(enterprise_resources.router, "/api", ["experts"]),
             _RouterMount(enterprise_resources_admin.router, "/api", ["experts"]),
             _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),

@@ -150,10 +150,21 @@ class EnterpriseCenter:
         if user is None:
             raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         subject = self.require_employee(user)
+        from octop.infra.enterprise_resources.member_access import access_for
+
+        access = access_for(self.server)
+        permissions = {key for key in PERMISSIONS if user_has_permission(user, key)}
+        member_access = access.status(user) if access.configured else None
+        if member_access:
+            if member_access["mcp_ids"]:
+                permissions.add("connector_enabled")
+            if member_access["companion"]:
+                permissions.add("experts")
         return {
             "subject": subject,
             "display_name": user.label,
-            "permissions": sorted(key for key in PERMISSIONS if user_has_permission(user, key)),
+            "permissions": sorted(permissions),
+            **({"member_access": member_access} if member_access else {}),
             "device_id": session.device_id,
             "expires_at": session.expires_at,
         }
@@ -194,11 +205,15 @@ class EnterpriseClient:
         body: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         try:
+            headers = {"Authorization": f"Bearer {token}"} if token else {}
+            if path == CENTER_PATH + "/mcp/catalog":
+                headers["X-Octop-MCP-Protocols"] = "http,https"
+                headers["X-Octop-MCP-Gateway"] = "1"
             async with httpx.AsyncClient(timeout=10, follow_redirects=False) as client:
                 response = await client.request(
                     method,
                     self.authority + path,
-                    headers={"Authorization": f"Bearer {token}"} if token else {},
+                    headers=headers,
                     json=body,
                 )
             if response.status_code in {401, 403}:
@@ -277,6 +292,10 @@ class EnterpriseClient:
     @staticmethod
     def _profile(raw: dict[str, Any], subject: str | None = None) -> dict[str, Any]:
         try:
+            if raw.get("member_access") is not None:
+                from octop.infra.enterprise_resources.member_access import MemberAccessStatus
+
+                MemberAccessStatus.model_validate(raw["member_access"])
             actual = raw["subject"]
             permissions = raw["permissions"]
             if (
@@ -401,6 +420,11 @@ class EnterpriseClient:
         if user is None:
             raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         await self.authorize(user, force=True)
+
+    def cached_member_access(self, user_id: int) -> dict[str, Any] | None:
+        cached = self._cache.get(user_id)
+        value = cached[1].get("member_access") if cached else None
+        return value if isinstance(value, dict) else None
 
     async def fetch_mcp_catalog(self, user: User) -> tuple[str, dict[str, Any]]:
         """Use the company credential only for its dedicated read-only directory."""

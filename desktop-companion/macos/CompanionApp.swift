@@ -308,6 +308,11 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             currentUser = user
             if user == nil { speech.stopRecognition(); speech.stopSpeaking(); closeSockets() }
             var result: [String: Any] = ["authenticated": user != nil, "origin": client.origin.absoluteString, "storageScope": "companion-local-v1", "standalone": true, "backendRunning": healthy]
+            if user != nil {
+                let access = try? await client.json("/api/companion/access")
+                result["companionAllowed"] = access?["status"] as? Int == 200 && (access?["data"] as? [String: Any])?["allowed"] as? Bool == true
+                guard revision == loginRevision && origin == client.origin else { throw CancellationError() }
+            }
             if let user { result["user"] = user }
             return result
         case "api":

@@ -12,6 +12,7 @@ from octop.api.deps import current_user, extract_raw_token, get_server, resolve_
 from octop.api.routers.auth import me_payload
 from octop.infra.auth.enterprise import center_for, client_for, enterprise_error
 from octop.infra.auth.mfa.service import MfaService
+from octop.infra.enterprise_resources.member_access import MemberAccessStatus
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.identity import User
 from octop.infra.users.permissions import user_has_permission
@@ -76,6 +77,7 @@ class EnterpriseProfile(BaseModel):
     permissions: list[str]
     device_id: str
     expires_at: int
+    member_access: MemberAccessStatus | None = None
 
 
 class CompanyDevice(BaseModel):

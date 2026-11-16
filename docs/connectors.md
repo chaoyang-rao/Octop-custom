@@ -10,6 +10,8 @@ Octop ships a catalog of OAuth / MCP connectors. Dashboard copy (`name`,
 `src/octop/infra/connectors/catalog.py` only loads and validates that file.
 
 You can also add **custom MCP** servers in the dashboard; they are not listed here.
+Custom MCP URLs support both HTTP and HTTPS for local, LAN, and public endpoints.
+HTTPS is recommended when transmitting credentials or private data.
 
 # 内置连接器
 
@@ -22,6 +24,7 @@ Octop 内置一组 OAuth / MCP 连接器。控制台展示的名称、描述、�
 `catalog.py` 只负责加载和校验，不再手写 `_CATALOG`。
 
 控制台还可以添加**自定义 MCP**，不在下表中。完整目录见下方表格。
+自定义 MCP 地址支持本机、局域网和公网的 HTTP 与 HTTPS；传输凭据或私密数据时建议使用 HTTPS。
 
 ## Catalog / 目录
 
