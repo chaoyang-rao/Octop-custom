@@ -564,7 +564,11 @@
     "WEBAUTHN_LOGIN_DISABLED": "Passkey sign-in on the login page is turned off. An administrator can enable it under App settings → Passkeys.",
     "ENTERPRISE_RESOURCE_INVALID": "The company resource bundle is invalid or contains private paths.",
     "ENTERPRISE_RESOURCE_CONFLICT": "The version or local content changed. Review the current changes before continuing.",
-    "ENTERPRISE_RESOURCE_SYNC_FAILED": "The company resource update could not be applied. Your previous content was retained."
+    "ENTERPRISE_RESOURCE_SYNC_FAILED": "The company resource update could not be applied. Your previous content was retained.",
+    "DORA_MODEL_UNAVAILABLE": "The company model service is unavailable. Contact your administrator or try again later.",
+    "DORA_MODEL_INVALID_REQUEST": "The model request is invalid or exceeds company service limits.",
+    "DORA_MODEL_RATE_LIMITED": "Too many model requests. Please try again later.",
+    "DORA_MODEL_MANAGED": "This built-in model connection is managed by the company identity center."
   },
   "desktop": {
     "install_log_deps": "Installing Python dependencies…",

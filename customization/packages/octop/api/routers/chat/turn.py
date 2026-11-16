@@ -254,6 +254,9 @@ async def prepare_dashboard_turn(
     turn: ChatTurnBody,
 ) -> PreparedDashboardTurn:
     """Validate MCP/skills, resolve thread, return data for gateway enqueue."""
+    from octop.infra.enterprise_resources.companion import assert_companion_agent
+
+    await assert_companion_agent(server, user, agent_id)
     row = require_agent_row(agent_id, user=user, as_user=None, server=server)
     default_model = (row.default_model or "").strip() or None
 

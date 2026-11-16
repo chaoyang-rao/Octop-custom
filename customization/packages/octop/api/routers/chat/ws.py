@@ -55,6 +55,13 @@ async def dashboard_chat_ws(
 
     bridge_ref = parse_bridge_agent_id(agent_id)
     if bridge_ref is not None:
+        from octop.infra.enterprise_resources.companion import assert_companion_agent
+
+        try:
+            await assert_companion_agent(server, user, agent_id)
+        except OctopError:
+            await websocket.close(code=4003, reason="FORBIDDEN")
+            return
         await _bridge_chat_ws(websocket, server=server, user=user, ref=bridge_ref)
         return
 

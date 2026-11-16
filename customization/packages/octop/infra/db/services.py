@@ -19,6 +19,7 @@ from octop.infra.db.repos.backends import BackendRepo
 from octop.infra.db.repos.bridge_connections import BridgeConnectionRepo
 from octop.infra.db.repos.care_push import CarePushRepo
 from octop.infra.db.repos.channels import ChannelRepo
+from octop.infra.db.repos.company_model_usage import CompanyModelUsageRepo
 from octop.infra.db.repos.connectors import ConnectorRepo
 from octop.infra.db.repos.control_files import ControlFileRepo
 from octop.infra.db.repos.conversations import ConversationRepo
@@ -41,7 +42,7 @@ from octop.infra.db.repos.tasks import TaskRepo
 from octop.infra.db.repos.thread_messages import ThreadMessageRepo
 from octop.infra.db.repos.threads import ThreadRepo
 from octop.infra.db.repos.trajectory_events import TrajectoryEventRepo
-from octop.infra.db.repos.usage import UsageRepo
+from octop.infra.db.repos.usage import CompanyAwareUsageRepo, UsageRepo
 from octop.infra.db.repos.user_group_members import UserGroupMemberRepo
 from octop.infra.db.repos.user_groups import UserGroupRepo
 from octop.infra.db.repos.user_policies import UserPolicyRepo
@@ -71,6 +72,7 @@ class RepoBundle:
     secret_repo: SecretRepo
     audit_repo: AuditRepo
     usage_repo: UsageRepo
+    company_model_usage_repo: CompanyModelUsageRepo
     settings_repo: SettingsRepo
     storage_backend_repo: SealedBackendRepo
     bridge_connection_repo: BridgeConnectionRepo
@@ -114,7 +116,8 @@ class RepoBundle:
             trajectory_event_repo=TrajectoryEventRepo(db),
             secret_repo=secret_repo,
             audit_repo=AuditRepo(db),
-            usage_repo=UsageRepo(db),
+            usage_repo=CompanyAwareUsageRepo(db),
+            company_model_usage_repo=CompanyModelUsageRepo(db),
             settings_repo=SettingsRepo(db),
             storage_backend_repo=SealedBackendRepo(BackendRepo(db), secret_repo),
             bridge_connection_repo=BridgeConnectionRepo(db),

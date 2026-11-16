@@ -13,6 +13,7 @@ import {
   Button,
   Card,
   DatePicker,
+  Modal,
   Empty,
   Select,
   Segmented,
@@ -40,6 +41,7 @@ import cx from "classnames";
 import PageShell from "../../../layouts/PageShell";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import { UsageStats, type UsageStatItem } from "./UsageStats";
+import CompanyModelUsage from "./CompanyModelUsage";
 import { useUserRole } from "../../../hooks/useUserRole";
 import { request, requestBlob } from "../../../api/request";
 import { useAgent } from "../../../context/AgentContext";
@@ -836,6 +838,7 @@ function DimensionView({
 }
 
 export default function TokenUsagePage() {
+  const [companyUsageOpen, setCompanyUsageOpen] = useState(false);
   const { t } = useTranslation();
   const { agents } = useAgent();
   const role = useUserRole();
@@ -1033,6 +1036,22 @@ export default function TokenUsagePage() {
       fill
     >
       <div className={styles.page}>
+        <Modal
+          title={t("companyUsage.title")}
+          open={companyUsageOpen}
+          onCancel={() => setCompanyUsageOpen(false)}
+          footer={null}
+          width={1100}
+          destroyOnHidden
+        >
+          {companyUsageOpen && <CompanyModelUsage />}
+        </Modal>
+        <Button
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => setCompanyUsageOpen(true)}
+        >
+          {t("companyUsage.title")}
+        </Button>
         <Alert
           type="info"
           showIcon

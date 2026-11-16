@@ -16,6 +16,7 @@ from octop.infra.db.repos._base import (
     now_ts,
     sql_unix_day_bucket,
 )
+from octop.infra.db.repos.company_model_usage import CompanyModelUsageRepo
 
 _DAY_S = 86_400
 _DAY_WINDOW_RE = re.compile(r"^day:(\d{4}-\d{2}-\d{2})$")
@@ -551,3 +552,12 @@ class UsageRepo:
                 (user_id,),
             ).fetchone()
         return int(row["total"] if row is not None else 0)
+
+
+class CompanyAwareUsageRepo(UsageRepo):
+    """Apply existing account quotas to both local execution and company inference."""
+
+    def total_tokens_for_user(self, user_id: int) -> int:
+        return super().total_tokens_for_user(user_id) + CompanyModelUsageRepo(
+            self._db
+        ).total_tokens_for_user(user_id)

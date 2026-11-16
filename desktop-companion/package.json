@@ -1,0 +1,25 @@
+{
+  "name": "octop-desktop-companion",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "lucide-react": "0.562.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.1",
+    "@types/react": "18.3.30",
+    "@types/react-dom": "18.3.7",
+    "typescript": "5.8.3",
+    "vite": "6.4.3"
+  }
+}

@@ -7,6 +7,7 @@ import {
   Form,
   Input,
   Modal,
+  Select,
   Space,
   Spin,
   Tag,
@@ -19,6 +20,7 @@ import {
   type EnterpriseMcpCredentials,
   type EnterpriseMcpMemberEntry,
   type EnterpriseMcpNodeState,
+  type EnterpriseMcpAccountChoices,
 } from "../../../api/modules/enterpriseMcp";
 import { useServerTimezone } from "../../../hooks/useServerTimezone";
 import { formatServerDateTime } from "../../../utils/formatMessageTime";
@@ -39,6 +41,11 @@ export default function EnterpriseMcpTab() {
   const [enabling, setEnabling] = useState<string | null>(null);
   const [authorizationError, setAuthorizationError] = useState("");
   const [form] = Form.useForm<EnterpriseMcpCredentials>();
+  const [accounts, setAccounts] = useState<EnterpriseMcpAccountChoices>();
+  const [account, setAccount] = useState<string>();
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const accountEntryId = entry?.entry_id;
+  const accountFingerprint = entry?.fingerprint;
   const requestRevision = useRef(0);
   const mutating =
     authorizing || syncing || clearing !== null || enabling !== null;
@@ -88,7 +95,41 @@ export default function EnterpriseMcpTab() {
     form.resetFields();
     setAuthorizationError("");
     setEntry(null);
+    setAccounts(undefined);
+    setAccount(undefined);
+    setAccountsLoading(false);
   };
+
+  useEffect(() => {
+    let current = true;
+    setAccounts(undefined);
+    setAccount(undefined);
+    setAccountsLoading(false);
+    if (
+      !accountEntryId ||
+      !accountFingerprint ||
+      !["aftersales-quality", "quota-workbench"].includes(accountEntryId)
+    )
+      return;
+    setAccountsLoading(true);
+    enterpriseMcpApi
+      .accounts(accountEntryId)
+      .then((next) => {
+        if (!current) return;
+        setAccounts(next);
+        if (next.accounts.length === 1) setAccount(next.accounts[0].account_id);
+      })
+      .catch(() => {
+        // Manual member credentials remain available on older company servers.
+        if (current) setAccounts({ identity_name: "", accounts: [] });
+      })
+      .finally(() => {
+        if (current) setAccountsLoading(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [accountEntryId, accountFingerprint]);
 
   useEffect(() => {
     if (!entry || !state) return;
@@ -111,11 +152,13 @@ export default function EnterpriseMcpTab() {
 
   const authorize = async () => {
     if (!entry) return;
-    let values: EnterpriseMcpCredentials;
-    try {
-      values = await form.validateFields();
-    } catch {
-      return;
+    let values: EnterpriseMcpCredentials = {};
+    if (!account) {
+      try {
+        values = await form.validateFields();
+      } catch {
+        return;
+      }
     }
     setAuthorizing(true);
     requestRevision.current += 1;
@@ -124,10 +167,16 @@ export default function EnterpriseMcpTab() {
         entry.auth_kind === "bearer"
           ? { token: values.token?.trim() }
           : { username: values.username?.trim(), password: values.password };
-      const next = await enterpriseMcpApi.authorize(entry.entry_id, {
-        ...credentials,
-        expected_fingerprint: entry.fingerprint,
-      });
+      const next = account
+        ? await enterpriseMcpApi.authorizeAccount(
+            entry.entry_id,
+            account,
+            entry.fingerprint,
+          )
+        : await enterpriseMcpApi.authorize(entry.entry_id, {
+            ...credentials,
+            expected_fingerprint: entry.fingerprint,
+          });
       requestRevision.current += 1;
       setState(next);
       setError("");
@@ -414,9 +463,14 @@ export default function EnterpriseMcpTab() {
         open={entry !== null}
         onCancel={closeAuthorization}
         onOk={() => void authorize()}
-        okText={t("enterpriseMcp.saveAuthorization")}
+        okText={t(
+          account
+            ? "enterpriseMcp.useAccount"
+            : "enterpriseMcp.saveAuthorization",
+        )}
         cancelText={t("common.cancel")}
-        confirmLoading={authorizing}
+        confirmLoading={authorizing || accountsLoading}
+        okButtonProps={{ disabled: accountsLoading }}
         cancelButtonProps={{ disabled: authorizing }}
         closable={!authorizing}
         keyboard={!authorizing}
@@ -441,48 +495,80 @@ export default function EnterpriseMcpTab() {
             style={{ marginBottom: 16 }}
           />
         )}
-        <Form form={form} layout="vertical" preserve={false}>
-          {entry?.auth_kind === "bearer" ? (
-            <Form.Item
-              name="token"
-              label={t("enterpriseMcp.token")}
-              rules={[
-                {
-                  required: true,
-                  whitespace: true,
-                  message: t("enterpriseMcp.required"),
-                },
-              ]}
-            >
-              <Input.Password autoComplete="new-password" />
-            </Form.Item>
-          ) : (
-            <>
-              <Form.Item
-                name="username"
-                label={t("enterpriseMcp.username")}
-                rules={[
-                  {
-                    required: true,
-                    whitespace: true,
-                    message: t("enterpriseMcp.required"),
-                  },
-                ]}
-              >
-                <Input autoComplete="username" />
-              </Form.Item>
-              <Form.Item
-                name="password"
-                label={t("enterpriseMcp.password")}
-                rules={[
-                  { required: true, message: t("enterpriseMcp.required") },
-                ]}
-              >
-                <Input.Password autoComplete="new-password" />
-              </Form.Item>
-            </>
+        <Spin spinning={accountsLoading}>
+          {accounts && (
+            <Alert
+              type={accounts.accounts.length ? "success" : "info"}
+              showIcon
+              message={
+                accounts.accounts.length
+                  ? t("enterpriseMcp.accountIdentity", {
+                      name: accounts.identity_name,
+                    })
+                  : t("enterpriseMcp.noLinkedAccount")
+              }
+              style={{ marginBottom: 12 }}
+            />
           )}
-        </Form>
+          {!!accounts?.accounts.length && (
+            <Select
+              style={{ width: "100%", marginBottom: 16 }}
+              aria-label={t("enterpriseMcp.chooseAccount")}
+              placeholder={t("enterpriseMcp.chooseAccount")}
+              value={account}
+              onChange={setAccount}
+              allowClear
+              options={accounts.accounts.map((r) => ({
+                value: r.account_id,
+                label: r.label,
+              }))}
+            />
+          )}
+          {!account && (
+            <Form form={form} layout="vertical" preserve={false}>
+              {entry?.auth_kind === "bearer" ? (
+                <Form.Item
+                  name="token"
+                  label={t("enterpriseMcp.token")}
+                  rules={[
+                    {
+                      required: true,
+                      whitespace: true,
+                      message: t("enterpriseMcp.required"),
+                    },
+                  ]}
+                >
+                  <Input.Password autoComplete="new-password" />
+                </Form.Item>
+              ) : (
+                <>
+                  <Form.Item
+                    name="username"
+                    label={t("enterpriseMcp.username")}
+                    rules={[
+                      {
+                        required: true,
+                        whitespace: true,
+                        message: t("enterpriseMcp.required"),
+                      },
+                    ]}
+                  >
+                    <Input autoComplete="username" />
+                  </Form.Item>
+                  <Form.Item
+                    name="password"
+                    label={t("enterpriseMcp.password")}
+                    rules={[
+                      { required: true, message: t("enterpriseMcp.required") },
+                    ]}
+                  >
+                    <Input.Password autoComplete="new-password" />
+                  </Form.Item>
+                </>
+              )}
+            </Form>
+          )}
+        </Spin>
       </Modal>
     </section>
   );

@@ -197,6 +197,7 @@ def build_app(server: OctopServer) -> FastAPI:
         browser,
         channels,
         chat,
+        companion,
         connectors,
         conversations,
         cron,
@@ -276,6 +277,7 @@ def build_app(server: OctopServer) -> FastAPI:
             enterprise.router,
             enterprise_mcp_admin.router,
             enterprise_resources_admin.router,
+            companion.center_router,
         )
         app.add_api_route(
             "/api/settings/timezone",
@@ -303,6 +305,8 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(auth_oidc.router, "/api/auth", ["auth"]),
             _RouterMount(auth_oauth.router, "/api/auth", ["auth"]),
             _RouterMount(enterprise.router, "/api", ["auth"]),
+            _RouterMount(companion.router, "/api", ["experts"]),
+            _RouterMount(companion.center_router, "/api", ["experts"]),
             _RouterMount(enterprise_mcp.router, "/api", ["connectors"]),
             _RouterMount(enterprise_mcp_admin.router, "/api", ["connectors"]),
             _RouterMount(enterprise_resources.router, "/api", ["experts"]),

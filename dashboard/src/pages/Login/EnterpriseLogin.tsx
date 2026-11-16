@@ -35,7 +35,14 @@ export default function EnterpriseLogin({
     setConfirmation(null);
     try {
       setChallenge(
-        await enterpriseApi.begin(t("enterprise.deviceName"), bindCurrent),
+        await enterpriseApi.begin(
+          t(
+            (window as Window & { __DORA_CLIENT__?: boolean }).__DORA_CLIENT__
+              ? "companion.deviceName"
+              : "enterprise.deviceName",
+          ),
+          bindCurrent,
+        ),
       );
     } catch (err) {
       setError(apiErrorMessage(err, t("enterprise.failed"), t));

@@ -18,6 +18,8 @@ import LoginPage from "./pages/Login";
 import EnterpriseApprove from "./pages/Login/EnterpriseApprove";
 import EnterpriseAdmin from "./pages/Login/EnterpriseAdmin";
 import OidcComplete from "./pages/Login/OidcComplete";
+import DesktopCompanionLaunch from "./pages/DesktopCompanionLaunch";
+import DesktopCompanionManage from "./pages/DesktopCompanionManage";
 import SetupPage from "./pages/Setup";
 import InvitePage from "./pages/Invite";
 import AuthGuard from "./components/AuthGuard";
@@ -140,6 +142,20 @@ function ThemedApp() {
             <DesktopWindowControls chrome={desktopChrome} />
           ) : null}
           <Routes>
+            <Route
+              path="/companion/manage"
+              element={
+                <AuthGuard>
+                  <AgentProvider>
+                    <DesktopCompanionManage />
+                  </AgentProvider>
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/desktop-companion/launch"
+              element={<DesktopCompanionLaunch />}
+            />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/enterprise/approve"

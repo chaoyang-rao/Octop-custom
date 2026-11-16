@@ -2531,6 +2531,15 @@ def _ensure_task_rooms_schema(db: DatabasePool) -> None:
     )
 
 
+def _ensure_company_model_usage_schema(db: DatabasePool) -> None:
+    suffix = ".pg.sql" if db.dialect == "postgresql" else ".sql"
+    sql = (_MIGRATIONS_DIR / ("029_company_model_usage" + suffix)).read_text(encoding="utf-8")
+    with db.connect() as conn:
+        for statement in _split_pg_sql(sql):
+            if not statement.startswith("UPDATE _schema_version"):
+                conn.execute(statement)
+
+
 def run_migrations(db: DatabasePool) -> None:
     if db.dialect == "sqlite":
         _repair_legacy_schema(db)
@@ -2594,6 +2603,7 @@ def run_migrations(db: DatabasePool) -> None:
     _ensure_tasks_schema(db)
     _ensure_task_dispatch_schema(db)
     _ensure_task_rooms_schema(db)
+    _ensure_company_model_usage_schema(db)
     _ensure_sso_provider_kind_schema(db)
     _ensure_user_role_schema(db)
     _ensure_bridge_connections_schema(db)

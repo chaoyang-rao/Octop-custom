@@ -13,6 +13,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel, ConfigDict, Field
 
 from octop.api.deps import current_user, get_server
+from octop.infra.connectors.enterprise_account_auth import BusinessAccountAuth
 from octop.infra.connectors.enterprise_catalog import (
     CatalogAdminState,
     CatalogEntry,
@@ -46,6 +47,51 @@ class _CatalogRoute(APIRoute):
 
 
 router = APIRouter(route_class=_CatalogRoute)
+
+
+class AccountChoice(BaseModel):
+    account_id: str
+    label: str
+
+
+class AccountChoices(BaseModel):
+    identity_name: str
+    accounts: list[AccountChoice]
+
+
+class AccountSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    account_id: str = Field(min_length=1, max_length=64)
+    expected_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+@router.get("/enterprise/mcp/accounts/{entry_id}", response_model=AccountChoices)
+async def mcp_account_choices(
+    entry_id: str,
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    _no_store(response)
+    return await BusinessAccountAuth(server).choices(user, entry_id)
+
+
+@router.post("/enterprise/mcp/accounts/{entry_id}")
+async def mcp_account_grant(
+    entry_id: str,
+    body: AccountSelection,
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    """Issue this member's MCP-only grant after an explicit account choice.
+
+    Credentials travel directly to the member node, never through the picker.
+    """
+    _no_store(response)
+    return await BusinessAccountAuth(server).issue(
+        user, entry_id, body.account_id, body.expected_fingerprint
+    )
 
 
 class CatalogExpectedVersion(BaseModel):

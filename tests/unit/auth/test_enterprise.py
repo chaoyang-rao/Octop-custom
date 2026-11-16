@@ -418,6 +418,9 @@ async def test_center_routes_do_not_expose_agent_file_or_terminal_execution(serv
     assert "/api/enterprise/pairings" in paths
     assert "/api/auth/oauth/start" in paths
     assert "/api/users" in paths
+    assert "/api/enterprise/companion/admin/experts" in paths
+    assert "/api/enterprise/companion/experts" in paths
+    assert "/api/companion/agents" not in paths
     assert not any(
         path.startswith(
             (

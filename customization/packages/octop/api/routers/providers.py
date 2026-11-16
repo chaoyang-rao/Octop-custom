@@ -270,9 +270,10 @@ def _row_to_dict(r: Any) -> dict[str, Any]:
     return {
         "id": r.id,
         "name": r.name,
-        "kind": r.kind,
+        "kind": "openai" if r.kind == "enterprise" else r.kind,
         "base_url": r.base_url,
-        "api_key": r.api_key,
+        "api_key": "********" if r.api_key and r.kind == "enterprise" else r.api_key,
+        "enterprise_managed": r.kind == "enterprise",
         "models": models,
         "note": r.note,
         "enabled": bool(r.enabled),
@@ -300,6 +301,9 @@ async def list_resolved_models(
     server: Any = Depends(get_server),
 ) -> list[dict[str, Any]]:
     """Return enabled chat models the caller may select."""
+    from octop.infra.enterprise_resources.inference_node import builtin_models_for
+
+    await builtin_models_for(server).try_ensure(user)
     models = _list_resolved_models(server.services.provider_repo.list_all())
     return GroupAccess(server.services.repos).filter_rows(
         models,
@@ -404,6 +408,8 @@ async def admin_patch_provider(
     row = server.services.provider_repo.get(provider_id)
     if row is None:
         raise OctopError(ErrorCode.NOT_FOUND, "provider not found")
+    if row.kind == "enterprise":
+        raise OctopError.localized(ErrorCode.DORA_MODEL_MANAGED)
     if body.models is not None:
         body.models = _sync_model_visibility(server, row.name, body.models)
     server.services.provider_repo.update(
@@ -433,6 +439,8 @@ async def admin_delete_provider(
     row = server.services.provider_repo.get(provider_id)
     if row is None:
         raise OctopError(ErrorCode.NOT_FOUND, "provider not found")
+    if row.kind == "enterprise":
+        raise OctopError.localized(ErrorCode.DORA_MODEL_MANAGED)
     if is_local_runtime_provider(
         row.name,
         provider_api_key=row.api_key,

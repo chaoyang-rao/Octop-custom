@@ -1,0 +1,7 @@
+node_modules/
+dist/
+build/
+.test-data/
+output/
+assets/downloaded/
+*.log

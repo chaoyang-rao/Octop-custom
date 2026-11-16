@@ -1,0 +1,46 @@
+name: Dora standalone Mac package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    if: github.repository == 'chaoyang-rao/Octop-custom'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            dashboard/package-lock.json
+            desktop-companion/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: npm ci --prefix desktop-companion
+      - run: npm test --prefix desktop-companion
+      - name: Verify frozen program inputs
+        run: |
+          python3 scripts/custom/sync_octop_source.py --check
+          python3 scripts/custom/sync_dashboard.py --check
+      - name: Prepare both private engine architectures
+        run: uv run python desktop-companion/scripts/prepare_engine.py
+      - name: Build and verify universal native app and DMG
+        run: python3 desktop-companion/scripts/build_macos.py
+      - name: Verify independent engine startup and stable origin
+        run: desktop-companion/dist/哆啦.app/Contents/MacOS/OctopCompanion --preflight --restart-check
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dora-macos-universal-preview
+          path: |
+            desktop-companion/dist/*.dmg
+            desktop-companion/dist/build-report.json
+          if-no-files-found: error
+          retention-days: 7

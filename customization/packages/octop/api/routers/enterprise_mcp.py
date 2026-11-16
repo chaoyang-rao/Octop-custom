@@ -13,6 +13,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from octop.api.deps import current_user, get_server
+from octop.infra.connectors.enterprise_account_auth import member_account_request
 from octop.infra.connectors.enterprise_catalog import CatalogEntry
 from octop.infra.connectors.enterprise_mcp_sync import sync_for
 from octop.infra.errors import ErrorCode, OctopError
@@ -39,6 +40,35 @@ class _CredentialRoute(APIRoute):
 
 
 router = APIRouter(route_class=_CredentialRoute)
+
+
+class McpAccountSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    account_id: str = Field(min_length=1, max_length=64)
+    expected_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+@router.get("/connectors/enterprise-mcp/entries/{entry_id}/accounts")
+async def available_accounts(
+    entry_id: str,
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    _member(user, response)
+    return await member_account_request(server, user, entry_id)
+
+
+@router.post("/connectors/enterprise-mcp/entries/{entry_id}/account-authorization")
+async def authorize_account(
+    entry_id: str,
+    body: McpAccountSelection,
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> dict[str, Any]:
+    _member(user, response)
+    return await member_account_request(server, user, entry_id, body.model_dump())
 
 
 class EnterpriseMcpEntryState(CatalogEntry):

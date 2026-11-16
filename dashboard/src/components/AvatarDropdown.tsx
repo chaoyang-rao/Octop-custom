@@ -48,6 +48,7 @@ import wecomIcon from "../assets/channels/wecom.svg";
 import { ProfileAvatarPicker } from "../pages/Admin/Users/ProfileAvatar";
 import { AccountAvatar } from "./accountAvatar";
 import AccountSecurityDrawer from "./AccountSecurityDrawer";
+import DesktopCompanionSettings from "./DesktopCompanionSettings";
 import styles from "./AvatarDropdown.module.less";
 
 const GITHUB_URL = "https://github.com/TencentCloud/Octop";
@@ -440,6 +441,9 @@ export default function AvatarDropdown({
           {roleLabel}
         </Tag>
       </div>
+
+      <DesktopCompanionSettings />
+      <Divider className={styles.settingsDivider} />
 
       <section className={styles.settingsSection}>
         <div className={styles.settingsSectionHead}>

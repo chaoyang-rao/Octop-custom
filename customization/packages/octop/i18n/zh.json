@@ -564,7 +564,11 @@
     "WEBAUTHN_LOGIN_DISABLED": "登录页的通行密钥登录已关闭。管理员可在「应用设置 → 通行密钥」中开启。",
     "ENTERPRISE_RESOURCE_INVALID": "企业资源包无效或包含私人路径。",
     "ENTERPRISE_RESOURCE_CONFLICT": "版本或本地内容已变化，请重新核对后再处理。",
-    "ENTERPRISE_RESOURCE_SYNC_FAILED": "企业资源更新未能应用，已保留原有内容。"
+    "ENTERPRISE_RESOURCE_SYNC_FAILED": "企业资源更新未能应用，已保留原有内容。",
+    "DORA_MODEL_UNAVAILABLE": "企业模型服务暂不可用，请联系管理员或稍后重试。",
+    "DORA_MODEL_INVALID_REQUEST": "模型请求无效或超出企业服务限制。",
+    "DORA_MODEL_RATE_LIMITED": "模型服务请求过于频繁，请稍后重试。",
+    "DORA_MODEL_MANAGED": "这是企业内置模型连接，请在企业授权中心统一管理。"
   },
   "desktop": {
     "install_log_deps": "正在安装 Python 依赖…",

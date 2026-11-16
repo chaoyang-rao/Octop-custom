@@ -68,6 +68,10 @@ export interface EnterpriseMcpCredentials {
 export interface EnterpriseMcpAuthorization extends EnterpriseMcpCredentials {
   expected_fingerprint: string;
 }
+export interface EnterpriseMcpAccountChoices {
+  identity_name: string;
+  accounts: { account_id: string; label: string }[];
+}
 
 const center = "/enterprise/mcp/admin";
 const node = "/connectors/enterprise-mcp";
@@ -91,6 +95,22 @@ export const enterpriseMcpApi = {
       body: JSON.stringify({ revision, expected_etag }),
     }),
   nodeStatus: () => request<EnterpriseMcpNodeState>(node),
+  accounts: (entryId: string) =>
+    request<EnterpriseMcpAccountChoices>(
+      `${node}/entries/${encodeURIComponent(entryId)}/accounts`,
+    ),
+  authorizeAccount: (
+    entryId: string,
+    account_id: string,
+    expected_fingerprint: string,
+  ) =>
+    request<EnterpriseMcpNodeState>(
+      `${node}/entries/${encodeURIComponent(entryId)}/account-authorization`,
+      {
+        method: "POST",
+        body: JSON.stringify({ account_id, expected_fingerprint }),
+      },
+    ),
   sync: () =>
     request<EnterpriseMcpNodeState>(`${node}/sync`, { method: "POST" }),
   authorize: (entryId: string, credentials: EnterpriseMcpAuthorization) =>

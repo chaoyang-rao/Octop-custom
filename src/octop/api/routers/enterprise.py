@@ -288,6 +288,9 @@ async def poll_local(
     result, user = await client.poll(body.login_id.get_secret_value(), confirmed=body.confirmed)
     if user is None:
         return result
+    from octop.infra.enterprise_resources.inference_node import builtin_models_for
+
+    await builtin_models_for(server).try_ensure(user)
     token, ttl = MfaService(server.services).mint_access_token(user)
     return {
         **result,

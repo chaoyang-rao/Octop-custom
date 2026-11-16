@@ -10,6 +10,16 @@ const EnterpriseMcpAdmin = lazy(
 const EnterpriseResourceAdmin = lazy(
   () => import("../EnterpriseResources/Admin"),
 );
+const CompanionAdmin = lazy(
+  () => import("../EnterpriseResources/CompanionAdmin"),
+);
+
+const InferenceAdmin = lazy(
+  () => import("../EnterpriseResources/InferenceAdmin"),
+);
+const CompanyModelUsage = lazy(
+  () => import("../Control/TokenUsage/CompanyModelUsage"),
+);
 
 export default function EnterpriseAdmin() {
   const { t } = useTranslation();
@@ -34,6 +44,15 @@ export default function EnterpriseAdmin() {
       <Tabs
         items={[
           {
+            key: "company-usage",
+            label: t("companyUsage.title"),
+            children: (
+              <Suspense fallback={<Spin />}>
+                <CompanyModelUsage />
+              </Suspense>
+            ),
+          },
+          {
             key: "users",
             label: t("enterprise.manage"),
             children: (
@@ -44,6 +63,24 @@ export default function EnterpriseAdmin() {
           },
           ...(user?.role === "admin"
             ? [
+                {
+                  key: "inference",
+                  label: t("companion.modelServiceTitle"),
+                  children: (
+                    <Suspense fallback={<Spin />}>
+                      <InferenceAdmin />
+                    </Suspense>
+                  ),
+                },
+                {
+                  key: "companion",
+                  label: t("companion.adminTitle"),
+                  children: (
+                    <Suspense fallback={<Spin />}>
+                      <CompanionAdmin />
+                    </Suspense>
+                  ),
+                },
                 {
                   key: "resources",
                   label: t("enterpriseResources.title"),

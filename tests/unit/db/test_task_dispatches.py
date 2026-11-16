@@ -250,7 +250,7 @@ def test_v26_upgrade_ddl_and_repair_preserve_existing_rows(
     run_migrations(env.db)
     run_migrations(env.db)
     with env.db.connect() as conn:
-        assert conn.execute("SELECT version FROM _schema_version").fetchone()[0] == 28
+        assert conn.execute("SELECT version FROM _schema_version").fetchone()[0] == 29
         after = dict(conn.execute("SELECT * FROM agent_tasks WHERE task_id='task'").fetchone())
         assert after == before
         assert conn.execute("SELECT COUNT(*) FROM threads").fetchone()[0] == 3

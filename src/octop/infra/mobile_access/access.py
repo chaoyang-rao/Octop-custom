@@ -47,11 +47,37 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
                         "/api/enterprise/session",
                         "/api/enterprise/mcp/catalog",
                         "/api/enterprise/resources/catalog",
+                        "/api/enterprise/companion/experts",
+                        "/api/enterprise/companion/inference/profile",
+                        "/api/enterprise/companion/inference/usage",
+                        "/api/enterprise/companion/inference/v1/models",
                     }
                     or bool(re.fullmatch(r"/api/enterprise/resources/bundles/[0-9a-f]{64}", path))
+                    or bool(
+                        re.fullmatch(
+                            r"/api/enterprise/mcp/accounts/(?:aftersales-quality|quota-workbench)",
+                            path,
+                        )
+                    )
                 )
             )
-            or (method == "POST" and path == "/api/enterprise/session/revoke")
+            or (
+                method == "POST"
+                and bool(
+                    re.fullmatch(
+                        r"/api/enterprise/mcp/accounts/(?:aftersales-quality|quota-workbench)", path
+                    )
+                )
+            )
+            or (
+                method == "POST"
+                and path
+                in {
+                    "/api/enterprise/session/revoke",
+                    "/api/enterprise/companion/inference/v1/chat/completions",
+                    "/api/enterprise/companion/inference/v1/responses",
+                }
+            )
         ):
             return
         raise OctopError(ErrorCode.FORBIDDEN, "enterprise identity credential is purpose-limited")
