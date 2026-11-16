@@ -24,6 +24,7 @@ const PersonalizationPage = lazy(
 );
 const ACPPage = lazy(() => import("../pages/Agent/ACP"));
 const TokenUsagePage = lazy(() => import("../pages/Control/TokenUsage"));
+const DesktopPetPage = lazy(() => import("../pages/DesktopPet"));
 
 // Lazy-loaded pages — Control
 const RemoteDesktopPage = lazy(() => import("../pages/Control/RemoteDesktop"));
@@ -68,6 +69,7 @@ export const pathToKey: Record<string, string> = {
   "/account-connections": "account-connections",
   "/mobile-access": "mobile-access",
   "/connectors": "connectors",
+  "/companion": "companion",
   "/skill-packages": "skill-packages",
   "/knowledge-bases": "knowledge-bases",
   "/bridge": "bridge",
@@ -174,6 +176,7 @@ export const routeConfigs: RouteConfig[] = [
   { path: "/account-connections", element: <AccountConnectionsPage /> },
   { path: "/mobile-access", element: <MobileAccessPage /> },
   { path: "/connectors", element: <ConnectorsPage /> },
+  { path: "/companion", element: <DesktopPetPage /> },
   { path: "/skill-packages", element: <SkillPackagesPage /> },
   { path: "/knowledge-bases", element: <KnowledgeBasesPage /> },
   { path: "/bridge", element: <BridgePage /> },

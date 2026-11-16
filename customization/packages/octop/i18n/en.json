@@ -568,7 +568,14 @@
     "DORA_MODEL_UNAVAILABLE": "The company model service is unavailable. Contact your administrator or try again later.",
     "DORA_MODEL_INVALID_REQUEST": "The model request is invalid or exceeds company service limits.",
     "DORA_MODEL_RATE_LIMITED": "Too many model requests. Please try again later.",
-    "DORA_MODEL_MANAGED": "This built-in model connection is managed by the company identity center."
+    "DORA_MODEL_MANAGED": "This built-in model connection is managed by the company identity center.",
+    "ENTERPRISE_ACCESS_POLICY_INVALID": "The company member access policy is invalid.",
+    "ENTERPRISE_ACCESS_POLICY_CONFLICT": "Member access changed. Refresh and try again.",
+    "ENTERPRISE_CLIENT_UPGRADE_REQUIRED": "Upgrade the company client to use centrally managed access.",
+    "COMPANION_ACCESS_DENIED": "The super-administrator has not enabled the desktop pet for you.",
+    "COMPANION_NOT_AVAILABLE": "The desktop pet installer is not available. Contact your administrator.",
+    "COMPANION_INSTALL_FAILED": "Could not prepare the desktop pet. Retry or contact your administrator.",
+    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only."
   },
   "desktop": {
     "install_log_deps": "Installing Python dependencies…",

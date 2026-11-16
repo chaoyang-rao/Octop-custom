@@ -116,6 +116,16 @@ def test_draft_is_not_visible_until_publish_and_history_remains_immutable(catalo
     assert all(item.published_by == catalog.admin.username for item in rolled_back.history)
 
 
+@pytest.mark.parametrize("url", ["http://101.33.215.112:8092/mcp", "https://quality.example/mcp"])
+def test_catalog_publishes_http_and_https_definitions(catalog, url):
+    published = publish(catalog, [entry("negative-profit", url=url, auth_kind="none")])
+    member = catalog.service.snapshot_for(catalog.alice)
+    assert member.revision == published.published.revision
+    assert member.entries[0].url == url
+    assert member.entries[0].auth_kind == "none"
+    assert validate_snapshot(member.model_dump()).checksum == member.checksum
+
+
 def test_member_scope_is_filtered_but_disabled_entries_and_own_credentials_are_not_erased(catalog):
     subject = EnterpriseCenter(catalog.server).require_employee(catalog.alice)
     published = publish(
@@ -176,7 +186,9 @@ def test_secret_and_executable_fields_are_rejected_without_storage(catalog, fiel
 @pytest.mark.parametrize(
     "url",
     [
-        "http://quality.example/mcp",
+        "ftp://quality.example/mcp",
+        "http://127.0.0.1/mcp",
+        "http://localhost/mcp",
         "file:///private/file",
         "https://localhost/mcp",
         "https://localhost./mcp",
@@ -328,3 +340,27 @@ async def test_admin_member_picker_excludes_disabled_and_non_company_accounts(ca
     assert "synthetic-secret" not in response.text
     with pytest.raises(OctopError):
         catalog.service.members(catalog.alice)
+
+
+async def test_legacy_clients_keep_https_entries_when_http_is_published(catalog):
+    published = publish(
+        catalog,
+        [entry("quality"), entry("negative-profit", url="http://101.33.215.112:8092/mcp")],
+    )
+    app = FastAPI()
+    app.include_router(router, prefix="/api")
+    app.dependency_overrides[current_user] = lambda: catalog.alice
+    app.dependency_overrides[get_server] = lambda: catalog.server
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="https://center.example"
+    ) as client:
+        legacy = await client.get("/api/enterprise/mcp/catalog")
+        modern = await client.get(
+            "/api/enterprise/mcp/catalog", headers={"X-Octop-MCP-Protocols": "http,https"}
+        )
+    assert legacy.status_code == modern.status_code == 200
+    assert legacy.json()["revision"] == modern.json()["revision"] == published.published.revision
+    assert [row["entry_id"] for row in legacy.json()["entries"]] == ["quality"]
+    assert [row["entry_id"] for row in modern.json()["entries"]] == ["negative-profit", "quality"]
+    assert validate_snapshot(legacy.json()).checksum == legacy.json()["checksum"]
+    assert validate_snapshot(modern.json()).checksum == modern.json()["checksum"]

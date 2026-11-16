@@ -12,6 +12,9 @@ vi.mock("../Admin/Users", () => ({
 vi.mock("../EnterpriseMcp/EnterpriseMcpAdmin", () => ({
   default: () => <div>company-mcp-management</div>,
 }));
+vi.mock("../EnterpriseResources/MemberAccessAdmin", () => ({
+  default: () => <div>central-member-access</div>,
+}));
 
 beforeEach(() => {
   profile.role = "user";
@@ -26,12 +29,15 @@ it("does not offer catalog publishing to an ordinary member", async () => {
   expect(screen.queryByText("company-mcp-management")).toBeNull();
 });
 
-it("opens the company catalog in the existing authority administration page for an administrator", async () => {
+it("opens unified member access by default for a super-administrator", async () => {
   profile.role = "admin";
   render(<EnterpriseAdmin />);
-  await screen.findByText("existing-user-management");
-  fireEvent.click(
-    screen.getByRole("tab", { name: "enterpriseMcp.adminTitle" }),
-  );
-  expect(await screen.findByText("company-mcp-management")).toBeInTheDocument();
+  expect(await screen.findByText("central-member-access")).toBeInTheDocument();
+  expect(
+    screen.getByRole("tab", { name: "memberAccess.title" }),
+  ).toHaveAttribute("aria-selected", "true");
+  fireEvent.click(screen.getByRole("tab", { name: "enterprise.manage" }));
+  expect(
+    await screen.findByText("existing-user-management"),
+  ).toBeInTheDocument();
 });

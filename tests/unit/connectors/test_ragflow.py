@@ -50,6 +50,7 @@ def mock_http(monkeypatch: pytest.MonkeyPatch) -> Callable[..., list[httpx.Reque
     [
         ("http://127.0.0.1:9380/", "http://127.0.0.1:9380/api/v1"),
         ("http://10.0.0.5:9380/api/v1/", "http://10.0.0.5:9380/api/v1"),
+        ("http://ragflow.example.com", "http://ragflow.example.com/api/v1"),
         ("https://ragflow.example.com/ragflow/", "https://ragflow.example.com/ragflow/api/v1"),
     ],
 )
@@ -83,7 +84,6 @@ def test_credentials_require_api_key(key: str) -> None:
 @pytest.mark.parametrize(
     "url",
     [
-        "http://ragflow.example.com",
         "https://ragflow.example.com?key=secret",
         "http://127.0.0.1:9380/#/datasets",
         "http://user:secret@127.0.0.1:9380",

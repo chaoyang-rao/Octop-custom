@@ -297,7 +297,7 @@ export default function EnterpriseMcpAdmin() {
                                 message: t("enterpriseMcp.httpsHint"),
                               },
                               {
-                                pattern: /^https:\/\//,
+                                pattern: /^https?:\/\//i,
                                 message: t("enterpriseMcp.httpsHint"),
                               },
                             ]}

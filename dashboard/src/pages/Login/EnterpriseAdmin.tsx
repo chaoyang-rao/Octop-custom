@@ -3,15 +3,12 @@ import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 const UsersPage = lazy(() => import("../Admin/Users"));
-const EnterpriseMcpAdmin = lazy(
-  () => import("../EnterpriseMcp/EnterpriseMcpAdmin"),
-);
 
 const EnterpriseResourceAdmin = lazy(
   () => import("../EnterpriseResources/Admin"),
 );
-const CompanionAdmin = lazy(
-  () => import("../EnterpriseResources/CompanionAdmin"),
+const MemberAccessAdmin = lazy(
+  () => import("../EnterpriseResources/MemberAccessAdmin"),
 );
 
 const InferenceAdmin = lazy(
@@ -42,7 +39,7 @@ export default function EnterpriseAdmin() {
         message={t("enterprise.manageHint")}
       />
       <Tabs
-        defaultActiveKey="users"
+        defaultActiveKey={user?.role === "admin" ? "member-access" : "users"}
         items={[
           {
             key: "company-usage",
@@ -74,11 +71,11 @@ export default function EnterpriseAdmin() {
                   ),
                 },
                 {
-                  key: "companion",
-                  label: t("companion.adminTitle"),
+                  key: "member-access",
+                  label: t("memberAccess.title"),
                   children: (
                     <Suspense fallback={<Spin />}>
-                      <CompanionAdmin />
+                      <MemberAccessAdmin />
                     </Suspense>
                   ),
                 },
@@ -88,15 +85,6 @@ export default function EnterpriseAdmin() {
                   children: (
                     <Suspense fallback={<Spin />}>
                       <EnterpriseResourceAdmin />
-                    </Suspense>
-                  ),
-                },
-                {
-                  key: "mcp",
-                  label: t("enterpriseMcp.adminTitle"),
-                  children: (
-                    <Suspense fallback={<Spin />}>
-                      <EnterpriseMcpAdmin />
                     </Suspense>
                   ),
                 },

@@ -6,12 +6,11 @@ import re
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from octop.i18n.domains.errors import error_message
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.utils.ssrf_guard import (
     UnsafeOutboundUrl,
     is_private_or_local_host,
-    validate_https_url,
+    validate_http_url,
 )
 
 CUSTOM_MCP_KIND = "custom-mcp"
@@ -121,7 +120,7 @@ def validate_mcp_http_url(url: str) -> str:
 
     Loopback and LAN (private / link-local) hosts may use HTTP or HTTPS with no
     SSRF restriction — operators deliberately point connectors at local MCP
-    servers. Public remote hosts must use HTTPS and pass the shared SSRF guard
+    servers. Public remote hosts may use HTTP or HTTPS and pass the shared SSRF guard
     (literal private/reserved IPs rejected).
     """
     text = url.strip()
@@ -150,16 +149,9 @@ def validate_mcp_http_url(url: str) -> str:
     if is_private_or_local_host(host):
         return text
 
-    # Public remote MCP: HTTPS only + existing SSRF guards.
-    if parsed.scheme != "https":
-        details = {"host": host}
-        raise OctopError(
-            ErrorCode.CONNECTOR_MCP_HTTPS_REQUIRED,
-            error_message(ErrorCode.CONNECTOR_MCP_HTTPS_REQUIRED.value, "en", **details),
-            details=details,
-        )
+    # Public remote MCP: allow HTTP(S) with the existing SSRF guards.
     try:
-        validate_https_url(text, field="url")
+        validate_http_url(text, field="url")
     except UnsafeOutboundUrl as exc:
         raise OctopError(
             ErrorCode.CONNECTOR_MCP_URL_INVALID,

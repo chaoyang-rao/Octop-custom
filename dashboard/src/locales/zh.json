@@ -279,7 +279,14 @@
     "DORA_MODEL_UNAVAILABLE": "企业模型服务暂不可用，请联系管理员或稍后重试。",
     "DORA_MODEL_INVALID_REQUEST": "模型请求无效或超出企业服务限制。",
     "DORA_MODEL_RATE_LIMITED": "模型服务请求过于频繁，请稍后重试。",
-    "DORA_MODEL_MANAGED": "这是企业内置模型连接，请在企业授权中心统一管理。"
+    "DORA_MODEL_MANAGED": "这是企业内置模型连接，请在企业授权中心统一管理。",
+    "ENTERPRISE_ACCESS_POLICY_INVALID": "企业开放权限配置无效。",
+    "ENTERPRISE_ACCESS_POLICY_CONFLICT": "开放权限已更新，请刷新后重试。",
+    "ENTERPRISE_CLIENT_UPGRADE_REQUIRED": "请升级企业版客户端以使用统一开放权限。",
+    "COMPANION_ACCESS_DENIED": "超级管理员尚未为你开放桌宠。",
+    "COMPANION_NOT_AVAILABLE": "桌宠安装包暂未就绪，请联系管理员。",
+    "COMPANION_INSTALL_FAILED": "桌宠准备失败，请重试或联系管理员。",
+    "COMPANION_PLATFORM_UNSUPPORTED": "桌宠目前仅支持 macOS。"
   },
   "nav": {
     "chat": "对话",
@@ -366,7 +373,8 @@
     "conversations": "会话库",
     "taskQueue": "任务队列与工作流",
     "accountConnections": "账号与密码库",
-    "mobileAccess": "移动与远程访问"
+    "mobileAccess": "移动与远程访问",
+    "companion": "桌宠"
   },
   "skillPackages": {
     "title": "技能包",
@@ -8021,7 +8029,7 @@
     "adminTitle": "企业 MCP 目录",
     "memberHint": "企业目录由管理员发布。个人授权和专家选择保留在本机。",
     "adminHint": "在公司授权中心保存草稿并发布版本，成员电脑会自动同步。",
-    "definitionOnly": "目录只分发 HTTPS 连接定义，不包含个人密码、令牌或远程执行命令。",
+    "definitionOnly": "目录只分发 HTTP / HTTPS 连接定义，不包含个人密码、令牌或远程执行命令。",
     "loadFailed": "无法读取企业 MCP 目录",
     "syncNow": "立即同步",
     "syncFailed": "目录同步失败",
@@ -8043,6 +8051,11 @@
     "updateAuthorization": "更新本机授权",
     "clearAuthorization": "移除本机授权",
     "noCredentialsRequired": "无需个人凭据",
+    "connectionAuthMode": "连接授权方式",
+    "companyNoInput": "企业登录免填",
+    "gatewayBasic": "MCP 连接账号与密码",
+    "useCompanyCredential": "使用企业身份获取本人的 MCP 连接凭据",
+    "gatewayHint": "连接方式不改变查询范围。三个 MCP 均按超级管理员在服务器为本人开放的权限调用；业务凭据留在服务器，连接账号与密码是 MCP 专用授权。",
     "authorizeEntry": "授权 {{name}}",
     "personalAuthorizationHint": "使用你自己的业务账号或独立 MCP 令牌。凭据加密保存在本机，不会放入企业目录。飞书登录不替代业务系统的权限。",
     "saveAuthorization": "保存本机授权",
@@ -8067,8 +8080,8 @@
     "stableIdHint": "发布后保持 ID 不变，以便保留成员授权与专家选择。",
     "idHint": "使用 1–64 位字母、数字、下划线或连字符",
     "displayName": "连接名称",
-    "url": "HTTPS MCP 地址",
-    "httpsHint": "请输入有效的 HTTPS 地址",
+    "url": "HTTP / HTTPS MCP 地址",
+    "httpsHint": "请输入有效的 HTTP 或 HTTPS 地址",
     "authentication": "成员授权方式",
     "authBearer": "个人 MCP 令牌",
     "authBasic": "个人业务账号与密码",
@@ -8217,7 +8230,15 @@
     "modelServiceSaved": "哆啦模型服务已保存",
     "saveModelService": "保存模型服务",
     "modelServicePrivacy": "授权中心仅记录模型和 Token 用量，不集中保存对话正文。模型请求会发送至配置的词元 API；聊天记录保存在成员本机。",
-    "modelServiceLoadFailed": "模型服务加载失败"
+    "modelServiceLoadFailed": "模型服务加载失败",
+    "independentHint": "首次会自动准备桌宠组件。打开后可关闭 Octop，桌宠仍会独立运行。",
+    "notOpened": "桌宠尚未开放",
+    "contactAdmin": "请联系超级管理员，在成员开放权限中为你勾选桌宠。",
+    "preparing": "正在准备并打开桌宠…",
+    "firstInstallHint": "首次需要下载组件，请稍候。安装和启动前会核对企业授权及发布签名。",
+    "opened": "已打开独立桌宠",
+    "prepareFailed": "桌宠暂未打开，请重试。",
+    "updatePending": "桌宠已运行；退出桌宠后再次点击即可更新。"
   },
   "companyUsage": {
     "title": "企业模型用量",
@@ -8243,5 +8264,31 @@
     "estimated_other": "含 {{count}} 次估算",
     "actual": "上游实报",
     "refreshHint": "每 30 秒刷新；估算值不作为精确账单"
+  },
+  "memberAccess": {
+    "title": "成员开放权限",
+    "hint": "按 Octop 登录名单勾选即可。三个 MCP 使用服务器统一配置的只读连接；桌宠可独立运行。新成员默认关闭。",
+    "aftersales": "售后质量",
+    "workbench": "词元管理",
+    "negative": "负利润mcp",
+    "companion": "桌宠",
+    "member": "成员",
+    "status": "账号状态",
+    "disabled": "已停用",
+    "verified": "企业成员",
+    "notLinked": "尚未关联飞书",
+    "search": "搜索姓名或登录账号",
+    "save": "保存开放范围",
+    "refresh": "刷新登录名单",
+    "reset": "撤销修改",
+    "saved": "开放范围已保存",
+    "newMemberHint": "让同事先使用公司飞书登录一次，就会出现在这里。取消 MCP 勾选会阻止后续调用；取消桌宠勾选会阻止新的提问，保留原有聊天和文件。",
+    "services": "服务器只读连接（仅首次配置）",
+    "serviceHint": "勾选成员可使用服务器配置的只读查询范围。业务凭据只保存在服务器，不下发到同事电脑。",
+    "configured": "已配置",
+    "notConfigured": "待配置",
+    "configureService": "配置服务连接",
+    "serviceAccount": "已验证的服务器业务身份",
+    "serviceSaved": "服务器只读连接已保存"
   }
 }

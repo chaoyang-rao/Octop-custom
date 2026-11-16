@@ -568,7 +568,14 @@
     "DORA_MODEL_UNAVAILABLE": "企业模型服务暂不可用，请联系管理员或稍后重试。",
     "DORA_MODEL_INVALID_REQUEST": "模型请求无效或超出企业服务限制。",
     "DORA_MODEL_RATE_LIMITED": "模型服务请求过于频繁，请稍后重试。",
-    "DORA_MODEL_MANAGED": "这是企业内置模型连接，请在企业授权中心统一管理。"
+    "DORA_MODEL_MANAGED": "这是企业内置模型连接，请在企业授权中心统一管理。",
+    "ENTERPRISE_ACCESS_POLICY_INVALID": "企业开放权限配置无效。",
+    "ENTERPRISE_ACCESS_POLICY_CONFLICT": "开放权限已更新，请刷新后重试。",
+    "ENTERPRISE_CLIENT_UPGRADE_REQUIRED": "请升级企业版客户端以使用统一开放权限。",
+    "COMPANION_ACCESS_DENIED": "超级管理员尚未为你开放桌宠。",
+    "COMPANION_NOT_AVAILABLE": "桌宠安装包暂未就绪，请联系管理员。",
+    "COMPANION_INSTALL_FAILED": "桌宠准备失败，请重试或联系管理员。",
+    "COMPANION_PLATFORM_UNSUPPORTED": "桌宠目前仅支持 macOS。"
   },
   "desktop": {
     "install_log_deps": "正在安装 Python 依赖…",

@@ -124,33 +124,33 @@ def test_shared_custom_server_uses_collision_safe_name_for_viewer(
     assert svc.list_default_open_mcp_server_names(viewer_id) == []
 
 
-def test_rejects_public_http_and_allows_lan():
-    from octop.infra.errors import ErrorCode, OctopError
-
-    with pytest.raises(OctopError) as http_exc:
-        normalize_server_spec(
-            "bad",
-            {"transport": "streamable_http", "url": "http://example.com/mcp"},
-        )
-    assert http_exc.value.code is ErrorCode.CONNECTOR_MCP_HTTPS_REQUIRED
-    assert http_exc.value.details["host"] == "example.com"
-    assert "example.com" in http_exc.value.message
-    zh = http_exc.value.localized_message("zh")
-    assert "example.com" in zh
-    assert "{host}" not in zh
-    assert "HTTPS" in zh
-
+def test_allows_public_and_lan_http_and_https():
     for url in (
+        "http://example.com/mcp",
+        "https://example.com/mcp",
+        "http://101.33.215.112:8092/mcp",
+        "https://8.8.8.8/mcp",
         "http://10.0.0.1/mcp",
         "https://192.168.1.10:8443/mcp",
         "http://host.docker.internal:3000/mcp",
         "http://nas.local/mcp",
     ):
         spec = normalize_server_spec(
-            "lan",
+            "server",
             {"transport": "streamable_http", "url": url},
         )
         assert spec["url"] == url
+
+
+@pytest.mark.parametrize("scheme", ["http", "https"])
+def test_public_mcp_rejects_multicast_targets(scheme: str):
+    from octop.infra.errors import ErrorCode, OctopError
+
+    with pytest.raises(OctopError) as exc:
+        normalize_server_spec(
+            "bad", {"transport": "streamable_http", "url": f"{scheme}://224.0.0.1/mcp"}
+        )
+    assert exc.value.code is ErrorCode.CONNECTOR_MCP_URL_INVALID
 
 
 def test_allows_loopback_http_and_https():

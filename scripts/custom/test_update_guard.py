@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -39,12 +40,13 @@ class UpdateProtectionTests(unittest.TestCase):
             probe.assert_not_called()
 
     def test_health_marks_only_custom_processes(self):
+        version = json.loads(Path(__file__).with_name("upstream-lock.json").read_text())["custom_version"]
         server = SimpleNamespace(
             database_bound=True, user_manager=None, app_runtime=None, _started_at=0
         )
         with patch.dict(os.environ, {"OCTOP_CUSTOM_BUILD": "1"}):
             self.assertEqual(
-                asyncio.run(health(server))["custom_release"], "1.0.3b3.post2026111601"
+                asyncio.run(health(server))["custom_release"], version
             )
         with patch.dict(os.environ, {"OCTOP_CUSTOM_BUILD": ""}):
             self.assertNotIn("custom_release", asyncio.run(health(server)))

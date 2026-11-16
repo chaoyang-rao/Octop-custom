@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from octop.api.deps import current_user, get_server
 from octop.infra.connectors.enterprise_account_auth import member_account_request
 from octop.infra.connectors.enterprise_catalog import CatalogEntry
+from octop.infra.connectors.enterprise_mcp_protocol import AuthMode
 from octop.infra.connectors.enterprise_mcp_sync import sync_for
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.identity import User
@@ -78,6 +79,9 @@ class EnterpriseMcpEntryState(CatalogEntry):
     local_disabled: bool
     needs_reauthorization: bool
     configuration_error: str | None = None
+    auth_modes: list[AuthMode] = Field(default_factory=list)
+    selected_auth_mode: AuthMode = "none"
+    authorization_error: str | None = None
 
 
 class EnterpriseMcpNodeState(BaseModel):
@@ -94,6 +98,9 @@ class EnterpriseMcpCredentials(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     expected_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    auth_mode: AuthMode | None = None
+    use_company_identity: bool = False
+    account_id: str = Field(default="", max_length=64)
     token: SecretStr | None = Field(default=None, max_length=16384, repr=False)
     username: SecretStr | None = Field(default=None, max_length=4096, repr=False)
     password: SecretStr | None = Field(default=None, max_length=12288, repr=False)
@@ -155,8 +162,15 @@ async def authorize_company_mcp(
         for key in ("token", "username", "password")
         if (value := getattr(body, key)) is not None
     }
+    options: dict[str, Any] = {}
+    if body.auth_mode is not None:
+        options.update(
+            auth_mode=body.auth_mode,
+            use_company_identity=body.use_company_identity,
+            account_id=body.account_id,
+        )
     return await sync_for(server).save_credentials(
-        user, entry_id, credentials, body.expected_fingerprint
+        user, entry_id, credentials, body.expected_fingerprint, **options
     )
 
 

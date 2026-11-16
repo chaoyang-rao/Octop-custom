@@ -693,6 +693,10 @@ class OctopServer:
 
         user_mgr = UserManager(self.services)
         await user_mgr.boot()
+        if config.enterprise_center_enabled:
+            from octop.infra.enterprise_resources.member_access import access_for
+
+            await asyncio.to_thread(access_for(self).ensure_default)
         if not config.enterprise_center_enabled:
             await proactive_scheduler.start_all()
 

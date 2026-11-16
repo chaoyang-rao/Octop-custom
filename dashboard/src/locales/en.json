@@ -279,7 +279,14 @@
     "DORA_MODEL_UNAVAILABLE": "The company model service is unavailable. Contact your administrator or try again later.",
     "DORA_MODEL_INVALID_REQUEST": "The model request is invalid or exceeds company service limits.",
     "DORA_MODEL_RATE_LIMITED": "Too many model requests. Please try again later.",
-    "DORA_MODEL_MANAGED": "This built-in model connection is managed by the company identity center."
+    "DORA_MODEL_MANAGED": "This built-in model connection is managed by the company identity center.",
+    "ENTERPRISE_ACCESS_POLICY_INVALID": "The company member access policy is invalid.",
+    "ENTERPRISE_ACCESS_POLICY_CONFLICT": "Member access changed. Refresh and try again.",
+    "ENTERPRISE_CLIENT_UPGRADE_REQUIRED": "Upgrade the company client to use centrally managed access.",
+    "COMPANION_ACCESS_DENIED": "The super-administrator has not enabled the desktop pet for you.",
+    "COMPANION_NOT_AVAILABLE": "The desktop pet installer is not available. Contact your administrator.",
+    "COMPANION_INSTALL_FAILED": "Could not prepare the desktop pet. Retry or contact your administrator.",
+    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only."
   },
   "nav": {
     "chat": "Conversation",
@@ -366,7 +373,8 @@
     "conversations": "Conversations",
     "taskQueue": "Task queue & workflows",
     "accountConnections": "Accounts & vaults",
-    "mobileAccess": "Mobile & remote access"
+    "mobileAccess": "Mobile & remote access",
+    "companion": "Desktop pet"
   },
   "skillPackages": {
     "title": "Skill Packages",
@@ -8021,7 +8029,7 @@
     "adminTitle": "Company MCP catalog",
     "memberHint": "Your administrator publishes the company catalog. Personal authorization and expert selections stay on this computer.",
     "adminHint": "Save and publish catalog versions in the company authority center. Member computers synchronize automatically.",
-    "definitionOnly": "The catalog distributes HTTPS connection definitions, without personal passwords, tokens, or remote execution commands.",
+    "definitionOnly": "The catalog distributes HTTP / HTTPS connection definitions, without personal passwords, tokens, or remote execution commands.",
     "loadFailed": "Could not load the company MCP catalog",
     "syncNow": "Sync now",
     "syncFailed": "Catalog synchronization failed",
@@ -8043,6 +8051,11 @@
     "updateAuthorization": "Update local authorization",
     "clearAuthorization": "Remove local authorization",
     "noCredentialsRequired": "No personal credentials required",
+    "connectionAuthMode": "Connection authorization mode",
+    "companyNoInput": "Company sign-in, no extra input",
+    "gatewayBasic": "MCP connection username and password",
+    "useCompanyCredential": "Use my company identity to obtain my MCP connection credential",
+    "gatewayHint": "Connection modes do not change the query scope. The server enforces the MCP access your super-administrator enabled for you. Business credentials stay on the server; connection usernames and passwords are MCP-specific grants.",
     "authorizeEntry": "Authorize {{name}}",
     "personalAuthorizationHint": "Use your own business account or individual MCP token. Credentials are encrypted on this computer and are not included in the company catalog. Feishu sign-in does not replace business-system permissions.",
     "saveAuthorization": "Save local authorization",
@@ -8067,8 +8080,8 @@
     "stableIdHint": "Keep this ID unchanged after publication to preserve member authorization and expert selections.",
     "idHint": "Use 1–64 letters, digits, underscores, or hyphens",
     "displayName": "Connection name",
-    "url": "HTTPS MCP URL",
-    "httpsHint": "Enter a valid HTTPS URL",
+    "url": "HTTP / HTTPS MCP URL",
+    "httpsHint": "Enter a valid HTTP or HTTPS URL",
     "authentication": "Member authorization",
     "authBearer": "Individual MCP token",
     "authBasic": "Individual business username and password",
@@ -8217,7 +8230,15 @@
     "modelServiceSaved": "Dora model service saved",
     "saveModelService": "Save model service",
     "modelServicePrivacy": "The identity center records model and token usage, not chat bodies. Inference requests are forwarded to the configured API; conversation history stays on each member’s computer.",
-    "modelServiceLoadFailed": "Failed to load the model service"
+    "modelServiceLoadFailed": "Failed to load the model service",
+    "independentHint": "The pet component is prepared automatically on first use. Once opened, it keeps running independently when Octop is closed.",
+    "notOpened": "Desktop pet access is not enabled",
+    "contactAdmin": "Ask your super-administrator to enable the desktop pet for you in Member access.",
+    "preparing": "Preparing and opening the desktop pet…",
+    "firstInstallHint": "The first launch downloads the component. Company access and the publisher signature are verified before installation and launch.",
+    "opened": "Opened the independent desktop pet",
+    "prepareFailed": "Could not open the desktop pet. Try again.",
+    "updatePending": "The pet is running. Quit it and click again to update."
   },
   "companyUsage": {
     "title": "Company model usage",
@@ -8243,5 +8264,31 @@
     "estimated_other": "{{count}} estimated requests",
     "actual": "Provider reported",
     "refreshHint": "Refreshes every 30 seconds. Estimates are not an exact invoice."
+  },
+  "memberAccess": {
+    "title": "Member access",
+    "hint": "Select members from Octop sign-ins. The three MCPs use centrally managed read-only connections. The pet runs independently. New members are disabled by default.",
+    "aftersales": "Aftersales quality",
+    "workbench": "Quota workbench",
+    "negative": "Negative-profit MCP",
+    "companion": "Desktop pet",
+    "member": "Member",
+    "status": "Account status",
+    "disabled": "Disabled",
+    "verified": "Company member",
+    "notLinked": "Feishu not linked",
+    "search": "Search name or login account",
+    "save": "Save access",
+    "refresh": "Refresh sign-ins",
+    "reset": "Discard changes",
+    "saved": "Member access saved",
+    "newMemberHint": "Ask colleagues to sign in with company Feishu once to appear here. Revoking an MCP blocks subsequent calls; revoking the pet blocks new turns while retaining chats and files.",
+    "services": "Server read-only connections (one-time setup)",
+    "serviceHint": "Enabled members can use the configured server read-only query scope. Business credentials stay on the server and are not distributed to member computers.",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "configureService": "Configure connection",
+    "serviceAccount": "Verified server business identity",
+    "serviceSaved": "Server read-only connection saved"
   }
 }

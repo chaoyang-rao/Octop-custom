@@ -237,15 +237,12 @@ def test_obsidian_cli_catalog_and_credentials(tmp_path: Path):
         )
 
 
-def test_weknora_rejects_non_https_remote_url():
-    from octop.infra.errors import ErrorCode, OctopError
-
-    with pytest.raises(OctopError) as exc:
-        validate_create_credentials(
-            "weknora",
-            {"base_url": "http://weknora.example.com", "api_key": "sk-secret"},
-        )
-    assert exc.value.code is ErrorCode.CONNECTOR_MCP_HTTPS_REQUIRED
+def test_weknora_allows_public_http_and_rejects_query():
+    payload = validate_create_credentials(
+        "weknora",
+        {"base_url": "http://weknora.example.com", "api_key": "sk-secret"},
+    )
+    assert payload["base_url"] == "http://weknora.example.com/api/v1"
     with pytest.raises(ValueError, match="query string or fragment"):
         validate_create_credentials(
             "weknora",

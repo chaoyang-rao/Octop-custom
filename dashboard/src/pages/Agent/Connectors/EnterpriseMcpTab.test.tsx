@@ -73,6 +73,71 @@ afterEach(() => {
 });
 
 describe("company MCP member configuration", { timeout: 15_000 }, () => {
+  it.each(["none", "bearer", "basic"] as const)(
+    "connects a gateway using %s without asking for extra credentials",
+    async (mode) => {
+      const gatewayState: EnterpriseMcpNodeState = {
+        ...state,
+        entries: [
+          {
+            ...state.entries[0],
+            entry_id: "negative-profit",
+            auth_kind: "none",
+            auth_modes: ["none", "bearer", "basic"],
+            selected_auth_mode: "none",
+            url: "https://company.example/api/enterprise/mcp/gateway/negative-profit",
+          },
+        ],
+      };
+      vi.mocked(enterpriseMcpApi.nodeStatus).mockResolvedValue(gatewayState);
+      vi.mocked(enterpriseMcpApi.authorize).mockResolvedValue({
+        ...gatewayState,
+        entries: [
+          {
+            ...gatewayState.entries[0],
+            authorized: true,
+            selected_auth_mode: mode,
+          },
+        ],
+      });
+      render(<EnterpriseMcpTab />);
+      fireEvent.click(
+        await screen.findByRole("button", { name: "enterpriseMcp.authorize" }),
+      );
+      if (mode !== "none") {
+        fireEvent.mouseDown(
+          screen.getByRole("combobox", {
+            name: "enterpriseMcp.connectionAuthMode",
+          }),
+        );
+        const labels = await screen.findAllByText(
+          mode === "basic"
+            ? "enterpriseMcp.gatewayBasic"
+            : "enterpriseMcp.authBearer",
+        );
+        const option = labels.find((item) =>
+          item.closest(".ant-select-item-option"),
+        );
+        expect(option).toBeDefined();
+        fireEvent.click(option!);
+      }
+      expect(screen.queryByLabelText("enterpriseMcp.password")).toBeNull();
+      fireEvent.click(
+        screen.getByRole("button", { name: "enterpriseMcp.saveAuthorization" }),
+      );
+      await waitFor(() =>
+        expect(enterpriseMcpApi.authorize).toHaveBeenCalledWith(
+          "negative-profit",
+          expect.objectContaining({
+            auth_mode: mode,
+            use_company_identity: true,
+            expected_fingerprint: "a".repeat(64),
+          }),
+        ),
+      );
+      expect(enterpriseMcpApi.authorizeAccount).not.toHaveBeenCalled();
+    },
+  );
   it("offers only verified linked accounts and waits for confirmation without asking for a password", async () => {
     const linked = {
       ...state,

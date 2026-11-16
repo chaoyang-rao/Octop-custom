@@ -38,6 +38,14 @@ class BusinessAccountAuth:
         if entry is None:
             raise _denied()
         origin = os.environ.get("OCTOP_MCP_ACCOUNT_ORIGIN", "").rstrip("/")
+        from octop.infra.connectors.enterprise_mcp_protocol import is_gateway_entry
+
+        if is_gateway_entry(entry, origin):
+            from octop.infra.connectors.enterprise_mcp_gateway import gateway_for
+
+            entry = gateway_for(self.server).targets().get(entry_id)
+            if entry is None:
+                raise _denied()
         path = "aftersales" if entry_id == "aftersales-quality" else "workbench"
         expected_auth = "bearer" if entry_id == "aftersales-quality" else "basic"
         if (
