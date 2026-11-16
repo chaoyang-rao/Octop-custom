@@ -42,6 +42,7 @@ export default function EnterpriseAdmin() {
         message={t("enterprise.manageHint")}
       />
       <Tabs
+        defaultActiveKey="users"
         items={[
           {
             key: "company-usage",

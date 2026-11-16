@@ -212,6 +212,18 @@ def test_member_connections_use_personal_device_grants_not_the_shared_upstream_k
         and node.server.services.provider_repo.get_by_name(name).api_key
         == "fixture-refreshed-device-grant"
     )
+    updated_profile = {**profile, "stream_usage": True, "revision": "changed-stream-usage"}
+    changed, _ = local._apply(
+        node.user,
+        {"token": "fixture-refreshed-device-grant"},
+        updated_profile,
+        "https://company.example",
+    )
+    assert changed
+    assert (
+        json.loads(node.server.services.provider_repo.get_by_name(name).extra_json)["stream_usage"]
+        is True
+    )
 
 
 @pytest.mark.asyncio

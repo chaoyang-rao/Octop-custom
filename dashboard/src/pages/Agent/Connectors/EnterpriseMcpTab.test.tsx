@@ -23,6 +23,8 @@ vi.mock("../../../api/modules/enterpriseMcp", () => ({
     nodeStatus: vi.fn(),
     sync: vi.fn(),
     authorize: vi.fn(),
+    accounts: vi.fn(),
+    authorizeAccount: vi.fn(),
     clearAuthorization: vi.fn(),
   },
 }));
@@ -71,6 +73,45 @@ afterEach(() => {
 });
 
 describe("company MCP member configuration", { timeout: 15_000 }, () => {
+  it("offers only verified linked accounts and waits for confirmation without asking for a password", async () => {
+    const linked = {
+      ...state,
+      entries: [
+        {
+          ...state.entries[0],
+          entry_id: "quota-workbench",
+          auth_kind: "basic" as const,
+        },
+      ],
+    };
+    vi.mocked(enterpriseMcpApi.nodeStatus).mockResolvedValue(linked);
+    vi.mocked(enterpriseMcpApi.accounts).mockResolvedValue({
+      identity_name: "饶朝洋",
+      accounts: [{ account_id: "13", label: "饶朝洋 · chaoyang" }],
+    });
+    vi.mocked(enterpriseMcpApi.authorizeAccount).mockResolvedValue({
+      ...linked,
+      entries: [{ ...linked.entries[0], authorized: true }],
+    });
+    render(<EnterpriseMcpTab />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "enterpriseMcp.authorize" }),
+    );
+    expect(await screen.findByText("饶朝洋 · chaoyang")).toBeInTheDocument();
+    expect(screen.queryByLabelText("enterpriseMcp.password")).toBeNull();
+    expect(enterpriseMcpApi.authorizeAccount).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "enterpriseMcp.useAccount" }),
+    );
+    await waitFor(() =>
+      expect(enterpriseMcpApi.authorizeAccount).toHaveBeenCalledWith(
+        "quota-workbench",
+        "13",
+        "a".repeat(64),
+      ),
+    );
+    expect(enterpriseMcpApi.authorize).not.toHaveBeenCalled();
+  });
   it("shows a read-only catalog and server-timezone synchronization status without automatically authorizing", async () => {
     render(<EnterpriseMcpTab />);
     await screen.findByText("Aftersales");

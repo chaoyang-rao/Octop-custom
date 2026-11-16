@@ -81,6 +81,7 @@ class BuiltinModels:
             or row.api_key != identity["token"]
             or row.models_json != model_json
             or row.base_url != base
+            or row.extra_json != extra_json
             or not row.enabled
         )
         if row is None:
