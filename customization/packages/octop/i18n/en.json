@@ -575,7 +575,8 @@
     "COMPANION_ACCESS_DENIED": "The super-administrator has not enabled the desktop pet for you.",
     "COMPANION_NOT_AVAILABLE": "The desktop pet installer is not available. Contact your administrator.",
     "COMPANION_INSTALL_FAILED": "Could not prepare the desktop pet. Retry or contact your administrator.",
-    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only."
+    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only.",
+    "ENTERPRISE_CODE_INVALID": "This sign-in code is invalid, expired or already used. Return to Octop and start again."
   },
   "desktop": {
     "install_log_deps": "Installing Python dependencies…",

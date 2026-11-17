@@ -575,7 +575,8 @@
     "COMPANION_ACCESS_DENIED": "超级管理员尚未为你开放桌宠。",
     "COMPANION_NOT_AVAILABLE": "桌宠安装包暂未就绪，请联系管理员。",
     "COMPANION_INSTALL_FAILED": "桌宠准备失败，请重试或联系管理员。",
-    "COMPANION_PLATFORM_UNSUPPORTED": "桌宠目前仅支持 macOS。"
+    "COMPANION_PLATFORM_UNSUPPORTED": "桌宠目前仅支持 macOS。",
+    "ENTERPRISE_CODE_INVALID": "登录码已失效或已使用。请回到 Octop 重新发起登录。"
   },
   "desktop": {
     "install_log_deps": "正在安装 Python 依赖…",

@@ -5,6 +5,13 @@ export const octopAgentsApi = {
     request<{ agent_id: string; name: string }>("/agents/primary/ensure", {
       method: "POST",
     }),
+  preparationStatus: (id: string) =>
+    request<{
+      agent_id: string;
+      name: string;
+      state: string;
+      last_error?: string | null;
+    }>(`/agents/${encodeURIComponent(id)}`),
   copyExpert: (agentId: string, name?: string) =>
     request<{ agent_id: string; name: string }>(
       `/agents/${encodeURIComponent(agentId)}/copy`,

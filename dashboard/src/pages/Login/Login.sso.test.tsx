@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const startOauth = vi.hoisted(() => vi.fn());
+const getAuthStatus = vi.hoisted(() => vi.fn());
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -14,7 +15,7 @@ vi.mock("../../context/ThemeContext", () => ({
 }));
 vi.mock("../../api/modules/auth", () => ({
   authApi: {
-    getAuthStatus: () => Promise.resolve({ setup_required: false }),
+    getAuthStatus,
     getOauthStatus: () =>
       Promise.resolve({
         providers: [{ kind: "feishu", enabled: true, display_name: "Feishu" }],
@@ -45,6 +46,7 @@ let location: {
 describe("SSO when desktop or browser popups are unavailable", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getAuthStatus.mockResolvedValue({ setup_required: false });
     location = {
       href: "http://localhost:3000/login",
       origin: "http://localhost:3000",
@@ -105,5 +107,33 @@ describe("SSO when desktop or browser popups are unavailable", () => {
     await signIn();
     await waitFor(() => expect(popup.location.href).toBe(authorizeUrl));
     expect(location.href).toBe("http://localhost:3000/login");
+  });
+
+  it("uses the current company tab and preserves only the validated device code across Feishu login", async () => {
+    getAuthStatus.mockResolvedValue({
+      setup_required: false,
+      enterprise_center: true,
+    });
+    const open = vi.spyOn(realWindow, "open").mockReturnValue(null);
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/login?enterprise=1&device_code=ABCD-EFGH&next=https://other.test",
+        ]}
+      >
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "enterprise.continueFeishu" }),
+    );
+    await waitFor(() =>
+      expect(startOauth).toHaveBeenCalledExactlyOnceWith(
+        "feishu",
+        "/enterprise/approve?code=ABCDEFGH",
+      ),
+    );
+    expect(open).not.toHaveBeenCalled();
+    expect(location.href).toBe(authorizeUrl);
   });
 });

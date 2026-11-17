@@ -85,6 +85,21 @@ describe("401 handling", () => {
     expect(mod.getAuthToken()).toBe("expired-token");
   });
 
+  it("retains only the short device code when a company confirmation session expires", async () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        pathname: "/enterprise/approve",
+        search: "?code=ABCD-EFGH&redirect=https://other.test",
+        replace,
+      },
+    });
+    await expect(mod.request("/enterprise/devices")).rejects.toThrow();
+    expect(replace).toHaveBeenCalledWith(
+      "/login?enterprise=1&device_code=ABCDEFGH",
+    );
+  });
+
   it("redirects only once when several requests fail concurrently", async () => {
     const listener = vi.fn((event: Event) => event.preventDefault());
     window.addEventListener(mod.UNAUTHORIZED_EVENT, listener);

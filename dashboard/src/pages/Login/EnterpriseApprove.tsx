@@ -18,12 +18,21 @@ import {
 } from "../../api/modules/enterprise";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { apiErrorMessage } from "../../utils/apiError";
+import { parseApiError } from "../../utils/apiError";
+import {
+  enterpriseDeviceCode,
+  enterpriseApprovalPath,
+  enterpriseApprovalLoginPath,
+} from "../../utils/enterpriseApproval";
 import styles from "./enterprise.module.less";
 
 export default function EnterpriseApprove() {
   const { t } = useTranslation();
   const user = useCurrentUser();
-  const [code, setCode] = useState("");
+  const queryCode = enterpriseDeviceCode(
+    new URLSearchParams(window.location.search).get("code"),
+  );
+  const [code, setCode] = useState(queryCode);
   const [preview, setPreview] = useState<{ name: string; code: string } | null>(
     null,
   );
@@ -31,6 +40,7 @@ export default function EnterpriseApprove() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [needsFeishu, setNeedsFeishu] = useState(false);
   const refresh = useCallback(
     async () => setDevices(await enterpriseApi.devices()),
     [],
@@ -38,6 +48,32 @@ export default function EnterpriseApprove() {
   useEffect(() => {
     void refresh().catch(() => {});
   }, [refresh]);
+
+  useEffect(() => {
+    if (!queryCode) return;
+    let cancelled = false;
+    setBusy(true);
+    setError("");
+    void enterpriseApi
+      .inspect(queryCode)
+      .then((value) => {
+        if (!cancelled) setPreview({ ...value, code: queryCode });
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(apiErrorMessage(err, t("enterprise.failed"), t));
+          setNeedsFeishu(
+            parseApiError(err)?.code === "ENTERPRISE_FEISHU_REQUIRED",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [queryCode, t]);
 
   const action = async (task: () => Promise<unknown>) => {
     setBusy(true);
@@ -53,7 +89,7 @@ export default function EnterpriseApprove() {
   const bind = async () => {
     const { authorization_url } = await authApi.startOauthBind(
       "feishu",
-      "/enterprise/approve",
+      enterpriseApprovalPath(queryCode || code),
     );
     window.location.assign(authorization_url);
   };
@@ -81,37 +117,49 @@ export default function EnterpriseApprove() {
               message={t("enterprise.approved")}
             />
           )}
-          <Form
-            layout="vertical"
-            onFinish={() =>
-              void action(async () => {
-                setDone(false);
-                setPreview({ ...(await enterpriseApi.inspect(code)), code });
-              })
-            }
-          >
-            <Form.Item
-              label={t("enterprise.codeLabel")}
-              htmlFor="enterprise-device-code"
-            >
-              <Input
-                id="enterprise-device-code"
-                aria-label={t("enterprise.codeLabel")}
-                value={code}
-                disabled={busy}
-                autoComplete="one-time-code"
-                maxLength={12}
-                onChange={(e) => {
-                  setCode(e.target.value);
-                  setPreview(null);
-                  setDone(false);
-                }}
-              />
-            </Form.Item>
-            <Button htmlType="submit" loading={busy} disabled={!code.trim()}>
-              {t("enterprise.inspect")}
-            </Button>
-          </Form>
+          {!done && (
+            <details className={styles.details} open={!queryCode || !!error}>
+              <summary>{t("enterprise.codeFallback")}</summary>
+              <Form
+                layout="vertical"
+                onFinish={() =>
+                  void action(async () => {
+                    setDone(false);
+                    setPreview({
+                      ...(await enterpriseApi.inspect(code)),
+                      code,
+                    });
+                  })
+                }
+              >
+                <Form.Item
+                  label={t("enterprise.codeLabel")}
+                  htmlFor="enterprise-device-code"
+                >
+                  <Input
+                    id="enterprise-device-code"
+                    aria-label={t("enterprise.codeLabel")}
+                    value={code}
+                    disabled={busy}
+                    autoComplete="one-time-code"
+                    maxLength={12}
+                    onChange={(e) => {
+                      setCode(e.target.value);
+                      setPreview(null);
+                      setDone(false);
+                    }}
+                  />
+                </Form.Item>
+                <Button
+                  htmlType="submit"
+                  loading={busy}
+                  disabled={!code.trim()}
+                >
+                  {t("enterprise.inspect")}
+                </Button>
+              </Form>
+            </details>
+          )}
           {preview && (
             <>
               <Alert
@@ -135,53 +183,69 @@ export default function EnterpriseApprove() {
               </Button>
             </>
           )}
-          <Button onClick={() => void action(bind)}>
-            {t("enterprise.bindFeishu")}
-          </Button>
-          <Typography.Title level={2}>
-            {t("enterprise.devices")}
-          </Typography.Title>
-          <List
-            dataSource={devices}
-            locale={{ emptyText: t("enterprise.noDevices") }}
-            renderItem={(device) => (
-              <List.Item
-                actions={[
-                  <Button
-                    key="revoke"
-                    disabled={!!device.revoked_at || busy}
-                    onClick={() =>
-                      void action(async () => {
-                        await enterpriseApi.revoke(device.device_id);
-                        await refresh();
-                      })
-                    }
-                  >
-                    {device.revoked_at
-                      ? t("enterprise.revoked")
-                      : t("enterprise.revoke")}
-                  </Button>,
-                ]}
-              >
-                {device.name}
-              </List.Item>
-            )}
-          />
-          {(user?.role === "admin" || user?.permissions?.includes("users")) && (
-            <Button href="/enterprise/admin">{t("enterprise.manage")}</Button>
+          {(needsFeishu ||
+            !user?.sso_identities?.some(
+              (identity) => identity.kind === "feishu",
+            )) && (
+            <Button onClick={() => void action(bind)}>
+              {t("enterprise.bindFeishu")}
+            </Button>
           )}
-          <Button
-            disabled={busy}
-            onClick={() =>
-              void action(async () => {
-                await authApi.logout();
-                clearAuthToken();
-                window.location.assign("/login?enterprise=1");
-              })
-            }
-          >
-            {t("auth.logout")}
-          </Button>
+          {done && (
+            <Typography.Paragraph>
+              {t("enterprise.returnToApp")}
+            </Typography.Paragraph>
+          )}
+          <details className={styles.details}>
+            <summary>{t("enterprise.deviceManagement")}</summary>
+            <Typography.Title level={2}>
+              {t("enterprise.devices")}
+            </Typography.Title>
+            <List
+              dataSource={devices}
+              locale={{ emptyText: t("enterprise.noDevices") }}
+              renderItem={(device) => (
+                <List.Item
+                  actions={[
+                    <Button
+                      key="revoke"
+                      disabled={!!device.revoked_at || busy}
+                      onClick={() =>
+                        void action(async () => {
+                          await enterpriseApi.revoke(device.device_id);
+                          await refresh();
+                        })
+                      }
+                    >
+                      {device.revoked_at
+                        ? t("enterprise.revoked")
+                        : t("enterprise.revoke")}
+                    </Button>,
+                  ]}
+                >
+                  {device.name}
+                </List.Item>
+              )}
+            />
+            {(user?.role === "admin" ||
+              user?.permissions?.includes("users")) && (
+              <Button href="/enterprise/admin">{t("enterprise.manage")}</Button>
+            )}
+            <Button
+              disabled={busy}
+              onClick={() =>
+                void action(async () => {
+                  await authApi.logout();
+                  clearAuthToken();
+                  window.location.assign(
+                    enterpriseApprovalLoginPath(queryCode || code),
+                  );
+                })
+              }
+            >
+              {t("auth.logout")}
+            </Button>
+          </details>
         </Space>
       </Card>
     </main>

@@ -112,6 +112,43 @@ describe("login configuration discovery", () => {
     ).toBeNull();
   });
 
+  it("guides company employees to Feishu while keeping administrator login optional", async () => {
+    mocks.status.mockResolvedValue({
+      setup_required: false,
+      enterprise_center: true,
+    });
+    mocks.oauth.mockResolvedValue({
+      providers: [{ kind: "feishu", enabled: true, display_name: "Company" }],
+    });
+    renderLogin("/login?enterprise=1&device_code=ABCDEFGH");
+    expect(
+      await screen.findByRole("button", { name: "enterprise.continueFeishu" }),
+    ).toBeVisible();
+    expect(screen.queryByPlaceholderText("login.username")).toBeNull();
+    expect(screen.queryByPlaceholderText("login.password")).toBeNull();
+    expect(
+      screen.getByRole("link", {
+        name: "enterprise.adminSignIn",
+        hidden: true,
+      }),
+    ).toHaveAttribute(
+      "href",
+      "/login?enterprise=1&device_code=ABCDEFGH&admin_login=1",
+    );
+  });
+
+  it("explains who can fix a missing company login configuration", async () => {
+    mocks.status.mockResolvedValue({
+      setup_required: false,
+      enterprise_center: true,
+    });
+    renderLogin("/login?enterprise=1");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "enterprise.centerUnavailable",
+    );
+    expect(screen.queryByPlaceholderText("login.username")).toBeNull();
+  });
+
   it.each([false, true])(
     "loads a logo that actually exists in the shipped public files (dark=%s)",
     async (dark) => {

@@ -9,6 +9,11 @@
 }
 .card {
   width: min(100%, 520px);
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 24px;
+    }
+  }
 }
 .content {
   width: 100%;
@@ -21,4 +26,36 @@
   font-family: monospace;
   font-size: 30px;
   letter-spacing: 0.12em;
+}
+.details {
+  width: 100%;
+  color: var(--fn-text-secondary);
+  summary {
+    cursor: pointer;
+    padding: 8px 0;
+  }
+}
+.centerCard {
+  width: min(100%, 440px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  padding: 32px;
+  background: var(--fn-bg-primary);
+  border: 1px solid var(--fn-border-primary);
+  border-radius: 16px;
+  h1 {
+    font-size: 22px;
+    line-height: 1.4;
+  }
+  p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  small {
+    color: var(--fn-text-secondary);
+    line-height: 1.6;
+  }
 }

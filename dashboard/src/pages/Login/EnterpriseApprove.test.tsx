@@ -3,9 +3,10 @@ import { beforeEach, expect, it, vi } from "vitest";
 import EnterpriseApprove from "./EnterpriseApprove";
 import { enterpriseApi } from "../../api/modules/enterprise";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+vi.mock("react-i18next", () => {
+  const t = (key: string) => key;
+  return { useTranslation: () => ({ t }) };
+});
 vi.mock("../../hooks/useCurrentUser", () => ({
   useCurrentUser: () => ({
     username: "colleague",
@@ -24,6 +25,7 @@ vi.mock("../../api/modules/enterprise", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState(null, "", "/");
   vi.mocked(enterpriseApi.devices).mockResolvedValue([]);
   vi.mocked(enterpriseApi.inspect).mockResolvedValue({
     name: "Office computer",
@@ -31,6 +33,24 @@ beforeEach(() => {
     expires_at: 2000000000,
     host_fingerprint: "test",
   });
+});
+
+it("automatically previews the short code from the link but never approves without a click", async () => {
+  window.history.replaceState(null, "", "/enterprise/approve?code=ABCDEFGH");
+  render(<EnterpriseApprove />);
+  await screen.findByText("Office computer");
+  expect(enterpriseApi.inspect).toHaveBeenCalledExactlyOnceWith("ABCDEFGH");
+  expect(enterpriseApi.approve).not.toHaveBeenCalled();
+  expect(
+    screen.queryByRole("button", { name: "enterprise.bindFeishu" }),
+  ).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "enterprise.confirm" }));
+  await waitFor(() =>
+    expect(enterpriseApi.approve).toHaveBeenCalledExactlyOnceWith("ABCDEFGH"),
+  );
+  expect(screen.getByRole("status").textContent).toContain(
+    "enterprise.approved",
+  );
 });
 
 it("previews the computer before explicit approval and invalidates the preview when the code changes", async () => {

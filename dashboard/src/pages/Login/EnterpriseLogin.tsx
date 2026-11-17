@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Card, Checkbox, Space, Typography } from "antd";
+import { Alert, Button, Card, Checkbox, Space, Steps, Typography } from "antd";
 import { getAuthToken } from "../../api/request";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,14 +8,19 @@ import {
 } from "../../api/modules/enterprise";
 import { apiErrorMessage, parseApiError } from "../../utils/apiError";
 import styles from "./enterprise.module.less";
+import { enterpriseVerificationUrl } from "../../utils/enterpriseApproval";
 
 export default function EnterpriseLogin({
   authority,
   localLoginAvailable = false,
+  remember = true,
+  onRememberChange,
   onSuccess,
 }: {
   authority: string;
   localLoginAvailable?: boolean;
+  remember?: boolean;
+  onRememberChange?: (remember: boolean) => void;
   onSuccess: (token: string, locale: string) => void | Promise<void>;
 }) {
   const { t } = useTranslation();
@@ -34,15 +39,21 @@ export default function EnterpriseLogin({
     setChallenge(null);
     setConfirmation(null);
     try {
-      setChallenge(
-        await enterpriseApi.begin(
-          t(
-            (window as Window & { __DORA_CLIENT__?: boolean }).__DORA_CLIENT__
-              ? "companion.deviceName"
-              : "enterprise.deviceName",
-          ),
-          bindCurrent,
+      const next = await enterpriseApi.begin(
+        t(
+          (window as Window & { __DORA_CLIENT__?: boolean }).__DORA_CLIENT__
+            ? "companion.deviceName"
+            : "enterprise.deviceName",
         ),
+        bindCurrent,
+      );
+      setChallenge(next);
+      // The desktop bridge opens this in the system browser. Browser users
+      // retain the ordinary link below if their popup policy blocks opening.
+      window.open(
+        enterpriseVerificationUrl(next.verification_uri, next.user_code),
+        "_blank",
+        "noopener,noreferrer",
       );
     } catch (err) {
       setError(apiErrorMessage(err, t("enterprise.failed"), t));
@@ -130,23 +141,34 @@ export default function EnterpriseLogin({
             <Typography.Paragraph>
               {t("enterprise.localHint")}
             </Typography.Paragraph>
-            <Typography.Text className={styles.authority}>
-              {authority}
-            </Typography.Text>
           </div>
+          <Steps
+            size="small"
+            current={challenge ? 1 : 0}
+            items={[
+              { title: t("enterprise.stepSignIn") },
+              { title: t("enterprise.stepConfirm") },
+              { title: t("enterprise.stepReady") },
+            ]}
+          />
           {error && <Alert role="alert" type="error" message={error} />}
-          {!challenge && getAuthToken() && (
-            <Checkbox
-              checked={bindCurrent}
-              onChange={(event) => setBindCurrent(event.target.checked)}
-            >
-              {t("enterprise.keepLocalAccount")}
-            </Checkbox>
-          )}
-          {!challenge && localLoginAvailable && (
-            <Button href="/login?local_link=1">
-              {t("enterprise.verifyLocalAccount")}
-            </Button>
+          {!challenge && (getAuthToken() || localLoginAvailable) && (
+            <details className={styles.details}>
+              <summary>{t("enterprise.existingAccount")}</summary>
+              {getAuthToken() && (
+                <Checkbox
+                  checked={bindCurrent}
+                  onChange={(event) => setBindCurrent(event.target.checked)}
+                >
+                  {t("enterprise.keepLocalAccount")}
+                </Checkbox>
+              )}
+              {localLoginAvailable && (
+                <Button href="/login?local_link=1">
+                  {t("enterprise.verifyLocalAccount")}
+                </Button>
+              )}
+            </details>
           )}
           {confirmation ? (
             <>
@@ -172,16 +194,18 @@ export default function EnterpriseLogin({
             </>
           ) : challenge ? (
             <>
-              <Typography.Text>{t("enterprise.codeLabel")}</Typography.Text>
-              <Typography.Text className={styles.code} copyable>
-                {challenge.user_code}
-              </Typography.Text>
-              <Typography.Paragraph>
-                {t("enterprise.codeHint")}
-              </Typography.Paragraph>
+              <Alert
+                type="info"
+                showIcon
+                message={t("enterprise.browserStep")}
+                description={t("enterprise.browserStepHint")}
+              />
               <Button
                 type="primary"
-                href={challenge.verification_uri}
+                href={enterpriseVerificationUrl(
+                  challenge.verification_uri,
+                  challenge.user_code,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -190,6 +214,15 @@ export default function EnterpriseLogin({
               <Typography.Text aria-live="polite">
                 {t("enterprise.waiting")}
               </Typography.Text>
+              <details className={styles.details}>
+                <summary>{t("enterprise.codeFallback")}</summary>
+                <Typography.Paragraph>
+                  {t("enterprise.codeHint")}
+                </Typography.Paragraph>
+                <Typography.Text className={styles.code} copyable>
+                  {challenge.user_code}
+                </Typography.Text>
+              </details>
               <Button onClick={() => void begin()} loading={busy}>
                 {t("enterprise.restart")}
               </Button>
@@ -198,10 +231,30 @@ export default function EnterpriseLogin({
               </Button>
             </>
           ) : (
-            <Button type="primary" onClick={() => void begin()} loading={busy}>
+            <Button
+              type="primary"
+              size="large"
+              block
+              onClick={() => void begin()}
+              loading={busy}
+            >
               {t("enterprise.signIn")}
             </Button>
           )}
+          {!challenge && onRememberChange && (
+            <Checkbox
+              checked={remember}
+              onChange={(e) => onRememberChange(e.target.checked)}
+            >
+              {t("login.remember")}
+            </Checkbox>
+          )}
+          <details className={styles.details}>
+            <summary>{t("enterprise.connectionDetails")}</summary>
+            <Typography.Text className={styles.authority}>
+              {authority}
+            </Typography.Text>
+          </details>
         </Space>
       </Card>
     </main>

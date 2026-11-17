@@ -82,6 +82,39 @@ describe("setup lockdown handling", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    "/auth/enterprise/start",
+    "/auth/enterprise/poll",
+    "/auth/enterprise/status",
+  ])(
+    "keeps the public enterprise bootstrap endpoint %s reachable after a background lockdown response",
+    async (path) => {
+      mod.markSetupRequired();
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "pending" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      );
+      await expect(
+        mod.request(path, { method: path.endsWith("status") ? "GET" : "POST" }),
+      ).resolves.toEqual({ status: "pending" });
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(replace).not.toHaveBeenCalled();
+    },
+  );
+
+  it("does not exempt protected enterprise routes from setup lockdown", async () => {
+    mod.markSetupRequired();
+    for (const path of [
+      "/enterprise/access/admin",
+      "/auth/enterprise/start/extra",
+    ]) {
+      await expect(mod.request(path)).rejects.toThrow(mod.SetupRequiredError);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("does not hard-reload when already on /setup", async () => {
     Object.defineProperty(window, "location", {
       configurable: true,
