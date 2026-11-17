@@ -2,11 +2,21 @@
 
 # Octop Custom 定制版
 
-这是 `chaoyang-rao/Octop-custom` 私有定制仓库，保留官方 **v1.0.2** 提交与此前全部已确认的本地改动。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。定制程序版本为 `1.0.2.post20261102`。
+这是 `chaoyang-rao/Octop-custom` 企业定制仓库，当前基于官方 **1.0.3b3**，历史定制基线继续保留。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。当前企业程序版本为 `1.0.3b3.post2026111701`。
 
 ## 下载与安装
 
-在本仓库 [Releases](https://github.com/chaoyang-rao/Octop-custom/releases) 下载：
+企业成员使用以下已预置企业登录中心的安装包。飞书登录后自动同步服务器开放的对话模型，无需填写个人模型 API Key。
+
+- [Windows x64 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111701.exe)
+- [Mac M 芯片企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111701.dmg)
+- [Mac Intel 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111701.dmg)
+
+升级前先在系统托盘／菜单栏选择“退出”，再安装并启动 **Octop Custom**，以加载新版后台。安装包与校验文件见[本次企业发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1)。
+
+如果登录后模型列表为空，先核对实际运行的企业程序版本及企业登录状态；重新打开新版客户端可再次同步模型。企业成员无需到官方版安装流程中单独配置供应商或共享业务密钥。
+
+其他平台文件与免安装包：
 
 | 平台 | 原生安装包 | 免安装完整运行包 |
 | --- | --- | --- |
@@ -56,7 +66,7 @@ python scripts/custom/build_portable.py --platform darwin-arm64 --output dist
 
 原生打包使用 `.github/workflows/custom-release.yml`，在三种平台原生 runner 上完成 Python smoke、定制回归、Go 测试、Wails／NSIS 打包和校验；三个平台全部成功后才发布完整 Release。向 `custom/main` 推送仅验证和构建，保留现有不可变 Release；后续发新版请手动运行工作流、勾选 `publish_release` 并增加发行 tag 的末尾修订号。原上游发布／Docker 工作流只在上游仓库运行。
 
-后续发行还需同步递增锁文件的 `custom_version`、工作流的 `CUSTOM_VERSION`、健康标记及对应测试；只增加 GitHub tag 不会改变包内版本，也不会触发桌面端替换同版本运行环境。合入新官方版本时须重新适配定制源码和程序基线，通过完整检查后再发行。
+后续发行还需同步递增锁文件的 `custom_version`、工作流的 `CUSTOM_VERSION`、健康标记及对应测试，并更新两份 README 的企业版本和下载直链；只增加 GitHub tag 不会改变包内版本，也不会触发桌面端替换同版本运行环境。合入新官方版本时须重新适配定制源码和程序基线，通过完整检查后再发行。
 
 本次发行的实际构建、校验与源码对应记录见 [发行验证](docs/release-verification-20261029.json)。恢复工具使用当前仓库默认分支，兼容发行 ZIP 与本机旧安装清单两种路径格式。
 
@@ -296,7 +306,7 @@ curl -fsSL https://download.octop.cloud/octop/scripts/install.sh | bash -s -- --
 
 See [scripts/README.md](scripts/README.md) for all install options (`--version`, `--from-source`, `--mirror`, Windows flags).
 
-**Desktop app** (GUI, no terminal) — grab the artifact for your platform from [GitHub Releases](https://github.com/TencentCloud/Octop/releases/latest):
+**Enterprise desktop app** (GUI, no terminal) — use the platform-specific company package in [the verified custom release](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1):
 
 | Platform | Artifact |
 |----------|----------|
