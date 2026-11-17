@@ -4,10 +4,6 @@ import Carbon
 import UniformTypeIdentifiers
 import WebKit
 
-final class GlassChatWebView: WKWebView {
-    override var isOpaque: Bool { false }
-}
-
 @MainActor
 final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private let defaults = UserDefaults.standard
@@ -18,6 +14,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private var pet: PetView!
     private var chatWindow: NSWindow!
     private var chatView: WKWebView!
+    private var hasPlacedChat = false
     private var authWindow: NSWindow?
     private var authView: WKWebView?
     private var loginMode = false
@@ -106,13 +103,13 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         let y = defaults.object(forKey: "petY") == nil ? area.minY + 35 : defaults.double(forKey: "petY")
         petWindow = PetPanel(contentRect: NSRect(x: x, y: y, width: side, height: side), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         petWindow.isOpaque = false; petWindow.backgroundColor = .clear; petWindow.hasShadow = false
-        petWindow.level = .floating; petWindow.hidesOnDeactivate = false; petWindow.isMovableByWindowBackground = false
+        petWindow.level = CompanionWindowLevels.pet; petWindow.hidesOnDeactivate = false; petWindow.isMovableByWindowBackground = false
         petWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         petWindow.contentView = pet; pet.clampToScreen()
         pet.edgeHiding = defaults.object(forKey: "petEdgeHiding") == nil || defaults.bool(forKey: "petEdgeHiding")
         pet.onOpen = { [weak self] in self?.toggleChatFromPet() }
         pet.onMenu = { [weak self] event in guard let self else { return }; NSMenu.popUpContextMenu(self.contextMenu(), with: event, for: self.pet) }
-        pet.onMoved = { [weak self] in self?.savePosition(); self?.avoidChatOverlap() }
+        pet.onMoved = { [weak self] in self?.savePosition() }
         pet.onScale = { [weak self] multiplier in
             guard let self else { return }
             self.applyPetScale(Double(self.pet.placementFrame.width) / PetSizing.defaultSide * multiplier)
@@ -120,7 +117,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         chatWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 456, height: 684), styleMask: [.titled, .fullSizeContentView, .closable, .resizable, .miniaturizable], backing: .buffered, defer: false)
         chatWindow.title = "哆啦"; chatWindow.titleVisibility = .hidden; chatWindow.titlebarAppearsTransparent = true
         chatWindow.titlebarSeparatorStyle = .none
-        chatWindow.minSize = NSSize(width: 350, height: 510); chatWindow.level = .floating; chatWindow.isReleasedWhenClosed = false; chatWindow.delegate = self
+        chatWindow.minSize = NSSize(width: 350, height: 510); chatWindow.level = CompanionWindowLevels.chat; chatWindow.isReleasedWhenClosed = false; chatWindow.delegate = self
         chatWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, name: "companion")
@@ -136,17 +133,19 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
 
     private func chatMaterial(content: NSView) -> NSView {
+        let surface = ChatWindowContentView(content:content)
         #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
             let glass = NSGlassEffectView(frame:content.frame)
-            glass.style = .regular; glass.cornerRadius = 20; glass.contentView = content
+            glass.style = .regular; glass.cornerRadius = 20; glass.contentView = surface
             return glass
         }
         #endif
         let glass = NSVisualEffectView(frame:content.frame)
         glass.material = .underWindowBackground; glass.blendingMode = .behindWindow; glass.state = .active
         glass.wantsLayer = true; glass.layer?.cornerRadius = 20; glass.layer?.masksToBounds = true
-        glass.addSubview(content)
+        surface.autoresizingMask = [.width,.height]
+        glass.addSubview(surface)
         return glass
     }
 
@@ -177,23 +176,12 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private func toggleChatFromPet() { chatWindow.isVisible ? chatWindow.orderOut(nil) : showChat() }
     private func showChat() {
         authWindow?.orderOut(nil); sizingWindow?.orderOut(nil)
-        if !chatWindow.isVisible {
+        if !hasPlacedChat || !NSScreen.screens.contains(where: { $0.visibleFrame.intersects(chatWindow.frame) }) {
             let area = PetSizing.screenArea(for:pet.placementFrame,areas:NSScreen.screens.map(\.visibleFrame)) ?? NSScreen.main!.visibleFrame
             chatWindow.setFrame(CompanionWindowPlacement.chat(size:chatWindow.frame.size,pet:pet.placementFrame,area:area),display:true)
+            hasPlacedChat = true
         }
         NSApp.activate(ignoringOtherApps: true); chatWindow.makeKeyAndOrderFront(nil)
-    }
-    private func avoidChatOverlap() {
-        guard let chatWindow, chatWindow.isVisible, let pet,
-              chatWindow.frame.intersects(pet.placementFrame.insetBy(dx:-8,dy:-8)),
-              let area = PetSizing.screenArea(for:pet.placementFrame,areas:NSScreen.screens.map(\.visibleFrame)) else { return }
-        chatWindow.setFrame(CompanionWindowPlacement.chat(size:chatWindow.frame.size,pet:pet.placementFrame,area:area),display:true)
-    }
-    func windowDidMove(_ notification: Notification) {
-        if notification.object as? NSWindow === chatWindow { avoidChatOverlap() }
-    }
-    func windowDidResize(_ notification: Notification) {
-        if notification.object as? NSWindow === chatWindow { avoidChatOverlap() }
     }
     @objc private func togglePet() { if petWindow.isVisible { petWindow.orderOut(nil) } else { petWindow.orderFrontRegardless() } }
     @objc private func toggleAnimation() { pet.paused.toggle() }
@@ -245,7 +233,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private func applyPetScale(_ scale: Double) {
         pet.resize(to: scale)
         defaults.set(Double(pet.placementFrame.width), forKey: "petSize")
-        savePosition(); updateSizeControls(); avoidChatOverlap()
+        savePosition(); updateSizeControls()
     }
     private func updateSizeControls() {
         let percentage = Double(pet.placementFrame.width) / PetSizing.defaultSide * 100

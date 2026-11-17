@@ -11,6 +11,16 @@ async function runUISmoke(page) {
     if (!value) throw new Error(name);
     checks.push(name);
   };
+  async function checkCompactTitlebar(name) {
+    ensure(await page.evaluate(() => {
+      const top = document.querySelector(".topbar").getBoundingClientRect();
+      const mark = document.querySelector(".app-mark").getBoundingClientRect();
+      const settings = document.querySelector(".settings-trigger").getBoundingClientRect();
+      return top.y === 0 && top.height <= 40 && mark.x >= 80 &&
+        mark.right + 6 <= settings.left && settings.right <= window.innerWidth &&
+        settings.top >= top.top && settings.bottom <= top.bottom;
+    }), name);
+  }
   await page.addInitScript(() => {
     const pixel =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9WQAAAAASUVORK5CYII=";
@@ -147,6 +157,7 @@ async function runUISmoke(page) {
     .locator('textarea[aria-label="输入问题"]:not([disabled])')
     .waitFor();
   const input = page.getByRole("textbox", { name: "输入问题", exact: true });
+  await checkCompactTitlebar("compact_titlebar_gives_chat_more_height");
   ensure(
     (await page.locator(".topbar button").count()) === 1,
     "one_top_level_settings_entry",
@@ -346,6 +357,7 @@ async function runUISmoke(page) {
   );
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await page.setViewportSize({ width: 350, height: 510 });
+  await checkCompactTitlebar("narrow_titlebar_preserves_traffic_lights_and_settings");
   await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   ensure(
     await page.evaluate(
