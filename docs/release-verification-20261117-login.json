@@ -1,0 +1,111 @@
+{
+  "custom_version": "1.0.3b3.post2026111703",
+  "release": "https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.3",
+  "source_commit": "770bdc05d6c70d06f20d110621b5823451be9f4e",
+  "feature_commit": "db9595dfa797f09e57fb59e17899123073bf0faf",
+  "workflow_run": "https://github.com/chaoyang-rao/Octop-custom/actions/runs/44027522546",
+  "ci": {
+    "all_six_jobs": "success",
+    "full_make_all": {
+      "passed": 6115,
+      "skipped": 30
+    },
+    "frontend_release_gate": {
+      "passed": 263
+    },
+    "platforms": [
+      "windows-amd64",
+      "darwin-amd64",
+      "darwin-arm64"
+    ]
+  },
+  "enterprise_center": {
+    "deployed": true,
+    "healthy": true,
+    "business_tables_unchanged": true,
+    "enterprise_settings_checked": 11,
+    "enterprise_settings_unchanged": true,
+    "nginx_unchanged": true
+  },
+  "isolated_ui": {
+    "blank_data_directory": true,
+    "fresh_browser_profile": true,
+    "actual_packaged_python_and_dashboard": true,
+    "oauth_callback_and_explicit_device_confirmation": true,
+    "automatic_model_and_primary_preparation": true,
+    "chat_reply_verified": true,
+    "external_identity_and_model": "synthetic test services; no real colleague account was used",
+    "fixture_correction": "Initial synthetic 16k model context was insufficient for bundled tools/output reservation. Aligned synthetic context to the verified company default metadata (1000000), then verified retry and a clean conversation. Production model settings were only read.",
+    "windows_interactive_login": "not exercised on a colleague workstation",
+    "macos_native_webview": "not automated; packaged backend and dashboard were exercised through a real isolated browser"
+  },
+  "tested_portable_sha256": "4a67ef5e997af7f604746f99a612f8ba80dd072dbab27504e2d860110a54985b",
+  "tested_portable_matches_public_release": true,
+  "assets": [
+    {
+      "name": "native-smoke-darwin-amd64.json",
+      "size": 5675,
+      "digest": "sha256:f050694a43b34c73e9f7e24956d32f3ee0afdb42f28a925018479142835e58cd"
+    },
+    {
+      "name": "native-smoke-darwin-arm64.json",
+      "size": 820,
+      "digest": "sha256:fb0373383888176687585901ef97c890fca69a17bd3d45dcda39bfc159f85a9b"
+    },
+    {
+      "name": "native-smoke-windows-amd64.json",
+      "size": 851,
+      "digest": "sha256:f4b079dbc7d55d77de536ca111806ba433ccfcf140b350631195cd692473ee44"
+    },
+    {
+      "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026111703.json",
+      "size": 5917,
+      "digest": "sha256:223956e42082d0d58328e48c21c0f41c8476e3ccdaeec373caa1d51b5d5728ba"
+    },
+    {
+      "name": "Octop-portable-darwin-amd64-1.0.3b3.post2026111703.zip",
+      "size": 252497761,
+      "digest": "sha256:73b10000d1501ab493134888737c0652cc8f32b49956495ace4609e61818eb4e"
+    },
+    {
+      "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026111703.json",
+      "size": 1061,
+      "digest": "sha256:2140c2099057e0f7d85f9710d8387c60bec34da8da80d21f1f59de671b8c0011"
+    },
+    {
+      "name": "Octop-portable-darwin-arm64-1.0.3b3.post2026111703.zip",
+      "size": 243800249,
+      "digest": "sha256:4a67ef5e997af7f604746f99a612f8ba80dd072dbab27504e2d860110a54985b"
+    },
+    {
+      "name": "Octop-portable-windows-amd64-1.0.3b3.post2026111703.json",
+      "size": 1065,
+      "digest": "sha256:e44dddbf728299015853004647a74cafe903cb7bd6075081884d99a09e79d796"
+    },
+    {
+      "name": "Octop-portable-windows-amd64-1.0.3b3.post2026111703.zip",
+      "size": 237813557,
+      "digest": "sha256:cb9af2c2bb21866fc97562db5a7dbc5f95e2c245674fa3b2de0f049277284664"
+    },
+    {
+      "name": "OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111703.dmg",
+      "size": 267356059,
+      "digest": "sha256:2af401ce1480e0839e12f606b601b83d7711ca09a21770e1fa4e118afc1981fd"
+    },
+    {
+      "name": "OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111703.dmg",
+      "size": 257914656,
+      "digest": "sha256:e1cc7b5559b30302317d4ada0330707b475bb2acf5d7f9d26631bd4b4db0d45e"
+    },
+    {
+      "name": "OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111703.exe",
+      "size": 230078795,
+      "digest": "sha256:207a11323ee789918798848921e2bb100077e56ae88fb40aeca55044923e65d3"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 1402,
+      "digest": "sha256:4b580d9f88650463e4ada139815e142ef9db21fe39b832a244329d517fa320b9"
+    }
+  ]
+}
