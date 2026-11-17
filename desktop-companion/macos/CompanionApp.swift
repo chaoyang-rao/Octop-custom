@@ -371,15 +371,20 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             NSWorkspace.shared.open(url); return true
         case "chatSend":
             let command = try CompanionChatCommand(args)
+            if command.board == "team", command.frame["type"] as? String == "user_turn" {try await client.validateTeam(command.agent)}
             if command.frame["type"] as? String == "cancel" { approvalEpoch[command.board,default:0] += 1;approvalHeaders.removeValue(forKey:command.board)?.task.cancel();approvalStreams.removeValue(forKey:command.board)?.task.cancel() }
             let socket = try socketFor(board: command.board, agent: command.agent, context: command.context)
             let data = try JSONSerialization.data(withJSONObject: command.frame)
             try await socket.send(.string(String(data: data, encoding: .utf8)!)); return true
+        case "saveTeam":
+            guard let name=args["name"] as? String, let members=args["memberIds"] as? [String], let host=args["hostId"] as? String else {throw CompanionError.invalidPath}
+            return try await client.saveTeam(name:name,members:members,hostId:host,teamId:args["teamId"] as? String)
         case "resumeApproval":
             guard let thread=args["threadId"] as? String, let pending=args["pendingId"] as? String,
                   let decisions=args["decisions"] as? [[String:Any]] else {throw CompanionError.invalidPath}
             var fields=args;fields["frame"]=["type":"subscribe","thread_id":thread]
             let command=try CompanionChatCommand(fields)
+            if command.board == "team", !decisions.allSatisfy({$0["type"] as? String == "reject"}) {try await client.validateTeam(command.agent)}
             let revision=loginRevision
             let hadSocket=sockets[command.board]?.context == command.context && sockets[command.board]?.agent == command.agent
             let socket=try socketFor(board:command.board,agent:command.agent,context:command.context)

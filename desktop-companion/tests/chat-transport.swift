@@ -31,6 +31,11 @@ import Foundation
   for (name,mime) in [("data.csv","text/csv"),("report.pdf","application/pdf"),("sheet.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")] {
    let result=try await client.upload(agentId:"owned",filename:name,mime:mime,bytes:Data("fixture".utf8));precondition(result["filename"] as? String == name)
   }
+  let team=try await client.saveTeam(name:"测试团队",members:["member"],hostId:"owned",teamId:nil);precondition(team["primary_agent_id"] as? String == "owned")
+  try await client.validateTeam("team-created")
+  _=try await client.saveTeam(name:"修改成员",members:["member"],hostId:"owned",teamId:"team-created")
+  do {_=try await client.saveTeam(name:"bad",members:["member"],hostId:"other-host",teamId:nil);throw CompanionError.invalidPath} catch CompanionError.unavailable {}
+  do {_=try await client.saveTeam(name:"bad",members:["foreign"],hostId:"owned",teamId:nil);throw CompanionError.invalidPath} catch CompanionError.unavailable {}
   print("native_cancel_sse_approval_and_document_upload=passed")
  }
 }

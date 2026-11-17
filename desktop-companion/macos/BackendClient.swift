@@ -67,6 +67,45 @@ final class BackendClient: NSObject, URLSessionTaskDelegate {
         let value = (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) ?? ["detail": "Octop 暂时没有返回可用内容。"]
         return ["status": response.statusCode, "data": value]
     }
+    private func teamData(_ path:String) async throws -> [String:Any] {
+        let value=try await json(path)
+        guard value["status"] as? Int == 200, let data=value["data"] as? [String:Any] else {throw CompanionError.unavailable("团队信息暂不可用，请刷新核对。")}
+        return data
+    }
+    private func companionIDs() async throws -> Set<String> {
+        let value=try await json("/api/companion/agents")
+        guard value["status"] as? Int == 200, let rows=value["data"] as? [[String:Any]] else {throw CompanionError.unavailable("当前专家授权无法确认，请重新登录或刷新。")}
+        return Set(rows.compactMap {$0["agent_id"] as? String})
+    }
+    func validateTeam(_ teamId:String) async throws {
+        let id=try EndpointPolicy.segment(teamId), record=try await teamData("/api/teams/\(id)"), allowed=try await companionIDs()
+        guard let primary=record["primary_agent_id"] as? String, record["primary_agent_name"] as? String == "小通",
+              let members=record["member_ids"] as? [String], Set(members).count >= 2, members.contains(primary),
+              allowed.contains(id), members.allSatisfy({allowed.contains($0)}) else {throw CompanionError.unavailable("团队须由已开放的小通主持，所有成员也须当前可用。请刷新核对。")}
+        let host=try await teamData("/api/agents/\(try EndpointPolicy.segment(primary))")
+        guard host["name"] as? String == "小通", host["is_team_primary"] as? Bool == true else {throw CompanionError.unavailable("小通主持配置已变化，请先核对主专家。")}
+    }
+    func saveTeam(name:String,members:[String],hostId:String,teamId:String?) async throws -> [String:Any] {
+        let host=try EndpointPolicy.segment(hostId), available=try await companionIDs()
+        let primary=try await teamData("/api/agents/\(host)")
+        guard available.contains(host), primary["name"] as? String == "小通", primary["is_team_primary"] as? Bool == true else {throw CompanionError.unavailable("请先恢复本人已开放的小通主专家，再创建或编辑团队。")}
+        var seen:Set<String>=[]
+        let ids=try members.map {try EndpointPolicy.segment($0)}.filter {$0 != host && seen.insert($0).inserted}
+        guard !name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty, !ids.isEmpty, ids.allSatisfy({available.contains($0)}) else {throw CompanionError.unavailable("请填写团队名称，并至少选择一位当前可用专家。")}
+        let path=try teamId.map {"/api/teams/\(try EndpointPolicy.segment($0))"} ?? "/api/teams"
+        if let teamId {
+            let record=try await teamData("/api/teams/\(try EndpointPolicy.segment(teamId))")
+            guard record["primary_agent_id"] as? String == host, record["primary_agent_name"] as? String == "小通" else {throw CompanionError.unavailable("这个团队的主持人不是当前小通，无法在桌宠里修改。")}
+        }
+        let body=try JSONSerialization.data(withJSONObject:["name":name.trimmingCharacters(in:.whitespacesAndNewlines),"member_ids":ids])
+        let (data,response)=try await request(path,method:teamId == nil ? "POST" : "PATCH",body:body,contentType:"application/json")
+        let result=(try? JSONSerialization.jsonObject(with:data)) as? [String:Any] ?? [:]
+        guard (200..<300).contains(response.statusCode) else {
+            let error=(result["error"] as? [String:Any])?["message"] as? String ?? result["detail"] as? String ?? "团队未保存，请刷新后重试。"
+            throw CompanionError.unavailable(error)
+        }
+        return result
+    }
     func webSocket(agentId: String) throws -> URLSessionWebSocketTask {
         let id = try EndpointPolicy.segment(agentId)
         guard let token = credentials.read(origin: origin) else { throw CompanionError.signedOut }

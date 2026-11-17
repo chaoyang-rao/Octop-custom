@@ -15,7 +15,7 @@ struct CompanionChatCommand {
     let context: String
     var frame: [String: Any]
     init(_ args: [String: Any]) throws {
-        guard let board = args["board"] as? String, ["aftersales","workbench","profit","knowledge"].contains(board),
+        guard let board = args["board"] as? String, ["aftersales","workbench","profit","knowledge","team"].contains(board),
               let agent = args["agentId"] as? String, let context = args["contextKey"] as? String,
               var frame = args["frame"] as? [String:Any], let type = frame["type"] as? String,
               ["user_turn","subscribe","cancel","ping","steer_remove"].contains(type) else { throw CompanionError.invalidPath }

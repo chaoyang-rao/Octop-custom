@@ -76,10 +76,12 @@ export function canFlushQueue(room: {
   approvals: Approval[];
   error?: string;
   queue: QueuedInput[];
+  teamSpeakers?:string[];
 }): boolean {
   return (
     !!room.queue.length &&
     !room.busy &&
+    !room.teamSpeakers?.length &&
     !room.activeTurnId &&
     !room.approvalStreamActive &&
     !room.awaitingApproval &&
