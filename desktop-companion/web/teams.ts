@@ -1,6 +1,16 @@
-import type { TeamRecord } from "../../dashboard/src/api/modules/teams.ts";
 import { asList, type Agent } from "./core.ts";
-export type { TeamRecord };
+
+// The companion consumes the Teams HTTP contract without importing dashboard code.
+export interface TeamRecord {
+  team_id: string;
+  agent_id: string;
+  name: string;
+  kind: "team";
+  primary_agent_id?: string | null;
+  primary_agent_name?: string | null;
+  member_ids: string[];
+  members: { agent_id: string; name: string }[];
+}
 export function teamRecords(raw: unknown): TeamRecord[] {
   return asList(raw, ["items", "teams"]).filter(
     (t) =>

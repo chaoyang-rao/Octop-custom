@@ -9,7 +9,7 @@
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["node", "vite/client"]
+    "types": ["node"]
   },
   "include": ["web", "tests"]
 }
