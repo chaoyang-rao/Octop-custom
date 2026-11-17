@@ -93,6 +93,16 @@ export default function EnterpriseApprove() {
     );
     window.location.assign(authorization_url);
   };
+  const switchAccount = async () => {
+    const destination = `${enterpriseApprovalLoginPath(
+      done ? undefined : queryCode || code,
+    )}&switch_account=1`;
+    setPreview(null);
+    setDone(false);
+    await authApi.logout();
+    clearAuthToken();
+    window.location.assign(destination);
+  };
 
   return (
     <main className={styles.page}>
@@ -105,9 +115,26 @@ export default function EnterpriseApprove() {
             <Typography.Paragraph>
               {t("enterprise.approveHint")}
             </Typography.Paragraph>
-            <Typography.Text>
-              {user?.display_name || user?.username}
-            </Typography.Text>
+            <Space wrap>
+              <Typography.Text>
+                {t("enterprise.currentAccount", {
+                  name: user?.display_name || user?.username || "",
+                })}
+              </Typography.Text>
+              <Button
+                disabled={busy}
+                onClick={() => void action(switchAccount)}
+              >
+                {t("enterprise.switchAccount")}
+              </Button>
+            </Space>
+            <Typography.Paragraph type="secondary">
+              {t(
+                done
+                  ? "enterprise.switchAfterApprovalHint"
+                  : "enterprise.switchAccountHint",
+              )}
+            </Typography.Paragraph>
           </div>
           {error && <Alert role="alert" type="error" message={error} />}
           {done && (
@@ -231,20 +258,6 @@ export default function EnterpriseApprove() {
               user?.permissions?.includes("users")) && (
               <Button href="/enterprise/admin">{t("enterprise.manage")}</Button>
             )}
-            <Button
-              disabled={busy}
-              onClick={() =>
-                void action(async () => {
-                  await authApi.logout();
-                  clearAuthToken();
-                  window.location.assign(
-                    enterpriseApprovalLoginPath(queryCode || code),
-                  );
-                })
-              }
-            >
-              {t("auth.logout")}
-            </Button>
           </details>
         </Space>
       </Card>

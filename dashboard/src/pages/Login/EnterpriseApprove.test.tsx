@@ -1,7 +1,20 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import EnterpriseApprove from "./EnterpriseApprove";
 import { enterpriseApi } from "../../api/modules/enterprise";
+import { authApi } from "../../api/modules/auth";
+import { clearAuthToken } from "../../api/request";
+
+vi.mock("../../api/modules/auth", () => ({
+  authApi: { logout: vi.fn(), startOauthBind: vi.fn() },
+}));
+vi.mock("../../api/request", () => ({ clearAuthToken: vi.fn() }));
 
 vi.mock("react-i18next", () => {
   const t = (key: string) => key;
@@ -34,6 +47,8 @@ beforeEach(() => {
     host_fingerprint: "test",
   });
 });
+
+afterEach(() => vi.unstubAllGlobals());
 
 it("automatically previews the short code from the link but never approves without a click", async () => {
   window.history.replaceState(null, "", "/enterprise/approve?code=ABCDEFGH");
@@ -70,4 +85,45 @@ it("previews the computer before explicit approval and invalidates the preview w
   await waitFor(() =>
     expect(enterpriseApi.approve).toHaveBeenCalledExactlyOnceWith("IJKL-MNOP"),
   );
+});
+
+it("offers account switching beside the identity and preserves the device code without approving", async () => {
+  window.history.replaceState(null, "", "/enterprise/approve?code=ABCD-EFGH");
+  const realWindow = window;
+  const assign = vi.fn();
+  vi.stubGlobal(
+    "window",
+    new Proxy(realWindow, {
+      get(target, key) {
+        return key === "location"
+          ? { search: realWindow.location.search, assign }
+          : Reflect.get(target, key, target);
+      },
+    }),
+  );
+  let finishLogout!: () => void;
+  vi.mocked(authApi.logout).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishLogout = resolve;
+      }),
+  );
+  render(<EnterpriseApprove />);
+  await screen.findByText("Office computer");
+  const button = screen.getByRole("button", {
+    name: "enterprise.switchAccount",
+  });
+  expect(button.closest("details")).toBeNull();
+  fireEvent.click(button);
+  expect(
+    screen.queryByRole("button", { name: "enterprise.confirm" }),
+  ).toBeNull();
+  expect(button).toBeDisabled();
+  await act(async () => finishLogout());
+  expect(authApi.logout).toHaveBeenCalledTimes(1);
+  expect(clearAuthToken).toHaveBeenCalledTimes(1);
+  expect(assign).toHaveBeenCalledExactlyOnceWith(
+    "/login?enterprise=1&device_code=ABCDEFGH&switch_account=1",
+  );
+  expect(enterpriseApi.approve).not.toHaveBeenCalled();
 });

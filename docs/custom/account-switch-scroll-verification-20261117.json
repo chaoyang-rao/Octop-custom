@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-17",
+  "scope": "Enterprise browser approval account switching and scrolling; no desktop reinstall required",
+  "source_base": "34658778ba6a0c28151680d7c0995f3823262f1c",
+  "frontend": {
+    "login_and_guard_tests": 60,
+    "typescript": "passed",
+    "targeted_eslint": "passed",
+    "production_build": "passed",
+    "source_freeze": "passed",
+    "dashboard_freeze": "passed"
+  },
+  "backend_checks": {
+    "standard_full_scan": {
+      "passed": 6103,
+      "failed": 1,
+      "skipped": 41,
+      "failure": "test_dashboard_serve file disappeared while a concurrent frontend build replaced the build directory"
+    },
+    "instrumented_full_scan": {
+      "passed": 6101,
+      "failed": 3,
+      "skipped": 41,
+      "mode": "testmon reordered tests"
+    },
+    "standard_failed_recheck": {
+      "make_all_last_failed_passed": 3,
+      "dashboard_serve_passed": 5,
+      "backend_logic_changed": false
+    }
+  },
+  "deployment": {
+    "deployed": true,
+    "index_sha256": "754cbd281f56366ff2bbf7bc7a949935b68795f720b4363f37bae6891f103dc6",
+    "service_not_restarted": true,
+    "existing_assets_preserved": true,
+    "account_configuration_unchanged": true
+  },
+  "browser": {
+    "public_url": "https://120.79.0.171:18443/enterprise/approve",
+    "current_account_and_switch_control_visible": true,
+    "expanded_device_list_wheel_scroll_to_bottom": "passed",
+    "production_feishu_account_switch_completed_for_user": false,
+    "note": "The user completes Feishu identity authentication and device confirmation. Cross-account display and permission transitions were verified with controlled frontend test identities."
+  }
+}

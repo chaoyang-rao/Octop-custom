@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spin } from "antd";
 import { clearAuthToken, getAuthToken } from "../api/request";
@@ -30,7 +30,7 @@ interface AuthGuardProps {
  * When the backend is unreachable (offline / Failed to fetch), show an
  * explicit offline panel with Retry instead of mounting a blank shell.
  *
- * Auth is checked on mount and on explicit offline retry only. Do not put
+ * Auth is checked on mount, credential changes, and explicit offline retry. Do not put
  * ``navigate`` in the effect deps: under ``BrowserRouter``, React Router's
  * navigate identity changes with the location, which would re-run the gate
  * on every sidebar click and flash a full-page spinner.
@@ -50,6 +50,33 @@ export default function AuthGuard({
   const [user, setUser] = useState<OctopUser | null>(null);
   const [offline, setOffline] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const tokenRef = useRef(getAuthToken());
+  const verifiedUserId = useRef<number | null>(null);
+  const restartAuth = useCallback(() => {
+    setChecking(true);
+    setAuthed(false);
+    setUser(null);
+    setOffline(false);
+    setRetryKey((key) => key + 1);
+  }, []);
+
+  useEffect(() => {
+    const checkChangedToken = () => {
+      const token = getAuthToken();
+      if (token === tokenRef.current) return;
+      tokenRef.current = token;
+      restartAuth();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "auth_token" || event.key === null) checkChangedToken();
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", checkChangedToken);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", checkChangedToken);
+    };
+  }, [restartAuth]);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +85,7 @@ export default function AuthGuard({
       setOffline(false);
       try {
         const status = await authApi.getAuthStatus();
+        if (cancelled) return;
 
         // No admin yet → push to setup wizard; drop any leftover JWT from a
         // previous install so background prefetch cannot stampede lockdown.
@@ -69,6 +97,7 @@ export default function AuthGuard({
 
         // Setup done. Need a token.
         const token = getAuthToken();
+        tokenRef.current = token;
         if (!token) {
           if (!cancelled) {
             setAuthed(false);
@@ -84,12 +113,31 @@ export default function AuthGuard({
         // need to swallow the throw here.
         try {
           const me = await authApi.me();
-          await applyUserLocale(me.locale);
-          if (!cancelled) {
-            setUser(me);
-            setAuthed(true);
-            setChecking(false);
+          if (cancelled) return;
+          if (getAuthToken() !== token) {
+            tokenRef.current = getAuthToken();
+            restartAuth();
+            return;
           }
+          await applyUserLocale(me.locale);
+          if (cancelled) return;
+          if (getAuthToken() !== token) {
+            tokenRef.current = getAuthToken();
+            restartAuth();
+            return;
+          }
+          if (
+            verifiedUserId.current !== null &&
+            verifiedUserId.current !== me.id
+          ) {
+            // A full load also drops module-level private caches from the previous user.
+            window.location.reload();
+            return;
+          }
+          verifiedUserId.current = me.id;
+          setUser(me);
+          setAuthed(true);
+          setChecking(false);
         } catch (err) {
           if (cancelled) return;
           if (isNetworkFetchError(err)) {
@@ -117,7 +165,7 @@ export default function AuthGuard({
     return () => {
       cancelled = true;
     };
-  }, [retryKey]);
+  }, [retryKey, restartAuth]);
 
   if (offline) {
     return (

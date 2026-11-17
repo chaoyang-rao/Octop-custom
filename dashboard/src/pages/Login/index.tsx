@@ -379,7 +379,12 @@ export default function LoginPage() {
       popup = openSsoPopup();
     }
     try {
-      const { authorization_url } = await authApi.startOauth(kind, loginTarget);
+      let { authorization_url } = await authApi.startOauth(kind, loginTarget);
+      if (kind === "feishu" && searchParams.get("switch_account") === "1") {
+        const url = new URL(authorization_url);
+        url.searchParams.set("prompt", "consent");
+        authorization_url = url.toString();
+      }
       if (kind === "oidc" || !popup || popup.closed) {
         window.location.href = authorization_url;
         return;
