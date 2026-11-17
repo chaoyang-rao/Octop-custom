@@ -4,10 +4,6 @@ import Carbon
 import UniformTypeIdentifiers
 import WebKit
 
-final class GlassChatWebView: WKWebView {
-    override var isOpaque: Bool { false }
-}
-
 @MainActor
 final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private let defaults = UserDefaults.standard
@@ -136,17 +132,19 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
 
     private func chatMaterial(content: NSView) -> NSView {
+        let surface = ChatWindowContentView(content:content)
         #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
             let glass = NSGlassEffectView(frame:content.frame)
-            glass.style = .regular; glass.cornerRadius = 20; glass.contentView = content
+            glass.style = .regular; glass.cornerRadius = 20; glass.contentView = surface
             return glass
         }
         #endif
         let glass = NSVisualEffectView(frame:content.frame)
         glass.material = .underWindowBackground; glass.blendingMode = .behindWindow; glass.state = .active
         glass.wantsLayer = true; glass.layer?.cornerRadius = 20; glass.layer?.masksToBounds = true
-        glass.addSubview(content)
+        surface.autoresizingMask = [.width,.height]
+        glass.addSubview(surface)
         return glass
     }
 

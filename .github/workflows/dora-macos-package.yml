@@ -51,6 +51,14 @@ jobs:
             desktop-companion/tests/edge-docking.swift \
             -o desktop-companion/build/edge-docking-check
           desktop-companion/build/edge-docking-check
+      - name: Verify chat title dragging and web controls
+        run: |
+          xcrun swiftc -swift-version 5 -parse-as-library \
+            -framework AppKit -framework WebKit \
+            desktop-companion/macos/GlassChatWebView.swift \
+            desktop-companion/tests/chat-window-drag.swift \
+            -o desktop-companion/build/chat-window-drag-check
+          desktop-companion/build/chat-window-drag-check
       - name: Verify fixed character scale without internal artwork
         run: |
           xcrun swiftc -swift-version 5 -parse-as-library \
