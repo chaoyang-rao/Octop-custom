@@ -16,7 +16,12 @@ from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, WebSock
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 app = FastAPI()
-state = {"active": False, "turn": 0, "pending": None, "messages": [], "task": None}
+state = {"active": False, "turn": 0, "pending": None, "messages": [], "task": None, "teams": []}
+experts = [
+    {"agent_id": "host", "name": "小通", "user_id": 901, "is_running": True},
+    {"agent_id": "owned", "name": "售后质量专家", "user_id": 901, "is_running": True},
+    {"agent_id": "quota", "name": "词元管理专家", "user_id": 901, "is_running": True},
+]
 
 
 def log(value):
@@ -61,7 +66,51 @@ async def access(authorization: str = Header(default="")):
 @app.get("/api/companion/agents")
 async def agents(authorization: str = Header(default="")):
     auth(authorization)
-    return [{"agent_id": "owned", "name": "售后质量专家", "user_id": 901, "is_running": True}]
+    return experts + [
+        {"agent_id": t["agent_id"], "name": t["name"], "user_id": 901} for t in state["teams"]
+    ]
+
+
+@app.get("/api/agents/{agent_id}")
+async def agent_detail(agent_id: str, authorization: str = Header(default="")):
+    auth(authorization)
+    return {
+        **next(e for e in experts if e["agent_id"] == agent_id),
+        "is_team_primary": agent_id == "host",
+    }
+
+
+@app.get("/api/teams")
+async def teams(authorization: str = Header(default="")):
+    auth(authorization)
+    return state["teams"]
+
+
+@app.get("/api/teams/{team_id}")
+async def team_detail(team_id: str, authorization: str = Header(default="")):
+    auth(authorization)
+    return next(t for t in state["teams"] if t["agent_id"] == team_id)
+
+
+@app.post("/api/teams")
+@app.patch("/api/teams/{team_id}")
+async def save_team(request: Request, team_id: str = "", authorization: str = Header(default="")):
+    auth(authorization)
+    body = await request.json()
+    ids = ["host", *[i for i in body["member_ids"] if i != "host"]]
+    assert len(ids) > 1 and set(ids) <= {e["agent_id"] for e in experts}
+    team = {
+        "agent_id": team_id or "team-1",
+        "name": body["name"],
+        "kind": "team",
+        "primary_agent_id": "host",
+        "primary_agent_name": "小通",
+        "member_ids": ids,
+        "members": [e for e in experts if e["agent_id"] in ids],
+    }
+    state["teams"] = [t for t in state["teams"] if t["agent_id"] != team["agent_id"]] + [team]
+    log({"team_updated" if team_id else "team_created": team})
+    return team
 
 
 @app.get("/api/connector-instances")
@@ -76,8 +125,8 @@ async def knowledge(authorization: str = Header(default="")):
     return []
 
 
-@app.get("/api/agents/owned/threads/{thread}/history")
-async def history(thread: str, authorization: str = Header(default="")):
+@app.get("/api/agents/{agent_id}/threads/{thread}/history")
+async def history(agent_id: str, thread: str, authorization: str = Header(default="")):
     auth(authorization)
     return {
         "messages": state["messages"],
@@ -98,8 +147,8 @@ async def upload(file: UploadFile, authorization: str = Header(default="")):
     }
 
 
-@app.websocket("/api/agents/owned/chat/ws")
-async def chat(ws: WebSocket):
+@app.websocket("/api/agents/{agent_id}/chat/ws")
+async def chat(ws: WebSocket, agent_id: str):
     auth(ws.headers.get("authorization"))
     await ws.accept()
 
@@ -112,6 +161,43 @@ async def chat(ws: WebSocket):
         turn = "turn-" + str(state["turn"])
         await emit({"type": "turn.started", "turn_id": turn})
         try:
+            if agent_id.startswith("team-"):
+                team = next(t for t in state["teams"] if t["agent_id"] == agent_id)
+                await emit(
+                    {"type": "token", "speaker_agent_id": "host", "content": "我来主持本次协作。"}
+                )
+                await emit({"type": "done", "speaker_agent_id": "host"})
+                await emit({"type": "turn.ended", "turn_id": turn, "agent_id": agent_id})
+                for member in team["members"]:
+                    if member["agent_id"] == "host":
+                        continue
+                    await emit(
+                        {
+                            "type": "token",
+                            "speaker_agent_id": member["agent_id"],
+                            "content": member["name"] + "的独立分析。",
+                        }
+                    )
+                    await asyncio.sleep(2)
+                    await emit({"type": "done", "speaker_agent_id": member["agent_id"]})
+                await emit(
+                    {
+                        "type": "token",
+                        "speaker_agent_id": "host",
+                        "team_wrapup": True,
+                        "turn_owner_agent_id": agent_id,
+                        "content": "小通汇总各位专家的结论。",
+                    }
+                )
+                await emit(
+                    {
+                        "type": "done",
+                        "speaker_agent_id": "host",
+                        "team_wrapup": True,
+                        "turn_owner_agent_id": agent_id,
+                    }
+                )
+                return
             if "审批" in text or "追问" in text:
                 action = (
                     {

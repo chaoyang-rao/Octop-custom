@@ -1,4 +1,4 @@
-export type BoardId = "aftersales" | "workbench" | "profit" | "knowledge";
+export type BoardId = "aftersales" | "workbench" | "profit" | "knowledge" | "team";
 export type Binding = {
   agentId: string;
   connectors: string[];
@@ -35,6 +35,7 @@ export type Message = {
   inputId?: string;
   pendingId?: string;
   previewOnly?: boolean;
+  teamWrapup?:boolean;
   delivery?: "pending" | "queued" | "applied" | "failed" | "removed";
 };
 export const boards: {
@@ -57,6 +58,7 @@ export const boards: {
     id: "knowledge",
     name: "知识库",
   },
+  {id:"team",name:"团队"},
 ];
 export function asList(
   value: unknown,
@@ -126,6 +128,8 @@ export function initialBinding(
   agents: Agent[],
   connectors: Resource[],
 ): Binding {
+  if (board === "team") return {agentId:"",connectors:[],knowledgeBases:[]};
+  agents=agents.filter(agent=>!agent.is_team);
   const primary =
     agents.find((agent) => agent.name === "小通") ??
     agents.find((agent) => !agent.is_team) ??
@@ -375,8 +379,13 @@ export function consumeFrame(
   const speakerId = String(
     frame.speaker_agent_id ?? frame.agent_id ?? frame.agent ?? "",
   );
-  const speaker = speakerId ? agentName(speakerId) : undefined;
+  const speaker = speakerId ? agentName(speakerId) : defaultAgentId ? agentName(defaultAgentId) : undefined;
   let target = result.at(-1);
+  if (speakerId) {
+    const existing=[...result].reverse().find(item=>item.role === "assistant" && item.agentId === speakerId && (item.pending || type === "done") && (!!item.teamWrapup === (frame.team_wrapup === true)));
+    if (existing) target=existing;
+    else if (type === "done") return result;
+  }
   if (
     [
       "token",
@@ -392,7 +401,8 @@ export function consumeFrame(
       !target ||
       target.role !== "assistant" ||
       (speaker && target.speaker && target.speaker !== speaker) ||
-      (frame.team_wrapup === true && !target.pending)
+      (speakerId && target.agentId && target.agentId !== speakerId) ||
+      (frame.team_wrapup === true && (!target.pending || !target.teamWrapup))
     ) {
       target = {
         id: crypto.randomUUID(),
@@ -400,6 +410,7 @@ export function consumeFrame(
         text: "",
         speaker,
         pending: true,
+        ...(frame.team_wrapup === true ? {teamWrapup:true} : {}),
       };
       result.push(target);
     }
@@ -435,6 +446,7 @@ export function consumeFrame(
   } else if (type === "done") {
     if (!speakerId || frame.team_wrapup || !frame.team_member_continuing)
       target.pending = false;
+    if(frame.team_wrapup) for(const message of result) if(message.agentId === speakerId || message.agentId === defaultAgentId) message.pending=false;
   }
   return result;
 }

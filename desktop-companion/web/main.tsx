@@ -47,6 +47,14 @@ import {
 } from "./core";
 import "./styles.css";
 import ApprovalCard from "./ApprovalCard";
+import TeamSettings from "./TeamSettings";
+import {
+  teamRecords,
+  markTeams,
+  teamProblem,
+  liveTeamSpeakers,
+  type TeamRecord,
+} from "./teams";
 import {
   attachmentMime,
   canFlushQueue,
@@ -90,6 +98,7 @@ type Room = {
   completedTurnId?: string;
   awaitingStatus?: boolean;
   cancelVersion?: number;
+  teamSpeakers: string[];
 };
 type Rooms = Record<BoardId, Room>;
 const freshRoom = (binding: Binding): Room => ({
@@ -101,6 +110,7 @@ const freshRoom = (binding: Binding): Room => ({
   busy: false,
   queue: [],
   approvals: [],
+  teamSpeakers: [],
 });
 const emptyRooms = () =>
   Object.fromEntries(
@@ -359,6 +369,11 @@ function App() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [connectors, setConnectors] = useState<Resource[]>([]);
   const [knowledge, setKnowledge] = useState<Resource[]>([]);
+  const [teams, setTeams] = useState<TeamRecord[]>([]);
+  const [teamsError, setTeamsError] = useState("");
+  const teamsRef = useRef(teams);
+  teamsRef.current = teams;
+  const teamRoomsRef = useRef<Record<string, Room>>({});
   const [showSettings, setShowSettings] = useState(false);
   const [edgeHiding, setEdgeHiding] = useState(true);
   const settingsRef = useRef<HTMLElement>(null);
@@ -404,6 +419,8 @@ function App() {
   const room = rooms[active];
   const board = boards.find((value) => value.id === active)!;
   const chosenAgent = agents.find((agent) => agent.id === room.binding.agentId);
+  const selectedTeam = teams.find((t) => t.agent_id === room.binding.agentId);
+  const experts = agents.filter((a) => !a.is_team);
   const selectedResources =
     active === "knowledge"
       ? room.binding.knowledgeBases
@@ -415,6 +432,21 @@ function App() {
       .filter((id) => !visibleResources.some((item) => item.id === id))
       .map((id) => ({ id, name: `${id}（当前不可用）` })),
   ];
+  function speakerName(id: string, teamId?: string) {
+    const team = teamsRef.current.find((t) => t.agent_id === teamId);
+    if (team && [team.agent_id, team.primary_agent_id].includes(id))
+      return `${
+        team.primary_agent_name ||
+        agentsRef.current.find((a) => a.id === team.primary_agent_id)?.name ||
+        id
+      } · 主持人`;
+    return (
+      agentsRef.current.find((a) => a.id === id)?.name ||
+      teamsRef.current.flatMap((t) => t.members).find((m) => m.agent_id === id)
+        ?.name ||
+      id
+    );
+  }
   const identity = status.user?.display_name || status.user?.username;
 
   function updateRoom(
@@ -435,6 +467,109 @@ function App() {
   function replaceRooms(next: Rooms) {
     roomsRef.current = next;
     setRooms(next);
+  }
+  function storedRoom(value: Room) {
+    return {
+      binding: value.binding,
+      conversationId: value.conversationId,
+      threadId: value.threadId,
+      draft: value.draft,
+      queue: value.queue.map((q) => ({
+        ...q,
+        files: q.files.map(({ preview, ...file }) => file),
+      })),
+    };
+  }
+  function restoredRoom(
+    old: Partial<Room> | undefined,
+    binding: Binding,
+  ): Room {
+    return {
+      ...freshRoom(binding),
+      ...(old
+        ? {
+            conversationId: old.conversationId || crypto.randomUUID(),
+            threadId: old.threadId,
+            draft: old.draft || "",
+            queue: safeQueuedInputs(old.queue),
+            queuePaused: true,
+          }
+        : {}),
+    };
+  }
+  function chooseTeam(teamId: string) {
+    const old = roomsRef.current.team;
+    if (
+      old.busy ||
+      old.activeTurnId ||
+      old.teamSpeakers.length ||
+      old.queue.length ||
+      old.approvals.some((a) => ["pending", "submitting"].includes(a.status))
+    ) {
+      setNotice("请先处理当前团队任务、待发消息或确认，再切换团队。");
+      return;
+    }
+    if (old.binding.agentId === teamId) return;
+    if (old.binding.agentId) teamRoomsRef.current[old.binding.agentId] = old;
+    const next =
+      teamRoomsRef.current[teamId] ||
+      freshRoom({ agentId: teamId, connectors: [], knowledgeBases: [] });
+    updateRoom("team", next);
+    void native("chatClose", { board: "team" });
+    if (next.threadId)
+      void loadRoomHistory("team").catch((error) =>
+        updateRoom("team", { error: errorText(error), queuePaused: true }),
+      );
+  }
+  async function saveTeam(
+    name: string,
+    memberIds: string[],
+    teamId?: string,
+  ): Promise<TeamRecord> {
+    const owner = ownerRef.current,
+      user = userRef.current,
+      host = agentsRef.current.find((a) => a.name === "小通" && !a.is_team);
+    if (
+      !user ||
+      !host ||
+      memberIds.some(
+        (id) => !agentsRef.current.some((a) => a.id === id && !a.is_team),
+      )
+    )
+      throw new Error("请选择本人当前可用的专家，由小通主持。");
+    const record = await native<TeamRecord>("saveTeam", {
+      name,
+      memberIds,
+      hostId: host.id,
+      ...(teamId ? { teamId } : {}),
+    });
+    if (ownerRef.current !== owner)
+      throw new Error("账号已切换，团队已保存到原账号，请重新核对。");
+    setTeams((old) => [
+      ...old.filter((t) => t.agent_id !== record.agent_id),
+      record,
+    ]);
+    teamsRef.current = [
+      ...teamsRef.current.filter((t) => t.agent_id !== record.agent_id),
+      record,
+    ];
+    try {
+      const result = await api("/api/agents");
+      if (ownerRef.current !== owner) return record;
+      setAgents(markTeams(normalizeAgents(result, user.id), teamsRef.current));
+      setTeamsError("");
+    } catch {
+      setTeamsError("团队已保存，请刷新后核对桌宠授权。");
+    }
+    if (ownerRef.current === owner) {
+      if (
+        record.primary_agent_id === host.id &&
+        record.primary_agent_name === "小通"
+      )
+        chooseTeam(record.agent_id);
+      else setTeamsError("团队已保存，但主持配置不是小通，请先核对主专家。");
+    }
+    return record;
   }
   async function loadRoomHistory(id: BoardId) {
     const item = roomsRef.current[id],
@@ -464,7 +599,19 @@ function App() {
       .map((value) => pendingApproval(value, item.binding.agentId))
       .filter((a): a is Approval => !!a);
     updateRoom(id, {
-      messages: historyMessages(history, item.binding.agentId),
+      messages: historyMessages(history, item.binding.agentId).map(
+        (message) => ({
+          ...message,
+          speaker:
+            message.role === "assistant"
+              ? speakerName(
+                  message.agentId || item.binding.agentId,
+                  id === "team" ? item.binding.agentId : undefined,
+                )
+              : message.speaker,
+        }),
+      ),
+      teamSpeakers: [],
       approvals,
       busy: !!history.turn_active && !approvals.length,
       awaitingApproval: history.awaiting_user === true && !approvals.length,
@@ -472,7 +619,7 @@ function App() {
       cancelSent: false,
       activeTurnId: undefined,
     });
-    if (history.turn_active || approvals.length) {
+    if (history.turn_active || approvals.length || id === "team") {
       updateRoom(id, { awaitingStatus: true });
       await native(
         "chatSend",
@@ -495,6 +642,9 @@ function App() {
       const previouslyLoaded =
         loadedOwner.current === nextOwner && nextOwner !== null;
       if (!previouslyLoaded) {
+        teamRoomsRef.current = {};
+        setTeams([]);
+        setTeamsError("");
         replaceRooms(emptyRooms());
         setAgents([]);
         setConnectors([]);
@@ -510,15 +660,28 @@ function App() {
         setAgents([]);
         return;
       }
-      const [agentResult, instanceResult, knowledgeResult] =
+      const [agentResult, instanceResult, knowledgeResult, teamResult] =
         await Promise.allSettled([
           api("/api/agents"),
           api("/api/connector-instances"),
           api("/api/knowledge-bases"),
+          api("/api/teams"),
         ]);
       if (revision !== refreshRevision.current) return;
       if (agentResult.status === "rejected") throw agentResult.reason;
-      const owned = normalizeAgents(agentResult.value, next.user.id);
+      const foundTeams =
+        teamResult.status === "fulfilled"
+          ? teamRecords(teamResult.value)
+          : teamsRef.current;
+      setTeams(foundTeams);
+      teamsRef.current = foundTeams;
+      setTeamsError(
+        teamResult.status === "rejected" ? "团队列表暂不可用，请刷新。" : "",
+      );
+      const owned = markTeams(
+        normalizeAgents(agentResult.value, next.user.id),
+        foundTeams,
+      );
       const connections =
         instanceResult.status === "fulfilled"
           ? connectionCandidates(instanceResult.value)
@@ -553,6 +716,7 @@ function App() {
         rooms?: Record<BoardId, Partial<Room>>;
         voice?: boolean;
         active?: BoardId;
+        teamSessions?: Record<string, Partial<Room>>;
       } = {};
       try {
         saved = JSON.parse(
@@ -563,6 +727,16 @@ function App() {
       } catch {
         /* Invalid local view preferences do not alter server data. */
       }
+      teamRoomsRef.current = Object.fromEntries(
+        Object.entries(saved.teamSessions || {}).map(([id, old]) => [
+          id,
+          restoredRoom(old, {
+            agentId: id,
+            connectors: [],
+            knowledgeBases: [],
+          }),
+        ]),
+      );
       const restored = Object.fromEntries(
         boards.map(({ id }) => {
           const old = saved.rooms?.[id];
@@ -574,21 +748,7 @@ function App() {
             !Array.isArray(binding.knowledgeBases)
           )
             binding = initialBinding(id, owned, connections);
-          return [
-            id,
-            {
-              ...freshRoom(binding),
-              ...(old
-                ? {
-                    conversationId: old.conversationId || crypto.randomUUID(),
-                    threadId: old.threadId,
-                    draft: old.draft || "",
-                    queue: safeQueuedInputs(old.queue),
-                    queuePaused: true,
-                  }
-                : {}),
-            },
-          ];
+          return [id, restoredRoom(old, binding)];
         }),
       ) as Rooms;
       loadedOwner.current = nextOwner;
@@ -628,22 +788,18 @@ function App() {
   const persistence = JSON.stringify({
     voice,
     active,
+    teamSessions: Object.fromEntries(
+      Object.entries({
+        ...teamRoomsRef.current,
+        ...(rooms.team.binding.agentId
+          ? { [rooms.team.binding.agentId]: rooms.team }
+          : {}),
+      }).map(([id, value]) => [id, storedRoom(value)]),
+    ),
     rooms: Object.fromEntries(
       boards.map(({ id }) => {
         const item = rooms[id];
-        return [
-          id,
-          {
-            binding: item.binding,
-            conversationId: item.conversationId,
-            threadId: item.threadId,
-            draft: item.draft,
-            queue: item.queue.map((value) => ({
-              ...value,
-              files: value.files.map(({ preview, ...file }) => file),
-            })),
-          },
-        ];
+        return [id, storedRoom(item)];
       }),
     ),
   });
@@ -661,13 +817,19 @@ function App() {
       if (running) return;
       running = true;
       try {
-        const [agentResult, connectionResult, knowledgeResult, accessResult] =
-          await Promise.allSettled([
-            api("/api/agents"),
-            api("/api/connector-instances"),
-            api("/api/knowledge-bases"),
-            api<{ allowed: boolean }>("/api/companion/access"),
-          ]);
+        const [
+          agentResult,
+          connectionResult,
+          knowledgeResult,
+          accessResult,
+          teamResult,
+        ] = await Promise.allSettled([
+          api("/api/agents"),
+          api("/api/connector-instances"),
+          api("/api/knowledge-bases"),
+          api<{ allowed: boolean }>("/api/companion/access"),
+          api("/api/teams"),
+        ]);
         if (!live || ownerRef.current !== owner) return;
         setStatus((value) => ({
           ...value,
@@ -675,8 +837,19 @@ function App() {
             accessResult.status === "fulfilled" &&
             accessResult.value.allowed === true,
         }));
+        const latestTeams =
+          teamResult.status === "fulfilled"
+            ? teamRecords(teamResult.value)
+            : teamsRef.current;
+        if (teamResult.status === "fulfilled") {
+          setTeams(latestTeams);
+          teamsRef.current = latestTeams;
+          setTeamsError("");
+        }
         if (agentResult.status === "fulfilled")
-          setAgents(normalizeAgents(agentResult.value, userId));
+          setAgents(
+            markTeams(normalizeAgents(agentResult.value, userId), latestTeams),
+          );
         if (connectionResult.status === "fulfilled")
           setConnectors(connectionCandidates(connectionResult.value));
         if (knowledgeResult.status === "fulfilled")
@@ -702,10 +875,16 @@ function App() {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<NativeEvent>).detail;
       if (detail.type === "authChanged") {
+        teamRoomsRef.current = {};
+        teamsRef.current = [];
+        setTeams([]);
         void refresh();
         return;
       }
       if (detail.type === "authExpired") {
+        teamRoomsRef.current = {};
+        teamsRef.current = [];
+        setTeams([]);
         ++refreshRevision.current;
         loadedOwner.current = null;
         voiceDraft.current.owner = null;
@@ -747,7 +926,9 @@ function App() {
         setSpeaking(detail.data === "started");
         if (
           detail.data !== "started" &&
-          Object.values(roomsRef.current).some((item) => item.busy)
+          Object.values(roomsRef.current).some(
+            (item) => item.busy || item.teamSpeakers.length,
+          )
         )
           void native("petState", { state: "working" });
         return;
@@ -794,6 +975,29 @@ function App() {
         })
       )
         return;
+      const team =
+        id === "team"
+          ? teamsRef.current.find((t) => t.agent_id === current.binding.agentId)
+          : undefined;
+      if (team) {
+        const live = liveTeamSpeakers(current.teamSpeakers, frame, team);
+        const text =
+          frame.type === "done" && frame.team_wrapup
+            ? "小通已回复"
+            : live.length
+            ? frame.team_wrapup
+              ? "小通汇总中"
+              : "团队成员回复中"
+            : frame.type === "done" &&
+              String(frame.speaker_agent_id ?? frame.agent_id ?? "") !==
+                team.primary_agent_id
+            ? "成员已回复"
+            : undefined;
+        updateRoom(id, {
+          teamSpeakers: live,
+          ...(text ? { controlStatus: text } : {}),
+        });
+      }
       if (
         current.resumingId &&
         [
@@ -981,11 +1185,14 @@ function App() {
       const speakerId = String(
         frame.speaker_agent_id ?? frame.agent_id ?? frame.agent ?? "",
       );
+      const turnOwner = String(
+        frame.turn_owner_agent_id ?? frame.agent_id ?? frame.agent ?? "",
+      );
       const finished =
         frame.type === "done" &&
         !frame.team_member_continuing &&
-        (!speakerId ||
-          speakerId === current.binding.agentId ||
+        (!turnOwner ||
+          turnOwner === current.binding.agentId ||
           frame.team_wrapup === true);
       if (frame.type === "done")
         updateRoom(id, {
@@ -1071,15 +1278,18 @@ function App() {
           value.messages,
           frame,
           (agentId) =>
-            agentsRef.current.find((item) => item.id === agentId)?.name ||
-            agentId,
+            speakerName(
+              agentId,
+              id === "team" ? value.binding.agentId : undefined,
+            ),
           value.binding.agentId,
         ),
       }));
       if (finished || frame.type === "error")
         void native("petState", {
           state: Object.entries(roomsRef.current).some(
-            ([key, value]) => key !== id && value.busy,
+            ([key, value]) =>
+              (key !== id && value.busy) || value.teamSpeakers.length > 0,
           )
             ? "working"
             : frame.type === "error"
@@ -1124,7 +1334,9 @@ function App() {
       return;
     if (
       !current.binding.agentId ||
-      (id !== "knowledge" && !current.binding.connectors.length)
+      (id !== "knowledge" &&
+        id !== "team" &&
+        !current.binding.connectors.length)
     ) {
       setShowSettings(true);
       updateRoom(id, {
@@ -1134,10 +1346,22 @@ function App() {
       });
       return;
     }
+    if (id === "team") {
+      const problem = teamProblem(
+        teamsRef.current.find((t) => t.agent_id === current.binding.agentId),
+        agentsRef.current,
+      );
+      if (problem) {
+        setShowSettings(true);
+        updateRoom(id, { error: problem, queuePaused: true });
+        return;
+      }
+    }
     if (
       !queued &&
       !steering &&
       (current.busy ||
+        current.teamSpeakers.length ||
         current.activeTurnId ||
         current.awaitingApproval ||
         current.approvals.some((a) =>
@@ -1147,6 +1371,7 @@ function App() {
     ) {
       updateRoom(id, {
         queue: [...current.queue, request],
+        ...(id === "team" ? { queuePaused: true } : {}),
         draft: "",
         files: [],
       });
@@ -1198,7 +1423,7 @@ function App() {
       busy: true,
       error: undefined,
       controlStatus: undefined,
-      ...(!steering ? { queuePaused: false } : {}),
+      ...(!steering ? { queuePaused: id === "team" } : {}),
     }));
     void native("stopSpeaking");
     void native("petState", { state: "working" });
@@ -1300,7 +1525,9 @@ function App() {
             messages: v.messages.map((m) => ({ ...m, pending: false })),
           }));
           void native("petState", {
-            state: Object.values(roomsRef.current).some((r) => r.busy)
+            state: Object.values(roomsRef.current).some(
+              (r) => r.busy || r.teamSpeakers.length,
+            )
               ? "working"
               : "idle",
           });
@@ -1545,7 +1772,7 @@ function App() {
   }
 
   function changeBinding(binding: Binding) {
-    if (room.busy) return;
+    if (room.busy || room.teamSpeakers.length) return;
     if (
       room.queue.length ||
       room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
@@ -1601,6 +1828,10 @@ function App() {
     setNotice("");
   }
   function newChat() {
+    if (room.teamSpeakers.length) {
+      setNotice("团队成员仍在回复，请稍后新建对话。");
+      return;
+    }
     if (
       room.queue.length ||
       room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
@@ -1684,74 +1915,107 @@ function App() {
                   onClick={() => chooseBoard(item.id)}
                 >
                   {item.name}
-                  {rooms[item.id].busy && (
+                  {(rooms[item.id].busy ||
+                    rooms[item.id].teamSpeakers.length > 0) && (
                     <LoaderCircle size={12} className="spin" />
                   )}
                 </button>
               ))}
             </nav>
-            <label>
-              回答专家
-              <select
-                aria-label="回答专家"
-                disabled={room.busy}
-                value={room.binding.agentId}
-                onChange={(event) =>
-                  changeBinding({
-                    ...room.binding,
-                    agentId: event.target.value,
-                  })
+            {active === "team" ? (
+              <TeamSettings
+                teams={teams}
+                experts={experts}
+                selectedId={room.binding.agentId}
+                locked={
+                  room.busy ||
+                  !!room.activeTurnId ||
+                  !!room.teamSpeakers.length ||
+                  !!room.queue.length ||
+                  room.approvals.some((a) =>
+                    ["pending", "submitting"].includes(a.status),
+                  )
                 }
-              >
-                <option value="">请选择专家</option>
-                {room.binding.agentId && !chosenAgent && (
-                  <option value={room.binding.agentId}>
-                    原专家（当前不可用）
-                  </option>
-                )}
-                {agents.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <fieldset disabled={room.busy}>
-              <legend>
-                {active === "knowledge" ? "知识库" : "连接器（MCP）"}
-              </legend>
-              <div className="resource-options">
-                {resourceChoices.map((item) => {
-                  const selected =
-                    active === "knowledge"
-                      ? room.binding.knowledgeBases
-                      : room.binding.connectors;
-                  return (
-                    <label key={item.id}>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(item.id)}
-                        onChange={(event) => {
-                          const values = event.target.checked
-                            ? [...selected, item.id]
-                            : selected.filter((id) => id !== item.id);
-                          changeBinding({
-                            ...room.binding,
-                            [active === "knowledge"
-                              ? "knowledgeBases"
-                              : "connectors"]: values,
-                          });
-                        }}
-                      />
-                      {item.name}
-                    </label>
-                  );
-                })}
-                {!resourceChoices.length && (
-                  <span className="settings-empty">暂无可用资源</span>
-                )}
-              </div>
-            </fieldset>
+                error={
+                  teamsError ||
+                  (room.binding.agentId
+                    ? teamProblem(selectedTeam, agents) || ""
+                    : "")
+                }
+                onSelect={chooseTeam}
+                onSave={saveTeam}
+              />
+            ) : (
+              <>
+                <label>
+                  回答专家
+                  <select
+                    aria-label="回答专家"
+                    disabled={room.busy}
+                    value={room.binding.agentId}
+                    onChange={(event) =>
+                      changeBinding({
+                        ...room.binding,
+                        agentId: event.target.value,
+                      })
+                    }
+                  >
+                    <option value="">请选择专家</option>
+                    {room.binding.agentId && !chosenAgent && (
+                      <option value={room.binding.agentId}>
+                        原专家（当前不可用）
+                      </option>
+                    )}
+                    {chosenAgent?.is_team && (
+                      <option value={chosenAgent.id}>
+                        {chosenAgent.name}（团队）
+                      </option>
+                    )}
+                    {experts.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <fieldset disabled={room.busy}>
+                  <legend>
+                    {active === "knowledge" ? "知识库" : "连接器（MCP）"}
+                  </legend>
+                  <div className="resource-options">
+                    {resourceChoices.map((item) => {
+                      const selected =
+                        active === "knowledge"
+                          ? room.binding.knowledgeBases
+                          : room.binding.connectors;
+                      return (
+                        <label key={item.id}>
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(item.id)}
+                            onChange={(event) => {
+                              const values = event.target.checked
+                                ? [...selected, item.id]
+                                : selected.filter((id) => id !== item.id);
+                              changeBinding({
+                                ...room.binding,
+                                [active === "knowledge"
+                                  ? "knowledgeBases"
+                                  : "connectors"]: values,
+                              });
+                            }}
+                          />
+                          {item.name}
+                        </label>
+                      );
+                    })}
+                    {!resourceChoices.length && (
+                      <span className="settings-empty">暂无可用资源</span>
+                    )}
+                  </div>
+                </fieldset>
+              </>
+            )}
             <div className="settings-links">
               <button
                 onClick={() =>
@@ -1794,7 +2058,10 @@ function App() {
               <button
                 className="text-button"
                 disabled={
-                  loading || Object.values(rooms).some((item) => item.busy)
+                  loading ||
+                  Object.values(rooms).some(
+                    (item) => item.busy || item.teamSpeakers.length,
+                  )
                 }
                 onClick={() => void refresh()}
               >
@@ -1839,7 +2106,9 @@ function App() {
           {status.authenticated && (
             <button
               className="text-button"
-              disabled={Object.values(rooms).some((item) => item.busy)}
+              disabled={Object.values(rooms).some(
+                (item) => item.busy || item.teamSpeakers.length,
+              )}
               onClick={() => void openSetting("logout")}
             >
               退出账号
@@ -2094,6 +2363,11 @@ function App() {
               <button
                 className="send stop"
                 aria-label={room.stopping ? "正在停止" : "停止回答"}
+                title={
+                  active === "team"
+                    ? "停止主持人本轮生成；已开始的成员回复仍会继续接收"
+                    : "停止回答"
+                }
                 disabled={room.stopping}
                 onClick={requestStop}
               >
@@ -2120,6 +2394,7 @@ function App() {
                 className="send"
                 aria-label={
                   room.busy ||
+                  room.teamSpeakers.length > 0 ||
                   room.queue.length ||
                   room.approvals.some((a) =>
                     ["pending", "submitting"].includes(a.status),
