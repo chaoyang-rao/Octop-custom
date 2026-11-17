@@ -2,15 +2,15 @@
 
 ## 企业成员下载安装
 
-当前企业版本为 **1.0.3b3.post2026111701**，已预置企业登录中心。飞书登录后自动同步服务器开放的对话模型，无需填写个人模型 API Key。
+当前企业版本为 **1.0.3b3.post2026111702**，已预置企业登录中心。飞书登录后自动同步服务器开放的对话模型，无需填写个人模型 API Key。
 
-- [Windows x64 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111701.exe)
-- [Mac M 芯片企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111701.dmg)
-- [Mac Intel 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111701.dmg)
+- [Windows x64 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111702.exe)
+- [Mac M 芯片企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111702.dmg)
+- [Mac Intel 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111702.dmg)
 
-升级前先在系统托盘／菜单栏选择“退出”，再安装并启动 **Octop Custom**，以加载新版后台。安装包与校验文件见[本次企业发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1)。
+升级前先在系统托盘／菜单栏选择“退出”，再安装并启动 **Octop Custom**，以加载新版后台。安装包与校验文件见[本次企业发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.2)。
 
-登录后模型列表为空时，先核对实际运行的企业程序版本及企业登录状态，再重新打开新版客户端同步。企业成员无需按下方开发者说明单独配置供应商或共享业务密钥。
+登录后模型列表为空时，先核对实际运行的企业程序版本及企业登录状态，客户端会定期重试模型同步，成功后默认专家自动恢复。企业成员无需按下方开发者说明单独配置供应商或共享业务密钥。
 
 <p align="center">
   <img src="docs/assets/readme-banner-zh.png" alt="Octop Banner" width="600" />
@@ -238,7 +238,7 @@ curl -fsSL https://download.octop.cloud/octop/scripts/install.sh | bash -s -- --
 
 完整安装选项见 [scripts/README.md](scripts/README.md)（`--version`、`--from-source`、`--mirror` 及 Windows 参数）。
 
-**企业桌面客户端**（图形界面，无需终端）— 使用[已验证的企业定制发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1)中对应平台的安装包：
+**企业桌面客户端**（图形界面，无需终端）— 使用[已验证的企业定制发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.2)中对应平台的安装包：
 
 | 平台 | 制品 |
 |------|------|

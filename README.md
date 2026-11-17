@@ -2,19 +2,19 @@
 
 # Octop Custom 定制版
 
-这是 `chaoyang-rao/Octop-custom` 企业定制仓库，当前基于官方 **1.0.3b3**，历史定制基线继续保留。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。当前企业程序版本为 `1.0.3b3.post2026111701`。
+这是 `chaoyang-rao/Octop-custom` 企业定制仓库，当前基于官方 **1.0.3b3**，历史定制基线继续保留。官方许可证为 MIT，完整许可证见 [LICENSE](LICENSE)。当前企业程序版本为 `1.0.3b3.post2026111702`。
 
 ## 下载与安装
 
 企业成员使用以下已预置企业登录中心的安装包。飞书登录后自动同步服务器开放的对话模型，无需填写个人模型 API Key。
 
-- [Windows x64 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111701.exe)
-- [Mac M 芯片企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111701.dmg)
-- [Mac Intel 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.1/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111701.dmg)
+- [Windows x64 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-windows-amd64-1.0.3b3.post2026111702.exe)
+- [Mac M 芯片企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-darwin-arm64-1.0.3b3.post2026111702.dmg)
+- [Mac Intel 企业安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261117.2/OctopCustom-desktop-darwin-amd64-1.0.3b3.post2026111702.dmg)
 
-升级前先在系统托盘／菜单栏选择“退出”，再安装并启动 **Octop Custom**，以加载新版后台。安装包与校验文件见[本次企业发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1)。
+升级前先在系统托盘／菜单栏选择“退出”，再安装并启动 **Octop Custom**，以加载新版后台。安装包与校验文件见[本次企业发行](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.2)。
 
-如果登录后模型列表为空，先核对实际运行的企业程序版本及企业登录状态；重新打开新版客户端可再次同步模型。企业成员无需到官方版安装流程中单独配置供应商或共享业务密钥。
+如果登录后模型列表为空，先核对实际运行的企业程序版本及企业登录状态；客户端会定期重试模型同步，成功后默认专家自动恢复；重新打开客户端也会再次同步。企业成员无需到官方版安装流程中单独配置供应商或共享业务密钥。
 
 其他平台文件与免安装包：
 
@@ -306,7 +306,7 @@ curl -fsSL https://download.octop.cloud/octop/scripts/install.sh | bash -s -- --
 
 See [scripts/README.md](scripts/README.md) for all install options (`--version`, `--from-source`, `--mirror`, Windows flags).
 
-**Enterprise desktop app** (GUI, no terminal) — use the platform-specific company package in [the verified custom release](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.1):
+**Enterprise desktop app** (GUI, no terminal) — use the platform-specific company package in [the verified custom release](https://github.com/chaoyang-rao/Octop-custom/releases/tag/custom-1.0.3b3-20261117.2):
 
 | Platform | Artifact |
 |----------|----------|
