@@ -72,3 +72,12 @@ jobs:
             desktop-companion/tests/pose-scale.swift \
             -o desktop-companion/build/pose-scale-check
           desktop-companion/build/pose-scale-check
+      - name: Verify chat controls and SSE decoding
+        run: |
+          xcrun swiftc -swift-version 5 -parse-as-library \
+            desktop-companion/macos/SecurityCore.swift \
+            desktop-companion/macos/ChatTransport.swift \
+            desktop-companion/macos/BackendClient.swift \
+            desktop-companion/tests/chat-transport.swift \
+            -o desktop-companion/build/chat-transport-check
+          desktop-companion/build/chat-transport-check

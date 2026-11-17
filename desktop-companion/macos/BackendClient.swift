@@ -79,15 +79,38 @@ final class BackendClient: NSObject, URLSessionTaskDelegate {
         return task
     }
     func upload(agentId: String, filename: String, mime: String, bytes: Data) async throws -> [String: Any] {
-        guard bytes.count <= 12 * 1024 * 1024, ["image/png", "image/jpeg", "image/webp", "image/gif"].contains(mime) else { throw CompanionError.unavailable("请选择不超过 12 MB 的图片。") }
+        guard bytes.count <= 12 * 1024 * 1024, CompanionUploadPolicy.mimeTypes.contains(mime) else { throw CompanionError.unavailable("请选择不超过 12 MB 的图片、Excel、CSV 或 PDF。") }
         let id = try EndpointPolicy.segment(agentId)
         let safeName = (filename as NSString).lastPathComponent.replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "\r", with: "").replacingOccurrences(of: "\n", with: "")
         let boundary = "OctopCompanion-\(UUID().uuidString)"
         var body = Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(safeName)\"\r\nContent-Type: \(mime)\r\n\r\n".utf8)
         body.append(bytes); body.append(Data("\r\n--\(boundary)--\r\n".utf8))
         let (data, response) = try await request("/api/agents/\(id)/upload", method: "POST", body: body, contentType: "multipart/form-data; boundary=\(boundary)")
-        guard (200..<300).contains(response.statusCode), let result = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw CompanionError.unavailable("图片上传未完成，请检查专家是否已启动及图片大小限制。") }
+        guard (200..<300).contains(response.statusCode), let result = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw CompanionError.unavailable("附件上传未完成，请检查专家是否已启动及文件大小限制。") }
         return result
+    }
+    func approvalStream(agentId:String, threadId:String, pendingId:String, decisions:[[String:Any]]) async throws -> URLSession.AsyncBytes {
+        let id=try EndpointPolicy.segment(agentId); _ = try CompanionChatCommand.threadID(threadId); _ = try EndpointPolicy.segment(pendingId)
+        guard (1...16).contains(decisions.count), decisions.allSatisfy({d in
+            guard let type=d["type"] as? String, ["approve","reject","respond"].contains(type) else {return false}
+            if let text=d["message"] as? String, text.count > 8000 {return false}
+            return type != "respond" || !(d["message"] as? String ?? "").trimmingCharacters(in:.whitespacesAndNewlines).isEmpty
+        }) else {throw CompanionError.invalidPath}
+        let startOrigin=origin
+        guard let token=credentials.read(origin:startOrigin) else {throw CompanionError.signedOut}
+        var request=URLRequest(url:try EndpointPolicy.api("/api/agents/\(id)/chat/hitl/resume",origin:startOrigin))
+        request.httpMethod="POST"; request.timeoutInterval=3600
+        request.setValue("Bearer \(token)",forHTTPHeaderField:"Authorization")
+        request.setValue("application/json",forHTTPHeaderField:"Content-Type")
+        request.setValue("text/event-stream",forHTTPHeaderField:"Accept")
+        request.httpBody=try JSONSerialization.data(withJSONObject:["thread_id":threadId,"pending_id":pendingId,"decisions":decisions])
+        let (bytes,response)=try await transport.bytes(for:request)
+        guard let http=response as? HTTPURLResponse, EndpointPolicy.sameOrigin(http.url ?? startOrigin,startOrigin) else {throw CompanionError.invalidPath}
+        if http.statusCode == 401 && origin == startOrigin && credentials.read(origin:startOrigin) == token {
+            credentials.clear(origin:startOrigin); DispatchQueue.main.async {self.onExpired?(startOrigin)}
+        }
+        guard http.statusCode == 200, http.mimeType == "text/event-stream" else {throw CompanionError.unavailable("确认未提交（HTTP \(http.statusCode)），请核对登录及任务状态。")}
+        return bytes
     }
     func image(_ path: String) async throws -> (Data, String) {
         let (data, response) = try await request(path)

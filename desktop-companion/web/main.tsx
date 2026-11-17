@@ -13,6 +13,7 @@ import {
   LogIn,
   MessageCircle,
   Mic,
+  MoreHorizontal,
   Plus,
   Settings,
   ShieldCheck,
@@ -45,6 +46,16 @@ import {
   type Resource,
 } from "./core";
 import "./styles.css";
+import ApprovalCard from "./ApprovalCard";
+import {
+  attachmentMime,
+  canFlushQueue,
+  chatCommand,
+  pendingApproval,
+  safeQueuedInputs,
+  type Approval,
+  type QueuedInput,
+} from "./controls";
 
 type User = { id: number; username: string; display_name?: string };
 type Status = {
@@ -65,6 +76,20 @@ type Room = {
   files: Attachment[];
   busy: boolean;
   error?: string;
+  queue: QueuedInput[];
+  approvals: Approval[];
+  queuePaused?: boolean;
+  activeTurnId?: string;
+  awaitingApproval?: boolean;
+  stopping?: boolean;
+  cancelSent?: boolean;
+  controlStatus?: string;
+  resumingId?: string;
+  resumeRejected?: boolean;
+  approvalStreamActive?: boolean;
+  completedTurnId?: string;
+  awaitingStatus?: boolean;
+  cancelVersion?: number;
 };
 type Rooms = Record<BoardId, Room>;
 const freshRoom = (binding: Binding): Room => ({
@@ -74,6 +99,8 @@ const freshRoom = (binding: Binding): Room => ({
   draft: "",
   files: [],
   busy: false,
+  queue: [],
+  approvals: [],
 });
 const emptyRooms = () =>
   Object.fromEntries(
@@ -150,9 +177,17 @@ function InlineImage({
 function MessageCard({
   message,
   agentId,
+  onResend,
+  onEdit,
+  onWithdraw,
+  disabled,
 }: {
   message: Message;
   agentId: string;
+  onResend: () => void;
+  onEdit: () => void;
+  onWithdraw: () => void;
+  disabled: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   if (
@@ -183,16 +218,19 @@ function MessageCard({
         </div>
       )}
       <div className="message-body">
-        {message.attachments?.map(
-          (item) =>
-            item.preview && (
-              <img
-                key={item.path}
-                className="input-image"
-                src={item.preview}
-                alt={item.filename}
-              />
-            ),
+        {message.attachments?.map((item) =>
+          item.preview ? (
+            <img
+              key={item.path}
+              className="input-image"
+              src={item.preview}
+              alt={item.filename}
+            />
+          ) : !item.media_type.startsWith("image/") ? (
+            <span className="file-chip" key={item.path}>
+              {item.filename}
+            </span>
+          ) : null,
         )}
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -223,11 +261,10 @@ function MessageCard({
         </ReactMarkdown>
         {message.images?.map((url) => <InlineImage key={url} source={url} />)}
         {message.pending && !message.text && (
-          <div className="thinking" role="status">
-            <span />
-            <span />
-            <span />
-            <span className="sr-only">正在回答</span>
+          <div className="thinking" role="status" aria-label="正在回答">
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
           </div>
         )}
         {message.error && (
@@ -236,6 +273,41 @@ function MessageCard({
           </div>
         )}
       </div>
+      {message.delivery && (
+        <div className="delivery-state" role="status">
+          {
+            {
+              pending: "正在补充…",
+              queued: "等待本轮接收",
+              applied: "已补充到本轮",
+              failed: "未执行，内容已保留",
+              removed: "已撤回",
+            }[message.delivery]
+          }
+          {message.delivery === "queued" && message.pendingId && (
+            <button onClick={onWithdraw}>撤回</button>
+          )}
+        </div>
+      )}
+      {!message.pending && !message.previewOnly && (
+        <details className="message-menu">
+          <summary aria-label="消息操作">
+            <MoreHorizontal size={15} />
+          </summary>
+          <div>
+            <button disabled={disabled} onClick={onResend}>
+              {message.role === "assistant"
+                ? message.error
+                  ? "重试"
+                  : "重新回答"
+                : "再次发送"}
+            </button>
+            <button disabled={disabled} onClick={onEdit}>
+              编辑后再发
+            </button>
+          </div>
+        </details>
+      )}
       {((message.tools?.length ?? 0) > 0 || message.reasoning) && (
         <details className="process">
           <summary>
@@ -364,6 +436,50 @@ function App() {
     roomsRef.current = next;
     setRooms(next);
   }
+  async function loadRoomHistory(id: BoardId) {
+    const item = roomsRef.current[id],
+      revision = refreshRevision.current,
+      owner = loadedOwner.current;
+    if (!item.threadId || !item.binding.agentId) return;
+    const history = await api<{
+      messages: unknown[];
+      turn_active?: boolean;
+      awaiting_user?: boolean;
+      hitl_pending?: unknown;
+    }>(
+      `/api/agents/${encodeURIComponent(
+        item.binding.agentId,
+      )}/threads/${encodeURIComponent(item.threadId)}/history?limit=100`,
+    );
+    if (
+      revision !== refreshRevision.current ||
+      loadedOwner.current !== owner ||
+      roomsRef.current[id].conversationId !== item.conversationId
+    )
+      return;
+    const raw = Array.isArray(history.hitl_pending)
+      ? history.hitl_pending
+      : [history.hitl_pending];
+    const approvals = raw
+      .map((value) => pendingApproval(value, item.binding.agentId))
+      .filter((a): a is Approval => !!a);
+    updateRoom(id, {
+      messages: historyMessages(history, item.binding.agentId),
+      approvals,
+      busy: !!history.turn_active && !approvals.length,
+      awaitingApproval: history.awaiting_user === true && !approvals.length,
+      stopping: false,
+      cancelSent: false,
+      activeTurnId: undefined,
+    });
+    if (history.turn_active || approvals.length) {
+      updateRoom(id, { awaitingStatus: true });
+      await native(
+        "chatSend",
+        chatCommand(id, item, { type: "subscribe", thread_id: item.threadId }),
+      );
+    }
+  }
 
   async function refresh() {
     const revision = ++refreshRevision.current;
@@ -421,7 +537,18 @@ function App() {
         );
       setConnectors(connections);
       setKnowledge(bases);
-      if (previouslyLoaded) return;
+      if (previouslyLoaded) {
+        await Promise.all(
+          boards.map(async ({ id }) => {
+            try {
+              await loadRoomHistory(id);
+            } catch (error) {
+              updateRoom(id, { error: errorText(error), queuePaused: true });
+            }
+          }),
+        );
+        return;
+      }
       let saved: {
         rooms?: Record<BoardId, Partial<Room>>;
         voice?: boolean;
@@ -456,6 +583,8 @@ function App() {
                     conversationId: old.conversationId || crypto.randomUUID(),
                     threadId: old.threadId,
                     draft: old.draft || "",
+                    queue: safeQueuedInputs(old.queue),
+                    queuePaused: true,
                   }
                 : {}),
             },
@@ -474,33 +603,7 @@ function App() {
           const item = restored[id];
           if (!item.threadId || !item.binding.agentId) return;
           try {
-            const history = await api<{
-              messages: unknown[];
-              turn_active?: boolean;
-            }>(
-              `/api/agents/${encodeURIComponent(
-                item.binding.agentId,
-              )}/threads/${encodeURIComponent(
-                item.threadId,
-              )}/history?limit=100`,
-            );
-            if (
-              revision !== refreshRevision.current ||
-              roomsRef.current[id].threadId !== item.threadId ||
-              roomsRef.current[id].binding.agentId !== item.binding.agentId
-            )
-              return;
-            updateRoom(id, {
-              messages: historyMessages(history, item.binding.agentId),
-              busy: !!history.turn_active,
-            });
-            if (history.turn_active)
-              await native("chatSend", {
-                board: id,
-                contextKey: item.conversationId,
-                agentId: item.binding.agentId,
-                frame: { type: "subscribe", thread_id: item.threadId },
-              });
+            await loadRoomHistory(id);
           } catch (error) {
             updateRoom(id, { error: errorText(error) });
           }
@@ -535,6 +638,10 @@ function App() {
             conversationId: item.conversationId,
             threadId: item.threadId,
             draft: item.draft,
+            queue: item.queue.map((value) => ({
+              ...value,
+              files: value.files.map(({ preview, ...file }) => file),
+            })),
           },
         ];
       }),
@@ -649,12 +756,25 @@ function App() {
         inputRef.current?.focus();
         return;
       }
-      if (detail.type === "chatError" && detail.board) {
+      if (["chatError", "resumeError"].includes(detail.type) && detail.board) {
         if (acceptsRoomEvent(roomsRef.current[detail.board as BoardId], detail))
-          updateRoom(detail.board as BoardId, {
-            busy: false,
+          updateRoom(detail.board as BoardId, (value) => ({
+            ...value,
+            busy: detail.type === "chatError" && !!value.approvalStreamActive,
+            approvalStreamActive:
+              detail.type === "chatError" && value.approvalStreamActive,
+            activeTurnId: undefined,
+            stopping: false,
+            cancelSent: false,
+            queuePaused: true,
+            approvals: value.approvals.map((a) =>
+              a.pending_id === value.resumingId
+                ? { ...a, status: "pending", error: detail.error }
+                : a,
+            ),
+            resumingId: undefined,
             error: detail.error || "与专家的连接已断开，请重试。",
-          });
+          }));
         return;
       }
       if (
@@ -675,26 +795,183 @@ function App() {
       )
         return;
       if (
-        ["steer.rejected", "steer.expired", "steer.discarded"].includes(
-          String(frame.type),
-        )
+        current.resumingId &&
+        [
+          "token",
+          "reasoning",
+          "tool_call_chunk",
+          "turn.resumed",
+          "turn.started",
+          "done",
+          "hitl_required",
+        ].includes(String(frame.type))
       ) {
-        const last = current.messages
-          .filter((message) => message.role === "user")
-          .at(-1);
+        updateRoom(id, (value) => ({
+          ...value,
+          approvals: value.approvals.map((a) =>
+            a.pending_id === value.resumingId
+              ? {
+                  ...a,
+                  status: value.resumeRejected ? "rejected" : "approved",
+                  error: undefined,
+                }
+              : a,
+          ),
+          resumingId: undefined,
+        }));
+      }
+      if (["turn.started", "turn.resumed"].includes(String(frame.type))) {
         updateRoom(id, {
-          busy: false,
-          error:
-            "这条消息尚未执行。请先在 Octop 中确认上一项任务状态，再继续发送。",
-          draft: current.draft || last?.text || "",
-          files: current.files.length ? current.files : last?.attachments || [],
+          activeTurnId: String(frame.turn_id || "") || undefined,
+          threadId:
+            typeof frame.thread_id === "string"
+              ? frame.thread_id
+              : current.threadId,
+          busy: frame.phase !== "hitl_paused",
+          awaitingApproval:
+            frame.phase === "hitl_paused" &&
+            !roomsRef.current[id].approvals.some((a) =>
+              ["pending", "submitting"].includes(a.status),
+            ),
         });
         return;
       }
+      if (frame.type === "turn.ended") {
+        if (frame.turn_id && frame.turn_id === current.completedTurnId) return;
+        if (
+          current.activeTurnId &&
+          frame.turn_id &&
+          frame.turn_id !== current.activeTurnId
+        )
+          return;
+        updateRoom(id, {
+          busy: false,
+          awaitingApproval: frame.hitl_paused === true,
+          activeTurnId: frame.hitl_paused ? current.activeTurnId : undefined,
+          stopping: false,
+          cancelSent: false,
+          controlStatus: current.stopping
+            ? "本轮已结束"
+            : current.controlStatus,
+        });
+        return;
+      }
+      if (String(frame.type).startsWith("steer.")) {
+        if (
+          frame.type === "steer.queue_snapshot" &&
+          Array.isArray(frame.items)
+        ) {
+          updateRoom(id, (value) => {
+            const messages = [...value.messages];
+            for (const item of frame.items as Record<string, unknown>[]) {
+              if (
+                typeof item.client_pending_id !== "string" ||
+                typeof item.pending_id !== "string"
+              )
+                continue;
+              const index = messages.findIndex(
+                (m) => m.inputId === item.client_pending_id,
+              );
+              if (index >= 0)
+                messages[index] = {
+                  ...messages[index],
+                  pendingId: item.pending_id,
+                  delivery: "queued",
+                };
+              else
+                messages.push({
+                  id: `steer-${item.client_pending_id}`,
+                  inputId: item.client_pending_id,
+                  pendingId: item.pending_id,
+                  role: "user",
+                  text: String(item.preview || "已提交的补充"),
+                  delivery: "queued",
+                  previewOnly: true,
+                });
+            }
+            return { ...value, messages };
+          });
+        }
+        const ids = Array.isArray(frame.client_pending_ids)
+          ? frame.client_pending_ids
+          : [frame.client_pending_id];
+        const failed =
+          ["steer.rejected", "steer.expired", "steer.discarded"].includes(
+            String(frame.type),
+          ) || frame.status === "rejected";
+        updateRoom(id, (value) => ({
+          ...value,
+          messages: value.messages.map((message) =>
+            !message.inputId || !ids.includes(message.inputId)
+              ? message
+              : {
+                  ...message,
+                  delivery:
+                    frame.status === "removed" && frame.already_drained
+                      ? "applied"
+                      : frame.type === "steer.removed" ||
+                        frame.status === "removed"
+                      ? "removed"
+                      : failed
+                      ? "failed"
+                      : frame.type === "steer.drained"
+                      ? "applied"
+                      : "queued",
+                  pendingId:
+                    typeof frame.pending_id === "string"
+                      ? frame.pending_id
+                      : message.pendingId,
+                  error: failed
+                    ? "这条补充未执行，内容已保留，可编辑后再发。"
+                    : message.error,
+                },
+          ),
+          queuePaused: failed || value.queuePaused,
+          ...(frame.type === "steer.rejected" || frame.status === "rejected"
+            ? {
+                busy: !!(
+                  frame.active_turn_id ||
+                  frame.turn_id ||
+                  value.activeTurnId
+                ),
+                activeTurnId:
+                  String(
+                    frame.active_turn_id ||
+                      frame.turn_id ||
+                      value.activeTurnId ||
+                      "",
+                  ) || undefined,
+              }
+            : {}),
+        }));
+        if (
+          frame.type === "steer.queue_snapshot" &&
+          typeof frame.turn_id === "string"
+        )
+          updateRoom(id, { activeTurnId: frame.turn_id });
+        return;
+      }
       if (frame.type === "turn_status" && typeof frame.active === "boolean") {
+        if (
+          !frame.active &&
+          (current.approvalStreamActive ||
+            (current.busy && !current.stopping && !current.awaitingStatus))
+        )
+          return;
         updateRoom(id, (value) => ({
           ...value,
           busy: frame.active as boolean,
+          awaitingStatus: false,
+          ...(!frame.active
+            ? {
+                activeTurnId: undefined,
+                stopping: false,
+                cancelSent: false,
+                controlStatus: value.stopping
+                  ? "本轮已结束"
+                  : value.controlStatus,
+              }
+            : {}),
           messages: frame.active
             ? value.messages
             : value.messages.map((message) => ({ ...message, pending: false })),
@@ -710,6 +987,58 @@ function App() {
         (!speakerId ||
           speakerId === current.binding.agentId ||
           frame.team_wrapup === true);
+      if (frame.type === "done")
+        updateRoom(id, {
+          approvalStreamActive: false,
+          ...(current.approvalStreamActive && finished
+            ? { completedTurnId: current.activeTurnId, activeTurnId: undefined }
+            : {}),
+        });
+      if (frame.type === "hitl_required") {
+        const approval = pendingApproval(
+          frame.request,
+          current.binding.agentId,
+        );
+        if (approval)
+          updateRoom(id, (value) => ({
+            ...value,
+            awaitingApproval: false,
+            approvalStreamActive: false,
+            approvals: [
+              ...value.approvals.filter(
+                (a) => a.pending_id !== approval.pending_id,
+              ),
+              approval,
+            ],
+          }));
+        else
+          updateRoom(id, {
+            awaitingApproval: true,
+            error: "确认内容尚未恢复，请刷新任务状态。",
+            queuePaused: true,
+          });
+      }
+      if (frame.type === "error")
+        updateRoom(id, (value) => ({
+          ...value,
+          queuePaused: true,
+          approvalStreamActive: false,
+          activeTurnId: undefined,
+          stopping: false,
+          cancelSent: false,
+          approvals: value.approvals.map((a) =>
+            a.pending_id === value.resumingId
+              ? {
+                  ...a,
+                  status: "pending",
+                  error: String(
+                    frame.message || "确认后未能继续，请刷新核对。",
+                  ),
+                }
+              : a,
+          ),
+          resumingId: undefined,
+        }));
       if (finished && voiceRef.current && activeRef.current === id) {
         const last = current.messages
           .filter((item) => item.role === "assistant" && item.text)
@@ -728,6 +1057,16 @@ function App() {
           frame.type === "error" || frame.type === "hitl_required" || finished
             ? false
             : value.busy,
+        ...(finished
+          ? {
+              stopping: false,
+              cancelSent: false,
+              approvalStreamActive: false,
+              controlStatus: value.stopping
+                ? "本轮已结束"
+                : value.controlStatus,
+            }
+          : {}),
         messages: consumeFrame(
           value.messages,
           frame,
@@ -761,18 +1100,26 @@ function App() {
       element.scrollTop = element.scrollHeight;
   }, [room.messages]);
 
-  async function send() {
-    const id = active;
+  async function send(
+    queued?: QueuedInput,
+    delivery: "follow_up" | "steer" = "follow_up",
+    id: BoardId = active,
+  ) {
     const current = roomsRef.current[id];
+    const request = queued || {
+      id: crypto.randomUUID(),
+      text: current.draft,
+      files: current.files,
+    };
+    const steering = delivery === "steer";
     const user = userRef.current;
     const owner = ownerRef.current;
     if (
       !user ||
       !status.authenticated ||
       status.companionAllowed === false ||
-      current.busy ||
       uploading ||
-      (!current.draft.trim() && !current.files.length)
+      (!request.text.trim() && !request.files.length)
     )
       return;
     if (
@@ -785,6 +1132,38 @@ function App() {
           ? "请先选择管理员已开放的专家。"
           : "先选择专家和本人已授权的连接器，再查询业务数据。",
       });
+      return;
+    }
+    if (
+      !queued &&
+      !steering &&
+      (current.busy ||
+        current.activeTurnId ||
+        current.awaitingApproval ||
+        current.approvals.some((a) =>
+          ["pending", "submitting"].includes(a.status),
+        ) ||
+        current.queue.length)
+    ) {
+      updateRoom(id, {
+        queue: [...current.queue, request],
+        draft: "",
+        files: [],
+      });
+      return;
+    }
+    if (
+      steering &&
+      (!current.busy ||
+        !current.threadId ||
+        !current.activeTurnId ||
+        current.stopping ||
+        current.awaitingApproval ||
+        current.approvals.some((a) =>
+          ["pending", "submitting"].includes(a.status),
+        ))
+    ) {
+      updateRoom(id, { error: "当前不能补充本轮，请加入待发消息。" });
       return;
     }
     if (
@@ -804,39 +1183,46 @@ function App() {
       return;
     }
     const message: Message = {
-      id: crypto.randomUUID(),
+      id: request.id,
       role: "user",
-      text: current.draft,
-      attachments: current.files,
+      text: request.text,
+      attachments: request.files,
+      inputId: request.id,
+      ...(steering ? { delivery: "pending" as const } : {}),
     };
     updateRoom(id, (value) => ({
       ...value,
       messages: [...value.messages, message],
-      draft: "",
-      files: [],
+      ...(!queued ? { draft: "", files: [] } : {}),
+      queue: value.queue.filter((item) => item.id !== request.id),
       busy: true,
       error: undefined,
+      controlStatus: undefined,
+      ...(!steering ? { queuePaused: false } : {}),
     }));
     void native("stopSpeaking");
     void native("petState", { state: "working" });
     try {
-      await native("chatSend", {
-        board: id,
-        contextKey: current.conversationId,
-        agentId: current.binding.agentId,
-        frame: turnPayload(
-          current.binding,
-          sessionKey(
-            current.binding.agentId,
-            user.id,
-            id,
-            current.conversationId,
+      await native(
+        "chatSend",
+        chatCommand(id, current, {
+          ...turnPayload(
+            current.binding,
+            sessionKey(
+              current.binding.agentId,
+              user.id,
+              id,
+              current.conversationId,
+            ),
+            request.text,
+            request.files,
+            current.threadId,
           ),
-          current.draft,
-          current.files,
-          current.threadId,
-        ),
-      });
+          delivery,
+          client_pending_id: request.id,
+          ...(steering ? { expected_turn_id: current.activeTurnId } : {}),
+        }),
+      );
     } catch (error) {
       if (
         ownerRef.current === owner &&
@@ -844,11 +1230,241 @@ function App() {
       )
         updateRoom(id, (value) => ({
           ...value,
-          busy: false,
+          busy: steering && value.busy,
+          queuePaused: true,
           error: errorText(error),
-          draft: current.draft,
-          files: current.files,
+          draft: value.draft || request.text,
+          files: value.files.length ? value.files : request.files,
+          messages: value.messages.map((item) =>
+            item.id === request.id ? { ...item, delivery: "failed" } : item,
+          ),
         }));
+    }
+  }
+
+  useEffect(() => {
+    if (
+      !status.authenticated ||
+      status.companionAllowed === false ||
+      loading ||
+      uploading
+    )
+      return;
+    for (const { id } of boards)
+      if (canFlushQueue(roomsRef.current[id]))
+        void send(roomsRef.current[id].queue[0], "follow_up", id);
+  }, [
+    rooms,
+    status.authenticated,
+    status.companionAllowed,
+    loading,
+    uploading,
+  ]);
+
+  async function stop(id: BoardId) {
+    const item = roomsRef.current[id],
+      owner = ownerRef.current;
+    if (!item.threadId || item.cancelSent) return;
+    updateRoom(id, { cancelSent: true });
+    try {
+      await native(
+        "chatSend",
+        chatCommand(id, item, { type: "cancel", thread_id: item.threadId }),
+      );
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        if (
+          ownerRef.current !== owner ||
+          roomsRef.current[id].conversationId !== item.conversationId ||
+          !roomsRef.current[id].stopping
+        )
+          return;
+        const value = await api<{ turn_active?: boolean }>(
+          `/api/agents/${encodeURIComponent(
+            item.binding.agentId,
+          )}/threads/${encodeURIComponent(item.threadId)}/history?limit=1`,
+        );
+        if (
+          ownerRef.current !== owner ||
+          roomsRef.current[id].conversationId !== item.conversationId
+        )
+          return;
+        if (value.turn_active === false) {
+          updateRoom(id, (v) => ({
+            ...v,
+            busy: false,
+            activeTurnId: undefined,
+            stopping: false,
+            cancelSent: false,
+            controlStatus: "本轮已结束",
+            messages: v.messages.map((m) => ({ ...m, pending: false })),
+          }));
+          void native("petState", {
+            state: Object.values(roomsRef.current).some((r) => r.busy)
+              ? "working"
+              : "idle",
+          });
+          return;
+        }
+      }
+      updateRoom(id, { controlStatus: "停止请求已发送，正在等待任务结束。" });
+    } catch (error) {
+      if (
+        ownerRef.current === owner &&
+        roomsRef.current[id].conversationId === item.conversationId
+      )
+        updateRoom(id, {
+          stopping: false,
+          cancelSent: false,
+          error: errorText(error),
+          queuePaused: true,
+        });
+    }
+  }
+  useEffect(() => {
+    for (const { id } of boards) {
+      const value = roomsRef.current[id];
+      if (value.stopping && value.threadId && !value.cancelSent) void stop(id);
+    }
+  }, [rooms]);
+  function requestStop() {
+    updateRoom(active, (value) => ({
+      ...value,
+      stopping: true,
+      queuePaused: true,
+      cancelVersion: (value.cancelVersion || 0) + 1,
+      resumingId: undefined,
+      approvals: value.approvals.map((a) =>
+        a.status === "submitting"
+          ? {
+              ...a,
+              status: "pending",
+              error: "本次确认已请求停止，请刷新核对任务状态。",
+            }
+          : a,
+      ),
+      controlStatus: "正在停止…",
+    }));
+    void native("stopSpeaking");
+  }
+  async function decideApproval(
+    approval: Approval,
+    decisions: { type: string; message?: string }[],
+  ) {
+    const id = active,
+      item = roomsRef.current[id],
+      owner = ownerRef.current;
+    if (
+      !item.threadId ||
+      !approval.pending_id ||
+      approval.status !== "pending" ||
+      item.approvalStreamActive
+    )
+      return;
+    updateRoom(id, (v) => ({
+      ...v,
+      busy: true,
+      resumingId: approval.pending_id,
+      resumeRejected: decisions.some((d) => d.type === "reject"),
+      approvalStreamActive: true,
+      approvals: v.approvals.map((a) =>
+        a.pending_id === approval.pending_id
+          ? { ...a, status: "submitting", error: undefined }
+          : a,
+      ),
+    }));
+    try {
+      await native("resumeApproval", {
+        ...chatCommand(id, item, {}),
+        threadId: item.threadId,
+        pendingId: approval.pending_id,
+        decisions,
+      });
+    } catch (error) {
+      if (
+        ownerRef.current === owner &&
+        roomsRef.current[id].conversationId === item.conversationId &&
+        roomsRef.current[id].cancelVersion === item.cancelVersion
+      )
+        updateRoom(id, (v) => ({
+          ...v,
+          busy: false,
+          resumingId: undefined,
+          approvalStreamActive: false,
+          queuePaused: true,
+          approvals: v.approvals.map((a) =>
+            a.pending_id === approval.pending_id
+              ? { ...a, status: "pending", error: errorText(error) }
+              : a,
+          ),
+        }));
+    }
+  }
+  function previousInput(message: Message) {
+    const index = room.messages.findIndex((m) => m.id === message.id);
+    return room.messages
+      .slice(0, index + 1)
+      .filter((m) => m.role === "user")
+      .at(-1);
+  }
+  function editMessage(message: Message) {
+    const input = previousInput(message);
+    if (!input) return;
+    if (input.previewOnly) {
+      setNotice("这条补充只有预览，请先刷新完整会话后再编辑。");
+      return;
+    }
+    if (room.draft.trim() || room.files.length) {
+      setNotice("请先发送或清空当前草稿，再编辑历史消息。");
+      return;
+    }
+    updateRoom(active, { draft: input.text, files: input.attachments || [] });
+    inputRef.current?.focus();
+  }
+  function retryMessage(message: Message) {
+    const input = previousInput(message);
+    if (!input) return;
+    if (input.previewOnly) {
+      setNotice("这条补充只有预览，请先刷新完整会话后再重发。");
+      return;
+    }
+    const request = {
+      id: crypto.randomUUID(),
+      text: input.text,
+      files: input.attachments || [],
+    };
+    if (room.queue.length)
+      updateRoom(active, { queue: [...room.queue, request] });
+    else void send(request);
+  }
+  async function withdraw(message: Message) {
+    const id = active,
+      item = roomsRef.current[id],
+      owner = ownerRef.current;
+    if (
+      !item.threadId ||
+      !item.activeTurnId ||
+      !message.pendingId ||
+      !message.inputId
+    )
+      return;
+    try {
+      await native(
+        "chatSend",
+        chatCommand(id, item, {
+          type: "steer_remove",
+          thread_id: item.threadId,
+          turn_id: item.activeTurnId,
+          pending_id: message.pendingId,
+          client_pending_id: message.inputId,
+        }),
+      );
+    } catch (error) {
+      if (
+        ownerRef.current === owner &&
+        roomsRef.current[id].conversationId === item.conversationId
+      )
+        updateRoom(id, { error: errorText(error) });
     }
   }
 
@@ -860,16 +1476,14 @@ function App() {
       setNotice("请先登录并选择当前板块的专家。");
       return;
     }
-    if (uploading || current.busy) return;
+    if (uploading) return;
     setUploading(true);
     setNotice("");
     try {
       for (const file of files.slice(0, 4 - current.files.length)) {
-        if (
-          !/^image\/(png|jpeg|webp|gif)$/.test(file.type) ||
-          file.size > 12 * 1024 * 1024
-        )
-          throw new Error("请选择不超过 12 MB 的 PNG、JPG、WebP 或 GIF 图片。");
+        const mime = attachmentMime(file.name, file.type);
+        if (!mime || file.size > 12 * 1024 * 1024)
+          throw new Error("请选择不超过 12 MB 的图片、Excel、CSV 或 PDF。");
         const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result).split(",")[1]);
@@ -879,7 +1493,7 @@ function App() {
         const uploaded = await native<Attachment>("upload", {
           agentId: current.binding.agentId,
           filename: file.name,
-          mimeType: file.type,
+          mimeType: mime,
           base64,
         });
         if (
@@ -891,7 +1505,12 @@ function App() {
           ...value,
           files: [
             ...value.files,
-            { ...uploaded, preview: `data:${file.type};base64,${base64}` },
+            {
+              ...uploaded,
+              ...(mime.startsWith("image/")
+                ? { preview: `data:${mime};base64,${base64}` }
+                : {}),
+            },
           ],
         }));
       }
@@ -927,6 +1546,13 @@ function App() {
 
   function changeBinding(binding: Binding) {
     if (room.busy) return;
+    if (
+      room.queue.length ||
+      room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
+    ) {
+      setNotice("请先处理待发消息或当前确认，再切换专家和资源。");
+      return;
+    }
     if (JSON.stringify(room.binding) === JSON.stringify(binding)) return;
     if (listening) {
       void native("stopListening");
@@ -975,6 +1601,13 @@ function App() {
     setNotice("");
   }
   function newChat() {
+    if (
+      room.queue.length ||
+      room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
+    ) {
+      setNotice("请先处理待发消息或当前确认，再新建对话。");
+      return;
+    }
     void native("chatClose", { board: active });
     updateRoom(active, { ...freshRoom(room.binding), draft: room.draft });
     setShowSettings(false);
@@ -1021,7 +1654,11 @@ function App() {
             setShowSettings((value) => !value);
           }}
         >
-          {showSettings ? <ChevronLeft size={16} strokeWidth={1.7} /> : <Settings size={16} strokeWidth={1.7} />}
+          {showSettings ? (
+            <ChevronLeft size={16} strokeWidth={1.7} />
+          ) : (
+            <Settings size={16} strokeWidth={1.7} />
+          )}
         </button>
       </header>
       <section
@@ -1251,6 +1888,34 @@ function App() {
                 key={message.id}
                 message={message}
                 agentId={room.binding.agentId}
+                onResend={() => retryMessage(message)}
+                onEdit={() => editMessage(message)}
+                onWithdraw={() => void withdraw(message)}
+                disabled={
+                  room.busy ||
+                  !!room.activeTurnId ||
+                  room.stopping === true ||
+                  room.approvals.some((a) =>
+                    ["pending", "submitting"].includes(a.status),
+                  )
+                }
+              />
+            ))}
+            {room.approvals.map((approval, index) => (
+              <ApprovalCard
+                key={`${room.conversationId}:${approval.pending_id || index}`}
+                approval={approval}
+                blocked={
+                  !!room.approvalStreamActive && approval.status === "pending"
+                }
+                onDecision={(decisions) =>
+                  void decideApproval(approval, decisions)
+                }
+                onRefresh={() =>
+                  void loadRoomHistory(active).catch((error) =>
+                    setNotice(errorText(error)),
+                  )
+                }
               />
             ))}
           </div>
@@ -1271,10 +1936,64 @@ function App() {
         </div>
       )}
       <section className="composer" aria-label="消息输入">
+        {!!room.queue.length && (
+          <div className="queued-inputs" aria-label="待发消息">
+            <div>
+              <span>
+                待发送 {room.queue.length}
+                {room.queuePaused ? " · 已暂停" : ""}
+              </span>
+              {room.queuePaused && !room.busy && (
+                <button
+                  onClick={() =>
+                    updateRoom(active, {
+                      queuePaused: false,
+                      error: undefined,
+                      controlStatus: undefined,
+                    })
+                  }
+                >
+                  继续发送
+                </button>
+              )}
+            </div>
+            {room.queue.map((item, index) => (
+              <div className="queued-input" key={item.id}>
+                <span title={item.text}>
+                  {item.text || item.files.map((f) => f.filename).join("、")}
+                </span>
+                {room.busy && room.activeTurnId && !room.stopping && (
+                  <button onClick={() => void send(item, "steer")}>
+                    补充本轮
+                  </button>
+                )}
+                <button
+                  aria-label={`撤回待发消息 ${index + 1}`}
+                  onClick={() =>
+                    updateRoom(active, {
+                      queue: room.queue.filter((q) => q.id !== item.id),
+                    })
+                  }
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {room.controlStatus && (
+          <div className="control-status" role="status">
+            {room.controlStatus}
+          </div>
+        )}
         <div className="attachment-strip">
           {room.files.map((item, index) => (
             <div key={`${item.path}-${index}`}>
-              <img src={item.preview} alt={item.filename} />
+              {item.preview ? (
+                <img src={item.preview} alt={item.filename} />
+              ) : (
+                <span className="file-chip">{item.filename}</span>
+              )}
               <button
                 aria-label={`移除 ${item.filename}`}
                 onClick={() =>
@@ -1323,12 +2042,11 @@ function App() {
         <div className="composer-bottom">
           <div className="input-tools">
             <button
-              aria-label="添加图片"
-              title="添加图片，也可拖入或粘贴"
+              aria-label="添加附件"
+              title="图片、Excel、CSV、PDF，也可拖入或粘贴"
               disabled={
                 !status.authenticated ||
                 status.companionAllowed === false ||
-                room.busy ||
                 uploading ||
                 room.files.length >= 4
               }
@@ -1346,9 +2064,7 @@ function App() {
               aria-pressed={listening}
               className={listening ? "recording" : ""}
               disabled={
-                !status.authenticated ||
-                status.companionAllowed === false ||
-                room.busy
+                !status.authenticated || status.companionAllowed === false
               }
               onClick={() =>
                 void toggleMic().catch((e) => setNotice(errorText(e)))
@@ -1373,42 +2089,62 @@ function App() {
                 : ""}
             </span>
           </div>
-          {room.busy ? (
-            <button
-              className="send stop"
-              aria-label="停止回答"
-              onClick={() => {
-                if (room.threadId)
-                  void native("chatSend", {
-                    board: active,
-                    agentId: room.binding.agentId,
-                    frame: { type: "cancel", thread_id: room.threadId },
-                  });
-              }}
-            >
-              <Square size={15} />
-            </button>
-          ) : (
-            <button
-              className="send"
-              aria-label="发送消息"
-              disabled={
-                !status.authenticated ||
-                status.companionAllowed === false ||
-                uploading ||
-                listening ||
-                (!room.draft.trim() && !room.files.length)
-              }
-              onClick={() => void send()}
-            >
-              <ArrowUp size={18} />
-            </button>
-          )}
+          <div className="send-actions">
+            {room.busy && (
+              <button
+                className="send stop"
+                aria-label={room.stopping ? "正在停止" : "停止回答"}
+                disabled={room.stopping}
+                onClick={requestStop}
+              >
+                <Square size={15} />
+              </button>
+            )}
+            {room.busy && (room.draft.trim() || room.files.length > 0) && (
+              <button
+                className="steer-button"
+                disabled={
+                  !room.activeTurnId ||
+                  room.stopping ||
+                  room.approvals.some((a) =>
+                    ["pending", "submitting"].includes(a.status),
+                  )
+                }
+                onClick={() => void send(undefined, "steer")}
+              >
+                补充本轮
+              </button>
+            )}
+            <>
+              <button
+                className="send"
+                aria-label={
+                  room.busy ||
+                  room.queue.length ||
+                  room.approvals.some((a) =>
+                    ["pending", "submitting"].includes(a.status),
+                  )
+                    ? "排队发送"
+                    : "发送消息"
+                }
+                disabled={
+                  !status.authenticated ||
+                  status.companionAllowed === false ||
+                  uploading ||
+                  listening ||
+                  (!room.draft.trim() && !room.files.length)
+                }
+                onClick={() => void send()}
+              >
+                <ArrowUp size={18} />
+              </button>
+            </>
+          </div>
         </div>
         <input
           ref={fileRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept="image/png,image/jpeg,image/webp,image/gif,.xlsx,.xls,.csv,.pdf"
           multiple
           hidden
           onChange={(event) => {

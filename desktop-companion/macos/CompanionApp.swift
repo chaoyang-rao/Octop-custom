@@ -23,6 +23,9 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private var loginRevision = 0
     private var sockets: [String: (agent: String, context: String, task: URLSessionWebSocketTask)] = [:]
     private var receiveLoops: [String: Task<Void, Never>] = [:]
+    private var approvalStreams: [String: (id: UUID, task: Task<Void,Never>)] = [:]
+    private var approvalEpoch: [String:Int] = [:]
+    private var approvalHeaders: [String:(id:UUID,task:Task<URLSession.AsyncBytes,Error>)] = [:]
     private var pingTimer: Timer?
     private var hotKey: EventHotKeyRef?
     private var hotKeyHandler: EventHandlerRef?
@@ -367,13 +370,59 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             guard let url = URL(string: source), ["https", "http"].contains(url.scheme?.lowercased() ?? ""), url.user == nil, url.password == nil else { throw CompanionError.invalidPath }
             NSWorkspace.shared.open(url); return true
         case "chatSend":
-            guard let board = args["board"] as? String, ["aftersales", "workbench", "profit", "knowledge"].contains(board),
-                  let agent = args["agentId"] as? String, let context = args["contextKey"] as? String, var frame = args["frame"] as? [String: Any],
-                  let type = frame["type"] as? String, ["user_turn", "subscribe", "cancel", "ping"].contains(type) else { throw CompanionError.invalidPath }
-            if type == "user_turn" { frame.removeValue(forKey: "hitl_policy") }
-            let socket = try socketFor(board: board, agent: agent, context: context)
-            let data = try JSONSerialization.data(withJSONObject: frame)
+            let command = try CompanionChatCommand(args)
+            if command.frame["type"] as? String == "cancel" { approvalEpoch[command.board,default:0] += 1;approvalHeaders.removeValue(forKey:command.board)?.task.cancel();approvalStreams.removeValue(forKey:command.board)?.task.cancel() }
+            let socket = try socketFor(board: command.board, agent: command.agent, context: command.context)
+            let data = try JSONSerialization.data(withJSONObject: command.frame)
             try await socket.send(.string(String(data: data, encoding: .utf8)!)); return true
+        case "resumeApproval":
+            guard let thread=args["threadId"] as? String, let pending=args["pendingId"] as? String,
+                  let decisions=args["decisions"] as? [[String:Any]] else {throw CompanionError.invalidPath}
+            var fields=args;fields["frame"]=["type":"subscribe","thread_id":thread]
+            let command=try CompanionChatCommand(fields)
+            let revision=loginRevision
+            let hadSocket=sockets[command.board]?.context == command.context && sockets[command.board]?.agent == command.agent
+            let socket=try socketFor(board:command.board,agent:command.agent,context:command.context)
+            let epoch=approvalEpoch[command.board,default:0]
+            if !hadSocket {try await socket.send(.string(String(data:try JSONSerialization.data(withJSONObject:command.frame),encoding:.utf8)!))}
+            guard loginRevision == revision, approvalEpoch[command.board,default:0] == epoch else {throw CancellationError()}
+            approvalHeaders.removeValue(forKey:command.board)?.task.cancel()
+            let headerID=UUID(), headerTask=Task {try await client.approvalStream(agentId:command.agent,threadId:thread,pendingId:pending,decisions:decisions)}
+            approvalHeaders[command.board]=(headerID,headerTask)
+            defer {if approvalHeaders[command.board]?.id == headerID {approvalHeaders.removeValue(forKey:command.board)}}
+            let bytes=try await headerTask.value
+            guard loginRevision == revision, sockets[command.board]?.context == command.context, approvalEpoch[command.board,default:0] == epoch else {
+                bytes.task.cancel()
+                if loginRevision == revision, sockets[command.board]?.context == command.context {
+                    let data=try JSONSerialization.data(withJSONObject:["type":"cancel","thread_id":thread])
+                    try? await socket.send(.string(String(data:data,encoding:.utf8)!))
+                }
+                throw CancellationError()
+            }
+            approvalStreams.removeValue(forKey:command.board)?.task.cancel()
+            let streamID=UUID()
+            let task=Task { @MainActor [weak self] in
+                var decoder=CompanionSSEDecoder(), terminal=false
+                defer {bytes.task.cancel();if self?.approvalStreams[command.board]?.id == streamID {self?.approvalStreams.removeValue(forKey:command.board)}}
+                do {
+                    for try await byte in bytes {
+                        if var frame=try decoder.feed(byte:byte) {
+                            try Task.checkCancellation()
+                            guard self?.approvalStreams[command.board]?.id == streamID, self?.loginRevision == revision else {break}
+                            frame["thread_id"]=thread
+                            if ["done","error","hitl_required"].contains(frame["type"] as? String ?? "") {terminal=true}
+                            self?.event(["type":"chat","board":command.board,"contextKey":command.context,"data":frame])
+                        }
+                    }
+                    if !terminal && !Task.isCancelled {throw CompanionError.unavailable("确认后的连接已结束，请刷新核对任务状态。")}
+                } catch {
+                    if !Task.isCancelled && self?.approvalStreams[command.board]?.id == streamID {
+                        self?.event(["type":"resumeError","board":command.board,"contextKey":command.context,"error":error.localizedDescription])
+                    }
+                }
+            }
+            approvalStreams[command.board]=(streamID,task)
+            return true
         case "chatClose": if let board = args["board"] as? String { closeSocket(board) }; return true
         case "upload":
             guard let agent = args["agentId"] as? String, let filename = args["filename"] as? String, let mime = args["mimeType"] as? String,
@@ -435,8 +484,8 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         }
         return socket
     }
-    private func closeSocket(_ board: String) { receiveLoops.removeValue(forKey: board)?.cancel(); sockets.removeValue(forKey: board)?.task.cancel(with: .goingAway, reason: nil) }
-    private func closeSockets() { for board in Array(sockets.keys) { closeSocket(board) } }
+    private func closeSocket(_ board: String) { approvalEpoch[board,default:0] += 1;approvalHeaders.removeValue(forKey:board)?.task.cancel();approvalStreams.removeValue(forKey:board)?.task.cancel(); receiveLoops.removeValue(forKey: board)?.cancel(); sockets.removeValue(forKey: board)?.task.cancel(with: .goingAway, reason: nil) }
+    private func closeSockets() { for board in Set(sockets.keys).union(approvalStreams.keys).union(approvalHeaders.keys) { closeSocket(board) } }
 
     private func showFullOctop(path: String, login: Bool) {
         guard path.hasPrefix("/"), !path.hasPrefix("//"), !path.contains("\\"), let url = URL(string: path, relativeTo: client.origin)?.absoluteURL, EndpointPolicy.sameOrigin(url, client.origin) else { return }
@@ -489,7 +538,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel()
-        if webView === chatView { panel.allowedContentTypes = [.png, .jpeg, .webP, .gif] }
+        if webView === chatView { panel.allowedContentTypes = CompanionUploadPolicy.extensions.compactMap { UTType(filenameExtension:$0) } }
         panel.canChooseDirectories = parameters.allowsDirectories
         panel.allowsMultipleSelection = parameters.allowsMultipleSelection
         panel.begin { response in completionHandler(response == .OK ? panel.urls : nil) }

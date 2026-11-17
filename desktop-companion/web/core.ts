@@ -32,6 +32,10 @@ export type Message = {
   attachments?: Attachment[];
   pending?: boolean;
   error?: string;
+  inputId?: string;
+  pendingId?: string;
+  previewOnly?: boolean;
+  delivery?: "pending" | "queued" | "applied" | "failed" | "removed";
 };
 export const boards: {
   id: BoardId;
@@ -160,13 +164,22 @@ export function turnPayload(
   const content: Record<string, unknown>[] = [];
   if (text.trim()) content.push({ type: "text", text: text.trim() });
   for (const item of attachments)
-    content.push({
-      type: "image_url",
-      image_url: { url: item.path },
-      workspace_path: item.path,
-      filename: item.filename,
-      mime_type: item.media_type,
-    });
+    content.push(
+      item.media_type.startsWith("image/")
+        ? {
+            type: "image_url",
+            image_url: { url: item.path },
+            workspace_path: item.path,
+            filename: item.filename,
+            mime_type: item.media_type,
+          }
+        : {
+            type: "file",
+            workspace_path: item.path,
+            filename: item.filename,
+            media_type: item.media_type,
+          },
+    );
   // Omit permission overrides: the existing expert's Octop policy remains authoritative.
   return {
     type: "user_turn",
@@ -327,6 +340,25 @@ export function historyMessages(
       text,
       agentId,
       images,
+      attachments: Array.isArray(content)
+        ? content
+            .filter(
+              (block) =>
+                ["file", "image_url", "image"].includes(block?.type) &&
+                typeof block.workspace_path === "string",
+            )
+            .map((block) => ({
+              path: block.workspace_path,
+              filename: block.filename || "附件",
+              media_type:
+                block.media_type ||
+                block.mime_type ||
+                block.source?.media_type ||
+                (block.type === "file"
+                  ? "application/octet-stream"
+                  : "image/png"),
+            }))
+        : [],
       speaker: typeof row.name === "string" ? row.name : undefined,
     });
   });
@@ -399,7 +431,6 @@ export function consumeFrame(
     target.error = String(frame.message ?? "回答未完成，请重试。");
     target.pending = false;
   } else if (type === "hitl_required") {
-    target.error = "这一步需要确认，请在 Octop 中查看并处理后继续。";
     target.pending = false;
   } else if (type === "done") {
     if (!speakerId || frame.team_wrapup || !frame.team_member_continuing)
