@@ -14,7 +14,7 @@ import {
   MessageCircle,
   Mic,
   Plus,
-  Settings2,
+  Settings,
   ShieldCheck,
   Square,
   Volume2,
@@ -1002,8 +1002,11 @@ function App() {
     >
       <header className="topbar">
         <div className="app-mark">
-          <MessageCircle size={18} />
+          <span className="brand-glyph" aria-hidden="true">
+            <MessageCircle size={14} strokeWidth={1.7} />
+          </span>
           <strong>哆啦</strong>
+          <span className="header-divider" aria-hidden="true" />
           <span className="current-board">{board.name}</span>
         </div>
         <button
@@ -1018,7 +1021,7 @@ function App() {
             setShowSettings((value) => !value);
           }}
         >
-          {showSettings ? <ChevronLeft size={18} /> : <Settings2 size={18} />}
+          {showSettings ? <ChevronLeft size={16} strokeWidth={1.7} /> : <Settings size={16} strokeWidth={1.7} />}
         </button>
       </header>
       <section

@@ -1,6 +1,11 @@
 import AppKit
 import WebKit
 
+enum CompanionWindowLevels {
+    static let chat = NSWindow.Level.floating
+    static let pet = NSWindow.Level(rawValue: chat.rawValue + 1)
+}
+
 final class GlassChatWebView: WKWebView {
     override var isOpaque: Bool { false }
 }
@@ -11,9 +16,8 @@ final class ChatWindowContentView: NSView {
         content.frame = bounds
         content.autoresizingMask = [.width, .height]
         addSubview(content)
-        // Match the web topbar (34pt top inset + 38pt button + 12pt bottom).
-        // Leave the trailing settings button and its padding to WebKit.
-        let handle = ChatWindowDragHandle(frame: NSRect(x: 0, y: bounds.height - 84, width: max(0, bounds.width - 70), height: 84))
+        // Match the compact web topbar; keep traffic lights and settings free.
+        let handle = ChatWindowDragHandle(frame: NSRect(x: 80, y: bounds.height - 36, width: max(0, bounds.width - 128), height: 36))
         handle.autoresizingMask = [.width, .minYMargin]
         addSubview(handle)
     }
