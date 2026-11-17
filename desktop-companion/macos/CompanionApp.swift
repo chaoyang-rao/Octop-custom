@@ -4,6 +4,10 @@ import Carbon
 import UniformTypeIdentifiers
 import WebKit
 
+final class GlassChatWebView: WKWebView {
+    override var isOpaque: Bool { false }
+}
+
 @MainActor
 final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private let defaults = UserDefaults.standard
@@ -105,25 +109,45 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         petWindow.level = .floating; petWindow.hidesOnDeactivate = false; petWindow.isMovableByWindowBackground = false
         petWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         petWindow.contentView = pet; pet.clampToScreen()
+        pet.edgeHiding = defaults.object(forKey: "petEdgeHiding") == nil || defaults.bool(forKey: "petEdgeHiding")
         pet.onOpen = { [weak self] in self?.toggleChatFromPet() }
         pet.onMenu = { [weak self] event in guard let self else { return }; NSMenu.popUpContextMenu(self.contextMenu(), with: event, for: self.pet) }
-        pet.onMoved = { [weak self] in self?.savePosition() }
+        pet.onMoved = { [weak self] in self?.savePosition(); self?.avoidChatOverlap() }
         pet.onScale = { [weak self] multiplier in
             guard let self else { return }
-            self.applyPetScale(Double(self.petWindow.frame.width) / PetSizing.defaultSide * multiplier)
+            self.applyPetScale(Double(self.pet.placementFrame.width) / PetSizing.defaultSide * multiplier)
         }
-        chatWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 456, height: 684), styleMask: [.titled, .closable, .resizable, .miniaturizable], backing: .buffered, defer: false)
+        chatWindow = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 456, height: 684), styleMask: [.titled, .fullSizeContentView, .closable, .resizable, .miniaturizable], backing: .buffered, defer: false)
         chatWindow.title = "哆啦"; chatWindow.titleVisibility = .hidden; chatWindow.titlebarAppearsTransparent = true
+        chatWindow.titlebarSeparatorStyle = .none
         chatWindow.minSize = NSSize(width: 350, height: 510); chatWindow.level = .floating; chatWindow.isReleasedWhenClosed = false; chatWindow.delegate = self
         chatWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, name: "companion")
-        chatView = WKWebView(frame: .zero, configuration: config)
+        chatWindow.isOpaque = false; chatWindow.backgroundColor = .clear; chatWindow.hasShadow = true
+        chatView = GlassChatWebView(frame:NSRect(x:0,y:0,width:456,height:706), configuration:config)
+        chatView.setValue(false,forKey:"drawsBackground")
+        chatView.underPageBackgroundColor = .clear; chatView.autoresizingMask = [.width,.height]
         chatView.navigationDelegate = self; chatView.uiDelegate = self
-        chatWindow.contentView = chatView
+        chatWindow.contentView = chatMaterial(content:chatView)
         let web = resources.appendingPathComponent("web")
         chatView.loadFileURL(web.appendingPathComponent("index.html"), allowingReadAccessTo: web)
         NotificationCenter.default.addObserver(self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
+    }
+
+    private func chatMaterial(content: NSView) -> NSView {
+        #if compiler(>=6.2)
+        if #available(macOS 26.0, *) {
+            let glass = NSGlassEffectView(frame:content.frame)
+            glass.style = .regular; glass.cornerRadius = 20; glass.contentView = content
+            return glass
+        }
+        #endif
+        let glass = NSVisualEffectView(frame:content.frame)
+        glass.material = .underWindowBackground; glass.blendingMode = .behindWindow; glass.state = .active
+        glass.wantsLayer = true; glass.layer?.cornerRadius = 20; glass.layer?.masksToBounds = true
+        glass.addSubview(content)
+        return glass
     }
 
     private func makeMenuBar() {
@@ -152,21 +176,32 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private func toggleChat() { chatWindow.isVisible && chatWindow.isKeyWindow ? chatWindow.orderOut(nil) : showChat() }
     private func toggleChatFromPet() { chatWindow.isVisible ? chatWindow.orderOut(nil) : showChat() }
     private func showChat() {
+        authWindow?.orderOut(nil); sizingWindow?.orderOut(nil)
         if !chatWindow.isVisible {
-            let area = NSScreen.screens.first(where: { $0.visibleFrame.intersects(petWindow.frame) })?.visibleFrame ?? NSScreen.main!.visibleFrame
-            let width = chatWindow.frame.width, height = min(chatWindow.frame.height, area.height - 30)
-            let x = max(area.minX + 10, min(area.maxX - width - 10, petWindow.frame.midX - width + 35))
-            let y = max(area.minY + 10, min(area.maxY - height - 10, petWindow.frame.maxY + 12))
-            chatWindow.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
+            let area = PetSizing.screenArea(for:pet.placementFrame,areas:NSScreen.screens.map(\.visibleFrame)) ?? NSScreen.main!.visibleFrame
+            chatWindow.setFrame(CompanionWindowPlacement.chat(size:chatWindow.frame.size,pet:pet.placementFrame,area:area),display:true)
         }
         NSApp.activate(ignoringOtherApps: true); chatWindow.makeKeyAndOrderFront(nil)
+    }
+    private func avoidChatOverlap() {
+        guard let chatWindow, chatWindow.isVisible, let pet,
+              chatWindow.frame.intersects(pet.placementFrame.insetBy(dx:-8,dy:-8)),
+              let area = PetSizing.screenArea(for:pet.placementFrame,areas:NSScreen.screens.map(\.visibleFrame)) else { return }
+        chatWindow.setFrame(CompanionWindowPlacement.chat(size:chatWindow.frame.size,pet:pet.placementFrame,area:area),display:true)
+    }
+    func windowDidMove(_ notification: Notification) {
+        if notification.object as? NSWindow === chatWindow { avoidChatOverlap() }
+    }
+    func windowDidResize(_ notification: Notification) {
+        if notification.object as? NSWindow === chatWindow { avoidChatOverlap() }
     }
     @objc private func togglePet() { if petWindow.isVisible { petWindow.orderOut(nil) } else { petWindow.orderFrontRegardless() } }
     @objc private func toggleAnimation() { pet.paused.toggle() }
     @objc private func moveRight() { movePet(right: true) }
     @objc private func moveLeft() { movePet(right: false) }
-    private func movePet(right: Bool) { guard let area = NSScreen.main?.visibleFrame else { return }; petWindow.setFrameOrigin(NSPoint(x: right ? area.maxX - petWindow.frame.width - 28 : area.minX + 28, y: area.minY + 28)); savePosition() }
+    private func movePet(right: Bool) { pet.expandForPlacement(); guard let area = NSScreen.main?.visibleFrame else { return }; petWindow.setFrameOrigin(NSPoint(x: right ? area.maxX - petWindow.frame.width - 28 : area.minX + 28, y: area.minY + 28)); savePosition() }
     @objc private func showSizeControls() {
+        chatWindow.orderOut(nil); authWindow?.orderOut(nil)
         if sizingWindow == nil {
             let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 280, height: 128), styleMask: [.titled, .closable, .utilityWindow], backing: .buffered, defer: false)
             panel.title = "宠物大小"; panel.level = .floating; panel.isReleasedWhenClosed = false
@@ -208,14 +243,12 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         NSApp.activate(ignoringOtherApps: true); sizingWindow?.makeKeyAndOrderFront(nil)
     }
     private func applyPetScale(_ scale: Double) {
-        guard let area = PetSizing.screenArea(for: petWindow.frame, areas: NSScreen.screens.map(\.visibleFrame)) else { return }
-        let frame = PetSizing.frame(resizing: petWindow.frame, scale: scale, within: area)
-        petWindow.setFrame(frame, display: true)
-        defaults.set(Double(frame.width), forKey: "petSize")
-        savePosition(); updateSizeControls()
+        pet.resize(to: scale)
+        defaults.set(Double(pet.placementFrame.width), forKey: "petSize")
+        savePosition(); updateSizeControls(); avoidChatOverlap()
     }
     private func updateSizeControls() {
-        let percentage = Double(petWindow.frame.width) / PetSizing.defaultSide * 100
+        let percentage = Double(pet.placementFrame.width) / PetSizing.defaultSide * 100
         sizeSlider?.doubleValue = percentage
         let value = String(format: "%.0f%%", percentage)
         sizeValue?.stringValue = value
@@ -223,8 +256,8 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     @objc private func sizeSliderChanged(_ slider: NSSlider) { applyPetScale(slider.doubleValue / 100) }
     @objc private func resetPetSize() { applyPetScale(1) }
-    @objc private func screensChanged() { pet.clampToScreen(); savePosition() }
-    private func savePosition() { defaults.set(petWindow.frame.minX, forKey: "petX"); defaults.set(petWindow.frame.minY, forKey: "petY") }
+    @objc private func screensChanged() { pet.clampToScreen(); pet.dockNearEdge(); savePosition() }
+    private func savePosition() { defaults.set(pet.placementFrame.minX, forKey: "petX"); defaults.set(pet.placementFrame.minY, forKey: "petY") }
     @objc private func startOctop() { Task { do { try await ensureEngine(); showFullOctop(path: "/companion/manage", login: false) } catch { event(["type": "error", "error": error.localizedDescription]) } } }
     @objc private func showEngineLogs() { NSWorkspace.shared.open(EngineRuntime.home.appendingPathComponent("Logs")) }
     private func ensureEngine() async throws {
@@ -233,14 +266,11 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     @objc private func quitCompanion() { NSApp.terminate(nil) }
     @objc private func showCredits() {
-        let alert = NSAlert(); alert.messageText = "哆啦 · 角色素材说明"
-        alert.informativeText = "此版本自带问答引擎，聊天保存在桌宠独立目录，无需另装 Octop。专家开放范围由企业管理员控制，业务权限仍以本人授权为准。\n\n形象参考与素材：AlleyBo55/doraemon；Shimeji 原画署名 Cachomon。哆啦 A 梦角色版权归原权利方所有。程序许可不涵盖角色素材的授权；此预览包未公开发布。\n\n源文件与完整说明见安装包内 ASSET-NOTICE.txt。"
-        alert.addButton(withTitle: "知道了"); alert.addButton(withTitle: "查看素材项目")
-        if alert.runModal() == .alertSecondButtonReturn { NSWorkspace.shared.open(URL(string: "https://github.com/AlleyBo55/doraemon")!) }
+        if let url = Bundle.main.url(forResource:"ASSET-NOTICE",withExtension:"txt") { NSWorkspace.shared.open(url) }
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         sender.orderOut(nil)
-        if sender === authWindow { loginMode = false; showChat() }
+        if sender === authWindow || sender === sizingWindow { loginMode = false; showChat() }
         return false
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
@@ -298,6 +328,14 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     private func handle(op: String, args: [String: Any]) async throws -> Any {
         switch op {
+        case "petPreferences": return ["edgeHiding": pet.edgeHiding]
+        case "setEdgeHiding":
+            guard let enabled = args["enabled"] as? Bool else { throw CompanionError.invalidPath }
+            pet.edgeHiding = enabled; defaults.set(enabled, forKey: "petEdgeHiding"); savePosition(); return true
+        case "petSize": showSizeControls(); return true
+        case "help":
+            guard let url = Bundle.main.url(forResource: "HELP", withExtension: "html") else { throw CompanionError.invalidPath }
+            NSWorkspace.shared.open(url); return true
         case "status":
             try await ensureEngine()
             let revision = loginRevision, origin = client.origin
@@ -341,7 +379,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             guard let url = URL(string: source), ["https", "http"].contains(url.scheme?.lowercased() ?? ""), url.user == nil, url.password == nil else { throw CompanionError.invalidPath }
             NSWorkspace.shared.open(url); return true
         case "chatSend":
-            guard let board = args["board"] as? String, ["aftersales", "workbench", "knowledge"].contains(board),
+            guard let board = args["board"] as? String, ["aftersales", "workbench", "profit", "knowledge"].contains(board),
                   let agent = args["agentId"] as? String, let context = args["contextKey"] as? String, var frame = args["frame"] as? [String: Any],
                   let type = frame["type"] as? String, ["user_turn", "subscribe", "cancel", "ping"].contains(type) else { throw CompanionError.invalidPath }
             if type == "user_turn" { frame.removeValue(forKey: "hitl_policy") }
@@ -415,7 +453,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private func showFullOctop(path: String, login: Bool) {
         guard path.hasPrefix("/"), !path.hasPrefix("//"), !path.contains("\\"), let url = URL(string: path, relativeTo: client.origin)?.absoluteURL, EndpointPolicy.sameOrigin(url, client.origin) else { return }
         loginMode = login
-        if login { chatWindow.orderOut(nil) }
+        chatWindow.orderOut(nil); sizingWindow?.orderOut(nil)
         if authWindow == nil {
             let config = WKWebViewConfiguration()
             config.userContentController.add(self, name: "authCallback")
@@ -509,6 +547,7 @@ struct Main {
                 for url in ["octop-companion://open?token=bad", "octop-companion://size/evil", "octop-companion://open#token", "octop-companion://user@open", "https://open", "octop-companion://login"] { precondition(CompanionLaunchAction(url: URL(string: url)!) == nil) }
                 let manifest = try JSONDecoder().decode(PetManifest.self, from: Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("Pet/pet.json")))
                 for animation in manifest.animations.values { guard !animation.frames.isEmpty else { fatalError("Empty animation") } }
+                PetEdgeDocking.selfTest(); CompanionWindowPlacement.selfTest()
                 var flight = PetDragMotion()
                 flight.begin(at: 10)
                 precondition(flight.presentation(activity: "working") == "takeoff")

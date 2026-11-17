@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 
 def run(*args: str, **kwargs: object) -> None:
@@ -94,6 +94,7 @@ def main() -> None:
         parser.error("Prepare the matching engine archives with scripts/prepare_engine.py first")
     shutil.copytree(args.engine_dir, resources / "Engine")
     shutil.copy2(ROOT / "scripts/engine_entry.py", resources / "engine_entry.py")
+    shutil.copy2(ROOT / "HELP.html", resources / "HELP.html")
     shutil.copytree(args.pet_dir, resources / "Pet")
     shutil.copy2(
         args.pet_dir / "ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt"
@@ -105,7 +106,7 @@ def main() -> None:
         "CFBundleExecutable": "OctopCompanion",
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": VERSION,
-        "CFBundleVersion": "2026111701",
+        "CFBundleVersion": "2026111702",
         "CFBundleURLTypes": [{"CFBundleURLName": "Dora desktop companion", "CFBundleURLSchemes": ["octop-companion"], "CFBundleTypeRole": "Viewer"}],
         "LSMinimumSystemVersion": "13.0",
         "LSUIElement": True,

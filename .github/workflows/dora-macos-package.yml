@@ -44,3 +44,23 @@ jobs:
               -framework Speech -framework Carbon \
               desktop-companion/macos/*.swift -o "desktop-companion/build/Dora-$arch"
           done
+      - name: Verify edge docking without internal artwork
+        run: |
+          xcrun swiftc -swift-version 5 -parse-as-library \
+            desktop-companion/macos/PetEdgeDocking.swift \
+            desktop-companion/tests/edge-docking.swift \
+            -o desktop-companion/build/edge-docking-check
+          desktop-companion/build/edge-docking-check
+      - name: Verify fixed character scale without internal artwork
+        run: |
+          xcrun swiftc -swift-version 5 -parse-as-library \
+            desktop-companion/macos/SecurityCore.swift \
+            desktop-companion/macos/PetWindow.swift \
+            desktop-companion/macos/PetSizing.swift \
+            desktop-companion/macos/PetDragMotion.swift \
+            desktop-companion/macos/PetEdgeDocking.swift \
+            desktop-companion/macos/PetSpriteDrawing.swift \
+            desktop-companion/macos/PetPresentation.swift \
+            desktop-companion/tests/pose-scale.swift \
+            -o desktop-companion/build/pose-scale-check
+          desktop-companion/build/pose-scale-check
