@@ -23,7 +23,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-          enable-cache: true
+          enable-cache: false
       - run: npm ci --prefix desktop-companion
       - run: npm test --prefix desktop-companion
       - name: Verify frozen program inputs
