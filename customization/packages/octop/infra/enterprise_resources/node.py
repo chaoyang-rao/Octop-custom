@@ -641,6 +641,11 @@ class ResourceSync:
                 registry.end_runtime_update(agent_id)
 
     async def sync(self, user: User) -> dict[str, Any]:
+        from octop.infra.enterprise_resources.inference_node import builtin_models_for
+
+        # Retry a failed first-login model setup with the regular company sync.
+        # Keep it outside the resource lock and independent of directory failures.
+        await builtin_models_for(self.server).try_ensure(user)
         async with self._lock(user.id):
             try:
                 await self._fetch(user)

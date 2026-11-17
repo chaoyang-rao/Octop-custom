@@ -256,6 +256,90 @@ async def test_regular_octop_provisions_company_models_and_preserves_personal_de
     client._remote.assert_awaited_once()
 
 
+async def test_resource_sync_recovers_models_after_failed_first_login(company, monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from octop.infra.enterprise_resources import inference_node
+
+    monkeypatch.delenv("OCTOP_COMPANION_MODE", raising=False)
+    service = configured(company)
+    node = company.nodes[0]
+    agents = node.server.services.agent_repo
+    agents.create(agent_id="stranded", user_id=node.user.id, name="Primary")
+    agents.set_state("stranded", "failed", error="NO_MODELS_CONFIGURED")
+    client = SimpleNamespace(
+        authority="https://company.example",
+        _state=lambda uid: {"token": "fixture-personal-company-grant"},
+        _remote=AsyncMock(
+            side_effect=[
+                OctopError.localized(ErrorCode.ENTERPRISE_UNAVAILABLE),
+                service.profile(company.alice),
+            ]
+        ),
+    )
+    monkeypatch.setattr(inference_node, "client_for", lambda server: client)
+    local = inference_node.builtin_models_for(node.server)
+    assert not await local.try_ensure(node.user)
+    assert not node.server.services.provider_repo.list_all()
+
+    async def refresh(*, provider_name):
+        assert agents.get("stranded").default_model == provider_name + "/test-model"
+        agents.set_state("stranded", "running", error=None)
+
+    node.registry.on_provider_changed = AsyncMock(side_effect=refresh)
+    await node.sync.sync(node.user)
+    name = f"词元内置-{node.user.id}"
+    assert node.server.services.provider_repo.get_by_name(name).enabled
+    assert agents.get("stranded").last_state == "running"
+    assert node.server.services.settings_repo.get(f"companion.models.error.{node.user.id}") is None
+    node.registry.on_provider_changed.assert_awaited_once_with(provider_name=name)
+    assert GroupAccess(node.server.services.repos).allows(
+        user_id=node.user.id,
+        is_admin=False,
+        resource_type=RESOURCE_MODEL,
+        resource_key=model_resource_key(name, "test-model"),
+        is_owner=False,
+    )
+
+
+async def test_directory_failure_does_not_prevent_model_recovery(company, monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from octop.infra.enterprise_resources import inference_node
+
+    service = configured(company)
+    node = company.nodes[0]
+    client = SimpleNamespace(
+        authority="https://company.example",
+        _state=lambda uid: {"token": "fixture-personal-company-grant"},
+        _remote=AsyncMock(return_value=service.profile(company.alice)),
+    )
+    monkeypatch.setattr(inference_node, "client_for", lambda server: client)
+    company.clients[id(node.server)].fetch_resource_catalog.side_effect = OctopError.localized(
+        ErrorCode.ENTERPRISE_UNAVAILABLE
+    )
+    with pytest.raises(OctopError):
+        await node.sync.sync(node.user)
+    assert len(node.server.services.provider_repo.list_all()) == 1
+
+
+async def test_model_failure_does_not_block_other_enterprise_resources(company, monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from octop.infra.enterprise_resources import inference_node
+
+    configured(company)
+    node = company.nodes[0]
+    client = SimpleNamespace(
+        authority="https://company.example",
+        _state=lambda uid: {"token": "fixture-personal-company-grant"},
+        _remote=AsyncMock(side_effect=OctopError.localized(ErrorCode.DORA_MODEL_UNAVAILABLE)),
+    )
+    monkeypatch.setattr(inference_node, "client_for", lambda server: client)
+    result = await node.sync.sync(node.user)
+    assert result["resources"] and not result["error"]
+
+
 def test_company_usage_resolves_current_owner_and_never_grants_team_data_to_local_admin(company):
     service = configured(company)
     repo = company.center.services.repos.company_model_usage_repo
