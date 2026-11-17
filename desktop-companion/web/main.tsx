@@ -4,10 +4,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   ArrowUp,
-  AudioLines,
-  BookOpen,
   Check,
   ChevronDown,
+  ChevronLeft,
   Copy,
   ImagePlus,
   LoaderCircle,
@@ -156,6 +155,16 @@ function MessageCard({
   agentId: string;
 }) {
   const [copied, setCopied] = useState(false);
+  if (
+    !message.pending &&
+    !message.text.trim() &&
+    !message.error &&
+    !message.images?.length &&
+    !message.attachments?.length &&
+    !message.tools?.length &&
+    !message.reasoning?.trim()
+  )
+    return null;
   async function copy() {
     try {
       await native("copy", { text: message.text });
@@ -212,9 +221,7 @@ function MessageCard({
         >
           {message.text}
         </ReactMarkdown>
-        {message.images?.map((url) => (
-          <InlineImage key={url} source={url} />
-        ))}
+        {message.images?.map((url) => <InlineImage key={url} source={url} />)}
         {message.pending && !message.text && (
           <div className="thinking" role="status">
             <span />
@@ -281,7 +288,8 @@ function App() {
   const [connectors, setConnectors] = useState<Resource[]>([]);
   const [knowledge, setKnowledge] = useState<Resource[]>([]);
   const [showSettings, setShowSettings] = useState(false);
-  const [originDraft, setOriginDraft] = useState(status.origin);
+  const [edgeHiding, setEdgeHiding] = useState(true);
+  const settingsRef = useRef<HTMLElement>(null);
   const [loading, setLoading] = useState(false);
   const [voice, setVoice] = useState(true);
   const [speaking, setSpeaking] = useState(false);
@@ -378,7 +386,6 @@ function App() {
         voiceDraft.current.owner = null;
       }
       setStatus(next);
-      setOriginDraft(next.origin);
       if (next.backendRunning === false)
         setNotice("问答引擎暂未就绪，请重试或在桌宠菜单查看运行日志。");
       if (!next.authenticated || !next.user) {
@@ -415,8 +422,11 @@ function App() {
       setConnectors(connections);
       setKnowledge(bases);
       if (previouslyLoaded) return;
-      let saved: { rooms?: Record<BoardId, Partial<Room>>; voice?: boolean } =
-        {};
+      let saved: {
+        rooms?: Record<BoardId, Partial<Room>>;
+        voice?: boolean;
+        active?: BoardId;
+      } = {};
       try {
         saved = JSON.parse(
           localStorage.getItem(
@@ -455,6 +465,8 @@ function App() {
       loadedOwner.current = nextOwner;
       replaceRooms(restored);
       setVoice(saved.voice ?? true);
+      if (boards.some((item) => item.id === saved.active))
+        setActive(saved.active!);
       if (knowledgeResult.status === "rejected")
         setNotice("知识库列表暂时不可用，请检查该账号的知识库权限。");
       await Promise.all(
@@ -512,6 +524,7 @@ function App() {
   }, [status.authenticated, status.backendRunning, loading]);
   const persistence = JSON.stringify({
     voice,
+    active,
     rooms: Object.fromEntries(
       boards.map(({ id }) => {
         const item = rooms[id];
@@ -546,10 +559,15 @@ function App() {
             api("/api/agents"),
             api("/api/connector-instances"),
             api("/api/knowledge-bases"),
-            api<{allowed:boolean}>("/api/companion/access"),
+            api<{ allowed: boolean }>("/api/companion/access"),
           ]);
         if (!live || ownerRef.current !== owner) return;
-        setStatus(value=>({...value,companionAllowed:accessResult.status === "fulfilled" && accessResult.value.allowed === true}));
+        setStatus((value) => ({
+          ...value,
+          companionAllowed:
+            accessResult.status === "fulfilled" &&
+            accessResult.value.allowed === true,
+        }));
         if (agentResult.status === "fulfilled")
           setAgents(normalizeAgents(agentResult.value, userId));
         if (connectionResult.status === "fulfilled")
@@ -726,8 +744,8 @@ function App() {
           )
             ? "working"
             : frame.type === "error"
-              ? "error"
-              : "success",
+            ? "error"
+            : "success",
         });
     };
     window.addEventListener("companion", handler);
@@ -750,7 +768,8 @@ function App() {
     const owner = ownerRef.current;
     if (
       !user ||
-      !status.authenticated || status.companionAllowed === false ||
+      !status.authenticated ||
+      status.companionAllowed === false ||
       current.busy ||
       uploading ||
       (!current.draft.trim() && !current.files.length)
@@ -924,9 +943,55 @@ function App() {
     void native("chatClose", { board: active }).catch(() => {});
   }
 
+  useEffect(() => {
+    if (!showSettings) return;
+    settingsRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    void native<{ edgeHiding: boolean }>("petPreferences")
+      .then((value) => {
+        if (typeof value.edgeHiding === "boolean")
+          setEdgeHiding(value.edgeHiding);
+      })
+      .catch(() => {});
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setShowSettings(false);
+        document.querySelector<HTMLButtonElement>(".settings-trigger")?.focus();
+      }
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [showSettings]);
+  useEffect(() => {
+    if (!status.authenticated) setShowSettings(false);
+  }, [status.authenticated]);
+
+  function chooseBoard(id: BoardId) {
+    if (listening) {
+      void native("stopListening");
+      setListening(false);
+    }
+    setActive(id);
+    setNotice("");
+  }
+  function newChat() {
+    void native("chatClose", { board: active });
+    updateRoom(active, { ...freshRoom(room.binding), draft: room.draft });
+    setShowSettings(false);
+  }
+  async function openSetting(op: string, args: Record<string, unknown> = {}) {
+    try {
+      await native(op, args);
+      setShowSettings(false);
+    } catch (error) {
+      setNotice(errorText(error));
+      setShowSettings(false);
+    }
+  }
+
   return (
     <main
-      className="shell"
+      className={`shell${showSettings ? " settings-open" : ""}`}
       onDragOver={(event) => {
         event.preventDefault();
       }}
@@ -938,71 +1003,215 @@ function App() {
       <header className="topbar">
         <div className="app-mark">
           <MessageCircle size={18} />
-          <div>
-            <strong>哆啦</strong>
-            <span>
-              {identity ? `${identity} · 本机运行` : "让问题随时有个入口"}
-            </span>
-          </div>
+          <strong>哆啦</strong>
+          <span className="current-board">{board.name}</span>
         </div>
-        <div className="top-actions">
-          <button
-            aria-label={voice ? "关闭自动朗读" : "开启自动朗读"}
-            title={voice ? "自动朗读已开启" : "开启自动朗读"}
-            className={voice ? "selected" : ""}
-            onClick={() => {
-              setVoice(!voice);
-              if (voice) void native("stopSpeaking");
-            }}
-          >
-            {voice ? <Volume2 size={17} /> : <VolumeX size={17} />}
-          </button>
-          <button
-            aria-label="设置板块"
-            title="板块设置"
-            className={showSettings ? "selected" : ""}
-            onClick={() => setShowSettings(!showSettings)}
-          >
-            <Settings2 size={17} />
-          </button>
-        </div>
+        <button
+          className="settings-trigger"
+          aria-label={showSettings ? "关闭设置" : "功能与设置"}
+          title={showSettings ? "返回聊天" : "功能与设置"}
+          onClick={() => {
+            if (!showSettings && listening) {
+              void native("stopListening");
+              setListening(false);
+            }
+            setShowSettings((value) => !value);
+          }}
+        >
+          {showSettings ? <ChevronLeft size={18} /> : <Settings2 size={18} />}
+        </button>
       </header>
-      <nav className="boards" aria-label="选择问答板块">
-        {boards.map((item) => (
-          <button
-            key={item.id}
-            aria-pressed={item.id === active}
-            className={`board ${item.id} ${item.id === active ? "active" : ""}`}
-            onClick={() => {
-              if (listening) {
-                void native("stopListening");
-                setListening(false);
-              }
-              setActive(item.id);
-              setNotice("");
-            }}
-          >
-            <span className="board-icon">
-              {item.id === "aftersales" ? (
-                <Wrench size={17} />
-              ) : item.id === "workbench" ? (
-                <AudioLines size={17} />
-              ) : (
-                <BookOpen size={17} />
-              )}
-            </span>
-            {item.name}
-            {rooms[item.id].busy && <LoaderCircle size={12} className="spin" />}
-          </button>
-        ))}
-      </nav>
+      <section
+        ref={settingsRef}
+        className="settings-dialog settings-panel settings-page"
+        hidden={!showSettings}
+        role="region"
+        aria-labelledby="settings-title"
+      >
+        <div className="section-title">
+          <strong id="settings-title">功能与设置</strong>
+        </div>
+        {status.authenticated && status.companionAllowed !== false && (
+          <>
+            <nav className="boards" aria-label="选择问答板块">
+              {boards.map((item) => (
+                <button
+                  key={item.id}
+                  aria-pressed={item.id === active}
+                  className={`board ${item.id} ${
+                    item.id === active ? "active" : ""
+                  }`}
+                  onClick={() => chooseBoard(item.id)}
+                >
+                  {item.name}
+                  {rooms[item.id].busy && (
+                    <LoaderCircle size={12} className="spin" />
+                  )}
+                </button>
+              ))}
+            </nav>
+            <label>
+              回答专家
+              <select
+                aria-label="回答专家"
+                disabled={room.busy}
+                value={room.binding.agentId}
+                onChange={(event) =>
+                  changeBinding({
+                    ...room.binding,
+                    agentId: event.target.value,
+                  })
+                }
+              >
+                <option value="">请选择专家</option>
+                {room.binding.agentId && !chosenAgent && (
+                  <option value={room.binding.agentId}>
+                    原专家（当前不可用）
+                  </option>
+                )}
+                {agents.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <fieldset disabled={room.busy}>
+              <legend>
+                {active === "knowledge" ? "知识库" : "连接器（MCP）"}
+              </legend>
+              <div className="resource-options">
+                {resourceChoices.map((item) => {
+                  const selected =
+                    active === "knowledge"
+                      ? room.binding.knowledgeBases
+                      : room.binding.connectors;
+                  return (
+                    <label key={item.id}>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(item.id)}
+                        onChange={(event) => {
+                          const values = event.target.checked
+                            ? [...selected, item.id]
+                            : selected.filter((id) => id !== item.id);
+                          changeBinding({
+                            ...room.binding,
+                            [active === "knowledge"
+                              ? "knowledgeBases"
+                              : "connectors"]: values,
+                          });
+                        }}
+                      />
+                      {item.name}
+                    </label>
+                  );
+                })}
+                {!resourceChoices.length && (
+                  <span className="settings-empty">暂无可用资源</span>
+                )}
+              </div>
+            </fieldset>
+            <div className="settings-links">
+              <button
+                onClick={() =>
+                  void openSetting("openOctop", { path: "/experts" })
+                }
+              >
+                创建与管理专家
+              </button>
+              <button
+                onClick={() =>
+                  void openSetting("openOctop", { path: "/connectors" })
+                }
+              >
+                接入与管理 MCP
+              </button>
+              <button
+                onClick={() =>
+                  void openSetting("openOctop", { path: "/knowledge-bases" })
+                }
+              >
+                管理知识库
+              </button>
+              <button
+                onClick={() =>
+                  void openSetting("openOctop", { path: "/models" })
+                }
+              >
+                模型设置
+              </button>
+            </div>
+            <div className="settings-footer">
+              <button
+                className="text-button"
+                disabled={room.busy || uploading}
+                onClick={newChat}
+              >
+                <Plus size={14} />
+                新对话
+              </button>
+              <button
+                className="text-button"
+                disabled={
+                  loading || Object.values(rooms).some((item) => item.busy)
+                }
+                onClick={() => void refresh()}
+              >
+                {loading ? "刷新中…" : "刷新资源"}
+              </button>
+            </div>
+          </>
+        )}
+        <div className="preferences">
+          <label>
+            自动朗读
+            <input
+              type="checkbox"
+              checked={voice}
+              onChange={(event) => {
+                setVoice(event.target.checked);
+                if (!event.target.checked) void native("stopSpeaking");
+              }}
+            />
+          </label>
+          <label>
+            边缘收起
+            <input
+              type="checkbox"
+              checked={edgeHiding}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                setEdgeHiding(enabled);
+                void native("setEdgeHiding", { enabled }).catch((error) => {
+                  setEdgeHiding(!enabled);
+                  setNotice(errorText(error));
+                  setShowSettings(false);
+                });
+              }}
+            />
+          </label>
+          <button onClick={() => void openSetting("petSize")}>宠物大小</button>
+          <button onClick={() => void openSetting("help")}>使用说明</button>
+        </div>
+        <div className="settings-footer">
+          <span>{identity}</span>
+          {status.authenticated && (
+            <button
+              className="text-button"
+              disabled={Object.values(rooms).some((item) => item.busy)}
+              onClick={() => void openSetting("logout")}
+            >
+              退出账号
+            </button>
+          )}
+        </div>
+      </section>
       {!status.authenticated ? (
         <section className="login-state">
           <div className="welcome-orbit">
             <ShieldCheck size={30} />
           </div>
-          <h1>登录桌宠</h1>
-          <p>使用企业飞书登录，超级管理员开放的 MCP 将自动连接。</p>
           <button
             className="primary"
             disabled={!isNative() || loading}
@@ -1013,164 +1222,20 @@ function App() {
             <LogIn size={16} />
             使用企业飞书登录
           </button>
-          <button
-            className="text-button"
-            disabled={!isNative()}
-            onClick={() => void native("startOctop")}
-          >
-            连接设置
-          </button>
-          {!isNative() && (
-            <small>浏览器预览 · 实际登录与问答请使用 Mac 桌宠应用</small>
-          )}
-          <small>内置问答引擎 · 无需另装 Octop</small>
         </section>
       ) : status.companionAllowed === false ? (
-        <section className="login-state"><ShieldCheck size={30}/><h1>桌宠尚未开放</h1><p>请联系超级管理员，在企业中心的成员名单中为你勾选桌宠。已有聊天和个人配置继续保留。</p><button className="primary" onClick={()=>void refresh()}>重新检查权限</button></section>
+        <section className="login-state">
+          <ShieldCheck size={30} />
+          <h1>桌宠尚未开放</h1>
+          <p>
+            请联系超级管理员，在企业中心的成员名单中为你勾选桌宠。已有聊天和个人配置继续保留。
+          </p>
+          <button className="primary" onClick={() => void refresh()}>
+            重新检查权限
+          </button>
+        </section>
       ) : (
         <>
-          {showSettings && (
-            <section className="settings-panel" aria-label="当前板块设置">
-              <div className="section-title">
-                <strong>{board.name}板块设置</strong>
-                <button
-                  aria-label="关闭设置"
-                  onClick={() => setShowSettings(false)}
-                >
-                  <X size={15} />
-                </button>
-              </div>
-              <label>
-                回答专家
-                <select
-                  disabled={room.busy}
-                  value={room.binding.agentId}
-                  onChange={(event) =>
-                    void changeBinding({
-                      ...room.binding,
-                      agentId: event.target.value,
-                    })
-                  }
-                >
-                  <option value="">请选择专家</option>
-                  {room.binding.agentId && !chosenAgent && (
-                    <option value={room.binding.agentId}>
-                      原专家（当前不可用）
-                    </option>
-                  )}
-                  {agents.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <fieldset disabled={room.busy}>
-                <legend>
-                  {active === "knowledge" ? "检索知识库" : "使用的连接器"}
-                </legend>
-                <div className="resource-options">
-                  {resourceChoices.map((item) => {
-                    const selected =
-                      active === "knowledge"
-                        ? room.binding.knowledgeBases
-                        : room.binding.connectors;
-                    return (
-                      <label key={item.id}>
-                        <input
-                          type="checkbox"
-                          checked={selected.includes(item.id)}
-                          onChange={(event) => {
-                            const values = event.target.checked
-                              ? [...selected, item.id]
-                              : selected.filter((id) => id !== item.id);
-                            void changeBinding({
-                              ...room.binding,
-                              [active === "knowledge"
-                                ? "knowledgeBases"
-                                : "connectors"]: values,
-                            });
-                          }}
-                        />
-                        {item.name}
-                      </label>
-                    );
-                  })}
-                  {!(active === "knowledge" ? knowledge : connectors)
-                    .length && (
-                    <small>
-                      暂无可用资源，请在资源设置中完成个人授权或添加知识库。
-                    </small>
-                  )}
-                </div>
-              </fieldset>
-              <div className="settings-footer">
-                <button
-                  className="text-button"
-                  onClick={() =>
-                    void native("openOctop", {
-                      path:
-                        active === "knowledge"
-                          ? "/knowledge-bases"
-                          : "/connectors",
-                    })
-                  }
-                >
-                  管理资源与授权
-                </button>
-                <button
-                  className="text-button"
-                  disabled={
-                    loading || Object.values(rooms).some((value) => value.busy)
-                  }
-                  onClick={() => void refresh()}
-                >
-                  {loading ? "刷新中…" : "刷新资源"}
-                </button>
-              </div>
-              <small>
-                更换专家或资源会开始新对话，原会话保留。专家由企业管理员开放。
-              </small>
-              <div className="settings-footer">
-                <button
-                  className="text-button"
-                  disabled={Object.values(rooms).some((item) => item.busy)}
-                  onClick={() =>
-                    void native("logout").catch((error) =>
-                      setNotice(errorText(error)),
-                    )
-                  }
-                >
-                  退出桌宠账号
-                </button>
-              </div>
-            </section>
-          )}
-          <div className="conversation-meta">
-            <span>
-              <span className={`status-dot ${room.busy ? "busy" : ""}`} />
-              {chosenAgent?.name || "请选择专家"}
-              {room.busy
-                ? " · 正在处理"
-                : active === "knowledge" && !room.binding.knowledgeBases.length
-                  ? " · 未绑定知识库，可用本轮文字或图片提问"
-                  : ` · ${board.hint}`}
-            </span>
-            <button
-              title="新对话"
-              aria-label="新对话"
-              disabled={room.busy || uploading}
-              onClick={() => {
-                void native("chatClose", { board: active });
-                updateRoom(active, {
-                  ...freshRoom(room.binding),
-                  draft: room.draft,
-                });
-              }}
-            >
-              <Plus size={16} />
-            </button>
-          </div>
           <div
             className="messages"
             ref={scrollRef}
@@ -1178,45 +1243,6 @@ function App() {
             aria-label={`${board.name}对话`}
             aria-live="polite"
           >
-            {!room.messages.length && (
-              <div className="empty-state">
-                <span className={`empty-icon ${active}`}>
-                  {active === "aftersales" ? (
-                    <Wrench size={24} />
-                  ) : active === "workbench" ? (
-                    <AudioLines size={24} />
-                  ) : (
-                    <BookOpen size={24} />
-                  )}
-                </span>
-                <h1>{board.name}，从这里问起</h1>
-                <p>
-                  {active === "knowledge" && !room.binding.knowledgeBases.length
-                    ? "知识库可后续接入。现在可以先提供文字或图片提问。"
-                    : `${board.hint}。文字、语音或图片都可以。`}
-                </p>
-                <div className="suggestions">
-                  {board.examples.map((text) => (
-                    <button
-                      key={text}
-                      onClick={() => {
-                        updateRoom(active, { draft: text });
-                        inputRef.current?.focus();
-                      }}
-                    >
-                      {text}
-                      <ArrowUp size={13} />
-                    </button>
-                  ))}
-                </div>
-                <button
-                  className="text-button"
-                  onClick={() => setShowSettings(true)}
-                >
-                  选择专家与{active === "knowledge" ? "知识库" : "连接器"}
-                </button>
-              </div>
-            )}
             {room.messages.map((message) => (
               <MessageCard
                 key={message.id}
@@ -1262,13 +1288,13 @@ function App() {
         <textarea
           ref={inputRef}
           aria-label="输入问题"
-          placeholder={
-            status.authenticated
-              ? `向${board.name}专家提问，或粘贴一张图片…`
-              : "登录后开始提问"
-          }
+          placeholder={status.authenticated ? "输入消息…" : "登录后开始提问"}
           value={room.draft}
-          disabled={!status.authenticated || status.companionAllowed === false || loading}
+          disabled={
+            !status.authenticated ||
+            status.companionAllowed === false ||
+            loading
+          }
           rows={2}
           onChange={(event) =>
             updateRoom(active, { draft: event.target.value })
@@ -1297,7 +1323,8 @@ function App() {
               aria-label="添加图片"
               title="添加图片，也可拖入或粘贴"
               disabled={
-                !status.authenticated || status.companionAllowed === false ||
+                !status.authenticated ||
+                status.companionAllowed === false ||
                 room.busy ||
                 uploading ||
                 room.files.length >= 4
@@ -1315,7 +1342,11 @@ function App() {
               title={listening ? "结束录音，文字保留在输入框" : "语音输入"}
               aria-pressed={listening}
               className={listening ? "recording" : ""}
-              disabled={!status.authenticated || status.companionAllowed === false || room.busy}
+              disabled={
+                !status.authenticated ||
+                status.companionAllowed === false ||
+                room.busy
+              }
               onClick={() =>
                 void toggleMic().catch((e) => setNotice(errorText(e)))
               }
@@ -1335,8 +1366,8 @@ function App() {
               {listening
                 ? "正在聆听 · 再次点击结束"
                 : uploading
-                  ? "正在上传图片…"
-                  : "Enter 发送"}
+                ? "正在上传图片…"
+                : ""}
             </span>
           </div>
           {room.busy ? (
@@ -1359,7 +1390,8 @@ function App() {
               className="send"
               aria-label="发送消息"
               disabled={
-                !status.authenticated || status.companionAllowed === false ||
+                !status.authenticated ||
+                status.companionAllowed === false ||
                 uploading ||
                 listening ||
                 (!room.draft.trim() && !room.files.length)
@@ -1382,44 +1414,6 @@ function App() {
           }}
         />
       </section>
-      <footer className="footnote">
-        <span>会话保存在本机 · 本人授权</span>
-        <button
-          className="text-button"
-          onClick={() =>
-            void native("openOctop", {
-              path: room.binding.agentId
-                ? `/chat/${encodeURIComponent(room.binding.agentId)}${
-                    room.threadId ? `/${encodeURIComponent(room.threadId)}` : ""
-                  }`
-                : "/",
-            })
-          }
-        >
-          资源与模型设置
-        </button>
-      </footer>
-      {showSettings && !status.authenticated && !status.standalone && (
-        <section className="backend-settings">
-          <label>
-            本机 Octop 地址
-            <input
-              value={originDraft}
-              onChange={(event) => setOriginDraft(event.target.value)}
-            />
-          </label>
-          <button
-            className="primary"
-            onClick={() =>
-              void native("setOrigin", { origin: originDraft })
-                .then(() => refresh())
-                .catch((error) => setNotice(errorText(error)))
-            }
-          >
-            保存并连接
-          </button>
-        </section>
-      )}
     </main>
   );
 }

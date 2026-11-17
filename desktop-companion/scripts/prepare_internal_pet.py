@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from sprite_layout import registration
 import shutil
 
 from PIL import Image
@@ -67,6 +68,16 @@ def compile_pet(source: Path, output: Path) -> dict:
     animations["idle"].update(frames=[idle[0]]*20+[idle[1]],frameDelay=100,
                               baseFrame=idle[0],overlayRect=[236/512,106/512,78/512,34/512])
     manifest={"name":"哆啦 · 内部立体版","animations":animations}
+    peek_source = source/"peek.json"
+    if peek_source.is_file():
+        peek = json.loads(peek_source.read_text())
+        for item in peek.values():
+            name = item["frame"]
+            if Path(name).name != name or not name.endswith(".png"):
+                raise ValueError("Invalid private peek frame path")
+            shutil.copy2(source/"peek"/name, stage/name)
+        manifest["peek"] = peek
+    manifest["registration"], _ = registration(stage, manifest)
     (stage/"pet.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n")
     notice="""Dora internal 3D pet artwork
 

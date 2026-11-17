@@ -19,12 +19,26 @@ test("fresh installs bind each board to its corresponding published expert", () 
     { id: "quality-copy", name: "售后质量专家" },
     { id: "knowledge-copy", name: "知识库助手" },
     { id: "quota-copy", name: "词元管理专家" },
+    { id: "profit-copy", name: "负利润专家" },
   ];
   assert.equal(
     initialBinding("aftersales", agents, []).agentId,
     "quality-copy",
   );
   assert.equal(initialBinding("workbench", agents, []).agentId, "quota-copy");
+  assert.equal(
+    initialBinding("profit", agents, [
+      { id: "negative-profit", name: "负利润 MCP" },
+    ]).agentId,
+    "profit-copy",
+  );
+  assert.deepEqual(
+    initialBinding("profit", agents, [
+      { id: "negative-profit", name: "负利润 MCP" },
+      { id: "quality", name: "售后质量" },
+    ]).connectors,
+    ["negative-profit"],
+  );
   assert.equal(
     initialBinding("knowledge", agents, []).agentId,
     "knowledge-copy",
@@ -53,8 +67,9 @@ test("board and identity sessions cannot overwrite dashboard default or each oth
     sessionKey("main", 2, "workbench", "one"),
     sessionKey("main", 3, "aftersales", "one"),
     sessionKey("other", 2, "aftersales", "one"),
+    sessionKey("main", 2, "profit", "one"),
   ];
-  assert.equal(new Set(keys).size, 4);
+  assert.equal(new Set(keys).size, 5);
   assert.ok(keys.every((key) => key !== "main:dashboard:2:dm"));
   assert.notEqual(
     settingsKey("http://127.0.0.1:8088", 2),

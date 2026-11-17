@@ -2,6 +2,11 @@
 // tests UI behavior only; it never connects to a real Octop or model service.
 async function runUISmoke(page) {
   const checks = [];
+  async function selectBoard(name) {
+    await page.getByRole("button", { name: "功能与设置", exact: true }).click();
+    await page.getByRole("button", { name, exact: true }).click();
+    await page.getByRole("button", { name: "关闭设置", exact: true }).click();
+  }
   const ensure = (value, name) => {
     if (!value) throw new Error(name);
     checks.push(name);
@@ -43,23 +48,23 @@ async function runUISmoke(page) {
                         },
                       ]
                     : args.path === "/api/connector-instances"
-                      ? window.__fixture.hideConnections
-                        ? []
-                        : [
-                            {
-                              mcp_server_name: "aftersales_quality",
-                              display_name: "售后质量",
-                              usable: true,
-                            },
-                            {
-                              mcp_server_name: "aiq_workbench_readonly",
-                              display_name: "词元管理",
-                              usable: true,
-                            },
-                          ]
-                      : args.path === "/api/knowledge-bases"
-                        ? [{ id: "kb-test", name: "测试知识库" }]
-                        : { messages: [] },
+                    ? window.__fixture.hideConnections
+                      ? []
+                      : [
+                          {
+                            mcp_server_name: "aftersales_quality",
+                            display_name: "售后质量",
+                            usable: true,
+                          },
+                          {
+                            mcp_server_name: "aiq_workbench_readonly",
+                            display_name: "词元管理",
+                            usable: true,
+                          },
+                        ]
+                    : args.path === "/api/knowledge-bases"
+                    ? [{ id: "kb-test", name: "测试知识库" }]
+                    : { messages: [] },
               };
             if (op === "image") result = { url: pixel };
             if (op === "upload")
@@ -139,18 +144,42 @@ async function runUISmoke(page) {
   await page.reload();
   await page.setViewportSize({ width: 456, height: 684 });
   await page
-    .locator(".conversation-meta")
-    .filter({ hasText: "小通" })
+    .locator('textarea[aria-label="输入问题"]:not([disabled])')
     .waitFor();
   const input = page.getByRole("textbox", { name: "输入问题", exact: true });
+  ensure(
+    (await page.locator(".topbar button").count()) === 1,
+    "one_top_level_settings_entry",
+  );
+  for (const text of [
+    "从这里问起",
+    "本机运行",
+    "会话保存在本机",
+    "选择专家与连接器",
+  ])
+    ensure(
+      (await page.getByText(text, { exact: false }).count()) === 0,
+      "no_permanent_explainer_" + text,
+    );
+  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
+  await page.getByRole("button", { name: "负利润", exact: true }).waitFor();
+  ensure(!(await input.isVisible()), "settings_do_not_overlap_composer");
+  await page.keyboard.press("Escape");
+  ensure(
+    !(await page
+      .getByRole("region", { name: "功能与设置", exact: true })
+      .isVisible()),
+    "settings_escape_closes_dialog",
+  );
+
   await input.fill("售后草稿");
-  await page.getByRole("button", { name: "词元", exact: true }).click();
+  await selectBoard("词元");
   ensure(
     (await input.inputValue()) === "",
     "boards_start_with_separate_drafts",
   );
   await input.fill("词元草稿");
-  await page.getByRole("button", { name: "售后", exact: true }).click();
+  await selectBoard("售后");
   ensure(
     (await input.inputValue()) === "售后草稿",
     "switching_board_keeps_draft",
@@ -183,7 +212,7 @@ async function runUISmoke(page) {
       .evaluate((image) => image.complete && image.naturalWidth > 0),
     "authenticated_image_preview_renders",
   );
-  await page.getByRole("button", { name: "词元", exact: true }).click();
+  await selectBoard("词元");
   ensure(
     (await page.getByText("界面测试回答。", { exact: true }).count()) === 0,
     "answers_do_not_cross_boards",
@@ -210,7 +239,7 @@ async function runUISmoke(page) {
       !Object.hasOwn(sent[0].args.frame, "hitl_policy"),
     "unique_sessions_and_no_approval_bypass",
   );
-  await page.getByRole("button", { name: "知识库", exact: true }).click();
+  await selectBoard("知识库");
   await input.fill("这是本轮提供的测试文字，无需检索知识库。请回复收到。");
   await page.getByRole("button", { name: "发送消息", exact: true }).click();
   await page.getByRole("button", { name: "复制回答", exact: true }).waitFor();
@@ -228,7 +257,7 @@ async function runUISmoke(page) {
       unboundKnowledge.mcp_servers.length === 0,
     "unbound_knowledge_accepts_current_material_without_attaching_private_resources",
   );
-  await page.getByRole("button", { name: "设置板块", exact: true }).click();
+  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   ensure(
     (await page.getByRole("option", { name: "其他成员专家" }).count()) === 0,
     "foreign_owned_experts_are_not_offered",
@@ -266,18 +295,22 @@ async function runUISmoke(page) {
   await page
     .getByRole("button", { name: "开始语音输入", exact: true })
     .waitFor();
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles(
-      "desktop-companion/assets/downloaded/doraemon/action-chat_answer-01.png",
-    );
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "fixture.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9WQAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
   await page.locator(".attachment-strip img").waitFor();
   ensure(
     (await page.locator(".attachment-strip img").count()) === 1,
     "image_upload_is_shown_before_send",
   );
-  await page.getByRole("button", { name: "售后", exact: true }).click();
+  await selectBoard("售后");
   const oldContext = sent[0].args.contextKey;
+  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   await page.getByRole("button", { name: "新对话", exact: true }).click();
   await page.evaluate(
     (contextKey) =>
@@ -296,8 +329,7 @@ async function runUISmoke(page) {
   await input.fill("重开后保留的草稿");
   await page.reload();
   await page
-    .locator(".conversation-meta")
-    .filter({ hasText: "小通" })
+    .locator('textarea[aria-label="输入问题"]:not([disabled])')
     .waitFor();
   ensure(
     (await input.inputValue()) === "重开后保留的草稿",
@@ -306,8 +338,7 @@ async function runUISmoke(page) {
   await page.evaluate(() => localStorage.setItem("__fixtureUser", "1000"));
   await page.reload();
   await page
-    .locator(".conversation-meta")
-    .filter({ hasText: "小通" })
+    .locator('textarea[aria-label="输入问题"]:not([disabled])')
     .waitFor();
   ensure(
     (await input.inputValue()) === "",
@@ -315,7 +346,7 @@ async function runUISmoke(page) {
   );
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await page.setViewportSize({ width: 350, height: 510 });
-  await page.getByRole("button", { name: "设置板块", exact: true }).click();
+  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   ensure(
     await page.evaluate(
       () =>
@@ -332,8 +363,18 @@ async function runUISmoke(page) {
   await page.screenshot({
     path: "desktop-companion/output/playwright/ui-smoke-dark.png",
   });
+  await page.getByRole("button", {name:"关闭设置",exact:true}).click();
+  await input.fill("玻璃界面验收");
+  await page.getByRole("button", {name:"发送消息",exact:true}).click();
+  await page.getByText("界面测试回答。",{exact:true}).waitFor();
+  ensure(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor === "rgba(0, 0, 0, 0)"),"transparent_web_surface_for_native_glass");
+  await page.screenshot({path:"desktop-companion/output/playwright/glass-chat-dark.png"});
+  await page.emulateMedia({colorScheme:"light"});
+  await page.screenshot({path:"desktop-companion/output/playwright/glass-chat-light.png"});
   await page.evaluate(() => window.__companionEvent({ type: "authExpired" }));
-  await page.getByRole("heading", { name: "登录桌宠", exact: true }).waitFor();
+  await page
+    .getByRole("button", { name: "使用企业飞书登录", exact: true })
+    .waitFor();
   ensure(
     (await input.isDisabled()) && (await input.inputValue()) === "",
     "expired_login_clears_visible_private_state",

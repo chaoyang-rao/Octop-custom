@@ -137,3 +137,4 @@ scripts/lh_image_install_octop_tencentos.sh
 .tmp-mfa-e2e/
 # Local browser sessions and sign-in traces are never release assets.
 /output/playwright/
+/.playwright-cli/

@@ -1,4 +1,4 @@
-export type BoardId = "aftersales" | "workbench" | "knowledge";
+export type BoardId = "aftersales" | "workbench" | "profit" | "knowledge";
 export type Binding = {
   agentId: string;
   connectors: string[];
@@ -36,26 +36,22 @@ export type Message = {
 export const boards: {
   id: BoardId;
   name: string;
-  hint: string;
-  examples: string[];
 }[] = [
   {
     id: "aftersales",
     name: "售后",
-    hint: "质量、维修与售后数据",
-    examples: ["本周质量情况怎么样？", "帮我分析最近的返修问题"],
   },
   {
     id: "workbench",
     name: "词元",
-    hint: "词元查询与工作台",
-    examples: ["帮我查一下词元使用情况", "有哪些我可以查看的工作台数据？"],
+  },
+  {
+    id: "profit",
+    name: "负利润",
   },
   {
     id: "knowledge",
     name: "知识库",
-    hint: "从已授权的资料里找答案",
-    examples: ["这份文档的关键内容是什么？", "查找相关的操作流程，并列出来源"],
   },
 ];
 export function asList(
@@ -134,8 +130,10 @@ export function initialBinding(
     board === "aftersales"
       ? /aftersales|售后|质量/i
       : board === "workbench"
-        ? /workbench|aiq|词元/i
-        : /knowledge|知识/i;
+      ? /workbench|aiq|词元/i
+      : board === "profit"
+      ? /negative[-_ ]?profit|负利润|亏损/i
+      : /knowledge|知识/i;
   return {
     agentId:
       (
@@ -252,11 +250,11 @@ export function contentImages(value: unknown, agentId?: string): string[] {
       const source =
         typeof row.image_url === "object"
           ? (row.image_url as { url?: string })?.url
-          : (row.image_url ??
+          : row.image_url ??
             row.preview_url ??
             row.url ??
             row.path ??
-            row.localPath);
+            row.localPath;
       const mime = String(
         row.mime_type ?? row.media_type ?? row.mediaType ?? "image/png",
       );
@@ -316,11 +314,11 @@ export function historyMessages(
       typeof content === "string"
         ? content
         : Array.isArray(content)
-          ? content
-              .filter((block) => block?.type === "text")
-              .map((block) => block.text ?? "")
-              .join("\n")
-          : "";
+        ? content
+            .filter((block) => block?.type === "text")
+            .map((block) => block.text ?? "")
+            .join("\n")
+        : "";
     messages.push({
       id: String(row.id ?? `history-${index}`),
       role: ["user", "human"].includes(String(row.role ?? row.type))
