@@ -24,6 +24,7 @@ const challenge = {
 describe("enterprise sign-in consent and recovery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, "open").mockReturnValue(null);
     vi.useFakeTimers();
     vi.mocked(getAuthToken).mockReturnValue(null);
     vi.mocked(enterpriseApi.begin).mockResolvedValue(challenge);
@@ -31,6 +32,7 @@ describe("enterprise sign-in consent and recovery", () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+    vi.mocked(window.open).mockRestore();
   });
 
   async function start() {
@@ -55,7 +57,12 @@ describe("enterprise sign-in consent and recovery", () => {
       screen
         .getByRole("link", { name: "enterprise.openCenter" })
         .getAttribute("href"),
-    ).toBe(challenge.verification_uri);
+    ).toBe(`${challenge.verification_uri}?code=ABCDEFGH`);
+    expect(window.open).toHaveBeenCalledWith(
+      `${challenge.verification_uri}?code=ABCDEFGH`,
+      "_blank",
+      "noopener,noreferrer",
+    );
     expect(document.body.textContent).not.toContain(challenge.login_id);
     expect(enterpriseApi.begin).toHaveBeenCalledWith(
       "enterprise.deviceName",

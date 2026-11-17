@@ -11,6 +11,7 @@ from contextlib import suppress
 from contextvars import ContextVar
 from dataclasses import dataclass, replace
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from cryptography.fernet import InvalidToken
@@ -127,13 +128,23 @@ class EnterpriseCenter:
 
     async def inspect(self, user: User, code: str) -> dict[str, Any]:
         await asyncio.to_thread(self.require_employee, user)
-        return await self.devices.inspect_pairing(user_id=user.id, code=code, kind="enterprise")
+        try:
+            return await self.devices.inspect_pairing(user_id=user.id, code=code, kind="enterprise")
+        except OctopError as error:
+            if error.code == ErrorCode.AUTH_FAILED and error.status == 401:
+                raise enterprise_error(ErrorCode.ENTERPRISE_CODE_INVALID) from None
+            raise
 
     async def approve(self, user: User, code: str) -> dict[str, Any]:
         await asyncio.to_thread(self.require_employee, user)
-        return await self.devices.approve_pairing(
-            user_id=user.id, code=code, scopes=["enterprise"], kind="enterprise"
-        )
+        try:
+            return await self.devices.approve_pairing(
+                user_id=user.id, code=code, scopes=["enterprise"], kind="enterprise"
+            )
+        except OctopError as error:
+            if error.code == ErrorCode.AUTH_FAILED and error.status == 401:
+                raise enterprise_error(ErrorCode.ENTERPRISE_CODE_INVALID) from None
+            raise
 
     async def exchange(self, secret: str, network_key: str) -> dict[str, Any]:
         self.require_enabled()
@@ -255,7 +266,7 @@ class EnterpriseClient:
         return {
             "login_id": login_id,
             "user_code": code,
-            "verification_uri": self.authority + "/enterprise/approve",
+            "verification_uri": self.authority + "/enterprise/approve?" + urlencode({"code": code}),
             "expires_at": expires,
             "interval": 3,
         }

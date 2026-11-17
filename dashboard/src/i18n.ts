@@ -69,6 +69,10 @@ async function hydrateSkillLabels(lng: string) {
 }
 
 async function hydrateServerLabels(lng: string) {
+  // Login pages use bundled labels. A first-user enterprise node has no
+  // authenticated label endpoints yet; their 503 must not poison sign-in.
+  const { getAuthToken } = await import("./api/request");
+  if (!getAuthToken()) return;
   if (await isSetupRequired()) return;
   await Promise.all([hydrateToolLabels(lng), hydrateSkillLabels(lng)]);
 }

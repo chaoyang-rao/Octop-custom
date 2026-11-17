@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261117.2"
+        default: "custom-1.0.3b3-20261117.3"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026111702"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261117.2' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026111703"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261117.3' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -110,6 +110,11 @@ jobs:
           src/hooks/useDashboardPushToast.test.tsx
           src/pages/Login/EnterpriseLogin.test.tsx
           src/pages/Login/EnterpriseApprove.test.tsx
+          src/pages/Login/EnterpriseWelcome.test.tsx
+          src/utils/enterpriseApproval.test.ts
+          src/api/request.setup.test.ts
+          src/api/request.unauthorized.test.ts
+          src/i18n.hydration.test.ts
           src/pages/Login/Login.sso.test.tsx
           src/pages/Login/Login.configuration.test.tsx
           src/pages/Login/Login.remember.test.tsx
@@ -416,7 +421,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom，基于官方 1.0.3b3。本次修复首次企业模型同步失败后无法自动恢复的问题：后台同步会持续重试模型，恢复失败的小通；同时保留左侧桌宠入口和企业“成员开放权限”：超级管理员按登录名单统一选择售后质量、词元管理、负利润 MCP 与桌宠；业务凭据留在服务器。Mac 桌宠从企业中心按授权下载，安装后可独立运行，内部角色组件不进入公开安装包。
+          Octop Custom，基于官方 1.0.3b3。本次简化企业首次登录：点击公司飞书登录后自动打开浏览器并带入登录码，核对账号与设备确认后，显示模型同步和小通启动进度，准备好自动进入会话；失败可直接重试。修复首次登录按钮被初始化状态误拦截、失效登录码导致重复登录的问题，保留模型自动恢复、原有聊天和账号绑定保护。使用指引见仓库 docs/custom/company-first-login.md。
+
+          企业“成员开放权限”继续由超级管理员按登录名单统一选择售后质量、词元管理、负利润 MCP 与桌宠；业务凭据留在服务器。Mac 桌宠从企业中心按授权下载，安装后可独立运行，内部角色组件不进入公开安装包。
 
           Windows 使用 exe；Intel Mac 使用 darwin-amd64.dmg；M 芯片 Mac 使用 darwin-arm64.dmg。另附三个免安装 portable ZIP。SHA256SUMS.txt 可校验文件完整性。
 

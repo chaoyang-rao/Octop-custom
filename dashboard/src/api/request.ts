@@ -1,6 +1,7 @@
 import { getApiUrl } from "./config";
 import i18n from "../i18n";
 import { markNavigatingAway } from "../utils/reloadOnStaleChunk";
+import { enterpriseApprovalLoginPath } from "../utils/enterpriseApproval";
 
 const AUTH_TOKEN_KEY = "auth_token";
 /** sessionStorage handoff for SSO redirects / popups (default = remember). */
@@ -142,7 +143,11 @@ function isSetupApiPath(path: string): boolean {
  * Avoids stampeding ``/api/agents`` etc. after the first 503 / status probe.
  */
 function assertNotSetupLocked(path: string): void {
-  if (_setupRequiredKnown && !isSetupApiPath(path)) {
+  const enterpriseBootstrap =
+    path === "/auth/enterprise/start" ||
+    path === "/auth/enterprise/poll" ||
+    path === "/auth/enterprise/status";
+  if (_setupRequiredKnown && !isSetupApiPath(path) && !enterpriseBootstrap) {
     handleSetupRequired();
     throw new SetupRequiredError();
   }
@@ -326,7 +331,13 @@ function handleUnauthorized(): void {
   if (takenOver) return;
 
   markNavigatingAway();
-  window.location.replace("/login");
+  window.location.replace(
+    path === "/enterprise/approve"
+      ? enterpriseApprovalLoginPath(
+          new URLSearchParams(window.location.search).get("code"),
+        )
+      : "/login",
+  );
 }
 
 /**

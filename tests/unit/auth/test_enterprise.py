@@ -123,6 +123,33 @@ async def approved(center, user):
     return challenge, result
 
 
+@pytest.mark.parametrize("operation", ["inspect", "approve"])
+async def test_used_or_invalid_code_is_not_a_failed_company_session(servers, operation):
+    server = servers("center", OctopConfig(enterprise_center_enabled=True))
+    user = await employee(server)
+    center = EnterpriseCenter(server)
+    for code in ["INVALID-CODE", (await approved(center, user))[0]["user_code"]]:
+        with pytest.raises(OctopError) as error:
+            await getattr(center, operation)(user, code)
+        assert error.value.code == ErrorCode.ENTERPRISE_CODE_INVALID
+        assert error.value.status == 400
+        assert center.require_employee(user)
+
+
+@pytest.mark.parametrize("operation", ["inspect", "approve"])
+async def test_pairing_rate_limit_is_preserved(servers, monkeypatch, operation):
+    server = servers("center", OctopConfig(enterprise_center_enabled=True))
+    user = await employee(server)
+    center = EnterpriseCenter(server)
+    limited = OctopError(ErrorCode.AUTH_FAILED, "rate limit", status=429)
+    monkeypatch.setattr(
+        type(center.devices), operation + "_pairing", AsyncMock(side_effect=limited)
+    )
+    with pytest.raises(OctopError) as error:
+        await getattr(center, operation)(user, "ABCDEFGH")
+    assert error.value is limited
+
+
 def connect_transport(monkeypatch, center):
     original = httpx.AsyncClient
     requests = []
@@ -224,7 +251,13 @@ async def test_company_identity_survives_restart_without_exporting_center_creden
     client = client_for(node)
     challenge = await client.begin("My local computer")
     assert "pairing_secret" not in challenge
-    assert challenge["verification_uri"] == "https://company.example/enterprise/approve"
+    from urllib.parse import parse_qs, urlsplit
+
+    approval = urlsplit(challenge["verification_uri"])
+    assert approval.scheme == "https" and approval.netloc == "company.example"
+    assert approval.path == "/enterprise/approve"
+    assert parse_qs(approval.query) == {"code": [challenge["user_code"]]}
+    assert challenge["login_id"] not in challenge["verification_uri"]
     await center.approve(user, challenge["user_code"])
     clock(4)
     result, local = await client.poll(challenge["login_id"])

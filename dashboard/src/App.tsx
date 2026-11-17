@@ -10,12 +10,14 @@ import {
   DesktopChromeProvider,
   useDesktopChrome,
 } from "./hooks/useDesktopChrome";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { routerBasename } from "./utils/publicUrl";
 import { useTranslation } from "react-i18next";
 import MainLayout from "./layouts/MainLayout";
 import LoginPage from "./pages/Login";
 import EnterpriseApprove from "./pages/Login/EnterpriseApprove";
+import EnterpriseWelcome from "./pages/Login/EnterpriseWelcome";
+import { enterpriseApprovalLoginPath } from "./utils/enterpriseApproval";
 import EnterpriseAdmin from "./pages/Login/EnterpriseAdmin";
 import OidcComplete from "./pages/Login/OidcComplete";
 import DesktopCompanionLaunch from "./pages/DesktopCompanionLaunch";
@@ -46,6 +48,16 @@ const GlobalStyle = createGlobalStyle`
   box-sizing: border-box;
 }
 `;
+
+function EnterpriseApprovalEntry() {
+  const location = useLocation();
+  const code = new URLSearchParams(location.search).get("code");
+  return (
+    <AuthGuard loginPath={enterpriseApprovalLoginPath(code)}>
+      <EnterpriseApprove />
+    </AuthGuard>
+  );
+}
 
 function ThemedApp() {
   const { isDark, palette, customColor } = useTheme();
@@ -159,9 +171,13 @@ function ThemedApp() {
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/enterprise/approve"
+              element={<EnterpriseApprovalEntry />}
+            />
+            <Route
+              path="/welcome"
               element={
-                <AuthGuard loginPath="/login?enterprise=1">
-                  <EnterpriseApprove />
+                <AuthGuard>
+                  <EnterpriseWelcome />
                 </AuthGuard>
               }
             />

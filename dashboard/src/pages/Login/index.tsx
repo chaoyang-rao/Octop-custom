@@ -51,6 +51,11 @@ import googleIcon from "../../assets/providers/google.svg";
 import CaptchaField, { type CaptchaFieldHandle } from "./CaptchaField";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import EnterpriseLogin from "./EnterpriseLogin";
+import {
+  enterpriseApprovalPath,
+  enterpriseApprovalLoginPath,
+} from "../../utils/enterpriseApproval";
+import enterpriseStyles from "./enterprise.module.less";
 import { type PublicCaptchaConfig } from "./captchaAdapters";
 
 type MfaStepMode = "totp" | "recovery" | "passkey";
@@ -124,12 +129,13 @@ export default function LoginPage() {
     null,
   );
   const [enterpriseCenter, setEnterpriseCenter] = useState(false);
+  const [oauthStatusReady, setOauthStatusReady] = useState(false);
   const [enterpriseLocalLogin, setEnterpriseLocalLogin] = useState(false);
   const localLink = searchParams.get("local_link") === "1";
   const loginTarget = localLink
     ? "/login"
     : enterpriseCenter || searchParams.get("enterprise") === "1"
-    ? "/enterprise/approve"
+    ? enterpriseApprovalPath(searchParams.get("device_code"))
     : "/chat";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -199,7 +205,10 @@ export default function LoginPage() {
               setProviders(next.providers.filter((item) => item.enabled));
             }
           })
-          .catch(() => {});
+          .catch(() => {})
+          .finally(() => {
+            if (!cancelled) setOauthStatusReady(true);
+          });
         authApi
           .getLdapStatus()
           .then((next) => {
@@ -275,16 +284,24 @@ export default function LoginPage() {
   };
 
   const finishLogin = useCallback(
-    async (accessToken: string, locale: string | null | undefined) => {
+    async (
+      accessToken: string,
+      locale: string | null | undefined,
+      target = loginTarget,
+    ) => {
       conditionalAbortRef.current?.abort();
       setAuthToken(accessToken, remember);
       setMfaChallenge(null);
       setMfaCode("");
       const applied = await applyUserLocale(locale);
       void refreshServerLabels(applied);
-      navigate(loginTarget, { replace: true });
+      navigate(target, { replace: true });
     },
     [navigate, remember, loginTarget],
+  );
+  const finishEnterpriseLogin = useCallback(
+    (token: string, locale: string) => finishLogin(token, locale, "/welcome"),
+    [finishLogin],
   );
 
   // Conditional UI: passkeys appear in the username autofill when available.
@@ -356,7 +373,9 @@ export default function LoginPage() {
     setSsoLoadingKind(kind);
     setRememberLoginPreference(remember);
     let popup: Window | null = null;
-    if (kind !== "oidc") {
+    const companyFlow =
+      enterpriseCenter && searchParams.get("enterprise") === "1";
+    if (kind !== "oidc" && !companyFlow) {
       popup = openSsoPopup();
     }
     try {
@@ -558,7 +577,9 @@ export default function LoginPage() {
       <EnterpriseLogin
         authority={enterpriseAuthority}
         localLoginAvailable={enterpriseLocalLogin}
-        onSuccess={finishLogin}
+        onSuccess={finishEnterpriseLogin}
+        remember={remember}
+        onRememberChange={setRemember}
       />
     );
   }
@@ -722,6 +743,52 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (
+    enterpriseCenter &&
+    searchParams.get("enterprise") === "1" &&
+    searchParams.get("admin_login") !== "1"
+  ) {
+    const feishu = providers.find((provider) => provider.kind === "feishu");
+    return (
+      <main className={enterpriseStyles.page}>
+        <div className={enterpriseStyles.centerCard}>
+          {logo}
+          <h1>{t("enterprise.centerSignIn")}</h1>
+          <p>{t("enterprise.centerSignInHint")}</p>
+          {!oauthStatusReady ? (
+            <Spin aria-label={t("login.checkingConfiguration")} />
+          ) : feishu ? (
+            <Button
+              size="large"
+              type="primary"
+              block
+              loading={ssoLoadingKind === "feishu"}
+              icon={providerIcon(feishu)}
+              onClick={() => void onSso("feishu")}
+            >
+              {t("enterprise.continueFeishu")}
+            </Button>
+          ) : (
+            <Alert type="warning" message={t("enterprise.centerUnavailable")} />
+          )}
+          <small>{t("enterprise.centerPrivacyHint")}</small>
+          <details>
+            <summary>{t("enterprise.otherSignIn")}</summary>
+            <Button
+              type="link"
+              href={
+                enterpriseApprovalLoginPath(searchParams.get("device_code")) +
+                "&admin_login=1"
+              }
+            >
+              {t("enterprise.adminSignIn")}
+            </Button>
+          </details>
+        </div>
+      </main>
     );
   }
 
