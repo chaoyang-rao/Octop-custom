@@ -1,0 +1,32 @@
+{
+  "deployed": true,
+  "service": "octop-enterprise.service",
+  "port": 18088,
+  "source": "/opt/octop-enterprise/releases/client-updates-20261118-111801",
+  "health": {
+    "ok": true,
+    "started_at": 1794979291,
+    "db": true,
+    "users_loaded": 2,
+    "agents_running": 0,
+    "custom_release": "1.0.3b3.post2026111801"
+  },
+  "public_admin_http": 200,
+  "signing_configured": true,
+  "authority_config_unchanged": true,
+  "nginx_configuration_restored_exactly": true,
+  "active_connections_drained": true,
+  "source_commit": "f2bd3b8cbca34c14a9d50fb8b1f6cf6a0bafc561",
+  "mcp_visible_entries_before_after": {
+    "user_1": [
+      3,
+      3
+    ],
+    "user_2": [
+      0,
+      0
+    ]
+  },
+  "existing_secrets_unchanged": true,
+  "runtime_source_configuration": "Existing 99-companion.conf updated; temporary override removed"
+}
