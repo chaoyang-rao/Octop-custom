@@ -32,11 +32,15 @@ def portable_source(name: str, data: bytes, version: str) -> bytes:
         ]
         if len(returns) != 1 or "OCTOP_CUSTOM_BUILD" in text:
             raise ValueError("Review the portable health adapter after this upstream change")
-        text = text.replace(
-            "from __future__ import annotations\n",
-            "from __future__ import annotations\n\nimport os\n",
-            1,
-        )
+        if not any(
+            isinstance(node, ast.Import) and any(alias.name == "os" for alias in node.names)
+            for node in ast.walk(tree)
+        ):
+            text = text.replace(
+                "from __future__ import annotations\n",
+                "from __future__ import annotations\n\nimport os\n",
+                1,
+            )
         lines = text.splitlines(keepends=True)
         tree = ast.parse(text)
         result = next(

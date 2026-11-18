@@ -309,6 +309,14 @@ class Gateway:
 
         logger.info("Gateway booted; instance %s", self._instance_id)
 
+    async def resume_background(self) -> None:
+        """Claim IM channels only after a candidate desktop update is accepted."""
+        if self._claim_channels:
+            return
+        self._claim_channels = True
+        await self.reconcile_channels()
+        self._reconcile_task = asyncio.create_task(self._reconcile_loop(), name="channel-reconcile")
+
     async def refresh_media_backends(self) -> None:
         """Re-set media backends on all registered channels.
 

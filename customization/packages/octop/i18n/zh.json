@@ -576,7 +576,16 @@
     "COMPANION_NOT_AVAILABLE": "桌宠安装包暂未就绪，请联系管理员。",
     "COMPANION_INSTALL_FAILED": "桌宠准备失败，请重试或联系管理员。",
     "COMPANION_PLATFORM_UNSUPPORTED": "桌宠目前仅支持 macOS。",
-    "ENTERPRISE_CODE_INVALID": "登录码已失效或已使用。请回到 Octop 重新发起登录。"
+    "ENTERPRISE_CODE_INVALID": "登录码已失效或已使用。请回到 Octop 重新发起登录。",
+    "CLIENT_UPDATE_INVALID": "客户端升级信息无效。",
+    "CLIENT_UPDATE_INTEGRITY": "升级包或发布签名校验失败，未执行安装。",
+    "CLIENT_UPDATE_DOWNLOAD_FAILED": "无法下载升级信息或安装包，请稍后重试。",
+    "CLIENT_UPDATE_NOT_CONFIGURED": "企业客户端升级通道尚未配置。",
+    "CLIENT_UPDATE_CONFLICT": "升级版本或发布状态已变化，请刷新后重试。",
+    "CLIENT_UPDATE_BUSY": "当前仍有任务或审批在进行，请空闲后再更新。",
+    "CLIENT_UPDATE_UNSUPPORTED": "当前运行方式不支持自动安装，请使用定制安装包升级。",
+    "CLIENT_UPDATE_IN_PROGRESS": "客户端正在更新，请稍后重试。",
+    "CLIENT_UPDATE_FAILED": "客户端更新未完成，已保留原有数据。请重试或联系管理员。"
   },
   "desktop": {
     "install_log_deps": "正在安装 Python 依赖…",

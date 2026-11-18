@@ -576,7 +576,16 @@
     "COMPANION_NOT_AVAILABLE": "The desktop pet installer is not available. Contact your administrator.",
     "COMPANION_INSTALL_FAILED": "Could not prepare the desktop pet. Retry or contact your administrator.",
     "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only.",
-    "ENTERPRISE_CODE_INVALID": "This sign-in code is invalid, expired or already used. Return to Octop and start again."
+    "ENTERPRISE_CODE_INVALID": "This sign-in code is invalid, expired or already used. Return to Octop and start again.",
+    "CLIENT_UPDATE_INVALID": "The client update information is invalid.",
+    "CLIENT_UPDATE_INTEGRITY": "Update package or publication signature verification failed; installation did not run.",
+    "CLIENT_UPDATE_DOWNLOAD_FAILED": "Could not download update information or the package. Try again later.",
+    "CLIENT_UPDATE_NOT_CONFIGURED": "The company client update channel is not configured.",
+    "CLIENT_UPDATE_CONFLICT": "The update version or publication changed. Refresh and try again.",
+    "CLIENT_UPDATE_BUSY": "Tasks or approvals are still in progress. Update when the client is idle.",
+    "CLIENT_UPDATE_UNSUPPORTED": "This installation cannot update automatically. Use the custom installer.",
+    "CLIENT_UPDATE_IN_PROGRESS": "The client is being updated. Try again shortly.",
+    "CLIENT_UPDATE_FAILED": "The client update did not complete. Existing data was preserved. Retry or contact an administrator."
   },
   "desktop": {
     "install_log_deps": "Installing Python dependencies…",

@@ -12,6 +12,7 @@ tasks:
       - task: common:generate:icons:darwin
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.OUTPUT}}
+      - go build -trimpath -buildvcs=false -ldflags="-w -s" -o "{{.BIN_DIR}}/client-updater" ./cmd/client-updater
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s"{{else}}-buildvcs=false -gcflags=all="-l"{{end}}'
       DEFAULT_OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}"
@@ -154,11 +155,13 @@ tasks:
     summary: Creates an .app bundle
     cmds:
       - test -f {{.PORTABLE_ZIP}}
-      - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/{MacOS,Resources}
+      - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/{MacOS,Resources,Helpers}
       - cp build/darwin/icons.icns {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources
       # Stable name inside the signed .app; GitHub Release uses the versioned portable zip.
       - cp {{.PORTABLE_ZIP}} {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources/Octop-darwin-{{.ARCH}}.zip
       - cp {{.BIN_DIR}}/{{.APP_NAME}} {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS
+      - cp {{.BIN_DIR}}/client-updater {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Helpers/client-updater
+      - cp assets/client-update-build.json {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources/client-update-build.json
       - cp build/darwin/Info.plist {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents
       - python3 build/stamp_version.py plist {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist "{{.VERSION}}"
       - codesign --force --deep --sign - {{.BIN_DIR}}/{{.APP_NAME}}.app

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ type App struct {
 	cmd               *exec.Cmd
 	mu                sync.Mutex
 	quitting          bool
+	clientUpdating    bool
 	setTrayMenuLocale func(Locale)
 
 	trayClickMu    sync.Mutex
@@ -198,6 +200,10 @@ func (a *App) boot() {
 		return
 	}
 	if existing != "" {
+		if managedClientUpdateID != "" {
+			a.requestQuit()
+			return
+		}
 		a.setStatus(desktopText(locale, copyStatusUsingExisting))
 		if err := waitHealth(locale, existing, 30*time.Second); err != nil {
 			a.setStatus(err.Error())
@@ -230,10 +236,18 @@ func (a *App) boot() {
 		a.setStatus(err.Error())
 		return
 	}
+	if err := recordCandidateBackend(cmd.Process.Pid); err != nil {
+		a.requestQuit()
+		return
+	}
 	base := dashboardURL(host, port)
 	a.setStatus(desktopText(locale, copyStatusStartingService))
 	if err := waitHealth(locale, base, 2*time.Minute); err != nil {
 		a.setStatus(err.Error())
+		return
+	}
+	if err := a.completeManagedCandidate(base); err != nil {
+		a.requestQuit()
 		return
 	}
 	if err := writeDesktopPort(port); err != nil {
@@ -250,7 +264,11 @@ func (a *App) showDashboard(base string) {
 	if a.window == nil {
 		return
 	}
-	a.window.SetURL(base)
+	if currentClientBuild().Protocol == 1 && strings.Contains(currentClientBuild().Version, ".post") {
+		a.window.SetURL(desktopBootstrapURL(base, currentClientBuild().Version))
+	} else {
+		a.window.SetURL(base)
+	}
 	a.scheduleDragOverlay()
 	s := a.store.get()
 	go func() {
@@ -339,6 +357,9 @@ func (a *App) requestQuit() {
 }
 
 func main() {
+	if !initializeClientUpdater() {
+		return
+	}
 	store := &settingsStore{cur: loadSettings()}
 	api := &App{
 		store: store,
@@ -367,6 +388,7 @@ func main() {
 	api.app = app
 	attachOpenURLEventListener(app, api.OpenExternal)
 	attachFileDropEventListener(app, api)
+	appendWailsEventListener(app, &clientUpdateListener{api: api})
 	app.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
 		applyAppIcon(app)
 	})

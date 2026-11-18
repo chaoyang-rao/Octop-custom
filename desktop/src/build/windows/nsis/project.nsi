@@ -7,6 +7,7 @@ Unicode true
 
 # Written by stamp_version.py nsis-defines (pep440 display + X.X.X.X file version).
 !include /nonfatal "version_defines.nsh"
+!define WAILS_INSTALL_SCOPE "user"
 !include "wails_tools.nsh"
 
 SetCompressor /SOLID lzma
@@ -73,6 +74,8 @@ Section
     SetOutPath $INSTDIR
 
     !insertmacro wails.files
+    File "..\..\..\bin\client-updater.exe"
+    File "..\..\..\assets\client-update-build.json"
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortcut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"

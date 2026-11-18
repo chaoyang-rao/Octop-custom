@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -25,4 +26,13 @@ async def health(server: Any = Depends(get_server)) -> dict[str, Any]:
         "db": bound,
         "users_loaded": users,
         "agents_running": agents,
+        **(
+            {
+                "client_update_pending": bool(
+                    getattr(server.app_runtime.agent_registry, "application_update_pending", False)
+                )
+            }
+            if os.environ.get("OCTOP_CLIENT_UPDATE_PENDING") and server.app_runtime
+            else {}
+        ),
     }

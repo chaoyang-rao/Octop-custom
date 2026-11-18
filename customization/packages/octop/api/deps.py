@@ -86,6 +86,8 @@ def is_jwt_exempt_path(path: str) -> bool:
 
 def is_jwt_exempt_request(request: Request) -> bool:
     path = request.url.path
+    if request.method == "GET" and path == "/api/client-updates/bootstrap":
+        return True
     # The MCP gateway validates a revocable, member-and-service-scoped grant.
     if request.method in {"GET", "POST", "DELETE"} and re.fullmatch(
         r"/api/enterprise/mcp/gateway/[A-Za-z0-9_-]{1,64}", path
@@ -261,6 +263,9 @@ async def resolve_websocket_user(server: OctopServer, token: str) -> User:
         context = CURRENT_ENTERPRISE_SOCKET.get()
         if context is not None:
             context.user = user
+    registry = getattr(getattr(server, "app_runtime", None), "agent_registry", None)
+    if getattr(registry, "application_update_pending", False):
+        raise OctopError.localized(ErrorCode.CLIENT_UPDATE_IN_PROGRESS)
     return user
 
 

@@ -522,6 +522,7 @@ class AgentManager:
         self._active_invocation_threads: dict[str, dict[str, int]] = {}
         self._invocation_waiters: dict[str, int] = {}
         self._runtime_update_holds: dict[str, asyncio.Event] = {}
+        self._application_update_gate = False
         self._history_backfills: dict[str, asyncio.Event] = {}
         # Agents whose SQLite file should be rebuilt once they are idle.
         self._reclaim_pending: set[str] = set()
@@ -2096,7 +2097,29 @@ class AgentManager:
         if event is not None:
             event.set()
 
+    @property
+    def application_update_pending(self) -> bool:
+        return bool(getattr(self, "_application_update_gate", False))
+
+    def try_begin_application_update(self) -> bool:
+        """Reserve the idle client; new invocations fail before starting work."""
+        if (
+            self.application_update_pending
+            or any(self._active_invocations.values())
+            or any(self._invocation_waiters.values())
+        ):
+            return False
+        if self._runtime_update_holds or self._history_backfills or self._reclaim_holds:
+            return False
+        self._application_update_gate = True
+        return True
+
+    def end_application_update(self) -> None:
+        self._application_update_gate = False
+
     async def _begin_invocation(self, agent_id: str, thread_id: str = "") -> None:
+        if self.application_update_pending:
+            raise OctopError.localized(ErrorCode.CLIENT_UPDATE_IN_PROGRESS)
         self._invocation_waiters[agent_id] = self._invocation_waiters.get(agent_id, 0) + 1
         try:
             while True:

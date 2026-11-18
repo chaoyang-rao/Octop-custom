@@ -470,6 +470,11 @@ class OctopServer:
         self.config = config
         if config.enterprise_center_enabled:
             self._serve_background = False
+        import re  # noqa: PLC0415
+
+        self._client_update_pending = bool(
+            re.fullmatch(r"[0-9a-f]{32}", os.environ.get("OCTOP_CLIENT_UPDATE_PENDING", ""))
+        )
 
         self.expert_catalog = ExpertCatalog(
             default_library_root(),
@@ -577,6 +582,8 @@ class OctopServer:
             expert_catalog=self.expert_catalog,
             plugin_manager=self.plugin_manager,
         )
+        if self._client_update_pending:
+            registry.try_begin_application_update()
         from octop.infra.auth.enterprise import client_for  # noqa: PLC0415
 
         enterprise = client_for(self)
@@ -624,7 +631,9 @@ class OctopServer:
             history_archive=history_archive,
             instance_id=self.instance_id,
         )
-        await gateway.boot(serve_background=self._serve_background)
+        await gateway.boot(
+            serve_background=self._serve_background and not self._client_update_pending
+        )
 
         from octop import __version__  # noqa: PLC0415
 
@@ -650,9 +659,11 @@ class OctopServer:
             timezone=config.default_timezone,
             instance_id=self.instance_id,
         )
-        await cron_mgr.boot(serve_background=self._serve_background)
+        await cron_mgr.boot(
+            serve_background=self._serve_background and not self._client_update_pending
+        )
 
-        if self._serve_background:
+        if self._serve_background and not self._client_update_pending:
             from octop.infra.setup.tls.renewal import install_auto_renewal_job
 
             install_auto_renewal_job(cron_mgr, paths=self.paths)
@@ -697,7 +708,7 @@ class OctopServer:
             from octop.infra.enterprise_resources.member_access import access_for
 
             await asyncio.to_thread(access_for(self).ensure_default)
-        if not config.enterprise_center_enabled:
+        if not config.enterprise_center_enabled and not self._client_update_pending:
             await proactive_scheduler.start_all()
 
         from octop.infra.auth.mfa import MfaService
@@ -760,17 +771,25 @@ class OctopServer:
 
         company_mcp = sync_for(self)
         registry.set_enterprise_mcp_authorizer(company_mcp.check_call)
-        if self._serve_background and config.enterprise_authority_url:
+        if (
+            self._serve_background
+            and config.enterprise_authority_url
+            and not self._client_update_pending
+        ):
             company_mcp.start()
             from octop.infra.enterprise_resources.node import resources_for
 
             resources_for(self).start()
+        if os.environ.get("OCTOP_DESKTOP_UPDATER_PROTOCOL") == "1" or self._client_update_pending:
+            from octop.infra.client_updates.node import updates_for
+
+            updates_for(self).start()
         from octop.infra.mobile_access.push import push_for
 
         gateway.ws_hub.set_user_frame_observer(push_for(self).emit)
         gateway.set_dashboard_task_admission(task_manager.admit_turn)
         gateway.processor.hitl_coordinator.set_task_binding_resolver(task_manager.task_binding)
-        if not config.enterprise_center_enabled:
+        if not config.enterprise_center_enabled and not self._client_update_pending:
             await task_manager.start()
         from octop.infra.knowledge.gate import (  # noqa: PLC0415
             warn_if_local_embedding_deps_missing,
@@ -787,15 +806,43 @@ class OctopServer:
                 self.services.settings_repo.get,
                 self.services.provider_repo,
             )
-            resume_pending_index_jobs(self.services)
+            if not self._client_update_pending:
+                resume_pending_index_jobs(self.services)
 
         # Resume Bridge links that opted into auto-reconnect (best-effort).
         async def _resume_bridges() -> None:
             with suppress(Exception):
                 await bridge_mgr.resume_auto_connections()
 
-        if not config.enterprise_center_enabled:
+        if not config.enterprise_center_enabled and not self._client_update_pending:
             asyncio.create_task(_resume_bridges(), name="bridge-auto-resume")
+
+    async def resume_after_client_update(self) -> None:
+        """Resume admitted work only after the native helper committed installation."""
+        if not getattr(self, "_client_update_pending", False) or self.app_runtime is None:
+            return
+        self._client_update_pending = False
+        rt = self.app_runtime
+        rt.agent_registry.end_application_update()
+        await rt.gateway.resume_background()
+        await rt.cron_manager.resume_background()
+        from octop.infra.backup.auto import install_auto_backup_job
+        from octop.infra.setup.tls.renewal import install_auto_renewal_job
+
+        install_auto_renewal_job(rt.cron_manager, paths=self.paths)
+        install_auto_backup_job(rt.cron_manager, server=self)
+        await rt.proactive_scheduler.start_all()
+        if rt.task_manager is not None:
+            await rt.task_manager.start()
+        from octop.infra.connectors.enterprise_mcp_sync import sync_for
+        from octop.infra.enterprise_resources.node import resources_for
+        from octop.infra.knowledge.jobs import resume_pending_index_jobs
+
+        sync_for(self).start()
+        resources_for(self).start()
+        resume_pending_index_jobs(self.services)
+        if rt.bridge_manager is not None:
+            await rt.bridge_manager.resume_auto_connections()
 
     async def refresh_plugin_channels(self) -> None:
         """Reconcile only changed kinds and report registration failures to callers."""
@@ -884,6 +931,9 @@ class OctopServer:
         if not self._started:
             return
         try:
+            client_updates = getattr(self, "_client_updates", None)
+            if client_updates is not None:
+                await client_updates.stop()
             company_resources = getattr(self, "_enterprise_resources", None)
             if company_resources is not None:
                 await company_resources.stop()

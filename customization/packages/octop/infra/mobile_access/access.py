@@ -47,6 +47,7 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
                         "/api/enterprise/session",
                         "/api/enterprise/mcp/catalog",
                         "/api/enterprise/resources/catalog",
+                        "/api/enterprise/client-updates/catalog",
                         "/api/enterprise/companion/experts",
                         "/api/enterprise/companion/installer",
                         "/api/enterprise/companion/installer/file",
@@ -80,6 +81,7 @@ def authorize_device_path(session: DeviceSession, path: str, method: str) -> Non
                 and path
                 in {
                     "/api/enterprise/session/revoke",
+                    "/api/enterprise/client-updates/report",
                     "/api/enterprise/companion/inference/v1/chat/completions",
                     "/api/enterprise/companion/inference/v1/responses",
                 }

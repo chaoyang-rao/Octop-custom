@@ -13,7 +13,10 @@ import {
   tryReloadOnStaleChunk,
 } from "./utils/reloadOnStaleChunk";
 
-if (typeof window !== "undefined") {
+if (
+  typeof window !== "undefined" &&
+  sessionStorage.getItem("octop:desktop-session") !== "1"
+) {
   // Recover from post-deploy stale hashed chunks (white screen → soft reload).
   installChunkLoadRecovery();
 

@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261117.3"
+        default: "custom-1.0.3b3-20261118.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026111703"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261117.3' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026111801"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261118.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -123,6 +123,7 @@ jobs:
           src/pages/EnterpriseMcp/EnterpriseMcpAdmin.test.tsx
           src/pages/Agent/Connectors/EnterpriseMcpTab.test.tsx
           src/pages/EnterpriseResources/MemberAccessAdmin.test.tsx
+          src/pages/EnterpriseResources/ClientUpdateNotice.test.tsx
           src/pages/DesktopPet.test.tsx
           src/pages/Agent/Connectors/ConnectorInstanceCard.test.tsx
           src/pages/Login/EnterpriseAdmin.test.tsx
@@ -150,6 +151,7 @@ jobs:
       - name: Verify member isolation and runtime updates on Windows
         run: >-
           uv run pytest -q
+          tests/unit/client_updates
           tests/unit/db/test_settings_compare_and_set.py
           tests/unit/auth/test_enterprise.py
           tests/unit/auth/test_enterprise_mcp_catalog.py
@@ -290,6 +292,8 @@ jobs:
           report["startup"] = json.loads(subprocess.check_output(
               [sys.executable, "scripts/custom/smoke_portable_startup.py", str(root.resolve())],
               text=True))
+          report["client_update_candidate"] = json.loads(subprocess.check_output(
+              [sys.executable, "scripts/custom/smoke_client_update.py", str(root.resolve())], text=True))
           Path(f"dist/native-smoke-{plat}.json").write_text(json.dumps(report, indent=2) + "\n")
           PY
 
@@ -317,6 +321,9 @@ jobs:
           if (-not (Test-Path (Join-Path $nsisDir "makensis.exe"))) { throw "makensis.exe missing" }
           Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
 
+      - name: Stamp the pinned enterprise desktop updater
+        run: python scripts/custom/client_update_package.py stamp --version "$CUSTOM_VERSION" --authority "$ENTERPRISE_AUTHORITY_URL"
+
       - name: Package the custom desktop client with the customized runtime
         working-directory: desktop/src
         run: >-
@@ -324,6 +331,9 @@ jobs:
           ARCH=${{ matrix.arch }}
           VERSION=${{ env.CUSTOM_VERSION }}
           PORTABLE_ZIP=../../dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.zip
+
+      - name: Archive the verified native update payload
+        run: python scripts/custom/client_update_package.py archive --platform "${{ matrix.plat }}" --version "$CUSTOM_VERSION"
 
       - name: Verify the completed native package
         env:
@@ -354,6 +364,7 @@ jobs:
         with:
           name: custom-package-${{ matrix.plat }}
           path: |
+            dist/OctopCustom-update-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.zip
             dist/Octop-portable-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.zip
             dist/OctopCustom-desktop-${{ matrix.plat }}-${{ env.CUSTOM_VERSION }}.${{ matrix.ext }}
             dist/native-smoke-${{ matrix.plat }}.json
@@ -380,7 +391,7 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Require the full six-package set and write checksums
+      - name: Require the full nine-package set and write checksums
         run: |
           python - <<'PY'
           import hashlib
@@ -396,7 +407,7 @@ jobs:
           root = Path("release-assets")
           for plat in ["darwin-arm64", "darwin-amd64", "windows-amd64"]:
               extension = "exe" if plat.startswith("windows") else "dmg"
-              for name in [f"Octop-portable-{plat}-{version}.zip", f"OctopCustom-desktop-{plat}-{version}.{extension}"]:
+              for name in [f"OctopCustom-update-{plat}-{version}.zip", f"Octop-portable-{plat}-{version}.zip", f"OctopCustom-desktop-{plat}-{version}.{extension}"]:
                   path = root / name
                   assert path.is_file() and path.stat().st_size > 100_000_000, f"Incomplete release: {name}"
           lines = [f"{hashlib.file_digest(p.open('rb'), 'sha256').hexdigest()}  {p.name}" for p in sorted(root.iterdir()) if p.is_file()]
@@ -421,13 +432,15 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom，基于官方 1.0.3b3。本次简化企业首次登录：点击公司飞书登录后自动打开浏览器并带入登录码，核对账号与设备确认后，显示模型同步和小通启动进度，准备好自动进入会话；失败可直接重试。修复首次登录按钮被初始化状态误拦截、失效登录码导致重复登录的问题，保留模型自动恢复、原有聊天和账号绑定保护。使用指引见仓库 docs/custom/company-first-login.md。
+          Octop Custom 111801：新增企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
 
-          企业“成员开放权限”继续由超级管理员按登录名单统一选择售后质量、词元管理、负利润 MCP 与桌宠；业务凭据留在服务器。Mac 桌宠从企业中心按授权下载，安装后可独立运行，内部角色组件不进入公开安装包。
+          旧版（包括 110901）需先手动安装本次新版，之后才能自动接收更新。先退出旧 Octop，不要删除 ~/.octop（Windows 为 %USERPROFILE%\.octop）数据目录。外部数据库或不可写安装位置使用手动安装。
 
-          Windows 使用 exe；Intel Mac 使用 darwin-amd64.dmg；M 芯片 Mac 使用 darwin-arm64.dmg。另附三个免安装 portable ZIP。SHA256SUMS.txt 可校验文件完整性。
+          Windows: desktop-windows-amd64.exe; Intel Mac: desktop-darwin-amd64.dmg; Apple Silicon: desktop-darwin-arm64.dmg. OctopCustom-update-*.zip 为自动更新载荷，无需手动解压。附 SHA256SUMS。Mac 为 ad hoc 签名，Windows 未作 Authenticode 签名。
 
-          定制运行环境保存在 ~/.octop/custom-runtime/portable，独立于官方运行环境；账号和聊天继续使用 ~/.octop。首次使用前退出官方 Octop，避免同时运行两个实例。定制版禁止官方就地更新，以仓库内定制发行包升级。Mac 包采用 ad hoc 签名，未作 Developer ID 公证；Windows 包未作 Authenticode 签名。
+          登录和 MCP 同步说明：https://github.com/chaoyang-rao/Octop-custom/blob/custom/main/docs/custom/company-first-login.md
+          统一更新说明：https://github.com/chaoyang-rao/Octop-custom/blob/custom/main/docs/custom/company-client-updates.md
+
           EOF
             gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease --title "Octop Custom $RELEASE_TAG" --notes-file release-notes.md
           fi

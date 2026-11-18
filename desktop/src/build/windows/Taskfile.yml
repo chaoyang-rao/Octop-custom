@@ -16,6 +16,7 @@ tasks:
           ARCH: "{{.ARCH}}"
           VERSION: "{{.VERSION}}"
       - go build {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}.exe"
+      - go build -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui" -o "{{.BIN_DIR}}/client-updater.exe" ./cmd/client-updater
       - cmd: powershell Remove-item *.syso
         platforms: [windows]
       - cmd: rm -f *.syso

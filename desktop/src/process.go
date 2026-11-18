@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"octop.desktop/internal/clientupdate"
 )
 
 const freePortScanLimit = 100
@@ -75,6 +77,20 @@ func startOctop(root string, port int) (*exec.Cmd, error) {
 		"PYTHONNOUSERSITE":     "1",
 		"PYTHONPATH":           "",
 	})
+	build := currentClientBuild()
+	if build.Protocol == 1 && strings.Contains(build.Version, ".post") {
+		executable, pathErr := os.Executable()
+		if pathErr == nil {
+			program, rootErr := clientupdate.ProgramRoot(executable)
+			if rootErr == nil {
+				mustEnv(cmd, overlayMap(cmd.Env, map[string]string{
+					"OCTOP_DESKTOP": "1", "OCTOP_DESKTOP_CLIENT_VERSION": build.Version,
+					"OCTOP_DESKTOP_UPDATER_PROTOCOL": "1", "OCTOP_DESKTOP_PROGRAM_ROOT": program,
+					"OCTOP_CLIENT_UPDATE_PENDING": managedClientUpdateID,
+				}))
+			}
+		}
+	}
 	configureProcGroup(cmd)
 	if runtime.GOOS == "linux" {
 		// The Linux desktop release has no server terminal; the shell owns status
@@ -89,6 +105,20 @@ func startOctop(root string, port int) (*exec.Cmd, error) {
 		return nil, err
 	}
 	return cmd, nil
+}
+
+func overlayMap(environment []string, extra map[string]string) map[string]string {
+	result := map[string]string{}
+	for _, value := range environment {
+		key, val, ok := strings.Cut(value, "=")
+		if ok {
+			result[key] = val
+		}
+	}
+	for key, value := range extra {
+		result[key] = value
+	}
+	return result
 }
 
 func stopOctop(cmd *exec.Cmd) {

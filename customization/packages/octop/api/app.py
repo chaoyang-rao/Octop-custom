@@ -197,6 +197,7 @@ def build_app(server: OctopServer) -> FastAPI:
         browser,
         channels,
         chat,
+        client_updates,
         companion,
         connectors,
         conversations,
@@ -279,6 +280,7 @@ def build_app(server: OctopServer) -> FastAPI:
             enterprise_mcp_admin.router,
             member_access.router,
             enterprise_resources_admin.router,
+            client_updates.center_router,
             companion.center_router,
         )
         app.add_api_route(
@@ -314,6 +316,8 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(member_access.router, "/api", ["connectors"]),
             _RouterMount(enterprise_resources.router, "/api", ["experts"]),
             _RouterMount(enterprise_resources_admin.router, "/api", ["experts"]),
+            _RouterMount(client_updates.router, "/api", ["update"]),
+            _RouterMount(client_updates.center_router, "/api", ["update"]),
             _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),
             _RouterMount(invites.public_router, "/api/auth/invite", ["auth"]),
             _RouterMount(preferences.router, "/api", ["auth"]),

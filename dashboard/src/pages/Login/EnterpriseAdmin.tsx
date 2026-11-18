@@ -17,6 +17,9 @@ const InferenceAdmin = lazy(
 const CompanyModelUsage = lazy(
   () => import("../Control/TokenUsage/CompanyModelUsage"),
 );
+const ClientUpdateAdmin = lazy(
+  () => import("../EnterpriseResources/ClientUpdateAdmin"),
+);
 
 export default function EnterpriseAdmin() {
   const { t } = useTranslation();
@@ -39,7 +42,14 @@ export default function EnterpriseAdmin() {
         message={t("enterprise.manageHint")}
       />
       <Tabs
-        defaultActiveKey={user?.role === "admin" ? "member-access" : "users"}
+        defaultActiveKey={
+          user?.role === "admin"
+            ? new URLSearchParams(window.location.search).get("tab") ===
+              "client-updates"
+              ? "client-updates"
+              : "member-access"
+            : "users"
+        }
         items={[
           {
             key: "company-usage",
@@ -85,6 +95,15 @@ export default function EnterpriseAdmin() {
                   children: (
                     <Suspense fallback={<Spin />}>
                       <EnterpriseResourceAdmin />
+                    </Suspense>
+                  ),
+                },
+                {
+                  key: "client-updates",
+                  label: t("clientUpdates.title"),
+                  children: (
+                    <Suspense fallback={<Spin />}>
+                      <ClientUpdateAdmin />
                     </Suspense>
                   ),
                 },

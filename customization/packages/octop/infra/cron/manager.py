@@ -122,6 +122,14 @@ class CronManager:
         await self.reconcile_user_jobs()
         logger.info("CronManager reloaded from DB")
 
+    async def resume_background(self) -> None:
+        """Activate schedules after a desktop update was committed."""
+        if self._serve_background:
+            return
+        self._serve_background = True
+        await self.reconcile_user_jobs()
+        self._reconcile_task = asyncio.create_task(self._reconcile_loop(), name="cron-reconcile")
+
     async def shutdown(self) -> None:
         task = self._reconcile_task
         self._reconcile_task = None

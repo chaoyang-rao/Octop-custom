@@ -24,7 +24,7 @@ from octop.api.deps import (
     maybe_sliding_renew_token,
 )
 from octop.infra.auth.enterprise import client_for
-from octop.infra.errors import OctopError
+from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.utils.locale import resolve_request_locale
 
 _INSTALL_ATTR = "_octop_jwt_auth_installed"
@@ -42,6 +42,17 @@ def install(app: Any, server: Any) -> None:
         call_next: Callable[[Request], Awaitable[Any]],
     ) -> Any:
         path = request.url.path
+        registry = getattr(getattr(server, "app_runtime", None), "agent_registry", None)
+        if (
+            path.startswith("/api/")
+            and getattr(registry, "application_update_pending", False)
+            and not (path.startswith("/api/health") or path.startswith("/api/client-updates/"))
+        ):
+            error = OctopError.localized(ErrorCode.CLIENT_UPDATE_IN_PROGRESS)
+            return JSONResponse(
+                status_code=error.status,
+                content=error.to_envelope(locale=resolve_request_locale(request)),
+            )
         if not path.startswith("/api/") or is_jwt_exempt_request(request):
             return await call_next(request)
 
@@ -67,7 +78,25 @@ def install(app: Any, server: Any) -> None:
             locale = resolve_request_locale(request)
             return JSONResponse(status_code=exc.status, content=exc.to_envelope(locale=locale))
 
-        response = await call_next(request)
+        # Authorization can await the company server while an update is approved.
+        if getattr(registry, "application_update_pending", False) and not path.startswith(
+            "/api/client-updates/"
+        ):
+            error = OctopError.localized(ErrorCode.CLIENT_UPDATE_IN_PROGRESS)
+            return JSONResponse(
+                status_code=error.status,
+                content=error.to_envelope(locale=resolve_request_locale(request)),
+            )
+        mutation = request.method not in {"GET", "HEAD", "OPTIONS"} and not path.startswith(
+            "/api/client-updates/"
+        )
+        if mutation:
+            server._client_update_mutations = getattr(server, "_client_update_mutations", 0) + 1
+        try:
+            response = await call_next(request)
+        finally:
+            if mutation:
+                server._client_update_mutations -= 1
         if raw is not None:
             try:
                 renewed = maybe_sliding_renew_token(server, raw, request.state.octop_user)

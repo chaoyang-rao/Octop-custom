@@ -25,6 +25,7 @@ import {
 } from "../../../utils/updateStatusCache";
 import { TabPanelHeader } from "./TabPanelHeader";
 import styles from "./UpdateConfig.module.less";
+import { isDesktopShell } from "../../../utils/desktopChrome";
 
 /** Shell snippets shown in the manual upgrade guide (commands are locale-agnostic). */
 const UPGRADE_GUIDE_CODE = {
@@ -499,6 +500,17 @@ export default function UpdateConfig() {
               </button>
             )}
 
+            {status?.custom_build && isDesktopShell() && (
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={() =>
+                  window.dispatchEvent(new Event("octop:show-client-update"))
+                }
+              >
+                {t("clientUpdates.check")}
+              </button>
+            )}
             {status?.custom_build && status.custom_repository_url && (
               <a
                 className={styles.btnPrimary}
