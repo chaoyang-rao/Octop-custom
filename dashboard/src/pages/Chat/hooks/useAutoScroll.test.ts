@@ -72,6 +72,123 @@ describe("useAutoScroll", () => {
     vi.restoreAllMocks();
   });
 
+  function makeTurnScroller() {
+    const container = makeScroller({ clientHeight: 200, scrollTop: 0 });
+    const anchor = document.createElement("div");
+    const spacer = document.createElement("div");
+    container.append(anchor, spacer);
+    let replyHeight = 0;
+    Object.defineProperty(container, "scrollHeight", {
+      get: () => 261 + replyHeight + parseFloat(spacer.style.height || "0"),
+      configurable: true,
+    });
+    anchor.getBoundingClientRect = () =>
+      ({ top: 200 - container.scrollTop }) as DOMRect;
+    spacer.getBoundingClientRect = () =>
+      ({ top: 260 + replyHeight - container.scrollTop }) as DOMRect;
+    return {
+      container,
+      spacer,
+      replySpace: {
+        anchorId: "new-question" as string | null,
+        getAnchor: () => anchor,
+        spacerRef: { current: spacer },
+      },
+      growReply: (height: number) => {
+        replyHeight = height;
+      },
+    };
+  }
+
+  it("places the sent question at the top and consumes reserved space as tokens arrive", () => {
+    const turn = makeTurnScroller();
+    const { rerender } = renderHook(
+      ({ token }) =>
+        useAutoScroll({
+          containerRef: { current: turn.container },
+          replySpace: turn.replySpace,
+          deps: [token],
+        }),
+      { initialProps: { token: 0 } },
+    );
+    expect(turn.container.scrollTop).toBe(200);
+    expect(turn.spacer.style.height).toBe("139px");
+
+    turn.growReply(40);
+    rerender({ token: 1 });
+    expect(turn.container.scrollTop).toBe(200);
+    expect(turn.spacer.style.height).toBe("99px");
+
+    turn.growReply(300);
+    rerender({ token: 2 });
+    expect(turn.spacer.style.height).toBe("0px");
+    expect(turn.container.scrollTop).toBe(361);
+  });
+
+  it("updates reserved reply space without pulling a reader back down", () => {
+    const turn = makeTurnScroller();
+    const { rerender, result } = renderHook(
+      ({ token }) =>
+        useAutoScroll({
+          containerRef: { current: turn.container },
+          replySpace: turn.replySpace,
+          deps: [token],
+        }),
+      { initialProps: { token: 0 } },
+    );
+    act(() => {
+      turn.container.dispatchEvent(new WheelEvent("wheel", { deltaY: -80 }));
+      turn.container.scrollTop = 80;
+      turn.container.dispatchEvent(new Event("scroll"));
+    });
+    turn.growReply(60);
+    rerender({ token: 1 });
+    expect(turn.container.scrollTop).toBe(80);
+    expect(turn.spacer.style.height).toBe("79px");
+    expect(result.current.isFollowMode).toBe(false);
+  });
+
+  it("recalculates the reply area on resize and clears it for another session", () => {
+    const observers = installCallableResizeObserver();
+    const turn = makeTurnScroller();
+    const { rerender } = renderHook(
+      ({ anchorId }) =>
+        useAutoScroll({
+          containerRef: { current: turn.container },
+          replySpace: { ...turn.replySpace, anchorId },
+        }),
+      { initialProps: { anchorId: "new-question" as string | null } },
+    );
+    Object.defineProperty(turn.container, "clientHeight", { value: 300 });
+    act(() => observers.forEach((observer) => observer.emit()));
+    expect(turn.container.scrollTop).toBe(200);
+    expect(turn.spacer.style.height).toBe("239px");
+
+    rerender({ anchorId: null });
+    expect(turn.spacer.style.height).toBe("0px");
+  });
+
+  it("finishes delayed virtual-list measurements without overriding manual scroll", () => {
+    const turn = makeTurnScroller();
+    const containerRef = { current: turn.container };
+    const { result } = renderHook(() =>
+      useAutoScroll({ containerRef, replySpace: turn.replySpace }),
+    );
+    turn.growReply(300);
+    act(() => result.current.handleContentResize());
+    expect(turn.spacer.style.height).toBe("0px");
+    expect(turn.container.scrollTop).toBe(361);
+
+    act(() => {
+      turn.container.dispatchEvent(new WheelEvent("wheel", { deltaY: -80 }));
+      turn.container.scrollTop = 200;
+      turn.container.dispatchEvent(new Event("scroll"));
+    });
+    turn.growReply(400);
+    act(() => result.current.handleContentResize());
+    expect(turn.container.scrollTop).toBe(200);
+  });
+
   it("enters free mode on wheel up and shows the scroll button", () => {
     const container = makeScroller();
     const containerRef = { current: container };

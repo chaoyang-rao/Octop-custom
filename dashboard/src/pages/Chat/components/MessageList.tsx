@@ -294,6 +294,11 @@ export default function MessageList(props: MessageListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const replySpaceRef = useRef<HTMLDivElement | null>(null);
+  const [replyAnchor, setReplyAnchor] = useState<{
+    sessionKey: string;
+    messageId: string;
+  } | null>(null);
   const bubbleRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const prevInitialLoadingRef = useRef(false);
   const scrollHeightBeforePrependRef = useRef<number | null>(null);
@@ -347,6 +352,8 @@ export default function MessageList(props: MessageListProps) {
   );
 
   const stableSessionKey = sessionKey || "__default__";
+  const replyAnchorId =
+    replyAnchor?.sessionKey === stableSessionKey ? replyAnchor.messageId : null;
 
   // Keep this callback identity stable. An inline parent `onLoadMoreHistory`
   // (or flag churn) used to recreate it every render → useAutoScroll re-bound
@@ -496,6 +503,7 @@ export default function MessageList(props: MessageListProps) {
     scrollToBottom,
     armProgrammaticGuard,
     handleAtBottomChange,
+    handleContentResize,
   } = useAutoScroll({
     containerRef,
     endRef,
@@ -508,6 +516,12 @@ export default function MessageList(props: MessageListProps) {
     onOverscrollBottom: requestRefreshMessages,
     deps: [scrollFollowToken],
     skipNextDepsScrollRef,
+    replySpace: {
+      anchorId: replyAnchorId,
+      getAnchor: () =>
+        replyAnchorId ? bubbleRefsMap.current.get(replyAnchorId) ?? null : null,
+      spacerRef: replySpaceRef,
+    },
   });
 
   const handleAtTopStateChange = useCallback(
@@ -730,9 +744,8 @@ export default function MessageList(props: MessageListProps) {
     prevInitialLoadingRef.current = !!loading;
   }, [loading]);
 
-  // On send: pin instantly in layout so the new user bubble is visible before
-  // paint. A deferred smooth scroll left a frame where the message was below
-  // the fold, then animated the list upward.
+  // On send, reserve a viewport for this turn before following its reply.
+  // Retain the space after completion so a short answer does not jump down.
   useLayoutEffect(() => {
     if (!isStreaming) {
       lastSmoothScrolledUserIdRef.current = null;
@@ -744,9 +757,29 @@ export default function MessageList(props: MessageListProps) {
     if (lastSmoothScrolledUserIdRef.current === lastUserMsg.id) return;
     lastSmoothScrolledUserIdRef.current = lastUserMsg.id;
 
-    skipNextDepsScrollRef.current = true;
+    setReplyAnchor({ sessionKey: stableSessionKey, messageId: lastUserMsg.id });
+    if (useVirtual) {
+      const index = messageGroups.findIndex((group) =>
+        group.messages.some((message) => message.id === lastUserMsg.id),
+      );
+      if (index >= 0) {
+        virtuosoRef.current?.scrollToIndex({
+          index: firstItemIndex + index,
+          align: "start",
+          behavior: "auto",
+        });
+      }
+    }
     scrollToBottom(true, true);
-  }, [isStreaming, messages, scrollToBottom]);
+  }, [
+    isStreaming,
+    messages,
+    scrollToBottom,
+    stableSessionKey,
+    useVirtual,
+    messageGroups,
+    firstItemIndex,
+  ]);
 
   const groupContext = useMemo<GroupRenderContext>(
     () => ({
@@ -817,6 +850,12 @@ export default function MessageList(props: MessageListProps) {
           </div>
         )}
         {refreshFooter}
+        <div
+          ref={replySpaceRef}
+          aria-hidden="true"
+          data-chat-reply-space=""
+          style={{ height: 0, overflow: "hidden", flexShrink: 0 }}
+        />
       </>
     ),
     [
@@ -830,7 +869,7 @@ export default function MessageList(props: MessageListProps) {
     ],
   );
 
-  const hasFooter = showGenerating || Boolean(refreshFooter);
+  const hasFooter = showGenerating || Boolean(refreshFooter) || !!replyAnchorId;
 
   const virtuosoContext = useMemo<VirtuosoListContext>(
     () => ({
@@ -847,6 +886,14 @@ export default function MessageList(props: MessageListProps) {
     containerRef.current = el;
     if (el) {
       setScrollerMountKey((k) => k + 1);
+    }
+  }, []);
+
+  const bindVirtualScroller = useCallback((el: HTMLElement | Window | null) => {
+    const next = el instanceof HTMLElement ? el : null;
+    if (next !== scrollerRef.current) {
+      scrollerRef.current = next;
+      if (next) setScrollerMountKey((key) => key + 1);
     }
   }, []);
 
@@ -880,7 +927,7 @@ export default function MessageList(props: MessageListProps) {
           key={stableSessionKey}
           ref={virtuosoRef}
           className={styles.messageList}
-          style={{ height: "100%" }}
+          style={{ height: "100%", paddingBlock: 0 }}
           data={messageGroups}
           context={virtuosoContext}
           firstItemIndex={firstItemIndex}
@@ -892,16 +939,11 @@ export default function MessageList(props: MessageListProps) {
           increaseViewportBy={{ top: 600, bottom: 800 }}
           followOutput={false}
           atBottomStateChange={handleAtBottomChange}
+          totalListHeightChanged={handleContentResize}
           atTopStateChange={handleAtTopStateChange}
           atTopThreshold={200}
           startReached={requestOlderMessages}
-          scrollerRef={(el) => {
-            const next = el instanceof HTMLElement ? el : null;
-            if (next !== scrollerRef.current) {
-              scrollerRef.current = next;
-              if (next) setScrollerMountKey((k) => k + 1);
-            }
-          }}
+          scrollerRef={bindVirtualScroller}
           components={virtuosoComponents}
           itemContent={(index, group) =>
             renderMessageGroup(group, index - firstItemIndex, groupContext)
