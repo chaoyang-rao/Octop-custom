@@ -106,6 +106,7 @@ jobs:
           src/pages/TaskQueue/dispatchPresentation.test.ts
           src/pages/TaskQueue/workflowValidation.test.ts
           src/pages/Settings/AdvancedSettings/UpdateConfig.test.tsx
+          src/utils/cssPreloadUrls.test.ts
           src/utils/dashboardPushToast.test.ts
           src/hooks/useDashboardPushToast.test.tsx
           src/pages/Login/EnterpriseLogin.test.tsx

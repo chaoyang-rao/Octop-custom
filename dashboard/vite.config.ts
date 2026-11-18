@@ -6,6 +6,7 @@ import path from "path";
 
 import { monacoSameOrigin } from "./vite/monaco.ts";
 import { suppressViteDisconnectReload } from "./vite/suppress-disconnect-reload.ts";
+import { cssPreloadUrls } from "./vite/css-preload-urls.ts";
 
 // serialize-javascript@7 (pulled in by vite-plugin-pwa → @rollup/plugin-terser)
 // expects Web Crypto globals during `vite build`. Node <19 does not define them.
@@ -148,6 +149,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       monacoSameOrigin(__dirname),
       suppressViteDisconnectReload(),
+      cssPreloadUrls(),
       react(),
       VitePWA({
         // prompt: new SW stays in waiting until the user accepts via

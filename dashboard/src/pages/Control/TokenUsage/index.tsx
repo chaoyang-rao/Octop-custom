@@ -202,7 +202,7 @@ function UsageBarChart({
             tick={AXIS_TICK}
             tickLine={false}
             axisLine={AXIS_LINE}
-            width={44}
+            width={84}
             allowDecimals={false}
           />
           <RechartsTooltip contentStyle={CHART_TOOLTIP_STYLE} />

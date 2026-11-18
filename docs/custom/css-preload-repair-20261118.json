@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-18",
+  "runtime_version": "1.0.3b3.post2026111703",
+  "cause": "Cache-busted CSS URLs were classified as JavaScript by the generated Vite preload helper using endsWith(.css).",
+  "repair": "Classify the pathname before query/fragment; preserve the URL and CSS load completion barrier.",
+  "runtime_backup": "~/.octop/backups/css-preload-20261118-174922",
+  "runtime_program_files_preserved_after_normalizing_repair": 161,
+  "dynamic_css_urls_http200": 43,
+  "backend_restart": false,
+  "backend_started_at_before_after": [
+    1794897653,
+    1794897653
+  ],
+  "existing_chat_scroll_changes_preserved": true,
+  "account_chat_mcp_configuration_written": false,
+  "frontend_tests": 12,
+  "ui_verified": [
+    "token statistics (light/dark)",
+    "experts",
+    "connectors",
+    "skill packages",
+    "knowledge-base disabled state",
+    "task queue",
+    "personalization skills",
+    "automation empty state",
+    "application settings"
+  ],
+  "ui_limitations": [
+    "Windows and Intel native UI were not inspected in this local repair."
+  ],
+  "source_files": [
+    "dashboard/vite/css-preload-urls.ts",
+    "dashboard/vite.config.ts",
+    "dashboard/src/utils/cssPreloadUrls.test.ts",
+    "dashboard/src/pages/Control/TokenUsage/index.tsx"
+  ]
+}
