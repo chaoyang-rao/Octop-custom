@@ -18,7 +18,6 @@ from typing import Any
 import httpx
 from packaging.version import Version
 
-from octop.infra.agents.work_status import attach_expert_work_status
 from octop.infra.auth.enterprise import client_for
 from octop.infra.client_updates.github import github_download_host
 from octop.infra.client_updates.models import (
@@ -192,14 +191,41 @@ class ClientUpdateNode:
         if registry is None or bool(getattr(self.server, "_client_update_mutations", None)):
             return True
         rows = await asyncio.to_thread(self.server.services.agent_repo.list_all)
-        if any(registry.is_agent_active(row.id) for row in rows):
+        if any(registry.is_agent_active(row.agent_id) for row in rows):
             return True
-        for owner in {row.user_id for row in rows}:
-            payloads = [
-                {"agent_id": row.id, "state": "running"} for row in rows if row.user_id == owner
-            ]
-            await attach_expert_work_status(self.server, owner, payloads)
-            if any(row["work_status"] != "idle" for row in payloads):
+        if not rows:
+            return False
+        gateway = getattr(runtime, "gateway", None)
+        hub = getattr(gateway, "ws_hub", None)
+        store = getattr(
+            getattr(getattr(gateway, "processor", None), "hitl_coordinator", None), "store", None
+        )
+        pending = getattr(store, "pending_thread_ids", None)
+        socket_active = getattr(hub, "is_turn_active", None)
+        if (
+            not callable(pending)
+            or not callable(socket_active)
+            or not callable(getattr(registry, "acp_activity_snapshot", None))
+        ):
+            return True
+        users = await asyncio.to_thread(self.server.services.user_repo.list, include_disabled=True)
+        threads: set[str] = set()
+        for user in users:
+            pairs = await asyncio.to_thread(self.server.services.thread_repo.list_for_user, user.id)
+            threads.update(thread_id for _, thread_id in pairs)
+            # A shared expert and a team's host may be paused on another
+            # member's thread. Read all local users, including disabled ones.
+            if any(pending(agent_id=row.agent_id, user_id=user.id) for row in rows):
+                return True
+        if any(socket_active(thread_id) for thread_id in threads):
+            return True
+        for row in rows:
+            snapshot = await registry.acp_activity_snapshot(row.agent_id, frozenset(threads))
+            if (
+                snapshot is None
+                or snapshot.get("working_thread_ids")
+                or snapshot.get("waiting_thread_ids")
+            ):
                 return True
         return False
 

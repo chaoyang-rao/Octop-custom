@@ -167,3 +167,59 @@ async def test_poll_cannot_replace_current_download_job(node):
 def test_external_database_disables_automatic_replacement(node):
     node.server.services.config.database.driver = "postgresql"
     assert not ClientUpdateNode(node.server, native_platform="darwin-arm64").supported
+
+
+@pytest.fixture
+def shared_runtime(node):
+    row = SimpleNamespace(id=17, agent_id="shared-expert", user_id=1)
+    node.server.services.agent_repo.list_all = lambda: [row]
+    node.server.services.user_repo.list = lambda *, include_disabled=False: [
+        SimpleNamespace(id=1),
+        *([SimpleNamespace(id=2, disabled=True)] if include_disabled else []),
+    ]
+    node.server.services.thread_repo = SimpleNamespace(
+        list_for_user=lambda uid: [("team-room", "member-room")] if uid == 2 else []
+    )
+    registry = node.server.app_runtime.agent_registry
+    registry.acp_activity_snapshot = AsyncMock(
+        return_value={"working_thread_ids": frozenset(), "waiting_thread_ids": frozenset()}
+    )
+    store = SimpleNamespace(pending_thread_ids=lambda **kwargs: frozenset())
+    hub = SimpleNamespace(is_turn_active=lambda tid: False)
+    node.server.app_runtime.gateway = SimpleNamespace(
+        ws_hub=hub, processor=SimpleNamespace(hitl_coordinator=SimpleNamespace(store=store))
+    )
+    return SimpleNamespace(node=node, registry=registry, hub=hub, store=store)
+
+
+async def test_regular_invocations_use_public_agent_id_not_surrogate_primary_key(shared_runtime):
+    runtime = shared_runtime
+    runtime.registry.is_agent_active = lambda agent_id: agent_id == "shared-expert"
+    assert await runtime.node.manager.busy()
+
+
+@pytest.mark.parametrize("phase", ["working_thread_ids", "waiting_thread_ids"])
+async def test_shared_expert_acp_checks_all_users_and_team_threads(shared_runtime, phase):
+    runtime = shared_runtime
+    runtime.registry.acp_activity_snapshot.return_value = {phase: frozenset({"member-room"})}
+    assert await runtime.node.manager.busy()
+    runtime.registry.acp_activity_snapshot.assert_awaited_once_with(
+        "shared-expert", frozenset({"member-room"})
+    )
+
+
+async def test_team_host_approval_of_another_local_user_blocks_upgrade(shared_runtime):
+    runtime = shared_runtime
+    runtime.store.pending_thread_ids = lambda *, agent_id, user_id: (
+        frozenset({"member-room"}) if user_id == 2 and agent_id == "shared-expert" else frozenset()
+    )
+    assert await runtime.node.manager.busy()
+
+
+async def test_idle_shared_expert_does_not_block_upgrade(shared_runtime):
+    assert not await shared_runtime.node.manager.busy()
+
+
+async def test_unknown_acp_state_blocks_upgrade(shared_runtime):
+    shared_runtime.registry.acp_activity_snapshot.return_value = None
+    assert await shared_runtime.node.manager.busy()

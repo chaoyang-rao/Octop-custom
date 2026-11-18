@@ -9674,7 +9674,7 @@
     {
       "path": "octop/infra/client_updates/node.py",
       "upstream_program_sha256": null,
-      "sha256": "3b1ae0e864e5e16270e935abef7e576a3677e5077812beca3b64364fce74f23e",
+      "sha256": "828f9c5543fd0fd165339f09a911a3f494568716ffb7976324be2421dc99b4c7",
       "changed_from_saved_original": true
     },
     {
