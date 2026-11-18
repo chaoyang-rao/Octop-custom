@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { api, isNative, native, type NativeEvent } from "./bridge";
+import { useChatScroll } from "./useChatScroll";
 import {
   acceptsRoomEvent,
   asList,
@@ -220,7 +221,7 @@ function MessageCard({
     }
   }
   return (
-    <article className={`message ${message.role}`}>
+    <article className={`message ${message.role}`} data-message-id={message.id}>
       {message.role === "assistant" && (
         <div className="speaker">
           <span className="speaker-dot" />
@@ -417,6 +418,12 @@ function App() {
   agentsRef.current = agents;
   userRef.current = status.user;
   const room = rooms[active];
+  const { spacerRef: replySpaceRef, prepareSend } = useChatScroll(
+    scrollRef,
+    room.messages,
+    `${ownerKey}:${active}:${room.conversationId}`,
+    status.authenticated,
+  );
   const board = boards.find((value) => value.id === active)!;
   const chosenAgent = agents.find((agent) => agent.id === room.binding.agentId);
   const selectedTeam = teams.find((t) => t.agent_id === room.binding.agentId);
@@ -1301,15 +1308,6 @@ function App() {
     return () => window.removeEventListener("companion", handler);
   }, []);
 
-  useEffect(() => {
-    const element = scrollRef.current;
-    if (
-      element &&
-      element.scrollHeight - element.scrollTop - element.clientHeight < 180
-    )
-      element.scrollTop = element.scrollHeight;
-  }, [room.messages]);
-
   async function send(
     queued?: QueuedInput,
     delivery: "follow_up" | "steer" = "follow_up",
@@ -1415,6 +1413,7 @@ function App() {
       inputId: request.id,
       ...(steering ? { delivery: "pending" as const } : {}),
     };
+    if (id === activeRef.current) prepareSend(message.id);
     updateRoom(id, (value) => ({
       ...value,
       messages: [...value.messages, message],
@@ -2187,6 +2186,12 @@ function App() {
                 }
               />
             ))}
+            <div
+              ref={replySpaceRef}
+              aria-hidden="true"
+              data-chat-reply-space=""
+              style={{ height: 0, overflow: "hidden" }}
+            />
           </div>
         </>
       )}

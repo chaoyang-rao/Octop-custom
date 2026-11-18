@@ -2,6 +2,7 @@ name: Dora standalone Mac source checks
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -32,6 +33,14 @@ jobs:
           python3 scripts/custom/sync_dashboard.py --check
       - name: Build mini-client source
         run: npm run build --prefix desktop-companion
+      - name: Verify scrolling in native WebKit after history message IDs change
+        run: |
+          mkdir -p desktop-companion/build
+          node desktop-companion/tests/prepare-native-scroll-fixture.mjs desktop-companion/build/native-scroll-bridge.js
+          xcrun swiftc -swift-version 5 -framework AppKit -framework WebKit desktop-companion/tests/native-scroll.swift -o desktop-companion/build/native-scroll-check
+          desktop-companion/build/native-scroll-check desktop-companion/dist/web/index.html desktop-companion/build/native-scroll-bridge.js desktop-companion/tests/native-scroll.js 350 510
+          desktop-companion/build/native-scroll-check desktop-companion/dist/web/index.html desktop-companion/build/native-scroll-bridge.js desktop-companion/tests/native-scroll.js 456 684
+          desktop-companion/build/native-scroll-check desktop-companion/dist/web/index.html desktop-companion/build/native-scroll-bridge.js desktop-companion/tests/native-scroll.js 350 920
       - name: Compile both native architectures without internal artwork
         run: |
           set -euo pipefail

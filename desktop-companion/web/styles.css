@@ -288,7 +288,7 @@ a {
   padding: 10px 18px 22px;
   scrollbar-width: thin;
   scrollbar-color: #becbd6 transparent;
-  scroll-behavior: smooth;
+  overflow-anchor: none;
 }
 .message {
   margin: 0 0 20px;

@@ -82,6 +82,12 @@ export interface UseAutoScrollOptions {
   overscrollBottomThreshold?: number;
   /** When true on a deps tick, skip the automatic instant follow scroll. */
   skipNextDepsScrollRef?: React.MutableRefObject<boolean>;
+  /** Keep a newly sent user message at the top until its reply fills the viewport. */
+  replySpace?: {
+    anchorId: string | null;
+    getAnchor: () => HTMLElement | null;
+    spacerRef: React.RefObject<HTMLDivElement | null>;
+  };
 }
 
 export interface UseAutoScrollReturn {
@@ -98,6 +104,7 @@ export interface UseAutoScrollReturn {
   resumeAutoScroll: () => void;
   armProgrammaticGuard: (ms?: number) => void;
   handleAtBottomChange: (bottom: boolean) => void;
+  handleContentResize: () => void;
 }
 
 // ─── hook ─────────────────────────────────────────────────────────────────────
@@ -115,6 +122,7 @@ export function useAutoScroll({
   onOverscrollBottom,
   overscrollBottomThreshold = OVERSCROLL_BOTTOM_THRESHOLD,
   skipNextDepsScrollRef,
+  replySpace,
 }: UseAutoScrollOptions = {}): UseAutoScrollReturn {
   const internalContainerRef = useRef<HTMLDivElement>(null);
   const internalEndRef = useRef<HTMLDivElement>(null);
@@ -138,6 +146,32 @@ export function useAutoScroll({
 
   const virtualRef = useRef(virtual);
   virtualRef.current = virtual;
+  const replySpaceRef = useRef(replySpace);
+  replySpaceRef.current = replySpace;
+
+  const updateReplySpace = useCallback((scroller: HTMLElement) => {
+    const space = replySpaceRef.current;
+    const spacer = space?.spacerRef.current;
+    if (!spacer) return;
+    if (!space.anchorId) {
+      spacer.style.height = "0px";
+      return;
+    }
+    const anchor = space.getAnchor();
+    // A virtualized anchor can be offscreen. Keep its measured space until
+    // Virtuoso mounts it again rather than collapsing the scroll range.
+    if (!anchor) return;
+    const padding = getComputedStyle(scroller);
+    const available =
+      scroller.clientHeight -
+      parseFloat(padding.paddingTop || "0") -
+      parseFloat(padding.paddingBottom || "0") -
+      1;
+    const turnHeight =
+      spacer.getBoundingClientRect().top - anchor.getBoundingClientRect().top;
+    const height = `${Math.max(0, Math.floor(available - turnHeight))}px`;
+    if (spacer.style.height !== height) spacer.style.height = height;
+  }, []);
 
   const getScroller = useCallback((): HTMLElement | null => {
     if (virtualRef.current?.scrollerRef.current) {
@@ -194,6 +228,7 @@ export function useAutoScroll({
 
   const pinScrollerToBottom = useCallback(
     (scroller: HTMLElement, instant: boolean) => {
+      updateReplySpace(scroller);
       armProgrammaticGuard(
         instant ? INSTANT_FOLLOW_GUARD_MS : PROGRAMMATIC_GUARD_MS,
       );
@@ -209,7 +244,7 @@ export function useAutoScroll({
       }
       prevScrollTopRef.current = scroller.scrollTop;
     },
-    [armProgrammaticGuard],
+    [armProgrammaticGuard, updateReplySpace],
   );
 
   const scrollToBottomInFollowMode = useCallback(
@@ -287,14 +322,24 @@ export function useAutoScroll({
     scrollToBottom(smooth);
   }, [scrollToBottom, smooth]);
 
-  const handleAtBottomChange = useCallback(() => {
-    // Virtuoso may report at-bottom after programmatic follow scrolls.
-    // Resuming follow is handled only by user scroll/wheel/touch listeners.
-  }, []);
+  const handleAtBottomChange = useCallback(
+    (bottom: boolean) => {
+      // Footer measurements can settle after our layout pin. Finish that pin
+      // without resuming follow when the reader has intentionally scrolled up.
+      if (!bottom) scrollToBottomInFollowMode(true);
+    },
+    [scrollToBottomInFollowMode],
+  );
+
+  const handleContentResize = useCallback(() => {
+    scrollToBottomInFollowMode(true);
+  }, [scrollToBottomInFollowMode]);
 
   // Layout-phase follow: pin before paint so growing bubbles never sit below
   // the fold for a frame. One trailing rAF re-pins after Virtuoso/tool measure.
   useLayoutEffect(() => {
+    const scroller = getScroller();
+    if (scroller) updateReplySpace(scroller);
     if (skipNextDepsScrollRef?.current) {
       skipNextDepsScrollRef.current = false;
       return;
@@ -310,8 +355,16 @@ export function useAutoScroll({
         scrollToBottomInFollowMode(true, true);
       }
     });
+  }, [
     // eslint-disable-next-line react-hooks/exhaustive-deps -- caller supplies dynamic dependency list
-  }, [...deps, scrollToBottomInFollowMode, skipNextDepsScrollRef, getScroller]);
+    ...deps,
+    scrollToBottomInFollowMode,
+    skipNextDepsScrollRef,
+    getScroller,
+    updateReplySpace,
+    replySpace?.anchorId,
+    scrollerMountKey,
+  ]);
 
   useEffect(() => {
     const container = getScroller();
@@ -488,6 +541,7 @@ export function useAutoScroll({
     };
 
     const handleResize = (): void => {
+      updateReplySpace(container);
       if (scrollModeRef.current === "follow") {
         // Sync pin — RO already fires after layout; another double-rAF lag
         // is what made streaming follow feel late.
@@ -552,6 +606,7 @@ export function useAutoScroll({
     onOverscrollBottom,
     overscrollBottomThreshold,
     scrollerMountKey,
+    updateReplySpace,
   ]);
 
   return {
@@ -563,5 +618,6 @@ export function useAutoScroll({
     resumeAutoScroll,
     armProgrammaticGuard,
     handleAtBottomChange,
+    handleContentResize,
   };
 }
