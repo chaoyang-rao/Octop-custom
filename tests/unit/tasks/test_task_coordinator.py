@@ -321,6 +321,27 @@ async def test_review_budget_stops_before_a_ninth_model_turn(env):
     assert env.invoke.model_calls == MAX_REVIEWS
 
 
+async def test_failed_review_is_interrupted_and_reuses_completed_evidence_on_continue(env):
+    new_scope(env)
+    add_member(env)
+    complete_member(env)
+    repo = env.repos.task_coordination_repo
+    before = repo.members("scope")
+    failed = AsyncMock(return_value={"failed": True, "paused": False, "output": ""})
+    env.manager._coordinator._invoke = failed
+    await schedule(env)
+    assert repo.get("scope")["state"] == "interrupted"
+    await schedule(env)
+    assert failed.await_count == 1
+    assert repo.members("scope") == before
+    await env.manager.continue_coordination(env.uid, "member", prompt="Retry the same review")
+    env.manager._coordinator._invoke = env.invoke
+    await schedule(env)
+    assert env.invoke.model_calls == 1
+    assert repo.get("scope")["state"] == "idle"
+    assert repo.members("scope") == before
+
+
 async def test_busy_admission_refunds_the_claim_without_consuming_a_signature(env):
     new_scope(env)
     add_member(env)

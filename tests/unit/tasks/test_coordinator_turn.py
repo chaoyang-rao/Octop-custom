@@ -406,6 +406,38 @@ async def test_busy_or_pending_source_is_deferred_without_mutation(env, conditio
     assert env.hub.connection_count == 1
 
 
+@pytest.mark.parametrize("resumed", [False, True])
+@pytest.mark.parametrize(
+    "node,error,interrupts",
+    [
+        ("model", "failed model", ()),
+        ("model", None, ()),
+        ("tools", "failed tool", ()),
+        ("model", "failed model", ("approval",)),
+    ],
+)
+async def test_only_explicit_continuation_can_retry_failed_model(
+    env, resumed, node, error, interrupts
+):
+    env.state.next = (node,)
+    env.state.tasks = (SimpleNamespace(name=node, error=error, interrupts=interrupts),)
+    env.scope.update(resume_seq=int(resumed), handled_resume_seq=0)
+    previous_ids = [m.id for m in env.state.messages]
+    if resumed and node == "model" and error and not interrupts:
+        result = await run_coordinator_turn(
+            env.agents, env.gateway, env.scope, "Resume the same authorized review"
+        )
+        assert not result["failed"] and len(env.state.requests) == 1
+        assert [m.id for m in env.state.messages[: len(previous_ids)]] == previous_ids
+        assert all(not isinstance(m, HumanMessage) for m in env.state.requests[0]["messages"])
+    else:
+        with pytest.raises(CoordinatorTurnBusy):
+            await run_coordinator_turn(
+                env.agents, env.gateway, env.scope, "Resume the same authorized review"
+            )
+        assert not env.state.requests
+
+
 async def test_transport_lock_defers_without_interrupting_its_holder(env):
     entered, release = asyncio.Event(), asyncio.Event()
 

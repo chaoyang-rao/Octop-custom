@@ -84,6 +84,33 @@ async def test_proxy_applies_output_limit_redacts_provider_echo_and_records_usag
     assert service._active[company.alice.id] == 0
 
 
+@pytest.mark.parametrize(
+    "status,code",
+    [
+        (400, ErrorCode.DORA_MODEL_INVALID_REQUEST),
+        (422, ErrorCode.DORA_MODEL_INVALID_REQUEST),
+        (429, ErrorCode.DORA_MODEL_RATE_LIMITED),
+        (500, ErrorCode.DORA_MODEL_UNAVAILABLE),
+    ],
+)
+async def test_upstream_rejection_keeps_error_classification_and_releases_capacity(
+    company, status, code
+):
+    service = configured(company)
+    service.transport = httpx.MockTransport(
+        lambda req: httpx.Response(status, json={"error": {"message": SECRET}})
+    )
+    with pytest.raises(OctopError) as error:
+        await service.open(company.alice, "chat/completions", request())
+    assert error.value.code == code
+    assert SECRET not in str(error.value)
+    assert service._active[company.alice.id] == 0
+    service.transport = httpx.MockTransport(lambda req: httpx.Response(200, json={"choices": []}))
+    reply = await service.open(company.alice, "chat/completions", request())
+    await reply.json()
+    assert service._active[company.alice.id] == 0
+
+
 class SplitSSE(httpx.AsyncByteStream):
     async def __aiter__(self):
         data = (
