@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261122.1"
+        default: "custom-1.0.3b3-20261122.2"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026112201"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261122.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026112202"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261122.2' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -440,7 +440,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112201：宽泛或跨领域问题先由团队专家确认能力与问题归属，再交叉讨论，最后由小通汇总负责人、结论、依据与缺口。专家协作调用沿用各自绑定的 MCP、模型和思考设置；工具加载失败或无权限直接报告，避免误判为没有业务能力。手动团队与自动任务协作群均使用新规则，不复制私人会话或内部思考。
+          Octop Custom 112202：修复 DeepSeek 思考模式在空思考工具记录及旧会话中漏回传 reasoning_content 导致汇总失败的问题，保留真实思考与原始会话。模型汇总失败显示中断并保留专家成果，用户明确继续后可恢复失败模型节点，不重放工具或绕过审批。企业模型网关区分上游请求错误、限流和服务故障。保留 112201 的团队归属讨论、专家独立模型/MCP 与思考设置。
 
           保留企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
 

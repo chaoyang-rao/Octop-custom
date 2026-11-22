@@ -138,7 +138,35 @@ def _context(scope: dict[str, Any], prompt: str, user_input: str) -> Coordinator
         active_signature=str(scope.get("active_signature") or ""),
         system_prompt=prompt,
         user_input=user_input,
+        retry_failed_model=(
+            type(scope.get("resume_seq", 0)) is int
+            and type(scope.get("handled_resume_seq", 0)) is int
+            and scope.get("resume_seq", 0) > scope.get("handled_resume_seq", 0) >= 0
+        ),
     )
+
+
+def _pending_graph_work(state: Any, context: CoordinatorContext) -> bool:
+    if state is None:
+        return False
+    tasks = tuple(getattr(state, "tasks", ()) or ())
+    if any(getattr(task, "interrupts", ()) for task in tasks):
+        return True
+    pending = tuple(getattr(state, "next", ()) or ())
+    if not pending:
+        return False
+    # Only a real user's explicit continuation may retry a failed model node.
+    # Never replay unfinished tools, approvals, or an active transport turn.
+    resumable = (
+        context.retry_failed_model
+        and set(pending) == {"model"}
+        and bool(tasks)
+        and all(
+            getattr(task, "name", None) == "model" and getattr(task, "error", None)
+            for task in tasks
+        )
+    )
+    return not resumable
 
 
 async def _ready(
@@ -189,10 +217,7 @@ async def _ready(
             raise CoordinatorTurnBusy("coordinator_hitl_pending")
     harness = agents.get_agent(principal_id)
     state = await harness.graph.aget_state({"configurable": {"thread_id": thread.thread_id}})
-    if state is not None and (
-        getattr(state, "next", False)
-        or any(getattr(task, "interrupts", ()) for task in getattr(state, "tasks", ()))
-    ):
+    if _pending_graph_work(state, context):
         raise CoordinatorTurnBusy("coordinator_graph_pending")
     scopes = getattr(repos, "task_coordination_repo", None)
     room = await asyncio.to_thread(scopes.room, context.scope_id) if scopes is not None else None
@@ -220,10 +245,7 @@ async def _ready(
         room_state = await harness.graph.aget_state(
             {"configurable": {"thread_id": target.thread_id}}
         )
-        if room_state is not None and (
-            getattr(room_state, "next", False)
-            or any(getattr(task, "interrupts", ()) for task in getattr(room_state, "tasks", ()))
-        ):
+        if _pending_graph_work(room_state, context):
             raise CoordinatorTurnBusy("coordinator_graph_pending")
     return thread, identity, list((getattr(state, "values", {}) or {}).get("messages") or [])
 

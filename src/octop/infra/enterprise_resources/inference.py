@@ -290,7 +290,12 @@ class InferenceService:
                 body.get("stream")
                 and "text/event-stream" not in response.headers.get("content-type", "")
             ):
+                status = response.status_code
                 await response.aclose()
+                if status in {400, 422}:
+                    raise OctopError.localized(ErrorCode.DORA_MODEL_INVALID_REQUEST)
+                if status == 429:
+                    raise OctopError.localized(ErrorCode.DORA_MODEL_RATE_LIMITED)
                 raise OctopError.localized(ErrorCode.DORA_MODEL_UNAVAILABLE)
             return InferenceReply(
                 self,

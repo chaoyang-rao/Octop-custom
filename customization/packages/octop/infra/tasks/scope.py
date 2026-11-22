@@ -20,6 +20,7 @@ class CoordinatorContext:
     active_signature: str = ""
     system_prompt: str = ""
     user_input: str = ""
+    retry_failed_model: bool = False
 
 
 _CURRENT: ContextVar[CoordinatorContext | None] = ContextVar(

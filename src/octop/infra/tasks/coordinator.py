@@ -252,7 +252,10 @@ class TaskCoordinator:
                 item["state"] not in TERMINAL_STATES for item in latest_members
             ) or self.manager._rooms.has_pending_peers(scope_id)
             decision = current.get("decision")
-            if result.get("failed") or result.get("paused"):
+            if result.get("failed"):
+                state = "interrupted"
+                question = tr("tasks.coordination.review_failed", locale)
+            elif result.get("paused"):
                 state = "needs_user"
                 question = tr("tasks.coordination.check_source", locale)
             elif decision == "ready" and not pending:
@@ -272,7 +275,7 @@ class TaskCoordinator:
                 summary=str(current.get("summary") or result.get("output") or "")[:6000],
                 question=question,
             )
-            if state == "needs_user":
+            if state in {"needs_user", "interrupted"}:
                 await self._parent_waiting(scope)
                 await self._notice(scope, question)
         except CoordinatorTurnBusy:
@@ -286,11 +289,11 @@ class TaskCoordinator:
                 self.repo.finish,
                 scope_id,
                 signature,
-                "needs_user",
-                question=tr("tasks.coordination.check_source", locale),
+                "interrupted",
+                question=tr("tasks.coordination.review_failed", locale),
             )
             await self._parent_waiting(scope)
-            await self._notice(scope, tr("tasks.coordination.check_source", locale))
+            await self._notice(scope, tr("tasks.coordination.review_failed", locale))
         finally:
             self.manager._wake.set()
 

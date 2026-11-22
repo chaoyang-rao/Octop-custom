@@ -462,7 +462,7 @@ def _copy_reasoning_from_response(result: Any, response: Any) -> Any:
                 continue
             reasoning = msg_dict.get("reasoning_content")
             message = getattr(gen, "message", None)
-            if reasoning and isinstance(message, AIMessage):
+            if isinstance(reasoning, str) and isinstance(message, AIMessage):
                 message.additional_kwargs.setdefault("reasoning_content", reasoning)
         return result
     raw_choices = getattr(response, "choices", None) or []
@@ -475,7 +475,7 @@ def _copy_reasoning_from_response(result: Any, response: Any) -> Any:
             extras = getattr(msg, "model_extra", None) or {}
             reasoning = extras.get("reasoning_content")
         message = getattr(gen, "message", None)
-        if reasoning and isinstance(message, AIMessage):
+        if isinstance(reasoning, str) and isinstance(message, AIMessage):
             message.additional_kwargs.setdefault("reasoning_content", reasoning)
     return result
 
@@ -493,7 +493,7 @@ def _copy_reasoning_from_chunk(gen_chunk: Any, chunk: dict[str, Any]) -> Any:
         return gen_chunk
     reasoning = delta.get("reasoning_content")
     message = getattr(gen_chunk, "message", None)
-    if reasoning and isinstance(message, AIMessageChunk):
+    if isinstance(reasoning, str) and isinstance(message, AIMessageChunk):
         message.additional_kwargs.setdefault("reasoning_content", "")
         message.additional_kwargs["reasoning_content"] += reasoning
     return gen_chunk
@@ -522,6 +522,16 @@ def _attach_reasoning_to_payload(payload: dict[str, Any], source_messages: list[
     messages_out = payload.get("messages")
     if not isinstance(messages_out, list):
         return payload
+    extra = payload.get("extra_body") or {}
+    thinking = payload.get("thinking", extra.get("thinking") if isinstance(extra, dict) else None)
+    disabled = isinstance(thinking, dict) and thinking.get("type") == "disabled"
+    effort = payload.get("reasoning_effort", extra.get("reasoning_effort") if isinstance(extra, dict) else None)
+    needs_reasoning = (
+        str(payload.get("model") or "").lower().startswith("deepseek-")
+        and bool(payload.get("tools"))
+        and not disabled
+        and effort != "none"
+    )
     ai_index = 0
     for msg_dict in messages_out:
         if not isinstance(msg_dict, dict) or msg_dict.get("role") != "assistant":
@@ -533,8 +543,13 @@ def _attach_reasoning_to_payload(payload: dict[str, Any], source_messages: list[
         src = source_messages[ai_index]
         ai_index += 1
         reasoning = src.additional_kwargs.get("reasoning_content") if isinstance(src, AIMessage) else None
-        if reasoning:
+        if isinstance(reasoning, str):
             msg_dict["reasoning_content"] = reasoning
+        elif needs_reasoning:
+            # Old checkpoints and application-authored notices may predate
+            # reasoning capture. An empty field represents unavailable content;
+            # never invent reasoning or mutate the stored conversation.
+            msg_dict["reasoning_content"] = ""
     return payload
 
 
