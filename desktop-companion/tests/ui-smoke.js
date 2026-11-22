@@ -3,9 +3,8 @@
 async function runUISmoke(page) {
   const checks = [];
   async function selectBoard(name) {
-    await page.getByRole("button", { name: "功能与设置", exact: true }).click();
-    await page.getByRole("button", { name, exact: true }).click();
-    await page.getByRole("button", { name: "关闭设置", exact: true }).click();
+    const id = {"售后":"quality-copy","词元":"quota-copy","知识库":"knowledge-copy"}[name];
+    await page.getByRole("combobox",{name:"快捷选择专家",exact:true}).selectOption("expert:"+id);
   }
   const ensure = (value, name) => {
     if (!value) throw new Error(name);
@@ -51,6 +50,9 @@ async function runUISmoke(page) {
                   args.path === "/api/agents"
                     ? [
                         { agent_id: "main", name: "小通", user_id: uid },
+                        { agent_id: "quality-copy", name: "售后质量专家", user_id: uid },
+                        { agent_id: "quota-copy", name: "词元管理专家", user_id: uid },
+                        { agent_id: "knowledge-copy", name: "知识库助手", user_id: uid },
                         {
                           agent_id: "foreign",
                           name: "其他成员专家",
@@ -113,7 +115,7 @@ async function runUISmoke(page) {
                 () =>
                   emit({
                     type: "token",
-                    agent_id: "main",
+                    agent_id: args.agentId,
                     content:
                       "界面测试回答。\n\n|项目|结果|\n|---|---|\n|状态|通过|",
                   }),
@@ -129,7 +131,7 @@ async function runUISmoke(page) {
                   }),
                 50,
               );
-              setTimeout(() => emit({ type: "done", agent_id: "main" }), 70);
+              setTimeout(() => emit({ type: "done", agent_id: args.agentId }), 70);
             }
             if (op === "startListening")
               setTimeout(() => {
@@ -159,8 +161,10 @@ async function runUISmoke(page) {
   const input = page.getByRole("textbox", { name: "输入问题", exact: true });
   await checkCompactTitlebar("compact_titlebar_gives_chat_more_height");
   ensure(
-    (await page.locator(".topbar button").count()) === 1,
-    "one_top_level_settings_entry",
+    (await page.locator(".topbar button").count()) === 2 &&
+      (await page.getByRole("button",{name:"功能与设置",exact:true}).count()) === 1 &&
+      (await page.getByRole("button",{name:"新对话",exact:true}).count()) === 1,
+    "compact_header_has_new_chat_and_one_settings_entry",
   );
   for (const text of [
     "从这里问起",
@@ -173,7 +177,7 @@ async function runUISmoke(page) {
       "no_permanent_explainer_" + text,
     );
   await page.getByRole("button", { name: "功能与设置", exact: true }).click();
-  await page.getByRole("button", { name: "负利润", exact: true }).waitFor();
+  await page.getByRole("button", { name: "知识库", exact: true }).waitFor();
   ensure(!(await input.isVisible()), "settings_do_not_overlap_composer");
   await page.keyboard.press("Escape");
   ensure(
@@ -321,7 +325,6 @@ async function runUISmoke(page) {
   );
   await selectBoard("售后");
   const oldContext = sent[0].args.contextKey;
-  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   await page.getByRole("button", { name: "新对话", exact: true }).click();
   await page.evaluate(
     (contextKey) =>

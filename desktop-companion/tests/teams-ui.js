@@ -300,7 +300,7 @@ async function teamUI(page) {
     "switching_teams_preserves_each_draft",
   );
   await page.getByRole("button", { name: "功能与设置", exact: true }).click();
-  await page.getByRole("button", { name: "售后", exact: true }).click();
+  await page.getByRole("button", { name: "知识库", exact: true }).click();
   ensure(
     (await page
       .getByRole("combobox", { name: "快捷选择专家", exact: true })

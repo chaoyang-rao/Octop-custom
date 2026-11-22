@@ -34,6 +34,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private var sizeSlider: NSSlider?
     private var sizeValue: NSTextField?
     private var pendingLaunchAction: CompanionLaunchAction?
+    private var voiceEnabled = true
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
@@ -165,15 +166,31 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     private func contextMenu() -> NSMenu {
         let menu = NSMenu()
-        func item(_ name: String, _ action: Selector) { let value = NSMenuItem(title: name, action: action, keyEquivalent: ""); value.target = self; menu.addItem(value) }
+        menu.autoenablesItems = false
+        @discardableResult func item(_ name: String, _ action: Selector) -> NSMenuItem { let value = NSMenuItem(title: name, action: action, keyEquivalent: ""); value.target = self; menu.addItem(value); return value }
         item("打开对话  ⌃⌥空格", #selector(openChat)); item(petWindow.isVisible ? "隐藏桌宠" : "显示桌宠", #selector(togglePet))
         menu.addItem(.separator())
         item("移到右下角", #selector(moveRight)); item("移到左下角", #selector(moveLeft))
         item("宠物大小…", #selector(showSizeControls))
         item(pet.paused ? "恢复动作" : "暂停动作", #selector(toggleAnimation))
-        menu.addItem(.separator()); item("资源与模型设置", #selector(startOctop)); item("查看运行日志", #selector(showEngineLogs)); item("素材来源与说明", #selector(showCredits)); item("退出哆啦", #selector(quitCompanion))
+        item("边缘收起", #selector(toggleEdgeHiding)).state = pet.edgeHiding ? .on : .off
+        item("自动朗读", #selector(toggleVoice)).state = voiceEnabled ? .on : .off
+        menu.addItem(.separator())
+        item("资源与模型设置", #selector(startOctop)); item("刷新资源", #selector(refreshResources)); item("使用说明", #selector(showHelp))
+        item("查看运行日志", #selector(showEngineLogs)); item("素材来源与说明", #selector(showCredits))
+        if let user = currentUser {
+            let label = user["display_name"] as? String ?? user["username"] as? String ?? ""
+            let account = NSMenuItem(title: label, action: nil, keyEquivalent: ""); account.isEnabled = false; menu.addItem(account)
+            item("退出账号", #selector(logoutRequested))
+        }
+        item("退出哆啦", #selector(quitCompanion))
         return menu
     }
+    @objc private func toggleVoice() { event(["type":"toggleVoice"]) }
+    @objc private func refreshResources() { event(["type":"refreshResources"]) }
+    @objc private func logoutRequested() { event(["type":"logoutRequested"]) }
+    @objc private func toggleEdgeHiding() { pet.edgeHiding.toggle(); defaults.set(pet.edgeHiding, forKey:"petEdgeHiding"); savePosition() }
+    @objc private func showHelp() { if let url = Bundle.main.url(forResource:"HELP",withExtension:"html") { NSWorkspace.shared.open(url) } }
     @objc private func openChat() { showChat() }
     private func toggleChat() { chatWindow.isVisible && chatWindow.isKeyWindow ? chatWindow.orderOut(nil) : showChat() }
     private func toggleChatFromPet() { chatWindow.isVisible ? chatWindow.orderOut(nil) : showChat() }
@@ -319,6 +336,9 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     private func handle(op: String, args: [String: Any]) async throws -> Any {
         switch op {
+        case "voicePreference":
+            guard let enabled=args["enabled"] as? Bool else { throw CompanionError.invalidPath }
+            voiceEnabled=enabled;return true
         case "petPreferences": return ["edgeHiding": pet.edgeHiding]
         case "setEdgeHiding":
             guard let enabled = args["enabled"] as? Bool else { throw CompanionError.invalidPath }

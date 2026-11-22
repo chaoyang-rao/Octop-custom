@@ -16,7 +16,8 @@ struct ChatWindowDragCheck {
             precondition(container.hitTest(point(140, 18)) is ChatWindowDragHandle,
                          "Title must receive native window dragging")
             precondition(!(container.hitTest(point(180, 18)) is ChatWindowDragHandle), "Expert selector must receive WebKit clicks")
-            precondition(!(container.hitTest(point(width - 55, 18)) is ChatWindowDragHandle), "The entire selector must remain interactive")
+            precondition(!(container.hitTest(point(width - 90, 18)) is ChatWindowDragHandle), "The entire selector must remain interactive")
+            precondition(!(container.hitTest(point(width - 55, 18)) is ChatWindowDragHandle), "New conversation must remain clickable")
             precondition(!(container.hitTest(point(width - 22, 18)) is ChatWindowDragHandle), "Settings must remain a WebKit control")
             precondition(!(container.hitTest(point(20, 18)) is ChatWindowDragHandle), "Native traffic lights must remain clickable")
             precondition(!(container.hitTest(point(140, 200)) is ChatWindowDragHandle), "Messages must retain selection and scrolling")

@@ -86,7 +86,12 @@ async function expertPickerUI(page) {
             if (op === "chatSend" && args.frame.type === "user_turn") {
               f.current = {
                 ...args,
-                thread: "thread-" + args.agentId,
+                thread:
+                  args.frame.thread_id ||
+                  "thread-" +
+                    args.agentId +
+                    "-" +
+                    (f.counter = (f.counter || 0) + 1),
                 text: args.frame.messages[0].content[0].text,
               };
               f.started = false;
@@ -212,9 +217,57 @@ async function expertPickerUI(page) {
     await picker.isDisabled(),
     "active_turns_cannot_be_rebound_to_another_expert",
   );
+  ensure(
+    await page
+      .getByRole("button", { name: "新对话", exact: true })
+      .isDisabled(),
+    "new_chat_does_not_discard_an_active_turn",
+  );
   await page.evaluate(() => window.__picker.finish());
   await page.waitForFunction(
     () => !document.querySelector('[aria-label="快捷选择专家"]').disabled,
+  );
+  await input.fill("新对话保留的草稿");
+  const prior = await page.evaluate(
+    () =>
+      window.__picker.calls
+        .filter((c) => c.op === "chatSend" && c.args.frame.type === "user_turn")
+        .at(-1).args.frame.session_key,
+  );
+  await page.getByRole("button", { name: "新对话", exact: true }).click();
+  ensure(
+    (await input.inputValue()) === "新对话保留的草稿",
+    "new_chat_is_available_in_the_chat_header_and_keeps_the_composition",
+  );
+  await page.evaluate(() => (window.__picker.hold = false));
+  await page.getByRole("button", { name: "发送消息", exact: true }).click();
+  await page.getByText("隔离回复：supplier", { exact: true }).waitFor();
+  ensure(
+    await page.evaluate((previous) => {
+      const f = window.__picker.calls
+        .filter((c) => c.op === "chatSend" && c.args.frame.type === "user_turn")
+        .at(-1).args.frame;
+      return !f.thread_id && f.session_key !== previous;
+    }, prior),
+    "new_chat_clears_the_previous_thread_identity",
+  );
+  await page.getByRole("button", { name: "新对话", exact: true }).focus();
+  await page
+    .getByRole("button", { name: "新对话", exact: true })
+    .press("Shift+Tab");
+  await picker.hover();
+  ensure(
+    await picker.evaluate(
+      (el) =>
+        el.matches(":focus-visible") &&
+        getComputedStyle(el).outlineStyle === "none" &&
+        getComputedStyle(el).opacity === "0" &&
+        getComputedStyle(
+          el.parentElement.querySelector(".expert-picker-label"),
+        ).textDecorationLine.includes("underline") &&
+        getComputedStyle(el).backgroundColor.replace(/\s/g, "").endsWith(",0)"),
+    ),
+    "expert_selection_has_no_outer_black_focus_frame",
   );
   await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   ensure(
@@ -223,14 +276,17 @@ async function expertPickerUI(page) {
       .count()) === 0,
     "companion_has_no_manual_mcp_checkbox_step",
   );
+  const panel = page.getByRole("region", { name: "功能与设置", exact: true });
   ensure(
-    (await page
-      .getByRole("button", { name: "创建与管理专家", exact: true })
-      .isVisible()) &&
-      (await page
-        .getByRole("button", { name: "接入与管理 MCP", exact: true })
-        .isVisible()),
-    "advanced_octop_configuration_entries_are_preserved",
+    JSON.stringify(await panel.getByRole("button").allTextContents()) ===
+      JSON.stringify(["知识库", "团队", "管理知识库"]),
+    "settings_keep_only_knowledge_and_team_configuration",
+  );
+  ensure(
+    (await panel
+      .getByRole("button", { name: "新对话", exact: true })
+      .count()) === 0,
+    "new_chat_is_not_buried_in_settings",
   );
   await page.getByRole("button", { name: "关闭设置", exact: true }).click();
   await picker.selectOption("team:team-1");
@@ -247,9 +303,13 @@ async function expertPickerUI(page) {
           .querySelector(".expert-picker")
           .getBoundingClientRect(),
         s = document.querySelector(".settings-trigger").getBoundingClientRect();
+      const n = document
+        .querySelector(".new-chat-trigger")
+        .getBoundingClientRect();
       return (
         r.left === 166 &&
-        r.right + 6 <= s.left &&
+        r.right + 6 <= n.left &&
+        n.right + 2 <= s.left &&
         r.height <= 28 &&
         document.documentElement.scrollWidth <= innerWidth
       );
@@ -259,6 +319,22 @@ async function expertPickerUI(page) {
   await page.screenshot({
     path: "desktop-companion/output/playwright/expert-picker.png",
   });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.getByRole("button", { name: "新对话", exact: true }).focus();
+  await page
+    .getByRole("button", { name: "新对话", exact: true })
+    .press("Shift+Tab");
+  ensure(
+    await picker.evaluate(
+      (el) =>
+        getComputedStyle(el).outlineStyle === "none" &&
+        getComputedStyle(el).opacity === "0" &&
+        getComputedStyle(
+          el.parentElement.querySelector(".expert-picker-label"),
+        ).textDecorationLine.includes("underline"),
+    ),
+    "dark_theme_keeps_keyboard_focus_without_an_outer_frame",
+  );
   await page.evaluate(() => localStorage.setItem("__pickerUser", "72"));
   await page.reload();
   ensure(

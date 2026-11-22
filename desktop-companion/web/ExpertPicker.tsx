@@ -18,11 +18,20 @@ export default function ExpertPicker({
 }) {
   const options = [
     ...experts.map((a) => ({ value: `expert:${a.id}`, name: a.name })),
-    ...teams.map((t) => ({ value: `team:${t.agent_id}`, name: t.name })),
+    ...teams.map((t) => ({
+      value: `team:${t.agent_id}`,
+      name: `${t.name} · ${t.primary_agent_name || "待配置"}主持`,
+    })),
   ];
   const selected = options.find((item) => item.value === value);
   return (
-    <label className="expert-picker" title={selected?.name || "选择专家"}>
+    <label
+      className={`expert-picker${disabled ? " disabled" : ""}`}
+      title={selected?.name || "选择专家"}
+    >
+      <span className="expert-picker-label" aria-hidden="true">
+        {selected?.name || (value ? "原专家（当前不可用）" : "选择专家")}
+      </span>
       <select
         aria-label="快捷选择专家"
         value={value}

@@ -981,12 +981,16 @@ body,
 .expert-picker {
   position: absolute;
   left: 166px; /* Native dragging ends here in GlassChatWebView.swift. */
-  right: 44px;
+  right: 76px;
   top: 4px;
   height: 28px;
   min-width: 0;
 }
 .expert-picker select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 100%;
@@ -1001,8 +1005,19 @@ body,
   text-overflow: ellipsis;
   cursor: pointer;
 }
-.expert-picker select:hover:not(:disabled) { background: var(--field); }
-.expert-picker select:disabled { opacity: .5; cursor: default; }
+.expert-picker select:hover:not(:disabled) { background: transparent; }
+.expert-picker select:disabled { opacity: 0; cursor: default; }
+.expert-picker.disabled { opacity: .5; }
+.app-mark .expert-picker-label { margin: 0; padding: 0 24px 0 6px; line-height: 28px; color: var(--text); font-size: 11.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.expert-picker:focus-within .expert-picker-label { text-decoration: underline; text-decoration-color: var(--blue); text-underline-offset: 4px; }
+.expert-picker select:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.settings-open .expert-picker { right: 44px; }
+.header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.new-chat-trigger { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border-radius: 8px; background: transparent; color: var(--muted); }
+.new-chat-trigger:hover:not(:disabled) { background: var(--field); }
 .expert-picker > svg {
   position: absolute;
   right: 7px;
@@ -1387,7 +1402,7 @@ textarea:focus-visible {
   opacity: 0.8;
 }
 
-.settings-page .boards {grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.settings-page .boards {grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .team-settings {display:grid;gap:12px;margin:4px 0 16px;min-width:0}
 .team-settings>label {display:grid;gap:6px;font-size:12px}
 .team-settings>label>input,.team-settings select {box-sizing:border-box;min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--field);color:var(--text);font:inherit}

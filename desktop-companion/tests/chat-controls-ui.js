@@ -284,9 +284,7 @@ async function runControlChecks(page) {
     }),
   );
   await page.getByRole("button", { name: "确认这一次", exact: true }).waitFor();
-  await page.getByRole("button", { name: "功能与设置", exact: true }).click();
-  await page.getByRole("button", { name: "刷新资源", exact: true }).click();
-  await page.getByRole("button", { name: "关闭设置", exact: true }).click();
+  await page.evaluate(() => window.__companionEvent({type:"refreshResources"}));
   await page.getByRole("button", { name: "确认这一次", exact: true }).waitFor();
   checks.push("pending_approval_is_recovered_from_backend_history");
   await page.evaluate(() => (window.__control.rejectResume = true));

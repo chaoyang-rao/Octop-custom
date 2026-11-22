@@ -378,7 +378,6 @@ function App() {
   const expertRoomsRef = useRef<Record<string, Room>>({});
   const lastSoloBoardRef = useRef<BoardId>("aftersales");
   const [showSettings, setShowSettings] = useState(false);
-  const [edgeHiding, setEdgeHiding] = useState(true);
   const settingsRef = useRef<HTMLElement>(null);
   const [loading, setLoading] = useState(false);
   const [voice, setVoice] = useState(true);
@@ -453,7 +452,6 @@ function App() {
       id
     );
   }
-  const identity = status.user?.display_name || status.user?.username;
 
   function updateRoom(
     id: BoardId,
@@ -832,6 +830,10 @@ function App() {
   useEffect(() => {
     if (ownerKey && !loading) localStorage.setItem(ownerKey, persistence);
   }, [ownerKey, persistence, loading]);
+  useEffect(() => {
+    void native("voicePreference", { enabled: voice }).catch(() => {});
+    if (!voice) void native("stopSpeaking");
+  }, [voice]);
 
   useEffect(() => {
     if (!status.authenticated || !status.user || !ownerKey) return;
@@ -893,6 +895,26 @@ function App() {
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<NativeEvent>).detail;
+      if (detail.type === "toggleVoice") {
+        setVoice((value) => !value);
+        return;
+      }
+      if (
+        detail.type === "refreshResources" ||
+        detail.type === "logoutRequested"
+      ) {
+        if (
+          Object.values(roomsRef.current).some(
+            (item) => item.busy || item.teamSpeakers.length,
+          )
+        ) {
+          setNotice("请先等待当前任务完成。");
+          return;
+        }
+        if (detail.type === "refreshResources") void refresh();
+        else void openSetting("logout");
+        return;
+      }
       if (detail.type === "authChanged") {
         teamRoomsRef.current = {};
         expertRoomsRef.current = {};
@@ -1862,12 +1884,6 @@ function App() {
   useEffect(() => {
     if (!showSettings) return;
     settingsRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
-    void native<{ edgeHiding: boolean }>("petPreferences")
-      .then((value) => {
-        if (typeof value.edgeHiding === "boolean")
-          setEdgeHiding(value.edgeHiding);
-      })
-      .catch(() => {});
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -1891,19 +1907,17 @@ function App() {
     setNotice("");
   }
   function newChat() {
-    if (room.teamSpeakers.length) {
-      setNotice("团队成员仍在回复，请稍后新建对话。");
-      return;
-    }
-    if (
-      room.queue.length ||
-      room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
-    ) {
-      setNotice("请先处理待发消息或当前确认，再新建对话。");
-      return;
-    }
+    if (switchingLocked || uploading) return;
     void native("chatClose", { board: active });
-    updateRoom(active, { ...freshRoom(room.binding), draft: room.draft });
+    if (listening) {
+      void native("stopListening");
+      setListening(false);
+    }
+    updateRoom(active, () => ({
+      ...freshRoom(room.binding),
+      draft: room.draft,
+      files: room.files,
+    }));
     setShowSettings(false);
   }
   async function openSetting(op: string, args: Record<string, unknown> = {}) {
@@ -1954,24 +1968,43 @@ function App() {
             onChange={selectQuickExpert}
           />
         </div>
-        <button
-          className="settings-trigger"
-          aria-label={showSettings ? "关闭设置" : "功能与设置"}
-          title={showSettings ? "返回聊天" : "功能与设置"}
-          onClick={() => {
-            if (!showSettings && listening) {
-              void native("stopListening");
-              setListening(false);
-            }
-            setShowSettings((value) => !value);
-          }}
-        >
-          {showSettings ? (
-            <ChevronLeft size={16} strokeWidth={1.7} />
-          ) : (
-            <Settings size={16} strokeWidth={1.7} />
+        <div className="header-actions">
+          {!showSettings && (
+            <button
+              className="new-chat-trigger"
+              aria-label="新对话"
+              title="新对话"
+              disabled={
+                !status.authenticated ||
+                status.companionAllowed === false ||
+                !room.binding.agentId ||
+                !!switchingLocked ||
+                uploading
+              }
+              onClick={newChat}
+            >
+              <Plus size={16} strokeWidth={1.7} />
+            </button>
           )}
-        </button>
+          <button
+            className="settings-trigger"
+            aria-label={showSettings ? "关闭设置" : "功能与设置"}
+            title={showSettings ? "返回聊天" : "功能与设置"}
+            onClick={() => {
+              if (!showSettings && listening) {
+                void native("stopListening");
+                setListening(false);
+              }
+              setShowSettings((value) => !value);
+            }}
+          >
+            {showSettings ? (
+              <ChevronLeft size={16} strokeWidth={1.7} />
+            ) : (
+              <Settings size={16} strokeWidth={1.7} />
+            )}
+          </button>
+        </div>
       </header>
       <section
         ref={settingsRef}
@@ -1986,22 +2019,36 @@ function App() {
         {status.authenticated && status.companionAllowed !== false && (
           <>
             <nav className="boards" aria-label="选择问答板块">
-              {boards.map((item) => (
-                <button
-                  key={item.id}
-                  aria-pressed={item.id === active}
-                  className={`board ${item.id} ${
-                    item.id === active ? "active" : ""
-                  }`}
-                  onClick={() => chooseBoard(item.id)}
-                >
-                  {item.name}
-                  {(rooms[item.id].busy ||
-                    rooms[item.id].teamSpeakers.length > 0) && (
-                    <LoaderCircle size={12} className="spin" />
-                  )}
-                </button>
-              ))}
+              {boards
+                .filter((item) => item.id === "knowledge" || item.id === "team")
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    aria-pressed={
+                      item.id === "team" ? active === "team" : active !== "team"
+                    }
+                    className={`board ${item.id} ${
+                      (
+                        item.id === "team"
+                          ? active === "team"
+                          : active !== "team"
+                      )
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      chooseBoard(
+                        item.id === "team" ? "team" : lastSoloBoardRef.current,
+                      )
+                    }
+                  >
+                    {item.name}
+                    {(rooms[item.id].busy ||
+                      rooms[item.id].teamSpeakers.length > 0) && (
+                      <LoaderCircle size={12} className="spin" />
+                    )}
+                  </button>
+                ))}
             </nav>
             {active === "team" ? (
               <TeamSettings
@@ -2028,138 +2075,47 @@ function App() {
               />
             ) : (
               <>
-                {active === "knowledge" && (
-                  <fieldset disabled={room.busy}>
-                    <legend>知识库</legend>
-                    <div className="resource-options">
-                      {resourceChoices.map((item) => {
-                        const selected = room.binding.knowledgeBases;
-                        return (
-                          <label key={item.id}>
-                            <input
-                              type="checkbox"
-                              checked={selected.includes(item.id)}
-                              onChange={(event) => {
-                                const values = event.target.checked
-                                  ? [...selected, item.id]
-                                  : selected.filter((id) => id !== item.id);
-                                changeBinding({
-                                  ...room.binding,
-                                  knowledgeBases: values,
-                                });
-                              }}
-                            />
-                            {item.name}
-                          </label>
-                        );
-                      })}
-                      {!resourceChoices.length && (
-                        <span className="settings-empty">暂无可用资源</span>
-                      )}
-                    </div>
-                  </fieldset>
-                )}
+                <fieldset disabled={!!switchingLocked || uploading}>
+                  <legend>知识库</legend>
+                  <div className="resource-options">
+                    {resourceChoices.map((item) => {
+                      const selected = room.binding.knowledgeBases;
+                      return (
+                        <label key={item.id}>
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(item.id)}
+                            onChange={(event) => {
+                              const values = event.target.checked
+                                ? [...selected, item.id]
+                                : selected.filter((id) => id !== item.id);
+                              changeBinding({
+                                ...room.binding,
+                                knowledgeBases: values,
+                              });
+                            }}
+                          />
+                          {item.name}
+                        </label>
+                      );
+                    })}
+                    {!resourceChoices.length && (
+                      <span className="settings-empty">暂无可用资源</span>
+                    )}
+                  </div>
+                </fieldset>
+                <button
+                  className="text-button"
+                  onClick={() =>
+                    void openSetting("openOctop", { path: "/knowledge-bases" })
+                  }
+                >
+                  管理知识库
+                </button>
               </>
             )}
-            <div className="settings-links">
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/experts" })
-                }
-              >
-                创建与管理专家
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/connectors" })
-                }
-              >
-                接入与管理 MCP
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/knowledge-bases" })
-                }
-              >
-                管理知识库
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/models" })
-                }
-              >
-                模型设置
-              </button>
-            </div>
-            <div className="settings-footer">
-              <button
-                className="text-button"
-                disabled={room.busy || uploading}
-                onClick={newChat}
-              >
-                <Plus size={14} />
-                新对话
-              </button>
-              <button
-                className="text-button"
-                disabled={
-                  loading ||
-                  Object.values(rooms).some(
-                    (item) => item.busy || item.teamSpeakers.length,
-                  )
-                }
-                onClick={() => void refresh()}
-              >
-                {loading ? "刷新中…" : "刷新资源"}
-              </button>
-            </div>
           </>
         )}
-        <div className="preferences">
-          <label>
-            自动朗读
-            <input
-              type="checkbox"
-              checked={voice}
-              onChange={(event) => {
-                setVoice(event.target.checked);
-                if (!event.target.checked) void native("stopSpeaking");
-              }}
-            />
-          </label>
-          <label>
-            边缘收起
-            <input
-              type="checkbox"
-              checked={edgeHiding}
-              onChange={(event) => {
-                const enabled = event.target.checked;
-                setEdgeHiding(enabled);
-                void native("setEdgeHiding", { enabled }).catch((error) => {
-                  setEdgeHiding(!enabled);
-                  setNotice(errorText(error));
-                  setShowSettings(false);
-                });
-              }}
-            />
-          </label>
-          <button onClick={() => void openSetting("petSize")}>宠物大小</button>
-          <button onClick={() => void openSetting("help")}>使用说明</button>
-        </div>
-        <div className="settings-footer">
-          <span>{identity}</span>
-          {status.authenticated && (
-            <button
-              className="text-button"
-              disabled={Object.values(rooms).some(
-                (item) => item.busy || item.teamSpeakers.length,
-              )}
-              onClick={() => void openSetting("logout")}
-            >
-              退出账号
-            </button>
-          )}
-        </div>
       </section>
       {!status.authenticated ? (
         <section className="login-state">
