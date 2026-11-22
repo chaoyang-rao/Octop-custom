@@ -190,8 +190,10 @@ export function turnPayload(
     session_key: key,
     ...(threadId ? { thread_id: threadId } : {}),
     messages: [{ role: "user", content }],
-    mcp_servers: [...binding.connectors],
-    knowledge_base_ids: [...binding.knowledgeBases],
+    // Inherit the selected expert's MCPs. An empty override would disable them.
+    ...(binding.knowledgeBases.length
+      ? { knowledge_base_ids: [...binding.knowledgeBases] }
+      : {}),
   };
 }
 export function safeImageSource(source: unknown): string | null {

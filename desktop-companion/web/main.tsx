@@ -49,6 +49,7 @@ import {
 import "./styles.css";
 import ApprovalCard from "./ApprovalCard";
 import TeamSettings from "./TeamSettings";
+import ExpertPicker from "./ExpertPicker";
 import {
   teamRecords,
   markTeams,
@@ -368,15 +369,15 @@ function App() {
   const [rooms, setRooms] = useState<Rooms>(emptyRooms);
   const [active, setActive] = useState<BoardId>("aftersales");
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [connectors, setConnectors] = useState<Resource[]>([]);
   const [knowledge, setKnowledge] = useState<Resource[]>([]);
   const [teams, setTeams] = useState<TeamRecord[]>([]);
   const [teamsError, setTeamsError] = useState("");
   const teamsRef = useRef(teams);
   teamsRef.current = teams;
   const teamRoomsRef = useRef<Record<string, Room>>({});
+  const expertRoomsRef = useRef<Record<string, Room>>({});
+  const lastSoloBoardRef = useRef<BoardId>("aftersales");
   const [showSettings, setShowSettings] = useState(false);
-  const [edgeHiding, setEdgeHiding] = useState(true);
   const settingsRef = useRef<HTMLElement>(null);
   const [loading, setLoading] = useState(false);
   const [voice, setVoice] = useState(true);
@@ -418,6 +419,7 @@ function App() {
   agentsRef.current = agents;
   userRef.current = status.user;
   const room = rooms[active];
+  if (active !== "team") lastSoloBoardRef.current = active;
   const { spacerRef: replySpaceRef, prepareSend } = useChatScroll(
     scrollRef,
     room.messages,
@@ -425,14 +427,10 @@ function App() {
     status.authenticated,
   );
   const board = boards.find((value) => value.id === active)!;
-  const chosenAgent = agents.find((agent) => agent.id === room.binding.agentId);
   const selectedTeam = teams.find((t) => t.agent_id === room.binding.agentId);
   const experts = agents.filter((a) => !a.is_team);
-  const selectedResources =
-    active === "knowledge"
-      ? room.binding.knowledgeBases
-      : room.binding.connectors;
-  const visibleResources = active === "knowledge" ? knowledge : connectors;
+  const selectedResources = room.binding.knowledgeBases;
+  const visibleResources = knowledge;
   const resourceChoices = [
     ...visibleResources,
     ...selectedResources
@@ -454,7 +452,6 @@ function App() {
       id
     );
   }
-  const identity = status.user?.display_name || status.user?.username;
 
   function updateRoom(
     id: BoardId,
@@ -521,7 +518,7 @@ function App() {
     const next =
       teamRoomsRef.current[teamId] ||
       freshRoom({ agentId: teamId, connectors: [], knowledgeBases: [] });
-    updateRoom("team", next);
+    updateRoom("team", () => next);
     void native("chatClose", { board: "team" });
     if (next.threadId)
       void loadRoomHistory("team").catch((error) =>
@@ -650,11 +647,11 @@ function App() {
         loadedOwner.current === nextOwner && nextOwner !== null;
       if (!previouslyLoaded) {
         teamRoomsRef.current = {};
+        expertRoomsRef.current = {};
         setTeams([]);
         setTeamsError("");
         replaceRooms(emptyRooms());
         setAgents([]);
-        setConnectors([]);
         setKnowledge([]);
         voiceDraft.current.owner = null;
       }
@@ -705,7 +702,6 @@ function App() {
         setNotice(
           "暂无已开放的专家。请联系企业超级管理员在“桌宠开放专家”中配置，并确认本人有对应权限。",
         );
-      setConnectors(connections);
       setKnowledge(bases);
       if (previouslyLoaded) {
         await Promise.all(
@@ -724,6 +720,7 @@ function App() {
         voice?: boolean;
         active?: BoardId;
         teamSessions?: Record<string, Partial<Room>>;
+        expertSessions?: Record<string, Partial<Room>>;
       } = {};
       try {
         saved = JSON.parse(
@@ -743,6 +740,16 @@ function App() {
             knowledgeBases: [],
           }),
         ]),
+      );
+      expertRoomsRef.current = Object.fromEntries(
+        Object.entries(saved.expertSessions || {}).flatMap(([key, old]) =>
+          old.binding &&
+          typeof old.binding.agentId === "string" &&
+          Array.isArray(old.binding.connectors) &&
+          Array.isArray(old.binding.knowledgeBases)
+            ? [[key, restoredRoom(old, old.binding)]]
+            : [],
+        ),
       );
       const restored = Object.fromEntries(
         boards.map(({ id }) => {
@@ -795,6 +802,16 @@ function App() {
   const persistence = JSON.stringify({
     voice,
     active,
+    expertSessions: Object.fromEntries(
+      Object.entries({
+        ...expertRoomsRef.current,
+        ...Object.fromEntries(
+          boards
+            .filter(({ id }) => id !== "team" && rooms[id].binding.agentId)
+            .map(({ id }) => [`${id}:${rooms[id].binding.agentId}`, rooms[id]]),
+        ),
+      }).map(([key, value]) => [key, storedRoom(value)]),
+    ),
     teamSessions: Object.fromEntries(
       Object.entries({
         ...teamRoomsRef.current,
@@ -813,6 +830,10 @@ function App() {
   useEffect(() => {
     if (ownerKey && !loading) localStorage.setItem(ownerKey, persistence);
   }, [ownerKey, persistence, loading]);
+  useEffect(() => {
+    void native("voicePreference", { enabled: voice }).catch(() => {});
+    if (!voice) void native("stopSpeaking");
+  }, [voice]);
 
   useEffect(() => {
     if (!status.authenticated || !status.user || !ownerKey) return;
@@ -824,19 +845,14 @@ function App() {
       if (running) return;
       running = true;
       try {
-        const [
-          agentResult,
-          connectionResult,
-          knowledgeResult,
-          accessResult,
-          teamResult,
-        ] = await Promise.allSettled([
-          api("/api/agents"),
-          api("/api/connector-instances"),
-          api("/api/knowledge-bases"),
-          api<{ allowed: boolean }>("/api/companion/access"),
-          api("/api/teams"),
-        ]);
+        const [agentResult, , knowledgeResult, accessResult, teamResult] =
+          await Promise.allSettled([
+            api("/api/agents"),
+            api("/api/connector-instances"),
+            api("/api/knowledge-bases"),
+            api<{ allowed: boolean }>("/api/companion/access"),
+            api("/api/teams"),
+          ]);
         if (!live || ownerRef.current !== owner) return;
         setStatus((value) => ({
           ...value,
@@ -857,8 +873,6 @@ function App() {
           setAgents(
             markTeams(normalizeAgents(agentResult.value, userId), latestTeams),
           );
-        if (connectionResult.status === "fulfilled")
-          setConnectors(connectionCandidates(connectionResult.value));
         if (knowledgeResult.status === "fulfilled")
           setKnowledge(
             asList(knowledgeResult.value).map((row) => ({
@@ -881,8 +895,29 @@ function App() {
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<NativeEvent>).detail;
+      if (detail.type === "toggleVoice") {
+        setVoice((value) => !value);
+        return;
+      }
+      if (
+        detail.type === "refreshResources" ||
+        detail.type === "logoutRequested"
+      ) {
+        if (
+          Object.values(roomsRef.current).some(
+            (item) => item.busy || item.teamSpeakers.length,
+          )
+        ) {
+          setNotice("请先等待当前任务完成。");
+          return;
+        }
+        if (detail.type === "refreshResources") void refresh();
+        else void openSetting("logout");
+        return;
+      }
       if (detail.type === "authChanged") {
         teamRoomsRef.current = {};
+        expertRoomsRef.current = {};
         teamsRef.current = [];
         setTeams([]);
         void refresh();
@@ -890,6 +925,7 @@ function App() {
       }
       if (detail.type === "authExpired") {
         teamRoomsRef.current = {};
+        expertRoomsRef.current = {};
         teamsRef.current = [];
         setTeams([]);
         ++refreshRevision.current;
@@ -1330,17 +1366,10 @@ function App() {
       (!request.text.trim() && !request.files.length)
     )
       return;
-    if (
-      !current.binding.agentId ||
-      (id !== "knowledge" &&
-        id !== "team" &&
-        !current.binding.connectors.length)
-    ) {
+    if (!current.binding.agentId) {
       setShowSettings(true);
       updateRoom(id, {
-        error: !current.binding.agentId
-          ? "请先选择管理员已开放的专家。"
-          : "先选择专家和本人已授权的连接器，再查询业务数据。",
+        error: "请先选择管理员已开放的专家。",
       });
       return;
     }
@@ -1391,9 +1420,6 @@ function App() {
     }
     if (
       !agents.some((item) => item.id === current.binding.agentId) ||
-      current.binding.connectors.some(
-        (name) => !connectors.some((item) => item.id === name),
-      ) ||
       current.binding.knowledgeBases.some(
         (name) => !knowledge.some((item) => item.id === name),
       )
@@ -1795,15 +1821,69 @@ function App() {
     void native("chatClose", { board: active }).catch(() => {});
   }
 
+  const switchingLocked =
+    room.busy ||
+    !!room.activeTurnId ||
+    !!room.teamSpeakers.length ||
+    !!room.queue.length ||
+    room.stopping ||
+    room.awaitingStatus ||
+    room.approvals.some((a) => ["pending", "submitting"].includes(a.status));
+
+  function selectQuickExpert(value: string) {
+    if (switchingLocked || uploading) return;
+    if (value.startsWith("team:")) {
+      const id = value.slice(5);
+      if (!teamsRef.current.some((t) => t.agent_id === id)) return;
+      chooseTeam(id);
+      chooseBoard("team");
+      return;
+    }
+    if (!value.startsWith("expert:")) return;
+    const agentId = value.slice(7);
+    if (!agentsRef.current.some((a) => a.id === agentId && !a.is_team)) return;
+    const solo = active === "team" ? lastSoloBoardRef.current : active;
+    const target =
+      roomsRef.current[solo].binding.agentId === agentId ||
+      expertRoomsRef.current[`${solo}:${agentId}`]
+        ? solo
+        : boards.find(
+            ({ id }) =>
+              id !== "team" && roomsRef.current[id].binding.agentId === agentId,
+          )?.id || solo;
+    const old = roomsRef.current[target];
+    if (old.binding.agentId === agentId) {
+      chooseBoard(target);
+      return;
+    }
+    if (
+      old.busy ||
+      old.activeTurnId ||
+      old.awaitingStatus ||
+      old.stopping ||
+      old.queue.length ||
+      old.approvals.some((a) => ["pending", "submitting"].includes(a.status))
+    ) {
+      setNotice("请先处理当前专家任务、待发消息或确认，再切换专家。");
+      return;
+    }
+    if (old.binding.agentId)
+      expertRoomsRef.current[`${target}:${old.binding.agentId}`] = old;
+    const next =
+      expertRoomsRef.current[`${target}:${agentId}`] ||
+      freshRoom({ agentId, connectors: [], knowledgeBases: [] });
+    updateRoom(target, () => next);
+    void native("chatClose", { board: target }).catch(() => {});
+    chooseBoard(target);
+    if (next.threadId)
+      void loadRoomHistory(target).catch((error) =>
+        updateRoom(target, { error: errorText(error), queuePaused: true }),
+      );
+  }
+
   useEffect(() => {
     if (!showSettings) return;
     settingsRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
-    void native<{ edgeHiding: boolean }>("petPreferences")
-      .then((value) => {
-        if (typeof value.edgeHiding === "boolean")
-          setEdgeHiding(value.edgeHiding);
-      })
-      .catch(() => {});
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -1827,19 +1907,17 @@ function App() {
     setNotice("");
   }
   function newChat() {
-    if (room.teamSpeakers.length) {
-      setNotice("团队成员仍在回复，请稍后新建对话。");
-      return;
-    }
-    if (
-      room.queue.length ||
-      room.approvals.some((a) => ["pending", "submitting"].includes(a.status))
-    ) {
-      setNotice("请先处理待发消息或当前确认，再新建对话。");
-      return;
-    }
+    if (switchingLocked || uploading) return;
     void native("chatClose", { board: active });
-    updateRoom(active, { ...freshRoom(room.binding), draft: room.draft });
+    if (listening) {
+      void native("stopListening");
+      setListening(false);
+    }
+    updateRoom(active, () => ({
+      ...freshRoom(room.binding),
+      draft: room.draft,
+      files: room.files,
+    }));
     setShowSettings(false);
   }
   async function openSetting(op: string, args: Record<string, unknown> = {}) {
@@ -1870,26 +1948,63 @@ function App() {
           </span>
           <strong>哆啦</strong>
           <span className="header-divider" aria-hidden="true" />
-          <span className="current-board">{board.name}</span>
-        </div>
-        <button
-          className="settings-trigger"
-          aria-label={showSettings ? "关闭设置" : "功能与设置"}
-          title={showSettings ? "返回聊天" : "功能与设置"}
-          onClick={() => {
-            if (!showSettings && listening) {
-              void native("stopListening");
-              setListening(false);
+          <ExpertPicker
+            experts={experts}
+            teams={teams}
+            value={
+              room.binding.agentId
+                ? `${active === "team" ? "team" : "expert"}:${
+                    room.binding.agentId
+                  }`
+                : ""
             }
-            setShowSettings((value) => !value);
-          }}
-        >
-          {showSettings ? (
-            <ChevronLeft size={16} strokeWidth={1.7} />
-          ) : (
-            <Settings size={16} strokeWidth={1.7} />
+            disabled={
+              !status.authenticated ||
+              status.companionAllowed === false ||
+              loading ||
+              !!switchingLocked ||
+              uploading
+            }
+            onChange={selectQuickExpert}
+          />
+        </div>
+        <div className="header-actions">
+          {!showSettings && (
+            <button
+              className="new-chat-trigger"
+              aria-label="新对话"
+              title="新对话"
+              disabled={
+                !status.authenticated ||
+                status.companionAllowed === false ||
+                !room.binding.agentId ||
+                !!switchingLocked ||
+                uploading
+              }
+              onClick={newChat}
+            >
+              <Plus size={16} strokeWidth={1.7} />
+            </button>
           )}
-        </button>
+          <button
+            className="settings-trigger"
+            aria-label={showSettings ? "关闭设置" : "功能与设置"}
+            title={showSettings ? "返回聊天" : "功能与设置"}
+            onClick={() => {
+              if (!showSettings && listening) {
+                void native("stopListening");
+                setListening(false);
+              }
+              setShowSettings((value) => !value);
+            }}
+          >
+            {showSettings ? (
+              <ChevronLeft size={16} strokeWidth={1.7} />
+            ) : (
+              <Settings size={16} strokeWidth={1.7} />
+            )}
+          </button>
+        </div>
       </header>
       <section
         ref={settingsRef}
@@ -1904,22 +2019,36 @@ function App() {
         {status.authenticated && status.companionAllowed !== false && (
           <>
             <nav className="boards" aria-label="选择问答板块">
-              {boards.map((item) => (
-                <button
-                  key={item.id}
-                  aria-pressed={item.id === active}
-                  className={`board ${item.id} ${
-                    item.id === active ? "active" : ""
-                  }`}
-                  onClick={() => chooseBoard(item.id)}
-                >
-                  {item.name}
-                  {(rooms[item.id].busy ||
-                    rooms[item.id].teamSpeakers.length > 0) && (
-                    <LoaderCircle size={12} className="spin" />
-                  )}
-                </button>
-              ))}
+              {boards
+                .filter((item) => item.id === "knowledge" || item.id === "team")
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    aria-pressed={
+                      item.id === "team" ? active === "team" : active !== "team"
+                    }
+                    className={`board ${item.id} ${
+                      (
+                        item.id === "team"
+                          ? active === "team"
+                          : active !== "team"
+                      )
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      chooseBoard(
+                        item.id === "team" ? "team" : lastSoloBoardRef.current,
+                      )
+                    }
+                  >
+                    {item.name}
+                    {(rooms[item.id].busy ||
+                      rooms[item.id].teamSpeakers.length > 0) && (
+                      <LoaderCircle size={12} className="spin" />
+                    )}
+                  </button>
+                ))}
             </nav>
             {active === "team" ? (
               <TeamSettings
@@ -1946,47 +2075,11 @@ function App() {
               />
             ) : (
               <>
-                <label>
-                  回答专家
-                  <select
-                    aria-label="回答专家"
-                    disabled={room.busy}
-                    value={room.binding.agentId}
-                    onChange={(event) =>
-                      changeBinding({
-                        ...room.binding,
-                        agentId: event.target.value,
-                      })
-                    }
-                  >
-                    <option value="">请选择专家</option>
-                    {room.binding.agentId && !chosenAgent && (
-                      <option value={room.binding.agentId}>
-                        原专家（当前不可用）
-                      </option>
-                    )}
-                    {chosenAgent?.is_team && (
-                      <option value={chosenAgent.id}>
-                        {chosenAgent.name}（团队）
-                      </option>
-                    )}
-                    {experts.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <fieldset disabled={room.busy}>
-                  <legend>
-                    {active === "knowledge" ? "知识库" : "连接器（MCP）"}
-                  </legend>
+                <fieldset disabled={!!switchingLocked || uploading}>
+                  <legend>知识库</legend>
                   <div className="resource-options">
                     {resourceChoices.map((item) => {
-                      const selected =
-                        active === "knowledge"
-                          ? room.binding.knowledgeBases
-                          : room.binding.connectors;
+                      const selected = room.binding.knowledgeBases;
                       return (
                         <label key={item.id}>
                           <input
@@ -1998,9 +2091,7 @@ function App() {
                                 : selected.filter((id) => id !== item.id);
                               changeBinding({
                                 ...room.binding,
-                                [active === "knowledge"
-                                  ? "knowledgeBases"
-                                  : "connectors"]: values,
+                                knowledgeBases: values,
                               });
                             }}
                           />
@@ -2013,107 +2104,18 @@ function App() {
                     )}
                   </div>
                 </fieldset>
+                <button
+                  className="text-button"
+                  onClick={() =>
+                    void openSetting("openOctop", { path: "/knowledge-bases" })
+                  }
+                >
+                  管理知识库
+                </button>
               </>
             )}
-            <div className="settings-links">
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/experts" })
-                }
-              >
-                创建与管理专家
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/connectors" })
-                }
-              >
-                接入与管理 MCP
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/knowledge-bases" })
-                }
-              >
-                管理知识库
-              </button>
-              <button
-                onClick={() =>
-                  void openSetting("openOctop", { path: "/models" })
-                }
-              >
-                模型设置
-              </button>
-            </div>
-            <div className="settings-footer">
-              <button
-                className="text-button"
-                disabled={room.busy || uploading}
-                onClick={newChat}
-              >
-                <Plus size={14} />
-                新对话
-              </button>
-              <button
-                className="text-button"
-                disabled={
-                  loading ||
-                  Object.values(rooms).some(
-                    (item) => item.busy || item.teamSpeakers.length,
-                  )
-                }
-                onClick={() => void refresh()}
-              >
-                {loading ? "刷新中…" : "刷新资源"}
-              </button>
-            </div>
           </>
         )}
-        <div className="preferences">
-          <label>
-            自动朗读
-            <input
-              type="checkbox"
-              checked={voice}
-              onChange={(event) => {
-                setVoice(event.target.checked);
-                if (!event.target.checked) void native("stopSpeaking");
-              }}
-            />
-          </label>
-          <label>
-            边缘收起
-            <input
-              type="checkbox"
-              checked={edgeHiding}
-              onChange={(event) => {
-                const enabled = event.target.checked;
-                setEdgeHiding(enabled);
-                void native("setEdgeHiding", { enabled }).catch((error) => {
-                  setEdgeHiding(!enabled);
-                  setNotice(errorText(error));
-                  setShowSettings(false);
-                });
-              }}
-            />
-          </label>
-          <button onClick={() => void openSetting("petSize")}>宠物大小</button>
-          <button onClick={() => void openSetting("help")}>使用说明</button>
-        </div>
-        <div className="settings-footer">
-          <span>{identity}</span>
-          {status.authenticated && (
-            <button
-              className="text-button"
-              disabled={Object.values(rooms).some(
-                (item) => item.busy || item.teamSpeakers.length,
-              )}
-              onClick={() => void openSetting("logout")}
-            >
-              退出账号
-            </button>
-          )}
-        </div>
       </section>
       {!status.authenticated ? (
         <section className="login-state">

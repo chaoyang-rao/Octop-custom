@@ -45,7 +45,7 @@ test("fresh installs bind each board to its corresponding published expert", () 
   );
 });
 
-test("unbound knowledge questions opt out of connector and knowledge defaults", () => {
+test("knowledge questions inherit saved expert resources without manual selection", () => {
   const binding = initialBinding(
     "knowledge",
     [{ id: "knowledge-copy", name: "知识库助手" }],
@@ -57,8 +57,8 @@ test("unbound knowledge questions opt out of connector and knowledge defaults", 
     "只解释本轮提供的资料",
     [],
   );
-  assert.deepEqual(payload.mcp_servers, []);
-  assert.deepEqual(payload.knowledge_base_ids, []);
+  assert.equal("mcp_servers" in payload, false);
+  assert.equal("knowledge_base_ids" in payload, false);
 });
 
 test("board and identity sessions cannot overwrite dashboard default or each other", () => {
@@ -76,21 +76,31 @@ test("board and identity sessions cannot overwrite dashboard default or each oth
     settingsKey("http://127.0.0.1:8088", 3),
   );
 });
-test("explicit resources opt out of unwanted default connectors and attach selected KBs", () => {
+test("companion inherits expert MCPs even when legacy boards selected another connector", () => {
   const body = turnPayload(
-    { agentId: "a", connectors: [], knowledgeBases: ["kb"] },
+    { agentId: "a", connectors: ["legacy-other-mcp"], knowledgeBases: ["kb"] },
     "scoped",
     " question ",
     [{ path: "inbound/p.png", filename: "p.png", media_type: "image/png" }],
     "owned",
   );
-  assert.deepEqual(body.mcp_servers, []);
+  assert.equal("mcp_servers" in body, false);
   assert.deepEqual(body.knowledge_base_ids, ["kb"]);
   assert.equal("hitl_policy" in body, false);
   assert.equal("conversation_mode" in body, false);
   assert.equal(body.thread_id, "owned");
   assert.equal(body.messages[0].content[1].type, "image_url");
   assert.equal(body.messages[0].content[1].workspace_path, "inbound/p.png");
+});
+test("empty knowledge selection preserves the expert's saved knowledge defaults", () => {
+  const body = turnPayload(
+    { agentId: "a", connectors: [], knowledgeBases: [] },
+    "scoped",
+    "hello",
+    [],
+  );
+  assert.equal("mcp_servers" in body, false);
+  assert.equal("knowledge_base_ids" in body, false);
 });
 test("only owned agents are offered even when an admin response includes other users", () => {
   assert.deepEqual(

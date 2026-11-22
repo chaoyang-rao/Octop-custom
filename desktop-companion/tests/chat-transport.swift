@@ -10,6 +10,8 @@ import Foundation
   do {_ = try CompanionChatCommand(missing);throw CompanionError.unavailable("Missing context was accepted")}catch CompanionError.invalidPath {}
   var bypass=args;bypass["frame"]=["type":"user_turn","hitl_policy":["mode":"allow_all"]]
   let sanitized=try CompanionChatCommand(bypass);precondition(sanitized.frame["hitl_policy"] == nil)
+  var legacy=args;legacy["frame"]=["type":"user_turn","mcp_servers":["another-experts-mcp"]]
+  let inherited=try CompanionChatCommand(legacy);precondition(inherited.frame["mcp_servers"] == nil, "Legacy frames must not replace the expert's MCP binding")
   var decoder=CompanionSSEDecoder()
   _=try decoder.feed("event: chunk");_=try decoder.feed("data: {\"type\":\"token\",\"content\":\"中文\"}")
   let decoded=try decoder.feed("");precondition(decoded?["content"] as? String == "中文")
@@ -19,6 +21,10 @@ import Foundation
   guard CommandLine.arguments.count > 1 else {print("chat_identity_and_sse_decoder=passed");return}
   let client=BackendClient(origin:try EndpointPolicy.origin(CommandLine.arguments[1]))
   try client.credentials.save("fixture-only-token",origin:client.origin)
+  let originalBinding=try await client.expertMCPs("owned");precondition(originalBinding == ["fixture-owned"])
+  _=try await client.request("/api/fixture/binding",method:"PATCH",body:Data("{\"mcp_servers\":[\"fixture-updated\"]}".utf8),contentType:"application/json")
+  let updatedBinding=try await client.expertMCPs("owned");precondition(updatedBinding == ["fixture-updated"], "Expert MCP changes must apply without client-side configuration")
+  do {_=try await client.expertMCPs("foreign");throw CompanionError.invalidPath} catch CompanionError.unavailable {}
   let socket=try client.webSocket(agentId:"owned");socket.resume()
   try await socket.send(.string(String(data:try JSONSerialization.data(withJSONObject:command.frame),encoding:.utf8)!))
   let received=try await socket.receive()
