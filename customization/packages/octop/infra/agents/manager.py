@@ -2277,7 +2277,7 @@ class AgentManager:
             self._track_invocation(agent_id, thread_id_from_request(request) or ""),
         ):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
-            req = self._prepare_stream_request(agent_id, request)
+            req = await asyncio.to_thread(self._prepare_stream_request, agent_id, request)
             with (
                 hitl_thread_scope(thread_id_from_request(req)),
                 turn_model_scope(self._stream_model_label(agent_id, req, thread_id)),
@@ -2329,7 +2329,7 @@ class AgentManager:
                     return result
         async with self._track_invocation(agent_id, thread_id_from_request(request) or ""):
             self._apply_pending_bootstrap_graph_refresh(agent_id)
-            req = self._prepare_stream_request(agent_id, request)
+            req = await asyncio.to_thread(self._prepare_stream_request, agent_id, request)
             thread_id = str(req.get("thread_id") or thread_id_from_request(req) or "")
             with (
                 hitl_thread_scope(thread_id_from_request(req)),
@@ -4430,7 +4430,41 @@ class AgentManager:
             configurable = dict(req.get("configurable") or {})
             configurable["plugin_tool_configs"] = tool_configs
             req["configurable"] = configurable
+        from octop.infra.agents.middleware.reasoning import CONFIG_KEY
+        from octop.infra.agents.teams.primary import request_user_id
+
+        configurable = dict(req.get("configurable") or {})
+        uid = request_user_id(req)
+        if CONFIG_KEY not in configurable and uid is not None:
+            overrides = self.reasoning_for_invocation(agent_id, thread_id, uid, request=req)
+            if overrides:
+                configurable[CONFIG_KEY] = overrides
+                req["configurable"] = configurable
         return apply_agent_runtime_to_stream_request(req, agent_cfg)
+
+    def reasoning_for_invocation(
+        self, agent_id: str, thread_id: str, user_id: int, *, request: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        from octop.infra.agents.settings.reasoning import resolve_reasoning_overrides
+
+        thread = self._repos.thread_repo.get(thread_id) if thread_id else None
+        if thread is not None and thread.user_id != user_id:
+            raise OctopError.localized(ErrorCode.FORBIDDEN)
+        ref = self._stream_model_label(agent_id, request or {}, thread_id)
+        if not ref:
+            ref = self.resolve_fallback_model_ref() or ""
+        if not ref:
+            return {}
+        capability = self._providers.get_model_reasoning_capability(ref)
+        if capability is None:
+            return {}
+        user = self._repos.user_repo.get(user_id)
+        return resolve_reasoning_overrides(
+            capability,
+            model_ref=ref,
+            thread=thread,
+            preferences_json=user.preferences_json if user is not None else None,
+        )
 
     def _thread_project_config(self, agent_id: str, thread_id: str) -> dict[str, str]:
         from octop.infra.agents.teams.primary import current_primary_room

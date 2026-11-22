@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261119.1"
+        default: "custom-1.0.3b3-20261122.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026111901"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261119.1' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026112201"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261122.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -440,7 +440,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 111901：主聊天与哆啦桌宠发送新消息后顶部定位，为流式回复预留空间；修复桌宠历史同步更换消息 ID 后定位失效的问题。保留企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
+          Octop Custom 112201：宽泛或跨领域问题先由团队专家确认能力与问题归属，再交叉讨论，最后由小通汇总负责人、结论、依据与缺口。专家协作调用沿用各自绑定的 MCP、模型和思考设置；工具加载失败或无权限直接报告，避免误判为没有业务能力。手动团队与自动任务协作群均使用新规则，不复制私人会话或内部思考。
+
+          保留企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
 
           旧版（包括 110901）需先手动安装本次新版，之后才能自动接收更新。先退出旧 Octop，不要删除 ~/.octop（Windows 为 %USERPROFILE%\.octop）数据目录。外部数据库或不可写安装位置使用手动安装。
 

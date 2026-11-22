@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.3b3",
   "upstream_commit": "4811eb45996169e86006db1b6451264ff4758223",
-  "program_files": 2501,
-  "changed_program_files": 571,
+  "program_files": 2502,
+  "changed_program_files": 572,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -739,7 +739,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "781ff2f0bb4feca4a46b390586ae3ecc35cc8f7955184dde3c4c7cfa549eb775",
+      "sha256": "df37fba2bc7325c15d14f1e9d4dc8d5738f1a3d8f48b5664ae4c9ebf82fa6583",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
@@ -5593,7 +5593,7 @@
     },
     {
       "path": "octop/i18n/en.json",
-      "sha256": "79be6c76be93c1f40a8b41c647f363a981c5e545e3e77b5de3ccbcdd795b1d3e",
+      "sha256": "c68999a8de1c53032d315d0a9fa55aa282160ba16d1fda010c5479cb183f26fe",
       "upstream_program_sha256": "e2d96a5cdb9d22efa59f3b73824e8510fc87490d1c5a32926c5041796895d9b1",
       "changed_from_saved_original": true
     },
@@ -5605,7 +5605,7 @@
     },
     {
       "path": "octop/i18n/zh.json",
-      "sha256": "e17534120cbaaa7471abf7ad2681f3f1afddf6410940da4b811879a03e5ec78b",
+      "sha256": "204d42ef0ef14ca3a3b1921a0a2f326f42d7e7c89dc8807e7a8dcc51c1c7444d",
       "upstream_program_sha256": "c358a60eb6adbd6163e7dfb50f28a31cf53041f6c14d78b349e229c9d7f3566d",
       "changed_from_saved_original": true
     },
@@ -5767,7 +5767,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "65640db68aa86435cf7ec514ade549fc89995cccd0bbf7c0fa66eeecf6f49019",
+      "sha256": "19770c9ae134b4904f778ae08d327fefcc1dc7ca7c0c189ee04d6fd6adb738d4",
       "upstream_program_sha256": "1b5b79ef99271e81687de055fecd3730974b08a529182d8e58c70a492ce73fdd",
       "changed_from_saved_original": true
     },
@@ -5881,13 +5881,13 @@
     },
     {
       "path": "octop/infra/agents/middleware/task_dispatch.py",
-      "sha256": "adaa8a9338f4ad950cdaa94ee8891349c1917033b70b8849dee101c12bb275e4",
+      "sha256": "6d2acd6d586cfde7438d052b052547d865a7ab4feb1f26f03f09f1194bc0e279",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/middleware/team_context.py",
-      "sha256": "555ff4c3d5f61a9bdc3d57603b73bd548fbcfd668684a0f4534d0fe353e91c6f",
+      "sha256": "61e0869999e7ba635b8a850a62db74439033b4753980dd61af6206502a6636ae",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6148,6 +6148,12 @@
       "sha256": "84e7e4a62015d99c5a222fe3fa69c00ee49b74ddf1c35817cf3f3d625cb373a7",
       "upstream_program_sha256": "84e7e4a62015d99c5a222fe3fa69c00ee49b74ddf1c35817cf3f3d625cb373a7",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/infra/agents/settings/reasoning.py",
+      "sha256": "d0023f5d7d8011be8086e0ffa226b0a875645e2d9ecfaf8755b5ea5d9f48eaba",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/settings/runtime_limits.py",
@@ -9133,7 +9139,7 @@
     },
     {
       "path": "octop/infra/agents/teams/primary.py",
-      "sha256": "a08a53f40d43d7a962b4a7cc8d6029e3c6c8207cad5c1e047166df44e07579f1",
+      "sha256": "2072a512a0b9197446a39febc3777433fc02cfe73451153029285e898f9221a9",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -9145,13 +9151,13 @@
     },
     {
       "path": "octop/infra/agents/teams/team_manager.py",
-      "sha256": "2851424a067e8a2da6a1aab55e757c1e17f78c36b73d98a96893b6d0817834ac",
+      "sha256": "32829081633fd37ba34a3eece054d2ad72df5b194ca1611148c70f1cff65329d",
       "upstream_program_sha256": "c25dbe1dffe6fc921354c2e01fb1a6123ffac80c69c89ee68d0c383ec7561854",
       "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/teams/template/AGENTS.md",
-      "sha256": "a9d024944be0d06e412c79c2c74a3c06233b60d4711ac7aca1fcda3a399d2291",
+      "sha256": "acfcf2ffe793df803a929c42e0cd209d175e3508dda4a5b26e237d3437d442b3",
       "upstream_program_sha256": "32f83ef74249aaf04bd2cd6b16476ce10c4dd15e42d33b47fd7d75286519bb41",
       "changed_from_saved_original": true
     },
@@ -9163,7 +9169,7 @@
     },
     {
       "path": "octop/infra/agents/teams/template/SOUL.md",
-      "sha256": "166fc2224d5ca1aaa61b5a9692f645e86158d4e7e8901541d51ef67cf7110b4b",
+      "sha256": "031d139a9f076a3abcb2e59c9fbbe2f79b106144cd0b1e4e24eb2835491b0e08",
       "upstream_program_sha256": "852be000bdc782ce31526fa4d928854a9fb12cb73d31ed0fe98005700ccd22f1",
       "changed_from_saved_original": true
     },
@@ -11269,7 +11275,7 @@
     },
     {
       "path": "octop/infra/gateway/process/processor.py",
-      "sha256": "60c8e85b84891a6f5d9967879e86bd73bf6c7de7e530f903c135b0730a40f608",
+      "sha256": "26e12da1cbd1af5230d2967ef0a8f2cf8ba5aa8bf8b3d79be7de0efa68041eb7",
       "upstream_program_sha256": "8994b54e19a3e36021045d91f6b571d967152ecb683c1203c1756a4090d3a54f",
       "changed_from_saved_original": true
     },
@@ -12055,7 +12061,7 @@
     },
     {
       "path": "octop/infra/tasks/coordinator.py",
-      "sha256": "fc11d708a13eaf56b722bc000f8963cf6b92ef3a3a0f57fb900c87e38053c1a6",
+      "sha256": "1720ce8d61ee590f7792a02ba3ada7f8d0caa78103c6103c4b712c2d6e7792f1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },

@@ -211,6 +211,7 @@ class TaskCoordinator:
         briefing = tr("tasks.coordination.briefing", locale)
         if scope.get("task_room"):
             briefing += "\n\n" + tr("tasks.rooms.review_briefing", locale)
+            briefing += "\n\n" + tr("teams.discussion_host_briefing", locale)
         return briefing + "\n\n" + data
 
     async def _review(

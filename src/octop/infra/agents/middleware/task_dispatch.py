@@ -61,6 +61,9 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
             )
             if binding and binding.get("agent_id") and binding.get("thread_id"):
                 text += "\n\n" + tr(
+                    "teams.discussion_member_briefing", str(cfg.get("locale") or DEFAULT_LOCALE)
+                )
+                text += "\n\n" + tr(
                     "tasks.rooms.executor_briefing",
                     str(cfg.get("locale") or DEFAULT_LOCALE),
                     agent_id=binding["agent_id"],
@@ -77,6 +80,9 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
                 text = tr(
                     "tasks.rooms.consultant_briefing", str(cfg.get("locale") or DEFAULT_LOCALE)
                 )
+                text += "\n\n" + tr(
+                    "teams.discussion_member_briefing", str(cfg.get("locale") or DEFAULT_LOCALE)
+                )
                 binding = manager._repos.task_coordination_repo.room(peer_goal["scope_id"])
                 if binding and binding.get("agent_id") and binding.get("thread_id"):
                     text += "\n\n" + tr(
@@ -92,6 +98,10 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
         if primary is None or primary.agent_id != cfg.get("agent_id"):
             return request
         text = tr("tasks.dispatch_briefing", str(cfg.get("locale") or DEFAULT_LOCALE))
+        if room is None and not cfg.get("octop_team_id"):
+            text += "\n\n" + tr(
+                "teams.discussion_host_briefing", str(cfg.get("locale") or DEFAULT_LOCALE)
+            )
         if manager is not None:
             goal = manager._repos.task_coordination_repo.scope_for_room(
                 user_id, str(cfg.get("thread_id") or ""), include_stopped=True

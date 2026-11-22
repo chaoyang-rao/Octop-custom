@@ -109,7 +109,9 @@ def host_system_prompt(row: Any, user_repo: Any) -> str:
         if isinstance(uid, int) and uid > 0
         else DEFAULT_LOCALE
     )
-    briefing = tr("teams.host_briefing", locale)
+    briefing = (
+        tr("teams.host_briefing", locale) + "\n\n" + tr("teams.discussion_host_briefing", locale)
+    )
     custom = str(getattr(row, "system_prompt", None) or "").strip()
     return f"{custom}\n\n{briefing}".strip() if custom else briefing
 
@@ -251,12 +253,54 @@ class TeamManager:
                         await recording_result
                 except (OctopError, PermissionError, ValueError, RuntimeError, OSError):
                     logger.warning("Task peer history registration deferred", exc_info=True)
+        extra = await self._peer_runtime_defaults(call, thread_id, extra)
         return _make_peer_session(
             thread_id=thread_id,
             session_key=session_key,
             configurable=extra,
             message=question or dispatch_message,
         )
+
+    async def _peer_runtime_defaults(
+        self, call: PeerCall, thread_id: str | None, extra: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
+        """Keep the callee's tools and reasoning, never the caller's selections."""
+        uid = _octop_user_id(call.user_id)
+        if uid is None:
+            return extra
+        cfg = dict(extra or {})
+        names = await asyncio.to_thread(self._agent_manager.default_mcp_servers, call.to_agent_id)
+        if names:
+            try:
+                names = await asyncio.to_thread(
+                    self._agent_manager.validate_mcp_servers, uid, names
+                )
+                failed = await self._agent_manager.prepare_chat_mcp(
+                    call.to_agent_id, names, connector_user_id=uid
+                )
+            except (OctopError, PermissionError, ValueError):
+                cfg["mcp_servers"] = []
+                cfg["octop_peer_connector_error"] = {"code": "denied"}
+            else:
+                cfg["mcp_servers"] = list(names)
+                if failed:
+                    cfg["octop_peer_connector_error"] = {
+                        "code": "load",
+                        "servers": ", ".join(failed),
+                    }
+        try:
+            overrides = await asyncio.to_thread(
+                self._agent_manager.reasoning_for_invocation,
+                call.to_agent_id,
+                thread_id or "",
+                uid,
+            )
+        except (OctopError, PermissionError):
+            cfg["octop_peer_connector_error"] = {"code": "denied"}
+        else:
+            if overrides:
+                cfg["octop_reasoning_overrides"] = overrides
+        return cfg or None
 
     async def record_peer_turn(
         self,
@@ -342,13 +386,32 @@ class TeamManager:
         )
         if not result:
             result = "(empty)"
-        return tr(
+        notice = tr(
             "teams.followup_done",
             locale,
             name=child_name,
             task=msg.message,
             result=result,
         )
+        harness = getattr(self._agent_manager, "harness_manager", None)
+        inbox = getattr(getattr(harness, "team", None), "inbox", None)
+        if inbox is not None:
+            pending = [
+                self._display_name(job.target_agent_id)
+                for job in inbox.list(source=msg.source_agent_id)
+                if str(job.user_id) == str(msg.user_id)
+                and job.source_thread_id == msg.source_thread_id
+                and job.id != msg.id
+                and job.status in {"pending", "queued", "running"}
+            ]
+            if pending:
+                notice += "\n\n" + tr(
+                    "teams.pending_discussion",
+                    locale,
+                    members=", ".join(name[:80] for name in pending[:20]),
+                    count=len(pending),
+                )
+        return notice
 
     async def on_reply(self, event: ReplyEvent) -> None:
         self._end_job_from_reply(event)

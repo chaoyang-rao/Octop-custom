@@ -13,6 +13,7 @@ class ProjectRequestTests(unittest.TestCase):
         manager = AgentManager.__new__(AgentManager)
         manager._repos = SimpleNamespace(thread_repo=SimpleNamespace(get=lambda tid: row))
         manager.get_config = lambda agent_id: {}
+        manager.reasoning_for_invocation = lambda *args, **kwargs: {}
         return manager
 
     def row(self, path="/trusted/project", agent_id="codex"):

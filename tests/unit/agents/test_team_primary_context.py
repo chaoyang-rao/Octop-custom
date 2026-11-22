@@ -186,9 +186,28 @@ async def test_model_context_is_ephemeral_and_includes_all_recent_member_authors
     assert await middleware.awrap_model_call(Request(), handler) == "response"
     transcript = "\n".join(str(m.content) for m in seen)
     assert "小通" in transcript and "成员的薪酬分析" in transcript
+    assert "先确认归属" in transcript
     assert "另一个用户的秘密" not in transcript and "不应导出深度思考" not in transcript
     assert Request.messages == original and len(original) == 1
     assert env.repos.thread_message_repo.head("group") == 4
+
+
+def test_group_member_gets_independent_judgment_instructions(primary_env):
+    env = primary_env
+    middleware = TeamConversationContextMiddleware(repos=env.repos, teams=env.teams)
+    prefix, team_id, room_id = middleware._prefix(
+        {
+            "agent_id": "member",
+            "user": str(env.one),
+            "octop_team_id": "room",
+            "octop_team_thread_id": "group",
+        },
+        [],
+    )
+    text = "\n".join(str(item.content) for item in prefix)
+    assert (team_id, room_id) == ("room", "group")
+    assert "独立判断" in text and "不要代写其他成员" in text
+    assert "数据分析师" in text
 
 
 @pytest.mark.asyncio
