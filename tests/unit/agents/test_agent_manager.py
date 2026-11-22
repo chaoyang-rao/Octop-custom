@@ -2693,6 +2693,42 @@ def test_prepare_stream_request_maps_max_iters_to_recursion_limit(
     assert req["recursion_limit"] == 17
 
 
+def test_invocations_keep_the_experts_model_and_thread_reasoning(manager, monkeypatch):
+    from octop.infra.agents.providers.reasoning import reasoning_capability
+
+    uid = manager._repos.user_repo.create(username="reasoner", role="user")
+    manager._repos.user_repo.set_preferences_json(
+        uid,
+        json.dumps({"model_reasoning": {"own/kimi-k2.5": {"mode": "enabled", "effort": "high"}}}),
+    )
+    manager._repos.agent_repo.create(
+        agent_id="member", user_id=uid, name="Expert", default_model="own/kimi-k2.5"
+    )
+    manager._repos.thread_repo.insert(
+        thread_id="peer", agent_id="member", user_id=uid, channel_type="dashboard", session_key="s"
+    )
+    capability = reasoning_capability({"id": "kimi-k2.5"})
+    lookup = MagicMock(return_value=capability)
+    monkeypatch.setattr(manager._providers, "get_model_reasoning_capability", lookup)
+    request = {"user": str(uid), "thread_id": "peer", "messages": "检查归属"}
+    prepared = manager._prepare_stream_request("member", request)
+    assert prepared["configurable"]["octop_reasoning_overrides"] == {
+        "extra_body": {"thinking": {"type": "enabled"}}
+    }
+    lookup.assert_called_once_with("own/kimi-k2.5")
+    assert "configurable" not in request
+    explicit = {**request, "configurable": {"octop_reasoning_overrides": {}}}
+    assert (
+        manager._prepare_stream_request("member", explicit)["configurable"][
+            "octop_reasoning_overrides"
+        ]
+        == {}
+    )
+    with pytest.raises(OctopError) as error:
+        manager.reasoning_for_invocation("member", "peer", uid + 1)
+    assert error.value.code == ErrorCode.FORBIDDEN
+
+
 def test_prepare_stream_request_maps_model_settings_and_max_input_tokens(
     manager: AgentManager,
     monkeypatch: pytest.MonkeyPatch,

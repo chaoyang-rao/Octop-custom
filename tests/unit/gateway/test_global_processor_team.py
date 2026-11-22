@@ -42,6 +42,9 @@ def processor_env(tmp_path: Path) -> dict[str, object]:
 
     agent_manager = MagicMock()
     agent_manager.get_row.side_effect = lambda aid: AgentRepo(db).get(aid)
+    agent_manager.default_mcp_servers.return_value = []
+    agent_manager.reasoning_for_invocation.return_value = {}
+    agent_manager.prepare_chat_mcp = AsyncMock(return_value=[])
 
     from octop.infra.gateway.gateway import Gateway
 
@@ -147,6 +150,69 @@ def test_compose_followup_empty_result_placeholder(processor_env: dict) -> None:
     )
     text = processor.compose_followup(msg, result_text="   ", error_text=None)
     assert "(empty)" in text
+
+
+def test_followup_waits_for_own_room_members_only(processor_env):
+    processor = processor_env["processor"]
+    processor._agent_repo.create(agent_id="host", user_id=1, name="Host", kind="team")
+    current = InboxMessage("done", "child", "host", "thr_parent", "核对归属", 1)
+    other = InboxMessage("pending", "parent", "host", "thr_parent", "交叉核对", 1)
+    foreign_room = InboxMessage("foreign", "secret", "host", "private-room", "private", 1)
+    foreign_user = InboxMessage("foreign-user", "secret", "host", "thr_parent", "private", 2)
+    inbox = processor._agent_manager.harness_manager.team.inbox
+    inbox.list.return_value = [current, other, foreign_room, foreign_user]
+    text = processor.compose_followup(current, result_text="已确认本专家负责质量", error_text=None)
+    assert "Parent" in text and "secret" not in text
+    assert "1" in text
+    other.status = "done"
+    settled = processor.compose_followup(
+        current, result_text="已确认本专家负责质量", error_text=None
+    )
+    assert "Parent" not in settled
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("failure", [None, "load", "denied"])
+async def test_peer_uses_own_bound_mcp_and_reasoning_before_model(
+    processor_env, failure, monkeypatch
+):
+    from octop_harness.request import ChatRequest
+    from octop_harness.teams.util import PeerCall
+
+    from octop.infra.agents.middleware.team_context import TeamConversationContextMiddleware
+    from octop.infra.errors import ErrorCode, OctopError
+
+    processor = processor_env["processor"]
+    manager = processor._agent_manager
+    manager.default_mcp_servers.return_value = ["quality-mcp"]
+    manager.validate_mcp_servers.return_value = ["quality-mcp"]
+    manager.reasoning_for_invocation.return_value = {"model_fields": {"reasoning_effort": "high"}}
+    if failure == "load":
+        manager.prepare_chat_mcp.return_value = ["quality-mcp"]
+    elif failure == "denied":
+        manager.validate_mcp_servers.side_effect = PermissionError("not authorized")
+    session = await processor.prepare_peer_session(
+        PeerCall("parent", "child", 1, "先核对当前工具和质量问题归属", "thr_parent", None)
+    )
+    cfg = session.configurable
+    assert cfg["mcp_servers"] == ([] if failure == "denied" else ["quality-mcp"])
+    assert cfg["octop_reasoning_overrides"] == {"model_fields": {"reasoning_effort": "high"}}
+    manager.reasoning_for_invocation.assert_called_once_with("child", "thr_parent~child", 1)
+    if failure != "denied":
+        manager.prepare_chat_mcp.assert_awaited_once_with(
+            "child", ["quality-mcp"], connector_user_id=1
+        )
+    # The harness actually merges PeerSession configurable into the callee request.
+    request = ChatRequest(messages="triage", agent_id="child", user="1", configurable=cfg)
+    runnable = request.to_runnable_config()["configurable"]
+    assert runnable["mcp_servers"] == cfg["mcp_servers"]
+    if failure:
+        mw = TeamConversationContextMiddleware(repos=MagicMock(), teams=MagicMock())
+        with pytest.raises(OctopError) as error:
+            mw._prefix(runnable, [])
+        assert error.value.code == (
+            ErrorCode.CONNECTOR_MCP_LOAD_FAILED if failure == "load" else ErrorCode.FORBIDDEN
+        )
 
 
 @pytest.mark.asyncio

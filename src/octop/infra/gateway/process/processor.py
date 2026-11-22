@@ -24,8 +24,8 @@ from octop_harness.teams.processor import ReplyEvent
 from octop_harness.teams.util import PeerCall, PeerSession
 
 from octop.i18n.domains.stream import format_stream_error
-from octop.infra.agents.providers.reasoning import reasoning_request_parameters
 from octop.infra.agents.settings.profile import parse_config_json
+from octop.infra.agents.settings.reasoning import resolve_reasoning_overrides
 from octop.infra.agents.teams import is_team_agent
 from octop.infra.agents.teams.team_manager import (
     TeamManager,
@@ -89,7 +89,6 @@ from octop.infra.history.projection import (
 from octop.infra.history.trajectory.settings import agent_trajectory_enabled
 from octop.infra.knowledge.default_open import stamp_turn_knowledge_config
 from octop.infra.users.preferences import (
-    get_model_reasoning_from_json,
     get_preferred_model_from_json,
 )
 from octop.infra.utils.locale import resolve_user_locale
@@ -884,31 +883,14 @@ class GlobalProcessor:
             return {}
         thread = self._thread_registry.get_thread(thread_id)
         user_row = self._user_repo.get(user_id)
-        user_prefs = get_model_reasoning_from_json(
-            user_row.preferences_json if user_row is not None else None
+        return resolve_reasoning_overrides(
+            capability,
+            model_ref=model_ref,
+            preferences_json=user_row.preferences_json if user_row is not None else None,
+            thread=thread,
+            mode=(meta or {}).get("reasoning_mode"),
+            effort=(meta or {}).get("reasoning_effort"),
         )
-        user_pref = user_prefs.get(model_ref)
-        raw_mode = (meta or {}).get("reasoning_mode")
-        raw_effort = (meta or {}).get("reasoning_effort")
-        mode = (
-            str(raw_mode)
-            if raw_mode in ("auto", "enabled", "disabled")
-            else thread.reasoning_mode
-            if thread is not None and thread.reasoning_mode
-            else user_pref.mode
-            if user_pref is not None
-            else None
-        )
-        effort = (
-            str(raw_effort).strip().lower()
-            if isinstance(raw_effort, str) and raw_effort.strip()
-            else thread.reasoning_effort
-            if thread is not None and thread.reasoning_effort
-            else user_pref.effort
-            if user_pref is not None
-            else None
-        )
-        return reasoning_request_parameters(capability, mode=mode, effort=effort)
 
     # -- IM channel entry (MessageEvent stream) --------------------------------
 

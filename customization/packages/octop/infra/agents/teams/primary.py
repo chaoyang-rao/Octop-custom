@@ -35,7 +35,7 @@ def primary_room_scope(room: PrimaryRoom) -> Iterator[None]:
 
 def request_user_id(request: dict[str, Any]) -> int | None:
     cfg = request.get("configurable") or {}
-    raw = cfg.get("user", request.get("user_id"))
+    raw = cfg.get("user", request.get("user", request.get("user_id")))
     if isinstance(raw, bool):
         return None
     if isinstance(raw, int) and raw > 0:

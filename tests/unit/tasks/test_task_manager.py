@@ -85,6 +85,8 @@ def setup(tmp_path, monkeypatch):
         cancel_stream=Mock(),
         is_agent_active=lambda _: False,
         validate_mcp_servers=lambda uid, values: values,
+        default_mcp_servers=lambda aid: [],
+        reasoning_for_invocation=lambda *args, **kwargs: {},
         validate_knowledge_base_ids=lambda uid, values: values,
         list_skill_summaries=AsyncMock(return_value=[]),
         providers=SimpleNamespace(is_model_ref_usable=lambda model: True),

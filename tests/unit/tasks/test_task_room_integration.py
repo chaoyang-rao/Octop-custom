@@ -6,7 +6,8 @@ import asyncio
 from types import SimpleNamespace
 
 import pytest
-from langchain.agents.middleware import ModelResponse
+from langchain.agents.middleware import ModelRequest, ModelResponse
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from octop_gateway.models import ChannelSubject, InboundMessage, TextContent
 from tests.unit.tasks.test_task_manager import settled
@@ -19,6 +20,39 @@ from octop.infra.errors import OctopError
 from octop.infra.tasks.models import CodingTaskSpec, TaskCreate
 from octop.infra.tasks.rooms import TaskRooms, discussion_messages
 from octop.infra.tasks.scope import CoordinatorContext, coordinator_scope
+
+
+async def test_automatic_task_group_gets_host_and_member_deliberation_policy(room_env, monkeypatch):
+    e = room_env
+    first = await enqueue(e)
+    await enqueue(e, "c")
+    middleware = TaskDispatchMiddleware(e.agents.teams, lambda: e.manager)
+    cfg = {"agent_id": "a", "thread_id": e.origin, "user": str(e.uid), "locale": "zh"}
+    monkeypatch.setattr(
+        "octop.infra.agents.middleware.task_dispatch.runtime_config",
+        lambda _: {"configurable": cfg},
+    )
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"]), messages=[HumanMessage("整体有哪些问题？")]
+    )
+    host = middleware._with_briefing(request)
+    assert "先确认归属" in str(host.system_message.content)
+    tid = await e.gateway.thread_registry.get_or_create(
+        agent_id="b", user_id=e.uid, channel_type="dashboard", channel_subject_id="task"
+    )
+    e.repos.task_repo.transition(
+        first.task_id,
+        expected={"queued"},
+        state="running",
+        action="thread",
+        fields={"thread_id": tid},
+    )
+    e.manager._bindings[("b", e.uid, tid)] = (first.task_id, first.attempt)
+    cfg.update(agent_id="b", thread_id=tid)
+    member = middleware._with_briefing(request)
+    assert "独立判断" in str(member.system_message.content)
+    assert "不构成新的授权" in str(member.system_message.content)
+    assert request.system_message is None
 
 
 async def test_legacy_review_is_tagged_and_survives_checkpoint_compaction(room_env, monkeypatch):
@@ -88,6 +122,7 @@ async def test_real_queue_records_member_results_then_primary_review(room_env):
 
     async def review(_agents, _gateway, scope, prompt, *, user_input):
         assert "Real recorded result from b" in prompt and "Real recorded result from c" in prompt
+        assert "先确认归属" in prompt
         context = CoordinatorContext(
             scope_id=scope["scope_id"],
             user_id=e.uid,

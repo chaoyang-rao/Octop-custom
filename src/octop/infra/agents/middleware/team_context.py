@@ -15,6 +15,7 @@ from octop_harness.middleware.runtime import runtime_config
 
 from octop.i18n import tr
 from octop.infra.agents.teams.primary import current_primary_room, request_user_id
+from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.history.conversations import ConversationHistory
 from octop.infra.utils.locale import DEFAULT_LOCALE
 
@@ -37,6 +38,15 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
 
     def _prefix(self, cfg: dict[str, Any], tools: Any) -> tuple[list[Any], str | None, str | None]:
         locale = str(cfg.get("locale") or DEFAULT_LOCALE)
+        connector_error = cfg.get("octop_peer_connector_error")
+        if isinstance(connector_error, dict):
+            if connector_error.get("code") == "load":
+                raise OctopError.localized(
+                    ErrorCode.CONNECTOR_MCP_LOAD_FAILED,
+                    locale,
+                    servers=connector_error.get("servers", ""),
+                )
+            raise OctopError.localized(ErrorCode.FORBIDDEN, locale)
         names = {
             getattr(tool, "name", "")
             if not isinstance(tool, dict)
@@ -100,6 +110,16 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
                     name=actor.name if actor else actor_id,
                     team=team.name,
                     primary=primary.name,
+                )
+            )
+        )
+        prefix.append(
+            SystemMessage(
+                content=tr(
+                    "teams.discussion_host_briefing"
+                    if actor_id == primary.agent_id
+                    else "teams.discussion_member_briefing",
+                    locale,
                 )
             )
         )
