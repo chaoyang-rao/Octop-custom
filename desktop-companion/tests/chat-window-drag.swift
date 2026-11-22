@@ -15,6 +15,8 @@ struct ChatWindowDragCheck {
             }
             precondition(container.hitTest(point(140, 18)) is ChatWindowDragHandle,
                          "Title must receive native window dragging")
+            precondition(!(container.hitTest(point(180, 18)) is ChatWindowDragHandle), "Expert selector must receive WebKit clicks")
+            precondition(!(container.hitTest(point(width - 55, 18)) is ChatWindowDragHandle), "The entire selector must remain interactive")
             precondition(!(container.hitTest(point(width - 22, 18)) is ChatWindowDragHandle), "Settings must remain a WebKit control")
             precondition(!(container.hitTest(point(20, 18)) is ChatWindowDragHandle), "Native traffic lights must remain clickable")
             precondition(!(container.hitTest(point(140, 200)) is ChatWindowDragHandle), "Messages must retain selection and scrolling")
@@ -23,6 +25,7 @@ struct ChatWindowDragCheck {
             container.setFrameSize(NSSize(width:width + 100,height:784))
             precondition(container.hitTest(NSPoint(x:140,y:766)) is ChatWindowDragHandle, "Drag region must follow window resizing")
             precondition(!(container.hitTest(NSPoint(x:width + 78,y:766)) is ChatWindowDragHandle), "Resized settings button must remain clickable")
+            precondition(!(container.hitTest(NSPoint(x:width + 35,y:766)) is ChatWindowDragHandle), "Selector must remain interactive after resize")
             let window = NSWindow(contentRect:NSRect(x:300,y:300,width:width + 100,height:784),styleMask:[.titled,.fullSizeContentView],backing:.buffered,defer:false)
             window.contentView = container
             let handle = container.hitTest(NSPoint(x:140,y:766)) as! ChatWindowDragHandle

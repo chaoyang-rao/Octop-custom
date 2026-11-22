@@ -77,6 +77,20 @@ final class BackendClient: NSObject, URLSessionTaskDelegate {
         guard value["status"] as? Int == 200, let rows=value["data"] as? [[String:Any]] else {throw CompanionError.unavailable("当前专家授权无法确认，请重新登录或刷新。")}
         return Set(rows.compactMap {$0["agent_id"] as? String})
     }
+    func expertMCPs(_ agentId: String) async throws -> [String] {
+        let id = try EndpointPolicy.segment(agentId)
+        guard try await companionIDs().contains(id) else {
+            throw CompanionError.unavailable("这个专家当前未向桌宠开放，请刷新或核对授权。")
+        }
+        let value = try await json("/api/agents/\(id)")
+        guard value["status"] as? Int == 200,
+              let record = value["data"] as? [String: Any],
+              record["kind"] as? String != "team",
+              let names = record["mcp_servers"] as? [String] else {
+            throw CompanionError.unavailable("专家的 MCP 配置暂不可用，请刷新后重试。")
+        }
+        return names
+    }
     func validateTeam(_ teamId:String) async throws {
         let id=try EndpointPolicy.segment(teamId), record=try await teamData("/api/teams/\(id)"), allowed=try await companionIDs()
         guard let primary=record["primary_agent_id"] as? String, record["primary_agent_name"] as? String == "小通",

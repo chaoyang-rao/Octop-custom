@@ -23,6 +23,8 @@ struct CompanionChatCommand {
         if let thread = frame["thread_id"] as? String { _ = try Self.threadID(thread) }
         if ["subscribe","cancel","steer_remove"].contains(type), frame["thread_id"] as? String == nil { throw CompanionError.invalidPath }
         frame.removeValue(forKey:"hitl_policy")
+        // Companion conversations always use the selected expert's saved MCPs.
+        if type == "user_turn" { frame.removeValue(forKey:"mcp_servers") }
         self.frame = frame
     }
 }

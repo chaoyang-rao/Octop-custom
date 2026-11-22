@@ -241,9 +241,9 @@ async function runUISmoke(page) {
   );
   ensure(
     sent.length === 2 &&
-      sent[0].args.frame.mcp_servers[0] === "aftersales_quality" &&
-      sent[1].args.frame.mcp_servers[0] === "aiq_workbench_readonly",
-    "each_board_sends_its_selected_connector",
+      !Object.hasOwn(sent[0].args.frame, "mcp_servers") &&
+      !Object.hasOwn(sent[1].args.frame, "mcp_servers"),
+    "each_expert_inherits_its_saved_connector_binding",
   );
   ensure(
     sent[0].args.frame.session_key !== sent[1].args.frame.session_key &&
@@ -264,9 +264,9 @@ async function runUISmoke(page) {
         .at(-1).args.frame,
   );
   ensure(
-    unboundKnowledge.knowledge_base_ids.length === 0 &&
-      unboundKnowledge.mcp_servers.length === 0,
-    "unbound_knowledge_accepts_current_material_without_attaching_private_resources",
+    !Object.hasOwn(unboundKnowledge, "knowledge_base_ids") &&
+      !Object.hasOwn(unboundKnowledge, "mcp_servers"),
+    "knowledge_questions_use_the_experts_authorized_defaults",
   );
   await page.getByRole("button", { name: "功能与设置", exact: true }).click();
   ensure(
@@ -288,7 +288,7 @@ async function runUISmoke(page) {
         .at(-1).args.frame,
   );
   ensure(
-    kb.knowledge_base_ids[0] === "kb-test" && kb.mcp_servers.length === 0,
+    kb.knowledge_base_ids[0] === "kb-test" && !Object.hasOwn(kb, "mcp_servers"),
     "knowledge_request_contains_only_selected_KB",
   );
   await page.getByRole("button", { name: "开始语音输入", exact: true }).click();

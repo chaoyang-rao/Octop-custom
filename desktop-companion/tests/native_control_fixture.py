@@ -77,6 +77,8 @@ async def agent_detail(agent_id: str, authorization: str = Header(default="")):
     return {
         **next(e for e in experts if e["agent_id"] == agent_id),
         "is_team_primary": agent_id == "host",
+        "kind": "expert",
+        "mcp_servers": [] if agent_id == "host" else ["fixture-" + agent_id],
     }
 
 
@@ -247,6 +249,8 @@ async def chat(ws: WebSocket, agent_id: str):
             log(frame)
             kind = frame.get("type")
             if kind == "user_turn":
+                expected = [] if agent_id == "host" or agent_id.startswith("team-") else ["fixture-" + agent_id]
+                assert frame.get("mcp_servers") == expected, "The native client must send the selected expert's saved MCP binding"
                 if frame.get("delivery") == "steer":
                     await emit(
                         {

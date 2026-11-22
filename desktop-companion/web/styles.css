@@ -940,6 +940,7 @@ body,
 }
 .topbar {
   height: 36px;
+  position: relative;
   padding: 4px 8px 4px 88px;
   flex-shrink: 0;
 }
@@ -976,6 +977,38 @@ body,
   font-size: 11.5px;
   font-weight: 500;
   line-height: 18px;
+}
+.expert-picker {
+  position: absolute;
+  left: 166px; /* Native dragging ends here in GlassChatWebView.swift. */
+  right: 44px;
+  top: 4px;
+  height: 28px;
+  min-width: 0;
+}
+.expert-picker select {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 24px 0 6px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.expert-picker select:hover:not(:disabled) { background: var(--field); }
+.expert-picker select:disabled { opacity: .5; cursor: default; }
+.expert-picker > svg {
+  position: absolute;
+  right: 7px;
+  top: 8px;
+  pointer-events: none;
+  color: var(--muted);
 }
 .app-mark strong {
   flex-shrink: 0;

@@ -371,10 +371,20 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             NSWorkspace.shared.open(url); return true
         case "chatSend":
             let command = try CompanionChatCommand(args)
-            if command.board == "team", command.frame["type"] as? String == "user_turn" {try await client.validateTeam(command.agent)}
+            var frame = command.frame
+            let revision = loginRevision, origin = client.origin
+            if frame["type"] as? String == "user_turn" {
+                if command.board == "team" {
+                    try await client.validateTeam(command.agent)
+                    frame["mcp_servers"] = [String]()
+                } else {
+                    frame["mcp_servers"] = try await client.expertMCPs(command.agent)
+                }
+                guard revision == loginRevision && origin == client.origin else { throw CancellationError() }
+            }
             if command.frame["type"] as? String == "cancel" { approvalEpoch[command.board,default:0] += 1;approvalHeaders.removeValue(forKey:command.board)?.task.cancel();approvalStreams.removeValue(forKey:command.board)?.task.cancel() }
             let socket = try socketFor(board: command.board, agent: command.agent, context: command.context)
-            let data = try JSONSerialization.data(withJSONObject: command.frame)
+            let data = try JSONSerialization.data(withJSONObject: frame)
             try await socket.send(.string(String(data: data, encoding: .utf8)!)); return true
         case "saveTeam":
             guard let name=args["name"] as? String, let members=args["memberIds"] as? [String], let host=args["hostId"] as? String else {throw CompanionError.invalidPath}

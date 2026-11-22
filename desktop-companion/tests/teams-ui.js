@@ -227,7 +227,7 @@ async function teamUI(page) {
       );
       return (
         call.args.agentId === "team-1" &&
-        call.args.frame.mcp_servers.length === 0 &&
+        !Object.hasOwn(call.args.frame, "mcp_servers") &&
         !call.args.frame.target_agent_ids
       );
     }),
@@ -303,8 +303,8 @@ async function teamUI(page) {
   await page.getByRole("button", { name: "售后", exact: true }).click();
   ensure(
     (await page
-      .getByRole("combobox", { name: "回答专家", exact: true })
-      .locator("option")
+      .getByRole("combobox", { name: "快捷选择专家", exact: true })
+      .locator('optgroup[label="专家"] option')
       .filter({ hasText: "业务团队" })
       .count()) === 0,
     "teams_do_not_replace_solo_expert_choices",

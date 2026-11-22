@@ -16,9 +16,9 @@ final class ChatWindowContentView: NSView {
         content.frame = bounds
         content.autoresizingMask = [.width, .height]
         addSubview(content)
-        // Match the compact web topbar; keep traffic lights and settings free.
-        let handle = ChatWindowDragHandle(frame: NSRect(x: 80, y: bounds.height - 36, width: max(0, bounds.width - 128), height: 36))
-        handle.autoresizingMask = [.width, .minYMargin]
+        // Only the brand drags. The expert picker starts at x=166 in styles.css.
+        let handle = ChatWindowDragHandle(frame: NSRect(x: 80, y: bounds.height - 36, width: 86, height: 36))
+        handle.autoresizingMask = [.minYMargin]
         addSubview(handle)
     }
 
