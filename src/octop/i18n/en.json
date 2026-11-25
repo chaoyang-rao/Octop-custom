@@ -575,7 +575,7 @@
     "COMPANION_ACCESS_DENIED": "The super-administrator has not enabled the desktop pet for you.",
     "COMPANION_NOT_AVAILABLE": "The desktop pet installer is not available. Contact your administrator.",
     "COMPANION_INSTALL_FAILED": "Could not prepare the desktop pet. Retry or contact your administrator.",
-    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet currently supports macOS only.",
+    "COMPANION_PLATFORM_UNSUPPORTED": "The desktop pet supports macOS and 64-bit Windows 10/11.",
     "ENTERPRISE_CODE_INVALID": "This sign-in code is invalid, expired or already used. Return to Octop and start again.",
     "CLIENT_UPDATE_INVALID": "The client update information is invalid.",
     "CLIENT_UPDATE_INTEGRITY": "Update package or publication signature verification failed; installation did not run.",

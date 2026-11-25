@@ -76,6 +76,8 @@ type Status = {
   standalone?: boolean;
   storageScope?: string;
   companionAllowed?: boolean;
+  progress?: string;
+  startupError?: string;
 };
 type Room = {
   binding: Binding;
@@ -657,7 +659,11 @@ function App() {
       }
       setStatus(next);
       if (next.backendRunning === false)
-        setNotice("问答引擎暂未就绪，请重试或在桌宠菜单查看运行日志。");
+        setNotice(
+          next.startupError ||
+            next.progress ||
+            "问答引擎暂未就绪，请重试或在桌宠菜单查看运行日志。",
+        );
       if (!next.authenticated || !next.user) {
         loadedOwner.current = null;
         replaceRooms(emptyRooms());
@@ -895,6 +901,10 @@ function App() {
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<NativeEvent>).detail;
+      if (["engineStatus", "engineError", "notice"].includes(detail.type)) {
+        setNotice(detail.error || detail.text || "");
+        return;
+      }
       if (detail.type === "toggleVoice") {
         setVoice((value) => !value);
         return;
@@ -2004,6 +2014,16 @@ function App() {
               <Settings size={16} strokeWidth={1.7} />
             )}
           </button>
+          {window.companionNative?.platform === "win32" && (
+            <button
+              className="settings-trigger"
+              title="隐藏聊天"
+              aria-label="隐藏聊天"
+              onClick={() => void native("hideChat")}
+            >
+              <X size={15} strokeWidth={1.7} />
+            </button>
+          )}
         </div>
       </header>
       <section

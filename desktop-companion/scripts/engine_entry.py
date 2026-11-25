@@ -15,7 +15,7 @@ def main() -> None:
     launch = runtime / "launch.py"
     if not launch.is_file() or os.environ.get("OCTOP_COMPANION_MODE") != "1":
         raise SystemExit("Companion engine launch refused")
-    if os.getpgrp() != os.getpid():
+    if os.name == "posix" and os.getpgrp() != os.getpid():
         os.setsid()
 
     def parent_lifetime() -> None:
@@ -24,7 +24,11 @@ def main() -> None:
             while sys.stdin.buffer.read(1):
                 pass
         finally:
-            os.killpg(os.getpgrp(), signal.SIGTERM)
+            if os.name == "posix":
+                os.killpg(os.getpgrp(), signal.SIGTERM)
+            else:
+                # Only this app-owned engine exits; never kill by process name.
+                os._exit(0)
 
     threading.Thread(target=parent_lifetime, daemon=True).start()
     sys.argv = [str(launch), *sys.argv[2:]]

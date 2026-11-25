@@ -174,3 +174,61 @@ async def test_installed_pet_opens_as_an_independent_application_without_main_pr
     assert result["opened"] and not result["installed"]
     assert calls[-1] == ["/usr/bin/open", "-a", str(app), "--args", "--show-chat"]
     assert all("token" not in str(command).lower() for command in calls)
+
+
+def test_windows_and_artwork_channels_preserve_existing_mac_manifest(signed):
+    before = installer_for(signed.company.center, signed.company.alice)[0]
+    directory = installer_directory(signed.company.center)
+    for platform in ("windows-amd64", "artwork"):
+        value = before.model_copy(update={"filename": f"Dora-{platform}-0.4.0.zip"})
+        value = value.model_copy(
+            update={"signature": base64.b64encode(signed.key.sign(value.signed_bytes())).decode()}
+        )
+        (directory / value.filename).write_bytes(signed.path.read_bytes())
+        register_installer(signed.company.center, signed.company.admin, value, platform)
+        assert installer_for(signed.company.center, signed.company.alice, platform)[0] == value
+        with pytest.raises(OctopError):
+            installer_for(signed.company.center, signed.company.bob, platform)
+    assert installer_for(signed.company.center, signed.company.alice)[0] == before
+
+
+def test_windows_install_preserves_data_and_rejects_alias_paths(tmp_path):
+    import json
+
+    from octop.infra.setup import companion_windows
+
+    archive = tmp_path / "windows.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("Dora/Dora.exe", b"fixture executable, never run")
+        bundle.writestr(
+            "Dora/companion-version.json", json.dumps({"bundle_id": BUNDLE_ID, "version": "0.8.0"})
+        )
+    metadata = CompanionInstaller(
+        filename=archive.name,
+        version="0.8.0",
+        size=archive.stat().st_size,
+        sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),
+        signature="A" * 88,
+    )
+    data = tmp_path / "OctopCompanion/Data/history"
+    data.parent.mkdir(parents=True)
+    data.write_text("existing member history")
+    target = companion_windows.install(archive, metadata, tmp_path / "Programs")
+    assert companion_windows.installed_version(target) == (0, 8, 0)
+    assert data.read_text() == "existing member history"
+    for name in (
+        "Dora/../../outside",
+        "Dora/NUL.txt",
+        "Dora/file:stream",
+        "Dora/trailing.",
+        "Dora/a\\b",
+    ):
+        with zipfile.ZipFile(archive, "w") as bundle:
+            bundle.writestr(name, b"bad")
+        with pytest.raises(OctopError):
+            companion_windows.validate_archive(archive)
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("Dora/File", b"one")
+        bundle.writestr("Dora/file", b"two")
+    with pytest.raises(OctopError):
+        companion_windows.validate_archive(archive)

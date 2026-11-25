@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from octop.infra.enterprise_resources.member_access import access_for
 from octop.infra.enterprise_resources.models import canonical
@@ -13,16 +13,24 @@ from octop.infra.setup.companion_package import CompanionInstaller
 from octop.infra.users.identity import User
 
 INSTALLER_KEY = "enterprise.companion.installer.v1"
+ComponentPlatform = Literal["macos", "windows-amd64", "artwork"]
+COMPONENT_KEYS = {
+    "macos": INSTALLER_KEY,
+    "windows-amd64": "enterprise.companion.windows.installer.v1",
+    "artwork": "enterprise.companion.artwork.v1",
+}
 
 
 def installer_directory(server: Any) -> Path:
     return Path(server.paths.root) / "companion" / "releases"
 
 
-def installer_for(server: Any, user: User) -> tuple[CompanionInstaller, Path]:
+def installer_for(
+    server: Any, user: User, platform: ComponentPlatform = "macos"
+) -> tuple[CompanionInstaller, Path]:
     if not access_for(server).allows_companion(user):
         raise OctopError.localized(ErrorCode.COMPANION_ACCESS_DENIED)
-    raw = server.services.settings_repo.get(INSTALLER_KEY)
+    raw = server.services.settings_repo.get(COMPONENT_KEYS[platform])
     if raw is None:
         raise OctopError.localized(ErrorCode.COMPANION_NOT_AVAILABLE)
     metadata = CompanionInstaller.model_validate_json(raw)
@@ -33,7 +41,9 @@ def installer_for(server: Any, user: User) -> tuple[CompanionInstaller, Path]:
     return metadata, path
 
 
-def register_installer(server: Any, user: User, metadata: CompanionInstaller) -> None:
+def register_installer(
+    server: Any, user: User, metadata: CompanionInstaller, platform: ComponentPlatform = "macos"
+) -> None:
     access_for(server)._admin(user)
     metadata.verify()
     path = installer_directory(server) / metadata.filename
@@ -43,17 +53,21 @@ def register_installer(server: Any, user: User, metadata: CompanionInstaller) ->
         actual = hashlib.file_digest(stream, "sha256").hexdigest()
     if actual != metadata.sha256:
         raise OctopError.localized(ErrorCode.COMPANION_INSTALL_FAILED)
-    old = server.services.settings_repo.get(INSTALLER_KEY)
+    old = server.services.settings_repo.get(COMPONENT_KEYS[platform])
     if old:
         previous = CompanionInstaller.model_validate_json(old)
         before = tuple(int(x) for x in previous.version.split("."))
         after = tuple(int(x) for x in metadata.version.split("."))
         if after < before or after == before and previous.sha256 != metadata.sha256:
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_CONFLICT)
-    server.services.settings_repo.set(INSTALLER_KEY, canonical(metadata.model_dump(mode="json")))
+    server.services.settings_repo.set(
+        COMPONENT_KEYS[platform], canonical(metadata.model_dump(mode="json"))
+    )
     server.services.audit_repo.write(
         actor=user.username,
-        action="enterprise.companion.installer.publish",
+        action="enterprise.companion.installer.publish"
+        if platform == "macos"
+        else f"enterprise.companion.{platform}.publish",
         target=metadata.filename,
         payload=metadata.sha256,
     )

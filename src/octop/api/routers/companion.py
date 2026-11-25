@@ -68,8 +68,8 @@ async def access(
 
 @router.post(
     "/companion/launch",
-    summary="Prepare and open the independent Mac desktop pet",
-    description="Requires the logged-in member to have server-granted pet access. Available only on the Mac's own loopback interface. A pinned publisher signature and SHA-256 are verified before installing a missing component; user data is retained.",
+    summary="Prepare and open the independent desktop pet",
+    description="Requires the logged-in member to have server-granted pet access. Available only on the local computer's own loopback interface. A pinned publisher signature and SHA-256 are verified before installing a missing component; user data is retained.",
 )
 async def launch(
     body: LaunchRequest,
@@ -96,10 +96,13 @@ async def launch(
     summary="Read the signed private desktop-pet component manifest",
 )
 async def installer_manifest(
-    response: Response, user: User = Depends(current_user), server: Any = Depends(get_server)
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+    platform: Literal["macos", "windows-amd64"] = "macos",
 ) -> CompanionInstaller:
     _no_store(response)
-    metadata, _ = await asyncio.to_thread(installer_for, server, user)
+    metadata, _ = await asyncio.to_thread(installer_for, server, user, platform)
     return metadata
 
 
@@ -109,9 +112,71 @@ async def installer_manifest(
     summary="Download the private desktop-pet component for an enabled member",
 )
 async def installer_file(
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+    platform: Literal["macos", "windows-amd64"] = "macos",
+) -> FileResponse:
+    metadata, path = await asyncio.to_thread(installer_for, server, user, platform)
+    return FileResponse(
+        path,
+        filename=metadata.filename,
+        media_type="application/zip",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@center_router.get(
+    "/enterprise/companion/artwork",
+    response_model=CompanionInstaller,
+    summary="Read signed internal pet artwork for an authorized member",
+)
+async def artwork_manifest(
+    response: Response, user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> CompanionInstaller:
+    _no_store(response)
+    metadata, _ = await asyncio.to_thread(installer_for, server, user, "artwork")
+    return metadata
+
+
+@center_router.get(
+    "/enterprise/companion/artwork/file",
+    response_class=FileResponse,
+    summary="Download internal pet artwork after member authorization",
+)
+async def artwork_file(
     user: User = Depends(current_user), server: Any = Depends(get_server)
 ) -> FileResponse:
-    metadata, path = await asyncio.to_thread(installer_for, server, user)
+    metadata, path = await asyncio.to_thread(installer_for, server, user, "artwork")
+    return FileResponse(
+        path,
+        filename=metadata.filename,
+        media_type="application/zip",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+@router.get(
+    "/companion/artwork",
+    response_model=CompanionInstaller,
+    summary="Prepare authorized, signed artwork through the local engine",
+)
+async def local_artwork_manifest(
+    response: Response, user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> CompanionInstaller:
+    _no_store(response)
+    metadata, _ = await launcher_for(server).artwork(user)
+    return metadata
+
+
+@router.get(
+    "/companion/artwork/file",
+    response_class=FileResponse,
+    summary="Read verified artwork without exposing enterprise device credentials",
+)
+async def local_artwork_file(
+    user: User = Depends(current_user), server: Any = Depends(get_server)
+) -> FileResponse:
+    metadata, path = await launcher_for(server).artwork(user)
     return FileResponse(
         path,
         filename=metadata.filename,

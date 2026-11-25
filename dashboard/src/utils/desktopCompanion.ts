@@ -1,5 +1,8 @@
 export function isCompanionSupported(userAgent = navigator.userAgent): boolean {
-  return /Macintosh/.test(userAgent) && !/iPhone|iPad|Android/.test(userAgent);
+  return (
+    /Macintosh|Windows NT/.test(userAgent) &&
+    !/iPhone|iPad|Android/.test(userAgent)
+  );
 }
 
 export function companionLaunchURL(search: string): string {
