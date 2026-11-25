@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+const FeedbackAdminPage = lazy(() => import("../pages/Feedback/FeedbackAdmin"));
 
 // Lazy-loaded pages — Common
 const EnterpriseResourcesPage = lazy(
@@ -238,6 +239,7 @@ export const routeConfigs: RouteConfig[] = [
 
   // Settings
   { path: "/admin/models", element: <ModelsPage /> },
+  { path: "/admin/feedback", element: <FeedbackAdminPage /> },
 
   // Admin (RequirePermission wrapper applied in MainLayout)
   { path: "/admin/users", element: <OctopAdminUsersPage /> },

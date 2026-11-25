@@ -210,6 +210,7 @@ def build_app(server: OctopServer) -> FastAPI:
         enterprise_resources_admin,
         envs,
         experts,
+        feedback,
         health,
         i18n,
         internal_mcp,
@@ -281,6 +282,7 @@ def build_app(server: OctopServer) -> FastAPI:
             member_access.router,
             enterprise_resources_admin.router,
             client_updates.center_router,
+            feedback.center_router,
             companion.center_router,
         )
         app.add_api_route(
@@ -316,6 +318,8 @@ def build_app(server: OctopServer) -> FastAPI:
             _RouterMount(member_access.router, "/api", ["connectors"]),
             _RouterMount(enterprise_resources.router, "/api", ["experts"]),
             _RouterMount(enterprise_resources_admin.router, "/api", ["experts"]),
+            _RouterMount(feedback.router, "/api", ["feedback"]),
+            _RouterMount(feedback.center_router, "/api", ["feedback"]),
             _RouterMount(client_updates.router, "/api", ["update"]),
             _RouterMount(client_updates.center_router, "/api", ["update"]),
             _RouterMount(auth_ldap.router, "/api/auth", ["auth"]),

@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-25",
+  "feature": "sidebar-section-feedback",
+  "sections": 25,
+  "schema": 30,
+  "backend_overlay_files": 14,
+  "active_dashboard_files": 700,
+  "verification": {
+    "make_all_passed": 6182,
+    "make_all_skipped": 41,
+    "mypy_source_files": 761,
+    "feedback_and_migration_tests_passed": 321,
+    "feedback_and_migration_tests_skipped": 2,
+    "frontend_tests_passed": 23,
+    "typescript": true,
+    "targeted_eslint": true,
+    "production_build": true,
+    "desktop_submit_to_center": true,
+    "admin_status_and_reply_saved": true,
+    "member_reply_received": true,
+    "correct_date_display": true,
+    "current_sidebar_default_after_navigation": true,
+    "anonymous_admin_http": 401,
+    "member_admin_http": 403,
+    "admin_http": 200,
+    "feedback_and_assignment_integration_tests_passed": 20,
+    "freeze_tests_passed": 31,
+    "freeze_subtests_passed": 4,
+    "windows_native_tested": false
+  },
+  "preservation": {
+    "existing_local_business_data_and_credentials": true,
+    "restart_timestamps_and_runtime_leases_expected": true,
+    "center_protected_tables_and_config_unchanged": true,
+    "unrelated_center_program_files_unchanged": true,
+    "original_nginx_bytes_restored": true,
+    "rollback_backups_retained_privately": true,
+    "prior_session_assets_retained": true,
+    "latest_resource_assignment_feature": true
+  },
+  "three_platform_installers_published_in_this_change": false,
+  "integration_base_commit": "c8293a90a08302172d5e3136c118767ba7a968fc"
+}
