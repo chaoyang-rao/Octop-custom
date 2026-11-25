@@ -52,7 +52,7 @@ export default function MemberAccessAdmin() {
       ]),
     ),
   };
-  const ids = state?.mcp_options?.length
+  const ids = state?.mcp_options
     ? state.mcp_options.map((entry) => entry.entry_id)
     : legacyIds;
   function apply(next: MemberAccessState) {
@@ -81,16 +81,12 @@ export default function MemberAccessAdmin() {
     const timer = window.setInterval(() => void load(), 30_000);
     return () => window.clearInterval(timer);
   }, [busy, dirty]); // eslint-disable-line react-hooks/exhaustive-deps
-  function change(
-    user: number,
-    id: ManagedMcpId | "companion",
-    checked: boolean,
-  ) {
+  function change(user: number, id: ManagedMcpId | null, checked: boolean) {
     setMembers((rows) =>
       rows.map((row) =>
         row.user_id !== user
           ? row
-          : id === "companion"
+          : id === null
           ? { ...row, companion: checked }
           : {
               ...row,
@@ -212,7 +208,7 @@ export default function MemberAccessAdmin() {
           },
           ...ids.map((id) => ({
             title: names[id],
-            key: id,
+            key: `mcp:${id}`,
             width: 150,
             align: "center" as const,
             render: (_: unknown, row: MemberAccessRow) => (
@@ -238,7 +234,7 @@ export default function MemberAccessAdmin() {
                 disabled={busy || row.disabled || !row.verified}
                 checked={row.companion}
                 onChange={(event) =>
-                  change(row.user_id, "companion", event.target.checked)
+                  change(row.user_id, null, event.target.checked)
                 }
               />
             ),
