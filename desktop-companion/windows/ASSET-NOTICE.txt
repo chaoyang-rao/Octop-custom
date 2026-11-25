@@ -1,0 +1,6 @@
+This Windows installer contains program code and an original speech-bubble app icon.
+Internal character artwork is downloaded separately after enterprise authorization.
+
+The Doraemon character remains the property of Fujiko F. Fujio / Shogakukan and the relevant rights holders. Redrawing does not grant a character licence. The internal images are not offered under MIT, CC0 or an unrestricted commercial licence.
+
+Only the program code carries the repository's software licence. Internal character frames are not uploaded to the public GitHub repository or public release assets.

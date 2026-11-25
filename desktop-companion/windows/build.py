@@ -67,6 +67,7 @@ def main() -> None:
     shutil.copy2(COMPANION / "scripts/engine_entry.py", resources / "engine_entry.py")
     shutil.copy2(COMPANION / "build/DoraSpeech.exe", resources / "DoraSpeech.exe")
     shutil.copy2(ROOT / "使用说明.txt", resources / "使用说明.txt")
+    shutil.copy2(ROOT / "ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt")
     png = icon()
     (resources / "tray.png").write_bytes(png)
     (BUILD / "dora.ico").write_bytes(
