@@ -1,9 +1,6 @@
 import { request } from "../request";
 
-export type ManagedMcpId =
-  | "aftersales-quality"
-  | "quota-workbench"
-  | "negative-profit";
+export type ManagedMcpId = string;
 export interface MemberAccessRow {
   user_id: number;
   username: string;
@@ -17,6 +14,7 @@ export interface MemberAccessState {
   etag: string;
   configured: boolean;
   revision: number;
+  mcp_options: { entry_id: string; display_name: string; enabled: boolean }[];
   members: MemberAccessRow[];
   services: {
     entry_id: ManagedMcpId;

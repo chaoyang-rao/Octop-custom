@@ -15,6 +15,11 @@ vi.mock("../EnterpriseMcp/EnterpriseMcpAdmin", () => ({
 vi.mock("../EnterpriseResources/MemberAccessAdmin", () => ({
   default: () => <div>central-member-access</div>,
 }));
+vi.mock("../EnterpriseResources/Admin", () => ({
+  default: ({ resourceKind }: { resourceKind: string }) => (
+    <div>company-resource-{resourceKind}</div>
+  ),
+}));
 
 beforeEach(() => {
   profile.role = "user";
@@ -40,4 +45,22 @@ it("opens unified member access by default for a super-administrator", async () 
   expect(
     await screen.findByText("existing-user-management"),
   ).toBeInTheDocument();
+});
+
+it("keeps the deployed expert and skill tabs separate", async () => {
+  profile.role = "admin";
+  render(<EnterpriseAdmin />);
+  fireEvent.click(
+    screen.getByRole("tab", { name: "enterpriseResources.expertsTitle" }),
+  );
+  expect(
+    await screen.findByText("company-resource-expert"),
+  ).toBeInTheDocument();
+  fireEvent.click(
+    screen.getByRole("tab", { name: "enterpriseResources.skillsTitle" }),
+  );
+  expect(await screen.findByText("company-resource-skill")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("tab", { name: "enterpriseResources.title" }),
+  ).toBeNull();
 });

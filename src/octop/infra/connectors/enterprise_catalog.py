@@ -365,7 +365,7 @@ class EnterpriseMcpCatalog:
     ) -> CatalogSnapshot:
         subject = self.center.require_employee(user)
         _, document = self._read()
-        from octop.infra.enterprise_resources.member_access import MCP_IDS, access_for
+        from octop.infra.enterprise_resources.member_access import access_for
 
         access = access_for(self.server)
         member_access = access.status(user) if access.configured else None
@@ -392,7 +392,7 @@ class EnterpriseMcpCatalog:
             if (include_http or urlsplit(entry.url).scheme == "https")
             and (
                 entry.entry_id in member_access["mcp_ids"]
-                if member_access is not None and entry.entry_id in MCP_IDS
+                if member_access is not None
                 else (not entry.allowed_subjects or subject in entry.allowed_subjects)
             )
         ]

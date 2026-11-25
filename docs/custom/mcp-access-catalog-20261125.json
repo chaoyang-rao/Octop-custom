@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-25",
+  "title": "MCP开放权限",
+  "mcp_count": 8,
+  "backend_files": 4,
+  "dashboard_files": 698,
+  "existing_resource_tabs_preserved": true,
+  "existing_member_access_preserved": true,
+  "protected_catalog_and_policy_unchanged": true,
+  "users_experts_threads_providers_unchanged": true,
+  "client_reinstall_required": false,
+  "verification": {
+    "make_all_passed": 6162,
+    "make_all_skipped": 41,
+    "frontend_tests_passed": 16,
+    "typescript": true,
+    "frontend_build": true,
+    "targeted_eslint": true,
+    "production_data_admin_api": 200,
+    "real_browser_name_and_eight_mcp_options": true
+  },
+  "rollback_retained": true
+}

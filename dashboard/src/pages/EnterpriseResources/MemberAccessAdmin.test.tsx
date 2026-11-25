@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import MemberAccessAdmin from "./MemberAccessAdmin";
 import {
@@ -20,6 +26,7 @@ const state: MemberAccessState = {
   etag: "a".repeat(64),
   configured: true,
   revision: 1,
+  mcp_options: [],
   services: [],
   members: [
     {
@@ -101,4 +108,75 @@ it("retains edited selections after a concurrent-policy conflict", async () => {
       screen.getByRole("checkbox", { name: "Alice memberAccess.companion" }),
     ).toBeChecked(),
   );
+});
+
+it("refreshes catalog MCP columns and saves their IDs while retaining existing grants", async () => {
+  vi.mocked(memberAccessApi.read)
+    .mockResolvedValueOnce(state)
+    .mockResolvedValueOnce({
+      ...state,
+      mcp_options: [
+        { entry_id: "negative-profit", display_name: "负利润", enabled: true },
+        { entry_id: "dianjian", display_name: "设备点检 MCP", enabled: true },
+        {
+          entry_id: "production-dashboard",
+          display_name: "一线生产看板 MCP",
+          enabled: true,
+        },
+      ],
+      members: state.members.map((row) => ({
+        ...row,
+        mcp_ids: row.user_id === 1 ? ["negative-profit"] : [],
+      })),
+    });
+  render(<MemberAccessAdmin />);
+  await screen.findByRole("checkbox", {
+    name: "Alice memberAccess.aftersales",
+  });
+  fireEvent.click(screen.getByRole("button", { name: "memberAccess.refresh" }));
+  fireEvent.click(
+    await screen.findByRole("checkbox", { name: "Alice 设备点检 MCP" }),
+  );
+  expect(screen.getByRole("checkbox", { name: "Alice 负利润" })).toBeChecked();
+  expect(
+    screen.getByRole("checkbox", { name: "Pending 一线生产看板 MCP" }),
+  ).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "memberAccess.save" }));
+  await waitFor(() =>
+    expect(memberAccessApi.save).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          user_id: 1,
+          mcp_ids: ["negative-profit", "dianjian"],
+        }),
+      ]),
+      state.etag,
+    ),
+  );
+  expect(memberAccessApi.choices).not.toHaveBeenCalled();
+});
+
+it("refreshes idle forms automatically and preserves unsaved permissions", async () => {
+  vi.useFakeTimers();
+  try {
+    await act(async () => {
+      render(<MemberAccessAdmin />);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(memberAccessApi.read).toHaveBeenCalledTimes(2);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Alice memberAccess.companion" }),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(memberAccessApi.read).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole("checkbox", { name: "Alice memberAccess.companion" }),
+    ).toBeChecked();
+  } finally {
+    vi.useRealTimers();
+  }
 });

@@ -161,7 +161,7 @@ class EnterpriseCenter:
         if user is None:
             raise enterprise_error(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         subject = self.require_employee(user)
-        from octop.infra.enterprise_resources.member_access import access_for
+        from octop.infra.enterprise_resources.member_access import MCP_IDS, access_for
 
         access = access_for(self.server)
         permissions = {key for key in PERMISSIONS if user_has_permission(user, key)}
@@ -171,6 +171,14 @@ class EnterpriseCenter:
                 permissions.add("connector_enabled")
             if member_access["companion"]:
                 permissions.add("experts")
+            # Older clients validate these three literal IDs in session profiles.
+            # Full MCP access remains enforced by the dedicated catalog endpoint.
+            member_access = {
+                **member_access,
+                "mcp_ids": [
+                    entry_id for entry_id in member_access["mcp_ids"] if entry_id in MCP_IDS
+                ],
+            }
         return {
             "subject": subject,
             "display_name": user.label,

@@ -13,7 +13,7 @@ from tests.unit.enterprise_resources.test_mcp_gateway import gateway as gateway
 from octop.api.deps import current_user, get_server
 from octop.api.routers.member_access import router
 from octop.infra.auth.enterprise import EnterpriseCenter
-from octop.infra.connectors.enterprise_catalog import validate_snapshot
+from octop.infra.connectors.enterprise_catalog import CatalogEntry, validate_snapshot
 from octop.infra.enterprise_resources import member_access as module
 from octop.infra.enterprise_resources.member_access import MemberSelection, access_for
 from octop.infra.errors import ErrorCode, OctopError
@@ -243,3 +243,144 @@ async def test_company_profile_keeps_member_entitlements_through_the_http_schema
         assert result.json()["member_access"]["companion"] is True
         assert result.json()["member_access"]["mcp_ids"] == ["negative-profit"]
         assert {"experts", "connector_enabled"} <= set(result.json()["permissions"])
+
+
+def publish_extra_mcps(gateway, *, explicit=True):
+    subject = EnterpriseCenter(gateway.company.center).require_employee(gateway.company.alice)
+    additions = [
+        CatalogEntry(
+            entry_id=entry_id,
+            display_name=name,
+            url="http://readonly.example/" + entry_id + "/mcp",
+            allowed_subjects=[subject] if explicit else [],
+        )
+        for entry_id, name in [
+            ("dianjian", "设备点检 MCP"),
+            ("production-dashboard", "一线生产看板 MCP"),
+        ]
+    ]
+    state = gateway.catalog.get_admin(gateway.company.admin)
+    state = gateway.catalog.save_draft(
+        gateway.company.admin, [*state.draft.entries, *additions], state.etag
+    )
+    gateway.catalog.publish(gateway.company.admin, state.etag)
+
+
+async def test_dynamic_grid_preserves_old_grants_and_explicit_audiences_then_controls_revocation(
+    gateway,
+):
+    await initialize(gateway)
+    access = access_for(gateway.company.center)
+    before = access.settings.get(module.ACCESS_KEY)
+    publish_extra_mcps(gateway)
+    state = access.admin(gateway.company.admin)
+    assert {item["entry_id"] for item in state["mcp_options"]} == {
+        *module.MCP_IDS,
+        "dianjian",
+        "production-dashboard",
+    }
+    assert access.status(gateway.company.admin)["mcp_ids"] == list(module.MCP_IDS)
+    assert set(access.status(gateway.company.alice)["mcp_ids"]) == {
+        "dianjian",
+        "production-dashboard",
+    }
+    assert not access.status(gateway.company.bob)["mcp_ids"]
+    assert access.settings.get(module.ACCESS_KEY) == before
+    selections = [
+        MemberSelection(
+            user_id=row["user_id"],
+            mcp_ids=(
+                ["production-dashboard"]
+                if row["user_id"] == gateway.company.alice.id
+                else ["dianjian"]
+                if row["user_id"] == gateway.company.bob.id
+                else row["mcp_ids"]
+            ),
+            companion=row["companion"],
+        )
+        for row in state["members"]
+    ]
+    state = access.save(gateway.company.admin, selections, state["etag"])
+    assert [e.entry_id for e in gateway.catalog.snapshot_for(gateway.company.alice).entries] == [
+        "production-dashboard"
+    ]
+    assert [e.entry_id for e in gateway.catalog.snapshot_for(gateway.company.bob).entries] == [
+        "dianjian"
+    ]
+    state = access.save(
+        gateway.company.admin,
+        [row for row in selections if row.user_id == gateway.company.admin.id],
+        state["etag"],
+    )
+    assert not gateway.catalog.snapshot_for(gateway.company.alice).entries
+    assert not gateway.catalog.snapshot_for(gateway.company.bob).entries
+    assert access.allows_companion(gateway.company.admin)
+    with pytest.raises(OctopError) as error:
+        access.save(
+            gateway.company.admin,
+            [MemberSelection(user_id=gateway.company.alice.id, mcp_ids=["unknown-service"])],
+            state["etag"],
+        )
+    assert error.value.code == ErrorCode.ENTERPRISE_ACCESS_POLICY_INVALID
+
+
+async def test_new_public_catalog_entry_does_not_implicitly_open_member_access(gateway):
+    await initialize(gateway)
+    publish_extra_mcps(gateway, explicit=False)
+    access = access_for(gateway.company.center)
+    assert not access.status(gateway.company.alice)["mcp_ids"]
+    assert not access.status(gateway.company.bob)["mcp_ids"]
+
+
+async def test_catalog_changes_make_an_open_access_form_stale(gateway):
+    state = await initialize(gateway)
+    publish_extra_mcps(gateway)
+    access = access_for(gateway.company.center)
+    with pytest.raises(OctopError) as error:
+        access.save(gateway.company.admin, [], state["etag"])
+    assert error.value.code == ErrorCode.ENTERPRISE_ACCESS_POLICY_CONFLICT
+
+
+async def test_dynamic_mcp_access_survives_admin_http_and_legacy_client_session(
+    gateway, monkeypatch
+):
+    await initialize(gateway)
+    publish_extra_mcps(gateway)
+    access = access_for(gateway.company.center)
+    state = access.admin(gateway.company.admin)
+    access.save(
+        gateway.company.admin,
+        [MemberSelection(user_id=gateway.company.alice.id, mcp_ids=["production-dashboard"])],
+        state["etag"],
+    )
+    member = replace(gateway.company.alice, permissions=[])
+    gateway.company.center.user_manager._users[member.username] = member
+    center = EnterpriseCenter(gateway.company.center)
+    monkeypatch.setattr(
+        center.devices,
+        "authenticate",
+        lambda token: DeviceSession(
+            member.id, "node", ("enterprise",), int(time.time()) + 3600, "device"
+        ),
+    )
+    profile = center.profile("isolated-test-device")
+    assert "connector_enabled" in profile["permissions"]
+    assert profile["member_access"]["mcp_ids"] == []
+    module.MemberAccessStatus.model_validate(profile["member_access"])
+    assert [e.entry_id for e in gateway.catalog.snapshot_for(member).entries] == [
+        "production-dashboard"
+    ]
+    app = FastAPI()
+    app.include_router(router, prefix="/api")
+    app.dependency_overrides[current_user] = lambda: gateway.company.admin
+    app.dependency_overrides[get_server] = lambda: gateway.company.center
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="https://company.example"
+    ) as client:
+        response = await client.get("/api/enterprise/access/admin")
+    assert response.status_code == 200
+    result = response.json()
+    assert len(result["mcp_options"]) == 5
+    assert next(row for row in result["members"] if row["user_id"] == member.id)["mcp_ids"] == [
+        "production-dashboard"
+    ]

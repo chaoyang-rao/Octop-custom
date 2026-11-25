@@ -1,0 +1,72 @@
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.intro :global(.octop-typography) {
+  margin-bottom: 4px;
+}
+
+.intro :global(.octop-typography-secondary),
+.visibility:global(.octop-typography-secondary) {
+  color: var(--fn-text-secondary);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--fn-border-primary);
+  border-radius: 10px;
+  background: var(--fn-bg-secondary);
+
+  > :global(.octop-space) {
+    margin-inline-start: auto;
+  }
+}
+
+.entries {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 490px), 1fr));
+  gap: 12px;
+}
+
+.entry {
+  min-width: 0;
+
+  :global(.octop-card-head-wrapper) {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding-block: 10px;
+  }
+
+  :global(.octop-card-head-title) {
+    flex: 1 1 210px;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+.description,
+.visibility {
+  overflow-wrap: anywhere;
+}
+
+.entry .description {
+  margin-bottom: 6px;
+}
+
+.visibility {
+  font-size: 12px;
+}
+
+.historySelect {
+  width: min(260px, calc(100vw - 110px));
+}
