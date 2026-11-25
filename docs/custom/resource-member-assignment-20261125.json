@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-25",
+  "feature": "resource member assignment",
+  "backend_files": 3,
+  "dashboard_files": 698,
+  "production_assignment_changes": false,
+  "existing_assignments_mcp_policies_and_user_data_preserved": true,
+  "browser_assignment_controls_verified": true,
+  "published_assignment_is_scope_only": true,
+  "other_drafts_preserved": true,
+  "client_reinstall_required": false,
+  "verification": {
+    "make_all_passed": 6172,
+    "make_all_skipped": 41,
+    "frontend_passed": 22,
+    "typescript": true,
+    "targeted_eslint": true,
+    "frontend_build": true,
+    "isolated_assignment_http": 200,
+    "production_read_only_admin": 200,
+    "anonymous_write": 401,
+    "public_api_docs": 404,
+    "generated_openapi_schema_verified": true
+  }
+}

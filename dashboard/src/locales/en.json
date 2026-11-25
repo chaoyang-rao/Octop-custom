@@ -8241,7 +8241,21 @@
     "localModified": "Includes local edits",
     "expertsTitle": "Company experts",
     "skillsTitle": "Company skill packs",
-    "wrongResourceKind": "This resource pack belongs in the other company resource tab."
+    "wrongResourceKind": "This resource pack belongs in the other company resource tab.",
+    "assignMembers": "Assign members",
+    "assignmentTitle": "Assign members · {{name}}",
+    "assignmentScope": "Assignment scope",
+    "assignmentSelected": "Selected members",
+    "assignmentRecipients": "Members",
+    "assignmentPlaceholder": "Search names and select one or more",
+    "assignmentSave": "Save assignment",
+    "assignmentImmediate": "Changes take effect when saved.",
+    "assignmentDraft": "Saved to the draft; effective after publication.",
+    "assignmentMcpHint": "Manage linked MCP permissions in MCP access.",
+    "assignmentSkillHint": "Linked skill packs must cover the same members.",
+    "assignmentChooseMembers": "Select at least one member.",
+    "assignmentFailed": "Assignment was not saved. Please retry.",
+    "formerMember": "Previously assigned member"
   },
   "companion": {
     "title": "Dora companion",

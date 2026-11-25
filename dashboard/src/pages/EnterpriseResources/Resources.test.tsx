@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
@@ -49,6 +55,7 @@ vi.mock("../../api/modules/enterpriseResources", async (original) => ({
     members: vi.fn(),
     bundle: vi.fn(),
     save: vi.fn(),
+    assign: vi.fn(),
     publish: vi.fn(),
     remove: vi.fn(),
     rollback: vi.fn(),
@@ -243,4 +250,165 @@ it("requires a deliberate choice for a file named constructor", async () => {
   expect(resourcesApi.resolve).not.toHaveBeenCalled();
   fireEvent.click(screen.getByLabelText("enterpriseResources.keepLocal"));
   expect(apply).not.toBeDisabled();
+});
+
+describe("company resource member assignment", { timeout: 15000 }, () => {
+  it.each(["expert", "skill"] as const)(
+    "assigns a published %s from its card without publishing content drafts",
+    async (kind) => {
+      const entry = {
+        resource_id: "quality",
+        kind,
+        display_name: "Quality",
+        description: "",
+        enabled: true,
+        allowed_subjects: [],
+        digest: "a".repeat(64),
+      };
+      const catalog = {
+        ...admin,
+        draft: [entry],
+        published: { ...admin.published, revision: 1, entries: [entry] },
+      };
+      vi.mocked(resourcesApi.admin).mockResolvedValue(catalog);
+      vi.mocked(resourcesApi.members).mockResolvedValue([
+        { subject: "alice", display_name: "Alice" },
+        { subject: "bob", display_name: "Bob" },
+      ]);
+      vi.mocked(resourcesApi.assign).mockResolvedValue({
+        ...catalog,
+        etag: "b".repeat(64),
+      });
+      render(<ResourceAdmin resourceKind={kind} />);
+      fireEvent.click(
+        await screen.findByRole("button", {
+          name: "enterpriseResources.assignMembers Quality",
+        }),
+      );
+      const dialog = screen.getByRole("dialog");
+      fireEvent.click(
+        within(dialog).getByRole("radio", {
+          name: "enterpriseResources.assignmentSelected",
+        }),
+      );
+      expect(
+        within(dialog).getByRole("button", {
+          name: "enterpriseResources.assignmentSave",
+        }),
+      ).toBeDisabled();
+      fireEvent.mouseDown(
+        within(dialog).getByRole("combobox", {
+          name: "enterpriseResources.assignmentRecipients",
+        }),
+      );
+      fireEvent.click(await screen.findByText("Alice"));
+      fireEvent.click(
+        within(dialog).getByRole("button", {
+          name: "enterpriseResources.assignmentSave",
+        }),
+      );
+      await waitFor(() =>
+        expect(resourcesApi.assign).toHaveBeenCalledWith(
+          "quality",
+          { scope: "selected", subjects: ["alice"] },
+          catalog.etag,
+        ),
+      );
+      expect(resourcesApi.publish).not.toHaveBeenCalled();
+      expect(resourcesApi.save).not.toHaveBeenCalled();
+      expect(resourcesApi.bundle).not.toHaveBeenCalled();
+    },
+  );
+
+  it("opens the published audience and clears selected IDs when choosing all members", async () => {
+    const entry = {
+      resource_id: "quality",
+      kind: "expert" as const,
+      display_name: "Quality",
+      description: "",
+      enabled: true,
+      digest: "a".repeat(64),
+      allowed_subjects: ["alice"],
+    };
+    const catalog = {
+      ...admin,
+      draft: [{ ...entry, allowed_subjects: ["bob"] }],
+      published: { ...admin.published, revision: 1, entries: [entry] },
+    };
+    vi.mocked(resourcesApi.admin).mockResolvedValue(catalog);
+    vi.mocked(resourcesApi.members).mockResolvedValue([
+      { subject: "alice", display_name: "Alice" },
+      { subject: "bob", display_name: "Bob" },
+    ]);
+    vi.mocked(resourcesApi.assign).mockResolvedValue(catalog);
+    render(<ResourceAdmin resourceKind="expert" />);
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "enterpriseResources.assignMembers Quality",
+      }),
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Alice")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Bob")).toBeNull();
+    fireEvent.click(
+      within(dialog).getByRole("radio", {
+        name: "enterpriseResources.allMembers",
+      }),
+    );
+    fireEvent.click(
+      within(dialog).getByRole("button", {
+        name: "enterpriseResources.assignmentSave",
+      }),
+    );
+    await waitFor(() =>
+      expect(resourcesApi.assign).toHaveBeenCalledWith(
+        "quality",
+        { scope: "all", subjects: [] },
+        catalog.etag,
+      ),
+    );
+  });
+
+  it("retains selected people and keeps the assignment open after a stale rejection", async () => {
+    const entry = {
+      resource_id: "quality",
+      kind: "skill" as const,
+      display_name: "Quality",
+      description: "",
+      enabled: true,
+      digest: "a".repeat(64),
+      allowed_subjects: ["alice"],
+    };
+    const catalog = {
+      ...admin,
+      draft: [entry],
+      published: { ...admin.published, revision: 1, entries: [entry] },
+    };
+    vi.mocked(resourcesApi.admin).mockResolvedValue(catalog);
+    vi.mocked(resourcesApi.members).mockResolvedValue([
+      { subject: "alice", display_name: "Alice" },
+    ]);
+    vi.mocked(resourcesApi.assign).mockRejectedValue(
+      new Error("stale assignment"),
+    );
+    render(<ResourceAdmin resourceKind="skill" />);
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "enterpriseResources.assignMembers Quality",
+      }),
+    );
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(
+      within(dialog).getByRole("button", {
+        name: "enterpriseResources.assignmentSave",
+      }),
+    );
+    await within(dialog).findByRole("alert");
+    expect(within(dialog).getByText("Alice")).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("radio", {
+        name: "enterpriseResources.assignmentSelected",
+      }),
+    ).toBeChecked();
+  });
 });
