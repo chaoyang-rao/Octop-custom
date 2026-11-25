@@ -1412,3 +1412,18 @@ textarea:focus-visible {
 .team-settings legend {margin-bottom:8px;padding:0;font-size:12px}
 .team-settings .primary {min-height:34px;border-radius:9px}
 .team-settings>p {font-size:12px;margin:0;color:var(--danger)}
+
+/* Native title dragging applies only to the Windows shell. */
+html[data-platform="windows"] .topbar {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+html[data-platform="windows"] .topbar button,
+html[data-platform="windows"] .topbar [role="combobox"],
+html[data-platform="windows"] .header-actions {
+  -webkit-app-region: no-drag;
+}
+
+html[data-platform="windows"] .topbar { padding-left: 12px; }
+html[data-platform="windows"] .expert-picker { left: 90px; right: 108px; -webkit-app-region: no-drag; }
+html[data-platform="windows"] .settings-open .expert-picker { right: 76px; }

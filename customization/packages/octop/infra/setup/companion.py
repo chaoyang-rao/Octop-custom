@@ -34,7 +34,7 @@ async def companion_access(server: Any, user: User, *, force: bool = False) -> d
     return {
         "allowed": status.get("companion") is True if status else True,
         "managed": bool(status and status.get("configured")),
-        "supported": sys.platform == "darwin",
+        "supported": sys.platform in {"darwin", "win32"},
     }
 
 
@@ -73,7 +73,13 @@ class CompanionLauncher:
         self.server = server
         self._lock = asyncio.Lock()
 
-    async def _download(self, user: User, metadata: CompanionInstaller) -> Path:
+    async def _download(
+        self,
+        user: User,
+        metadata: CompanionInstaller,
+        *,
+        component: Literal["macos", "windows-amd64", "artwork"] = "macos",
+    ) -> Path:
         client = client_for(self.server)
         if client is None:
             raise OctopError.localized(ErrorCode.ENTERPRISE_NOT_CONFIGURED)
@@ -100,7 +106,13 @@ class CompanionLauncher:
                 ) as transport,
                 transport.stream(
                     "GET",
-                    client.authority + "/api/enterprise/companion/installer/file",
+                    client.authority
+                    + (
+                        "/api/enterprise/companion/artwork/file"
+                        if component == "artwork"
+                        else "/api/enterprise/companion/installer/file"
+                        + ("?platform=windows-amd64" if component == "windows-amd64" else "")
+                    ),
                     headers={"Authorization": "Bearer " + state["token"]},
                 ) as response,
             ):
@@ -120,6 +132,22 @@ class CompanionLauncher:
             raise OctopError.localized(ErrorCode.COMPANION_INSTALL_FAILED) from None
         finally:
             await asyncio.to_thread(temporary.unlink, missing_ok=True)
+
+    async def artwork(self, user: User) -> tuple[CompanionInstaller, Path]:
+        async with self._lock:
+            access = await companion_access(self.server, user, force=True)
+            if not access["allowed"]:
+                raise OctopError.localized(ErrorCode.COMPANION_ACCESS_DENIED)
+            client = client_for(self.server)
+            assert client is not None
+            state = await asyncio.to_thread(client._state, user.id)
+            metadata = CompanionInstaller.model_validate(
+                await client._remote(
+                    "GET", "/api/enterprise/companion/artwork", token=state["token"]
+                )
+            )
+            metadata.verify()
+            return metadata, await self._download(user, metadata, component="artwork")
 
     def _install(self, archive: Path, metadata: CompanionInstaller) -> Path:
         validate_archive(archive)
@@ -172,6 +200,10 @@ class CompanionLauncher:
             shutil.rmtree(stage, ignore_errors=True)
 
     async def launch(self, user: User, action: Literal["open", "size"] = "open") -> dict[str, Any]:
+        if sys.platform == "win32":
+            from octop.infra.setup.companion_windows import launch_windows
+
+            return await launch_windows(self, user, action)
         if sys.platform != "darwin":
             raise OctopError.localized(ErrorCode.COMPANION_PLATFORM_UNSUPPORTED)
         async with self._lock:

@@ -1,0 +1,88 @@
+name: Dora Windows independent package
+
+on:
+  push:
+    branches: [codex/dora-windows]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    if: github.repository == 'chaoyang-rao/Octop-custom'
+    runs-on: windows-2025
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Preserve exact frozen source bytes
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: false
+      - run: |
+          npm ci --prefix desktop-companion
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm ci --prefix desktop-companion/windows
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm test --prefix desktop-companion
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm test --prefix desktop-companion/windows
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run build --prefix desktop-companion
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Native Windows transparent window and login transport checks
+        run: |
+          & desktop-companion/windows/node_modules/.bin/electron.cmd desktop-companion/windows/tests/native.cjs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Prepare independent engine from frozen public inputs
+        run: |
+          uv run python desktop-companion/scripts/prepare_engine.py --platform windows-amd64
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Build Windows speech bridge and installer
+        run: |
+          $compiler = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $source = (Resolve-Path 'desktop-companion\windows\Speech.cs').Path
+          $output = Join-Path $PWD 'desktop-companion\build\DoraSpeech.exe'
+          $speechAssembly = "${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Speech.dll"
+          $compilerArgs = @('/nologo', '/target:exe', "/out:$output", "/reference:$speechAssembly", '/reference:System.Web.Extensions.dll', $source)
+          & $compiler @compilerArgs
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          uv run python desktop-companion/windows/build.py
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          choco install nsis --version=3.11 -y --no-progress
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /INPUTCHARSET UTF8 desktop-companion/windows/installer.nsi
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Start the real self-contained engine without Python installed by the user
+        run: |
+          node desktop-companion/windows/tests/engine-preflight.cjs desktop-companion/build/windows/Dora/resources desktop-companion/build/windows-acceptance
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Install and open the final application on Windows
+        run: |
+          & desktop-companion/windows/tests/installer-check.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Record SHA-256 delivery checksums
+        run: |
+          Get-ChildItem desktop-companion/build/windows -File | Where-Object { $_.Extension -in '.exe','.zip' } | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content desktop-companion/build/windows/SHA256SUMS.txt -Encoding utf8NoBOM
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Dora-Windows-x64
+          path: |
+            desktop-companion/build/windows/*.exe
+            desktop-companion/build/windows/*.zip
+            desktop-companion/build/windows/SHA256SUMS.txt
+            desktop-companion/build/windows-native-*.json
+            desktop-companion/build/windows-native-*.png
+            desktop-companion/build/windows-installer-check.json
+          if-no-files-found: warn
+          retention-days: 14
