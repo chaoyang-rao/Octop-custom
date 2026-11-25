@@ -45,7 +45,7 @@ jobs:
       - name: Download and verify the final installer
         run: |
           gh run download "$BUILD_RUN" -n Dora-Windows-x64 -D dist
-          cd dist
+          cd dist/windows
           sed -i 's/\r$//' SHA256SUMS.txt
           sha256sum --check SHA256SUMS.txt
           test -s Dora-Windows-x64-0.8.0-Setup.exe
@@ -59,4 +59,4 @@ jobs:
           Windows 原生窗口、隔离登录、打断、实际引擎启动与最终安装/卸载数据保留已由构建验证。真实员工飞书登录和实体麦克风未由 CI 验证。
           安装器未配置 Windows 发布者签名。请从本发布页下载，并可用 SHA256SUMS.txt 校验。
           TEXT
-          gh release create dora-windows-v0.8.0 --latest=false --target "$GITHUB_SHA" --title '哆啦 Windows 0.8.0' --notes-file release-notes.txt dist/*.exe dist/*.zip dist/SHA256SUMS.txt
+          gh release create dora-windows-v0.8.0 --latest=false --target "$GITHUB_SHA" --title '哆啦 Windows 0.8.0' --notes-file release-notes.txt dist/windows/*.exe dist/windows/*.zip dist/windows/SHA256SUMS.txt
