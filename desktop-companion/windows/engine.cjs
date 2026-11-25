@@ -102,11 +102,15 @@ class Engine {
     if (!Number.isInteger(saved) || saved < 1024 || saved > 65535)
       saved = 18588;
     let port;
-    try {
-      port = await portAvailable(saved);
-    } catch {
-      port = await portAvailable(0);
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        port = await portAvailable(attempt < 10 ? saved : 0);
+        break;
+      } catch {
+        await delay(150);
+      }
     }
+    if (!port) throw new Error("无法启动桌宠专属问答端口。");
     this.origin = "http://127.0.0.1:" + port;
     this.instance = randomUUID();
     const env = Object.fromEntries(

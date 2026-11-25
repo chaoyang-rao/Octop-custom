@@ -26,8 +26,10 @@ VIAddVersionKey "FileDescription" "哆啦独立桌宠"
 VIAddVersionKey "LegalCopyright" "Octop Custom contributors"
 Section "哆啦" SEC_MAIN
   SetShellVarContext current
+  RMDir /r "$INSTDIR.stage"
   SetOutPath "$INSTDIR.stage"
   File /r "..\build\windows\Dora\*.*"
+  SetOutPath "$TEMP"
   IfFileExists "$INSTDIR\Dora.exe" 0 install_new
   ClearErrors
   Rename "$INSTDIR" "$INSTDIR.previous"
@@ -58,6 +60,7 @@ complete:
   RMDir /r "$INSTDIR.previous"
 SectionEnd
 Section "Uninstall"
+  SetOutPath "$TEMP"
   Delete "$DESKTOP\哆啦.lnk"
   RMDir /r "$SMPROGRAMS\哆啦"
   DeleteRegKey HKCU "Software\Classes\octop-companion"

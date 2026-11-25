@@ -1,5 +1,5 @@
 using System;
-using System.Globalization;
+using System.Text;
 using System.Speech.Recognition;
 using System.Speech.Synthesis;
 using System.Web.Script.Serialization;
@@ -12,6 +12,8 @@ class Speech {
     static readonly SpeechSynthesizer Voice = new SpeechSynthesizer();
     static void Emit(string type, string text) { lock (Gate) Console.WriteLine(Json.Serialize(new { type = type, text = text })); }
     static void Main() {
+        Console.InputEncoding = new UTF8Encoding(false);
+        Console.OutputEncoding = new UTF8Encoding(false);
         Voice.SpeakCompleted += (s, e) => Emit("speechEnded", "");
         foreach (var voice in Voice.GetInstalledVoices()) if (voice.Enabled && voice.VoiceInfo.Culture.TwoLetterISOLanguageName == "zh") { Voice.SelectVoice(voice.VoiceInfo.Name); break; }
         string line;
