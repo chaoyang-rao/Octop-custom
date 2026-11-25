@@ -1,0 +1,50 @@
+.page {
+  width: 100%;
+  min-width: 0;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+.section {
+  width: 200px;
+  max-width: 100%;
+}
+.status {
+  width: 150px;
+}
+.search {
+  width: 280px;
+  max-width: 100%;
+}
+.text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.subject {
+  padding: 0;
+  height: auto;
+  text-align: left;
+  white-space: normal;
+}
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.meta {
+  color: var(--fn-text-tertiary);
+  font-size: 12px;
+}
+.editor {
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .section,
+  .status,
+  .search {
+    width: 100%;
+  }
+}

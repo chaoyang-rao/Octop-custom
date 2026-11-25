@@ -13,6 +13,8 @@ import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import TabLabel from "../../components/TabLabel";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import FeedbackTabTitle from "../Feedback/FeedbackTabTitle";
+const FeedbackAdmin = lazy(() => import("../Feedback/FeedbackAdmin"));
 import styles from "./EnterpriseAdmin.module.less";
 
 const UsersPage = lazy(() => import("../Admin/Users"));
@@ -58,9 +60,11 @@ export default function EnterpriseAdmin() {
           more={{ trigger: "click" }}
           defaultActiveKey={
             user?.role === "admin"
-              ? new URLSearchParams(window.location.search).get("tab") ===
-                "client-updates"
-                ? "client-updates"
+              ? ["client-updates", "feedback"].includes(
+                  new URLSearchParams(window.location.search).get("tab") ?? "",
+                )
+                ? new URLSearchParams(window.location.search).get("tab") ??
+                  "member-access"
                 : "member-access"
               : "users"
           }
@@ -129,6 +133,15 @@ export default function EnterpriseAdmin() {
                     children: (
                       <Suspense fallback={<Spin />}>
                         <InferenceAdmin />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    key: "feedback",
+                    label: <FeedbackTabTitle />,
+                    children: (
+                      <Suspense fallback={<Spin />}>
+                        <FeedbackAdmin company />
                       </Suspense>
                     ),
                   },

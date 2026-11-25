@@ -24,6 +24,7 @@ from octop.infra.db.repos.connectors import ConnectorRepo
 from octop.infra.db.repos.control_files import ControlFileRepo
 from octop.infra.db.repos.conversations import ConversationRepo
 from octop.infra.db.repos.cron import CronJobRepo
+from octop.infra.db.repos.feedback import FeedbackRepo
 from octop.infra.db.repos.invites import InviteRepo
 from octop.infra.db.repos.knowledge import KnowledgeRepo
 from octop.infra.db.repos.proactive_care_config import ProactiveCareConfigRepo
@@ -73,6 +74,7 @@ class RepoBundle:
     audit_repo: AuditRepo
     usage_repo: UsageRepo
     company_model_usage_repo: CompanyModelUsageRepo
+    feedback_repo: FeedbackRepo
     settings_repo: SettingsRepo
     storage_backend_repo: SealedBackendRepo
     bridge_connection_repo: BridgeConnectionRepo
@@ -118,6 +120,7 @@ class RepoBundle:
             audit_repo=AuditRepo(db),
             usage_repo=CompanyAwareUsageRepo(db),
             company_model_usage_repo=CompanyModelUsageRepo(db),
+            feedback_repo=FeedbackRepo(db),
             settings_repo=SettingsRepo(db),
             storage_backend_repo=SealedBackendRepo(BackendRepo(db), secret_repo),
             bridge_connection_repo=BridgeConnectionRepo(db),
@@ -210,6 +213,10 @@ class SharedServices:
     @property
     def usage_repo(self) -> UsageRepo:
         return self.repos.usage_repo
+
+    @property
+    def feedback_repo(self) -> FeedbackRepo:
+        return self.repos.feedback_repo
 
     @property
     def settings_repo(self) -> SettingsRepo:

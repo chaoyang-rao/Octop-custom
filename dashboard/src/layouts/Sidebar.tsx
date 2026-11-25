@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import AvatarDropdown from "../components/AvatarDropdown";
+import FeedbackLauncher from "../components/feedback/FeedbackLauncher";
 import AppVersionBadge from "../components/AppVersionBadge";
 import CurrentVersionBadge from "../components/CurrentVersionBadge";
 import { ArrowRightLeft, ChevronDown, X } from "../components/arcIcons";
@@ -540,24 +541,30 @@ export default function Sidebar({
   );
 
   const userFooter = (
-    <div
-      className={styles.sidebarUser}
-      style={{
-        flexShrink: 0,
-        padding: isRailCollapsed ? "10px 0" : "10px 12px",
-        display: "flex",
-        justifyContent: isRailCollapsed ? "center" : "stretch",
-      }}
-    >
-      <AvatarDropdown
-        user={user}
-        onUserChange={setUser}
-        placement="sidebar"
+    <>
+      <FeedbackLauncher
         compact={isRailCollapsed}
-        onBeforeOpenSettings={isMobile && !collapsed ? onToggle : undefined}
-        onCustomizeNav={() => setCustomizerOpen(true)}
+        currentSection={selectedKey}
       />
-    </div>
+      <div
+        className={styles.sidebarUser}
+        style={{
+          flexShrink: 0,
+          padding: isRailCollapsed ? "10px 0" : "10px 12px",
+          display: "flex",
+          justifyContent: isRailCollapsed ? "center" : "stretch",
+        }}
+      >
+        <AvatarDropdown
+          user={user}
+          onUserChange={setUser}
+          placement="sidebar"
+          compact={isRailCollapsed}
+          onBeforeOpenSettings={isMobile && !collapsed ? onToggle : undefined}
+          onCustomizeNav={() => setCustomizerOpen(true)}
+        />
+      </div>
+    </>
   );
 
   const customizer = (

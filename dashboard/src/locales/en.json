@@ -296,7 +296,10 @@
     "CLIENT_UPDATE_BUSY": "Tasks or approvals are still in progress. Update when the client is idle.",
     "CLIENT_UPDATE_UNSUPPORTED": "This installation cannot update automatically. Use the custom installer.",
     "CLIENT_UPDATE_IN_PROGRESS": "The client is being updated. Try again shortly.",
-    "CLIENT_UPDATE_FAILED": "The client update did not complete. Existing data was preserved. Retry or contact an administrator."
+    "CLIENT_UPDATE_FAILED": "The client update did not complete. Existing data was preserved. Retry or contact an administrator.",
+    "FEEDBACK_INVALID": "Check the feedback section, title and description.",
+    "FEEDBACK_CONFLICT": "The feedback or its revision changed. Refresh and try again.",
+    "FEEDBACK_NOT_FOUND": "This feedback is unavailable."
   },
   "nav": {
     "chat": "Conversation",
@@ -8408,5 +8411,49 @@
       "rolled_back": "Previous version restored",
       "cancelled": "Cancelled"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "intro": "Choose a section and describe an issue or suggestion. Administrators can review and reply.",
+    "general": "Overall experience / Other",
+    "new": "Submit feedback",
+    "mine": "My feedback",
+    "section": "Section",
+    "sectionRequired": "Choose a section",
+    "kind": "Type",
+    "kinds": {
+      "problem": "Issue",
+      "suggestion": "Suggestion",
+      "other": "Other"
+    },
+    "subject": "Title",
+    "subjectRequired": "Enter a title",
+    "content": "Description",
+    "contentRequired": "Enter feedback details",
+    "contentHint": "Describe the steps, actual behavior and expected result.",
+    "submit": "Submit feedback",
+    "submitted": "Feedback submitted: {{id}}. Track replies in My feedback.",
+    "loadFailed": "Could not load feedback. Try again.",
+    "submitFailed": "Feedback was not confirmed. Your text is retained; try again.",
+    "emptyMine": "No feedback submitted yet",
+    "status": {
+      "new": "New",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "adminTitle": "Feedback management",
+    "adminIntro": "Filter by section, author and status, then record an outcome. Replies appear in the member’s My feedback tab.",
+    "processingStatus": "Status",
+    "allSections": "All sections",
+    "allStatuses": "All statuses",
+    "search": "Search title, description or author",
+    "emptyAdmin": "No feedback yet",
+    "total": "{{count}} feedback entries",
+    "author": "Submitted by",
+    "createdAt": "Submitted at",
+    "details": "Feedback details and outcome",
+    "reply": "Administrator reply",
+    "saved": "Outcome saved",
+    "saveFailed": "Could not save. Your edits are retained."
   }
 }

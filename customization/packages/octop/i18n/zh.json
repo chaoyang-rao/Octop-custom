@@ -585,7 +585,10 @@
     "CLIENT_UPDATE_BUSY": "当前仍有任务或审批在进行，请空闲后再更新。",
     "CLIENT_UPDATE_UNSUPPORTED": "当前运行方式不支持自动安装，请使用定制安装包升级。",
     "CLIENT_UPDATE_IN_PROGRESS": "客户端正在更新，请稍后重试。",
-    "CLIENT_UPDATE_FAILED": "客户端更新未完成，已保留原有数据。请重试或联系管理员。"
+    "CLIENT_UPDATE_FAILED": "客户端更新未完成，已保留原有数据。请重试或联系管理员。",
+    "FEEDBACK_INVALID": "请检查反馈板块、标题和内容。",
+    "FEEDBACK_CONFLICT": "反馈内容或处理状态已变化，请刷新后重试。",
+    "FEEDBACK_NOT_FOUND": "反馈不存在或已不可用。"
   },
   "desktop": {
     "install_log_deps": "正在安装 Python 依赖…",

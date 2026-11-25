@@ -296,7 +296,10 @@
     "CLIENT_UPDATE_BUSY": "当前仍有任务或审批在进行，请空闲后再更新。",
     "CLIENT_UPDATE_UNSUPPORTED": "当前运行方式不支持自动安装，请使用定制安装包升级。",
     "CLIENT_UPDATE_IN_PROGRESS": "客户端正在更新，请稍后重试。",
-    "CLIENT_UPDATE_FAILED": "客户端更新未完成，已保留原有数据。请重试或联系管理员。"
+    "CLIENT_UPDATE_FAILED": "客户端更新未完成，已保留原有数据。请重试或联系管理员。",
+    "FEEDBACK_INVALID": "请检查反馈板块、标题和内容。",
+    "FEEDBACK_CONFLICT": "反馈内容或处理状态已变化，请刷新后重试。",
+    "FEEDBACK_NOT_FOUND": "反馈不存在或已不可用。"
   },
   "nav": {
     "chat": "对话",
@@ -8408,5 +8411,49 @@
       "rolled_back": "已恢复旧版",
       "cancelled": "已取消"
     }
+  },
+  "feedback": {
+    "title": "问题反馈",
+    "intro": "选择相关板块并描述问题或建议，管理员可在后台查看并回复。",
+    "general": "整体体验 / 其他",
+    "new": "提交反馈",
+    "mine": "我的反馈",
+    "section": "相关板块",
+    "sectionRequired": "请选择相关板块",
+    "kind": "反馈类型",
+    "kinds": {
+      "problem": "问题",
+      "suggestion": "建议",
+      "other": "其他"
+    },
+    "subject": "标题",
+    "subjectRequired": "请填写反馈标题",
+    "content": "反馈内容",
+    "contentRequired": "请填写反馈内容",
+    "contentHint": "请描述操作步骤、实际情况和期望结果。",
+    "submit": "提交反馈",
+    "submitted": "反馈已提交，编号：{{id}}。可在“我的反馈”查看处理结果。",
+    "loadFailed": "反馈通道加载失败，请重试。",
+    "submitFailed": "反馈尚未提交成功，内容已保留，请重试。",
+    "emptyMine": "暂无已提交的反馈",
+    "status": {
+      "new": "待处理",
+      "in_progress": "处理中",
+      "resolved": "已解决"
+    },
+    "adminTitle": "反馈管理",
+    "adminIntro": "按板块、提交人和状态查看反馈，记录处理结果；回复会显示在成员的“我的反馈”中。",
+    "processingStatus": "处理状态",
+    "allSections": "全部板块",
+    "allStatuses": "全部状态",
+    "search": "搜索标题、内容或提交人",
+    "emptyAdmin": "暂无反馈",
+    "total": "共 {{count}} 条反馈",
+    "author": "提交人",
+    "createdAt": "提交时间",
+    "details": "反馈详情与处理",
+    "reply": "管理员回复",
+    "saved": "处理结果已保存",
+    "saveFailed": "保存失败，编辑内容已保留。"
   }
 }

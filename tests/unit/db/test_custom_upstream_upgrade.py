@@ -69,7 +69,7 @@ def test_upgrade_custom_watermark_preserves_projects_and_workflows(
     run_migrations(pool)
     run_migrations(pool)
     with pool.connect() as conn:
-        assert conn.execute("SELECT version FROM _schema_version").fetchone()[0] == 29
+        assert conn.execute("SELECT version FROM _schema_version").fetchone()[0] == 30
         tables = {
             row["name"] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
         }
