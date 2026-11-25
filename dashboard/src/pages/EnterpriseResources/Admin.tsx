@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Radio,
   Select,
   Space,
   Spin,
@@ -16,13 +17,14 @@ import {
   Typography,
 } from "antd";
 import { useTranslation } from "react-i18next";
-import { Bot, Layers3, RefreshCw, Upload } from "lucide-react";
+import { Bot, Layers3, RefreshCw, Upload, UsersRound } from "lucide-react";
 import {
   resourcesApi,
   decodeText,
   encodeText,
   type ResourceDefinition,
   type ResourceAdminState,
+  type ResourceAudience,
   type ResourceEntry,
 } from "../../api/modules/enterpriseResources";
 import {
@@ -50,6 +52,13 @@ export default function ResourceAdmin({
   const [files, setFiles] = useState<ResourceDefinition["files"]>([]);
   const [selected, setSelected] = useState("");
   const [revision, setRevision] = useState<number>();
+  const [assignment, setAssignment] = useState<{
+    entry: ResourceEntry;
+    etag: string;
+    published: boolean;
+    audience: ResourceAudience;
+  } | null>(null);
+  const [assignmentError, setAssignmentError] = useState("");
   const [form] = Form.useForm<ResourceDefinition>();
   const input = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -128,6 +137,49 @@ export default function ResourceAdmin({
         allowed_subjects: entry.allowed_subjects,
       });
     });
+  }
+  function openAssignment(entry: ResourceEntry) {
+    if (!state) return;
+    const published = state.published.entries.find(
+      (value) => value.resource_id === entry.resource_id,
+    );
+    const subjects = [...(published ?? entry).allowed_subjects];
+    setAssignment({
+      entry,
+      etag: state.etag,
+      published: !!published,
+      audience: { scope: subjects.length ? "selected" : "all", subjects },
+    });
+    setAssignmentError("");
+  }
+  async function saveAssignment() {
+    if (!assignment) return;
+    const audience = assignment.audience;
+    if (audience.scope === "selected" && !audience.subjects.length) {
+      setAssignmentError(t("enterpriseResources.assignmentChooseMembers"));
+      return;
+    }
+    setBusy(true);
+    setAssignmentError("");
+    try {
+      setState(
+        await resourcesApi.assign(
+          assignment.entry.resource_id,
+          {
+            ...audience,
+            subjects: audience.scope === "all" ? [] : audience.subjects,
+          },
+          assignment.etag,
+        ),
+      );
+      setAssignment(null);
+    } catch (e) {
+      setAssignmentError(
+        apiErrorMessage(e, t("enterpriseResources.assignmentFailed")),
+      );
+    } finally {
+      setBusy(false);
+    }
   }
   const active = files.find((f) => f.path === selected);
   const text = active ? decodeText(active.content_base64) : null;
@@ -267,6 +319,16 @@ export default function ResourceAdmin({
               }
               extra={
                 <Space wrap>
+                  <Button
+                    icon={<UsersRound size={15} />}
+                    aria-label={`${t("enterpriseResources.assignMembers")} ${
+                      entry.display_name
+                    }`}
+                    disabled={busy}
+                    onClick={() => openAssignment(entry)}
+                  >
+                    {t("enterpriseResources.assignMembers")}
+                  </Button>
                   <Button disabled={busy} onClick={() => void openEntry(entry)}>
                     {t("enterpriseResources.edit")}
                   </Button>
@@ -302,7 +364,7 @@ export default function ResourceAdmin({
                       .map(
                         (s) =>
                           members.find((m) => m.subject === s)?.display_name ??
-                          s.slice(0, 8),
+                          t("enterpriseResources.formerMember"),
                       )
                       .join(", ")
                   : t("enterpriseResources.allMembers")}
@@ -344,6 +406,110 @@ export default function ResourceAdmin({
           </Space>
         </Card>
       )}
+      <Modal
+        title={t("enterpriseResources.assignmentTitle", {
+          name: assignment?.entry.display_name,
+        })}
+        open={!!assignment}
+        destroyOnHidden
+        maskClosable={false}
+        closable={!busy}
+        cancelButtonProps={{ disabled: busy }}
+        onCancel={() => setAssignment(null)}
+        onOk={() => void saveAssignment()}
+        okText={t("enterpriseResources.assignmentSave")}
+        confirmLoading={busy}
+        okButtonProps={{
+          disabled:
+            busy ||
+            (assignment?.audience.scope === "selected" &&
+              !assignment.audience.subjects.length),
+        }}
+      >
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Radio.Group
+            aria-label={t("enterpriseResources.assignmentScope")}
+            value={assignment?.audience.scope}
+            disabled={busy}
+            onChange={(event) => {
+              const scope: ResourceAudience["scope"] = event.target.value;
+              setAssignment((current) =>
+                current
+                  ? {
+                      ...current,
+                      audience: { ...current.audience, scope },
+                    }
+                  : current,
+              );
+              setAssignmentError("");
+            }}
+          >
+            <Radio value="all">{t("enterpriseResources.allMembers")}</Radio>
+            <Radio value="selected">
+              {t("enterpriseResources.assignmentSelected")}
+            </Radio>
+          </Radio.Group>
+          {assignment?.audience.scope === "selected" && (
+            <Select
+              mode="multiple"
+              showSearch
+              optionFilterProp="label"
+              aria-label={t("enterpriseResources.assignmentRecipients")}
+              placeholder={t("enterpriseResources.assignmentPlaceholder")}
+              style={{ width: "100%" }}
+              disabled={busy}
+              value={assignment.audience.subjects}
+              options={[
+                ...members.map((member) => ({
+                  label: member.display_name,
+                  value: member.subject,
+                })),
+                ...assignment.audience.subjects
+                  .filter(
+                    (subject) =>
+                      !members.some((member) => member.subject === subject),
+                  )
+                  .map((subject) => ({
+                    label: t("enterpriseResources.formerMember"),
+                    value: subject,
+                  })),
+              ]}
+              onChange={(subjects: string[]) => {
+                setAssignment((current) =>
+                  current
+                    ? { ...current, audience: { scope: "selected", subjects } }
+                    : current,
+                );
+                setAssignmentError("");
+              }}
+              onBlur={() => {
+                if (!assignment.audience.subjects.length)
+                  setAssignmentError(
+                    t("enterpriseResources.assignmentChooseMembers"),
+                  );
+              }}
+            />
+          )}
+          <Typography.Text type="secondary">
+            {t(
+              assignment?.published
+                ? "enterpriseResources.assignmentImmediate"
+                : "enterpriseResources.assignmentDraft",
+            )}
+          </Typography.Text>
+          <Typography.Text type="secondary">
+            {t("enterpriseResources.assignmentSkillHint")}
+          </Typography.Text>
+          {isExpert && (
+            <Typography.Text type="secondary">
+              {t("enterpriseResources.assignmentMcpHint")}
+            </Typography.Text>
+          )}
+          {assignmentError && (
+            <Alert role="alert" type="error" message={assignmentError} />
+          )}
+        </Space>
+      </Modal>
       <Modal
         title={t("enterpriseResources.edit")}
         open={!!editing}

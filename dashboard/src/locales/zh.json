@@ -8241,7 +8241,21 @@
     "localModified": "含本地修改",
     "expertsTitle": "企业专家",
     "skillsTitle": "企业技能包",
-    "wrongResourceKind": "资源包类型不匹配，请切换到对应的企业专家或企业技能包页签。"
+    "wrongResourceKind": "资源包类型不匹配，请切换到对应的企业专家或企业技能包页签。",
+    "assignMembers": "分配人员",
+    "assignmentTitle": "分配人员 · {{name}}",
+    "assignmentScope": "分配范围",
+    "assignmentSelected": "指定人员",
+    "assignmentRecipients": "人员",
+    "assignmentPlaceholder": "搜索姓名，可多选",
+    "assignmentSave": "保存分配",
+    "assignmentImmediate": "保存后立即生效。",
+    "assignmentDraft": "保存到草稿，发布后生效。",
+    "assignmentMcpHint": "关联 MCP 的权限在“MCP开放权限”中管理。",
+    "assignmentSkillHint": "关联技能包需覆盖相同的人员范围。",
+    "assignmentChooseMembers": "请选择至少一位成员。",
+    "assignmentFailed": "分配未保存，请重试。",
+    "formerMember": "原分配成员"
   },
   "companion": {
     "title": "哆啦桌宠",

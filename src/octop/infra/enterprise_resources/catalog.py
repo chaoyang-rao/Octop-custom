@@ -11,6 +11,7 @@ from octop.infra.auth.enterprise import center_for
 from octop.infra.connectors.enterprise_catalog import CatalogMember, EnterpriseMcpCatalog
 from octop.infra.enterprise_resources.models import (
     NAMESPACE,
+    ResourceAudience,
     ResourceDefinition,
     ResourceEntry,
     ResourceSnapshot,
@@ -167,6 +168,38 @@ class ResourceCatalog:
         raw, doc = self._edit(expected)
         doc.draft = [e for e in doc.draft if e.resource_id != resource_id]
         return self._save(user, raw, doc, "remove_draft")
+
+    def assign(
+        self, user: User, resource_id: str, audience: ResourceAudience, expected: str
+    ) -> ResourceAdminState:
+        self._admin(user)
+        raw, doc = self._edit(expected)
+        targets = [
+            entry
+            for entry in [*doc.draft, *doc.published.entries]
+            if entry.resource_id == resource_id
+        ]
+        if not targets:
+            raise OctopError.localized(ErrorCode.NOT_FOUND)
+        known = {member.subject for member in self.members(user)}
+        previous = {subject for entry in targets for subject in entry.allowed_subjects}
+        if not set(audience.subjects) <= known | previous:
+            raise invalid()
+
+        def assigned(entries: list[ResourceEntry]) -> list[ResourceEntry]:
+            return [
+                entry.model_copy(update={"allowed_subjects": list(audience.subjects)})
+                if entry.resource_id == resource_id
+                else entry
+                for entry in entries
+            ]
+
+        doc.draft = assigned(doc.draft)
+        if any(entry.resource_id == resource_id for entry in doc.published.entries):
+            # Scope-only publication keeps the currently published content and
+            # all other draft edits intact, including edits to this resource.
+            return self._publish(user, raw, doc, assigned(doc.published.entries), "assign")
+        return self._save(user, raw, doc, "assign_draft")
 
     def _publish(
         self,

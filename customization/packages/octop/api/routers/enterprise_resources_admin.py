@@ -13,6 +13,8 @@ from octop.api.routers.enterprise_mcp_admin import _CatalogRoute, _no_store
 from octop.infra.connectors.enterprise_catalog import CatalogMember
 from octop.infra.enterprise_resources.catalog import ResourceAdminState, ResourceCatalog
 from octop.infra.enterprise_resources.models import (
+    ID_PATTERN,
+    ResourceAudience,
     ResourceDefinition,
     ResourceSnapshot,
     StrictModel,
@@ -38,6 +40,11 @@ class EntryUpdate(ExpectedVersion):
 
 class EntryRemoval(ExpectedVersion):
     resource_id: str
+
+
+class AssignmentUpdate(ExpectedVersion):
+    resource_id: str = Field(pattern=ID_PATTERN, description="Expert or Skill resource ID.")
+    audience: ResourceAudience
 
 
 class VersionRollback(ExpectedVersion):
@@ -71,6 +78,28 @@ async def save_entry(
     _no_store(response)
     return await asyncio.to_thread(
         ResourceCatalog(server).save_entry, user, body.resource, body.expected_etag
+    )
+
+
+@router.put(
+    "/enterprise/resources/admin/assignment",
+    response_model=ResourceAdminState,
+    summary="Assign an expert or Skill to company members",
+    description="Company web administrators only. Updates the selected resource's published audience immediately while retaining all content drafts. Unpublished resources remain drafts. Selected mode requires at least one member; dependency visibility and current etag are checked.",
+)
+async def assign(
+    body: AssignmentUpdate,
+    response: Response,
+    user: User = Depends(current_user),
+    server: Any = Depends(get_server),
+) -> ResourceAdminState:
+    _no_store(response)
+    return await asyncio.to_thread(
+        ResourceCatalog(server).assign,
+        user,
+        body.resource_id,
+        body.audience,
+        body.expected_etag,
     )
 
 

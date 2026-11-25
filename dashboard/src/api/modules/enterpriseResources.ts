@@ -35,6 +35,10 @@ export interface ResourceAdminState {
   };
   history: EnterpriseMcpVersion[];
 }
+export interface ResourceAudience {
+  scope: "all" | "selected";
+  subjects: string[];
+}
 export interface ResourceLocalState {
   resource_id: string;
   kind: "expert" | "skill";
@@ -85,6 +89,16 @@ export const resourcesApi = {
   save: (resource: ResourceDefinition, expected_etag: string) =>
     send<ResourceAdminState>(`${center}/entry`, "PUT", {
       resource,
+      expected_etag,
+    }),
+  assign: (
+    resource_id: string,
+    audience: ResourceAudience,
+    expected_etag: string,
+  ) =>
+    send<ResourceAdminState>(`${center}/assignment`, "PUT", {
+      resource_id,
+      audience,
       expected_etag,
     }),
   remove: (resource_id: string, expected_etag: string) =>

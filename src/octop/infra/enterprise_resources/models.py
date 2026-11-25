@@ -79,6 +79,25 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
+class ResourceAudience(StrictModel):
+    scope: Literal["all", "selected"]
+    subjects: list[str] = Field(default_factory=list, max_length=1000)
+
+    @model_validator(mode="after")
+    def valid_audience(self) -> ResourceAudience:
+        if (self.scope == "selected" and not self.subjects) or (
+            self.scope == "all" and self.subjects
+        ):
+            raise ValueError("choose all members or at least one selected member")
+        if any(
+            not value or len(value) > 128 or any(c.isspace() for c in value)
+            for value in self.subjects
+        ):
+            raise ValueError("invalid subject")
+        self.subjects = sorted(set(self.subjects))
+        return self
+
+
 class ResourceFile(StrictModel):
     path: str
     content_base64: str = Field(max_length=12 * 1024 * 1024, repr=False)
