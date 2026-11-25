@@ -26,7 +26,23 @@ const state: MemberAccessState = {
   etag: "a".repeat(64),
   configured: true,
   revision: 1,
-  mcp_options: [],
+  mcp_options: [
+    {
+      entry_id: "aftersales-quality",
+      display_name: "memberAccess.aftersales",
+      enabled: true,
+    },
+    {
+      entry_id: "quota-workbench",
+      display_name: "memberAccess.workbench",
+      enabled: true,
+    },
+    {
+      entry_id: "negative-profit",
+      display_name: "memberAccess.negative",
+      enabled: true,
+    },
+  ],
   services: [],
   members: [
     {
@@ -179,4 +195,45 @@ it("refreshes idle forms automatically and preserves unsaved permissions", async
   } finally {
     vi.useRealTimers();
   }
+});
+
+it("does not show legacy MCPs when the published catalog is explicitly empty", async () => {
+  vi.mocked(memberAccessApi.read).mockResolvedValue({
+    ...state,
+    mcp_options: [],
+  });
+  render(<MemberAccessAdmin />);
+  await screen.findByRole("checkbox", { name: "Alice memberAccess.companion" });
+  expect(
+    screen.queryByRole("checkbox", { name: "Alice memberAccess.aftersales" }),
+  ).toBeNull();
+});
+
+it("keeps an MCP named companion separate from desktop-pet access", async () => {
+  vi.mocked(memberAccessApi.read).mockResolvedValue({
+    ...state,
+    mcp_options: [
+      { entry_id: "companion", display_name: "Pet data MCP", enabled: true },
+    ],
+  });
+  render(<MemberAccessAdmin />);
+  fireEvent.click(
+    await screen.findByRole("checkbox", { name: "Alice Pet data MCP" }),
+  );
+  expect(
+    screen.getByRole("checkbox", { name: "Alice memberAccess.companion" }),
+  ).not.toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "memberAccess.save" }));
+  await waitFor(() =>
+    expect(memberAccessApi.save).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          user_id: 1,
+          mcp_ids: ["companion"],
+          companion: false,
+        }),
+      ]),
+      state.etag,
+    ),
+  );
 });
