@@ -173,6 +173,16 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         item("移到右下角", #selector(moveRight)); item("移到左下角", #selector(moveLeft))
         item("宠物大小…", #selector(showSizeControls))
         item(pet.paused ? "恢复动作" : "暂停动作", #selector(toggleAnimation))
+        if pet.isBongoCat {
+            if !pet.keyboardAllowed { item("允许小猫响应键盘…", #selector(allowCatKeyboard)) }
+            let actions = NSMenuItem(title: "小猫动作", action: nil, keyEquivalent: "")
+            let submenu = NSMenu()
+            for (title, action) in [("挥手", "wave"), ("眨眼", "blink"), ("墨镜", "glasses"), ("天使光环", "halo"), ("恢复表情", "reset")] {
+                let entry = NSMenuItem(title: title, action: #selector(catAction(_:)), keyEquivalent: "")
+                entry.target = self; entry.representedObject = action; submenu.addItem(entry)
+            }
+            actions.submenu = submenu; menu.addItem(actions)
+        }
         item("边缘收起", #selector(toggleEdgeHiding)).state = pet.edgeHiding ? .on : .off
         item("自动朗读", #selector(toggleVoice)).state = voiceEnabled ? .on : .off
         menu.addItem(.separator())
@@ -205,6 +215,8 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     @objc private func togglePet() { if petWindow.isVisible { petWindow.orderOut(nil) } else { petWindow.orderFrontRegardless() } }
     @objc private func toggleAnimation() { pet.paused.toggle() }
+    @objc private func allowCatKeyboard() { pet.requestKeyboard() }
+    @objc private func catAction(_ sender: NSMenuItem) { if let action = sender.representedObject as? String { pet.catAction(action) } }
     @objc private func moveRight() { movePet(right: true) }
     @objc private func moveLeft() { movePet(right: false) }
     private func movePet(right: Bool) { pet.expandForPlacement(); guard let area = NSScreen.main?.visibleFrame else { return }; petWindow.setFrameOrigin(NSPoint(x: right ? area.maxX - petWindow.frame.width - 28 : area.minX + 28, y: area.minY + 28)); savePosition() }
@@ -301,7 +313,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         case .size: showSizeControls()
         }
     }
-    func applicationWillTerminate(_ notification: Notification) { closeSockets(); speech.stopRecognition(); speech.stopSpeaking(); engine.stop(); if let hotKey { UnregisterEventHotKey(hotKey) }; if let hotKeyHandler { RemoveEventHandler(hotKeyHandler) } }
+    func applicationWillTerminate(_ notification: Notification) { pet?.stop(); closeSockets(); speech.stopRecognition(); speech.stopSpeaking(); engine.stop(); if let hotKey { UnregisterEventHotKey(hotKey) }; if let hotKeyHandler { RemoveEventHandler(hotKeyHandler) } }
     private func registerShortcut() {
         var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         InstallEventHandler(GetApplicationEventTarget(), { _, _, context in
@@ -606,6 +618,7 @@ struct Main {
                 for value in ["/api/../secret", "/api/%2e%2e/secret", "//example.com/api/auth/me", "/api/%252e%252e/secret", "/api/agents\\evil"] { if (try? EndpointPolicy.api(value, origin: origin)) != nil { fatalError("Unsafe path accepted") } }
                 _ = try EndpointPolicy.api("/api/auth/me", origin: origin)
                 PetSizing.selfTest()
+                BongoCatInputState.selfTest()
                 let sessions = CredentialStore()
                 let other = try EndpointPolicy.origin("http://localhost:8089")
                 precondition(sessions.read(origin: origin) == nil)

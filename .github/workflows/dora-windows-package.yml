@@ -46,7 +46,11 @@ jobs:
       - name: Build Windows speech bridge and installer
         run: |
           $compiler = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          & $compiler /nologo /target:exe /out:desktop-companion/build/DoraSpeech.exe /reference:"${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Speech.dll" /reference:System.Web.Extensions.dll desktop-companion/windows/Speech.cs
+          $source = (Resolve-Path 'desktop-companion\windows\Speech.cs').Path
+          $output = Join-Path $PWD 'desktop-companion\build\DoraSpeech.exe'
+          $speechAssembly = "${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Speech.dll"
+          $compilerArgs = @('/nologo', '/target:exe', "/out:$output", "/reference:$speechAssembly", '/reference:System.Web.Extensions.dll', $source)
+          & $compiler @compilerArgs
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           uv run python desktop-companion/windows/build.py
           if ($LASTEXITCODE) { exit $LASTEXITCODE }

@@ -81,7 +81,12 @@ function draw(now) {
         const [x, y, w, h] = animation.overlayRect;
         ctx.save();
         ctx.beginPath();
-        ctx.rect(x * width, y * height, w * width, h * height);
+        ctx.rect(
+          destination[0] + x * destination[2],
+          destination[1] + y * destination[3],
+          w * destination[2],
+          h * destination[3],
+        );
         ctx.clip();
         paintImage(frame, destination);
         ctx.restore();
@@ -119,30 +124,29 @@ function drawPeek(w, h) {
       h,
     );
   const grips = peek.gripRects || [];
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(-w, -h, w * 3, h * 3);
-  for (const [gx, gy, gw, gh] of grips)
-    ctx.ellipse(
-      ((gx + gw / 2 - x) / cw) * w,
-      ((gy + gh / 2 - y) / ch) * h,
-      ((gw / cw) * w) / 2,
-      ((gh / ch) * h) / 2,
-      0,
-      0,
-      Math.PI * 2,
-    );
-  ctx.clip("evenodd");
-  const pivot = peek.pivot || [0.5, 0.5],
+  const pivot = peek.pivot || [x + cw / 2, y + ch / 2],
     px = ((pivot[0] - x) / cw) * w,
-    py = ((pivot[1] - y) / ch) * h;
-  ctx.translate(px, py);
+    py = ((pivot[1] - y) / ch) * h,
+    offset = ((w * peek.headWidth) / cw) * (peek.retraction || 0);
+  ctx.save();
+  ctx.translate(px + (side ? offset : 0), py + (side ? 0 : offset));
   ctx.rotate((-(peek.rotation || 0) * Math.PI) / 180);
   ctx.translate(-px, -py);
-  ctx.translate(
-    side ? w * (peek.retraction || 0) : 0,
-    side ? 0 : h * (peek.retraction || 0),
-  );
+  if (grips.length) {
+    ctx.beginPath();
+    ctx.rect(0, 0, w, h);
+    for (const [gx, gy, gw, gh] of grips)
+      ctx.ellipse(
+        ((gx + gw / 2 - x) / cw) * w,
+        ((gy + gh / 2 - y) / ch) * h,
+        ((gw / cw) * w) / 2,
+        ((gh / ch) * h) / 2,
+        0,
+        0,
+        Math.PI * 2,
+      );
+    ctx.clip("evenodd");
+  }
   image();
   ctx.restore();
   for (const [gx, gy, gw, gh] of grips) {

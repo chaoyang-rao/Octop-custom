@@ -324,6 +324,7 @@ async function loadArtwork() {
     send(pet, { type: "petReload" });
     pet.showInactive();
   } catch (e) {
+    if (revision !== client.revision) return;
     event({ type: "notice", text: e.message });
     log(e.message + "\n");
   }
@@ -393,6 +394,7 @@ function speechCommand(op, text = "") {
     });
     const current = speech;
     readline.createInterface({ input: current.stdout }).on("line", (line) => {
+      if (speech !== current) return;
       try {
         const value = JSON.parse(line);
         if (value.type === "recognized")
@@ -409,7 +411,7 @@ function speechCommand(op, text = "") {
     });
     current.stderr.on("data", log);
     current.on("error", (e) => {
-      event({ type: "speechError", error: e.message });
+      if (speech === current) event({ type: "voice", error: e.message });
     });
     current.once("exit", () => {
       if (speech === current) speech = null;
@@ -482,17 +484,20 @@ async function native(op, args) {
           startupError,
           progress,
         };
+      const revision = client.revision;
       let user = null,
         allowed = false;
       if (client.token) {
         try {
           user = await client.user();
           allowed = (await client.data("/api/companion/access")).allowed;
-          if (!allowed) pet.hide();
+          if (revision === client.revision && !allowed) pet.hide();
         } catch (e) {
           log(e.message);
         }
       }
+      if (revision !== client.revision)
+        throw new Error("登录状态已变化，请刷新。");
       return {
         authenticated: !!user,
         origin: client.origin,
