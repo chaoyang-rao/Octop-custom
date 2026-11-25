@@ -41,7 +41,7 @@ struct PetRegistration: Decodable {
         return NSRect(x:bounds.minX+value[0]*bounds.width, y:bounds.maxY-(value[1]+value[3])*bounds.height, width:value[2]*bounds.width, height:value[3]*bounds.height)
     }
 }
-struct PetManifest: Decodable { let name: String; let animations: [String: PetAnimation]; let peek: [String: PetPeek]?; let registration: PetRegistration?; let renderer: String? }
+struct PetManifest: Decodable { let name: String; let animations: [String: PetAnimation]; let peek: [String: PetPeek]?; let registration: PetRegistration? }
 final class PetPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
@@ -78,12 +78,6 @@ final class PetView: NSView {
     var edgeHiding = true { didSet { if !edgeHiding { expandForPlacement() } else { dockNearEdge() } } }
     var placementFrame: NSRect { dockedFrame ?? window?.frame ?? .zero }
     private var resetAt: TimeInterval = 0
-    private var bongoCat: BongoCatRenderer?
-    var isBongoCat: Bool { bongoCat != nil }
-    var keyboardAllowed: Bool { bongoCat?.keyboardAllowed ?? false }
-    func requestKeyboard() { bongoCat?.requestKeyboard() }
-    func catAction(_ action: String) { bongoCat?.perform(action) }
-    func stop() { timer?.invalidate(); bongoCat?.stop() }
     init(root: URL) throws {
         manifest = try JSONDecoder().decode(PetManifest.self, from: Data(contentsOf: root.appendingPathComponent("pet.json")))
         var loaded: [String: NSImage] = [:], bitmap: [String: NSBitmapImageRep] = [:]
@@ -97,13 +91,9 @@ final class PetView: NSView {
         }
         images = loaded; bitmaps = bitmap
         super.init(frame: .zero)
-        if manifest.renderer == "bongocat" {
-            let renderer = BongoCatRenderer(root: root.appendingPathComponent("BongoCat"))
-            bongoCat = renderer; addSubview(renderer.view)
-        }
         setAccessibilityElement(true); setAccessibilityRole(.button); setAccessibilityLabel("双击打开或收起哆啦对话；拖动起飞，松手落地")
         toolTip = "双击打开或收起对话；拖动起飞，松手落地；⌥+滚动调整大小"
-        timer = Timer.scheduledTimer(withTimeInterval: bongoCat == nil ? 0.08 : 1.0 / 30, repeats: true) { [weak self] _ in self?.tick() }
+        timer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { [weak self] _ in self?.tick() }
         RunLoop.main.add(timer!, forMode: .common)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -130,15 +120,7 @@ final class PetView: NSView {
         }
     }
     private func tick() {
-        guard let window else { return }
-        if let bongoCat {
-            bongoCat.view.frame = imageRect
-            bongoCat.view.isHidden = docking.collapsed || !bongoCat.ready
-            let area = PetSizing.screenArea(for: placementFrame, areas: NSScreen.screens.map(\.visibleFrame)) ?? window.frame
-            bongoCat.update(activity: state, paused: paused || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-                visible: window.isVisible && !docking.collapsed, mirrored: !facing.right, screen: area)
-        }
-        guard window.isVisible else { return }
+        guard let window, window.isVisible else { return }
         let now = Date.timeIntervalSinceReferenceDate
         if resetAt > 0 && now >= resetAt { activity = "idle"; resetAt = 0 }
         dragMotion.advance(at: now)

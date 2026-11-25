@@ -30,9 +30,13 @@ jobs:
           enable-cache: false
       - run: |
           npm ci --prefix desktop-companion
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm ci --prefix desktop-companion/windows
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm test --prefix desktop-companion
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm test --prefix desktop-companion/windows
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run build --prefix desktop-companion
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Native Windows transparent window and login transport checks
@@ -55,6 +59,7 @@ jobs:
           uv run python desktop-companion/windows/build.py
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           choco install nsis --version=3.11 -y --no-progress
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /INPUTCHARSET UTF8 desktop-companion/windows/installer.nsi
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Start the real self-contained engine without Python installed by the user

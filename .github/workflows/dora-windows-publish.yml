@@ -1,0 +1,61 @@
+name: Publish verified Windows Dora
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Dora Windows independent package run
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    if: github.repository == 'chaoyang-rao/Octop-custom' && github.ref == 'refs/heads/custom/main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.build_run_id }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify build provenance and integration ancestry
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          def api(path):
+              return json.loads(subprocess.check_output(['gh', 'api', '/repos/' + os.environ['GH_REPO'] + path]))
+          run = os.environ['BUILD_RUN']
+          assert run.isdigit()
+          build = api('/actions/runs/' + run)
+          assert build['name'] == 'Dora Windows independent package' and build['conclusion'] == 'success'
+          assert build['path'] == '.github/workflows/dora-windows-package.yml'
+          comparison = api('/compare/' + build['head_sha'] + '...' + os.environ['GITHUB_SHA'])
+          assert comparison['status'] in {'ahead', 'identical'}, 'Build is not integrated into the release source'
+          def inputs(sha):
+              tree = api('/git/commits/' + sha)['tree']['sha']
+              return {x['path']: x['sha'] for x in api('/git/trees/' + tree)['tree']}
+          built, released = inputs(build['head_sha']), inputs(os.environ['GITHUB_SHA'])
+          for path in ['src', 'customization', 'desktop-companion', 'scripts', 'pyproject.toml', 'uv.lock']:
+              assert built[path] == released[path], 'Release inputs changed since acceptance: ' + path
+          PY
+      - name: Download and verify the final installer
+        run: |
+          gh run download "$BUILD_RUN" -n Dora-Windows-x64 -D dist
+          cd dist
+          sed -i 's/\r$//' SHA256SUMS.txt
+          sha256sum --check SHA256SUMS.txt
+          test -s Dora-Windows-x64-0.8.0-Setup.exe
+          test -s Dora-Windows-x64-0.8.0.zip
+      - name: Publish code-only installer
+        run: |
+          cat > release-notes.txt <<'TEXT'
+          Windows 10/11 x64 独立哆啦，可独立安装和运行，无需预装 Octop 或 Python。
+          使用企业飞书登录，模型、专家、团队和 MCP 按现有服务器权限同步。角色形象在获授权后自动下载；公开安装包不含内部角色素材。
+          支持置顶、边缘探头、拖动、连续缩放、专家切换、团队、附件及打断。关闭聊天会隐藏窗口，退出请使用系统托盘。
+          Windows 原生窗口、隔离登录、打断、实际引擎启动与最终安装/卸载数据保留已由构建验证。真实员工飞书登录和实体麦克风未由 CI 验证。
+          TEXT
+          gh release create dora-windows-v0.8.0 --target "$GITHUB_SHA" --title '哆啦 Windows 0.8.0' --notes-file release-notes.txt dist/*.exe dist/*.zip dist/SHA256SUMS.txt

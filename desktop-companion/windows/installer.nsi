@@ -53,10 +53,10 @@ complete:
   CreateShortcut "$DESKTOP\哆啦.lnk" "$INSTDIR\Dora.exe"
   WriteRegStr HKCU "Software\Classes\octop-companion" "" "URL:Octop Companion"
   WriteRegStr HKCU "Software\Classes\octop-companion" "URL Protocol" ""
-  WriteRegStr HKCU "Software\Classes\octop-companion\shell\open\command" "" '$"$INSTDIR\Dora.exe$" $"%1$"'
+  WriteRegStr HKCU "Software\Classes\octop-companion\shell\open\command" "" '"$INSTDIR\Dora.exe" "%1"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\OctopCompanion" "DisplayName" "哆啦"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\OctopCompanion" "DisplayVersion" "${VERSION}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\OctopCompanion" "UninstallString" '$"$INSTDIR\Uninstall.exe$"'
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\OctopCompanion" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   RMDir /r "$INSTDIR.previous"
 SectionEnd
 Section "Uninstall"

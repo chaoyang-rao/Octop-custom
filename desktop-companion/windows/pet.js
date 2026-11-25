@@ -135,16 +135,15 @@ function drawPeek(w, h) {
   if (grips.length) {
     ctx.beginPath();
     ctx.rect(0, 0, w, h);
-    for (const [gx, gy, gw, gh] of grips)
-      ctx.ellipse(
-        ((gx + gw / 2 - x) / cw) * w,
-        ((gy + gh / 2 - y) / ch) * h,
-        ((gw / cw) * w) / 2,
-        ((gh / ch) * h) / 2,
-        0,
-        0,
-        Math.PI * 2,
-      );
+    for (const [gx, gy, gw, gh] of grips) {
+      const cx = ((gx + gw / 2 - x) / cw) * w,
+        cy = ((gy + gh / 2 - y) / ch) * h;
+      const rx = ((gw / cw) * w) / 2,
+        ry = ((gh / ch) * h) / 2;
+      ctx.moveTo(cx + rx, cy);
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.closePath();
+    }
     ctx.clip("evenodd");
   }
   image();
