@@ -1,4 +1,4 @@
-"""One super-administrator member list for the three MCPs and desktop pet."""
+"""Super-administrator access to catalog MCPs and the desktop pet."""
 
 from __future__ import annotations
 
@@ -36,12 +36,19 @@ class ServiceState(StrictModel):
     owner_name: str | None = None
 
 
+class McpOption(StrictModel):
+    entry_id: str
+    display_name: str
+    enabled: bool
+
+
 class AccessAdminState(StrictModel):
     etag: str
     configured: bool
     revision: int
     members: list[MemberRow]
     services: list[ServiceState]
+    mcp_options: list[McpOption]
 
 
 class AccessUpdate(StrictModel):

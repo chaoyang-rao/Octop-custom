@@ -6112,7 +6112,8 @@
     "prepareExpertUnavailable": "Xiaotong is not ready yet. Retry preparation.",
     "prepareFailed": "Workspace preparation did not finish",
     "prepareRecoveryHint": "Retry directly, without reconfiguring models or registering again.",
-    "toolsAccessHint": "Chat and company tools are prepared separately. MCPs and the pet follow administrator-granted access."
+    "toolsAccessHint": "Chat and company tools are prepared separately. MCPs and the pet follow administrator-granted access.",
+    "centerTitle": "Company administration"
   },
   "login": {
     "checkingConfiguration": "Checking sign-in options…",
@@ -8166,10 +8167,10 @@
     "version": "Published v{{revision}}",
     "refresh": "Refresh directory",
     "addExpert": "Add expert",
-    "addSkill": "Add Skill",
+    "addSkill": "Add skill pack",
     "import": "Import resource pack",
     "publish": "Publish to members",
-    "publishConfirm": "Publish this draft? Member devices apply it when idle.",
+    "publishConfirm": "Publish all expert and skill pack drafts in this catalog? Member devices apply the update when idle.",
     "emptyDraft": "No draft resources. Add one or import an export from your desktop.",
     "expert": "Expert",
     "skill": "Skill",
@@ -8237,7 +8238,10 @@
       "retired": "Distribution stopped; local copy retained"
     },
     "avatar": "Avatar",
-    "localModified": "Includes local edits"
+    "localModified": "Includes local edits",
+    "expertsTitle": "Company experts",
+    "skillsTitle": "Company skill packs",
+    "wrongResourceKind": "This resource pack belongs in the other company resource tab."
   },
   "companion": {
     "title": "Dora companion",
@@ -8279,7 +8283,7 @@
     "modelServiceLoadFailed": "Failed to load the model service",
     "independentHint": "The pet component is prepared automatically on first use. Once opened, it keeps running independently when Octop is closed.",
     "notOpened": "Desktop pet access is not enabled",
-    "contactAdmin": "Ask your super-administrator to enable the desktop pet for you in Member access.",
+    "contactAdmin": "Ask your super-administrator to enable the desktop pet for you in MCP access.",
     "preparing": "Preparing and opening the desktop pet…",
     "firstInstallHint": "The first launch downloads the component. Company access and the publisher signature are verified before installation and launch.",
     "opened": "Opened the independent desktop pet",
@@ -8312,8 +8316,8 @@
     "refreshHint": "Refreshes every 30 seconds. Estimates are not an exact invoice."
   },
   "memberAccess": {
-    "title": "Member access",
-    "hint": "Select members from Octop sign-ins. The three MCPs use centrally managed read-only connections. The pet runs independently. New members are disabled by default.",
+    "title": "MCP access",
+    "hint": "Enable MCPs for Octop members. The list follows the published company MCP catalog. The pet runs independently. New members are disabled by default.",
     "aftersales": "Aftersales quality",
     "workbench": "Quota workbench",
     "negative": "Negative-profit MCP",
@@ -8325,7 +8329,7 @@
     "notLinked": "Feishu not linked",
     "search": "Search name or login account",
     "save": "Save access",
-    "refresh": "Refresh sign-ins",
+    "refresh": "Refresh members and MCPs",
     "reset": "Discard changes",
     "saved": "Member access saved",
     "newMemberHint": "Ask colleagues to sign in with company Feishu once to appear here. Revoking an MCP blocks subsequent calls; revoking the pet blocks new turns while retaining chats and files.",

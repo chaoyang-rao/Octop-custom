@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from contextlib import suppress
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Annotated, Any, Literal, cast
 
 from pydantic import Field
 
@@ -15,22 +15,29 @@ from octop.infra.enterprise_resources.models import StrictModel, canonical, dige
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.users.identity import User
 
+if TYPE_CHECKING:
+    from octop.infra.connectors.enterprise_catalog import CatalogSnapshot
+
 ACCESS_KEY = "enterprise.member_access.v1"
-McpId = Literal["aftersales-quality", "quota-workbench", "negative-profit"]
-MCP_IDS: tuple[McpId, ...] = ("aftersales-quality", "quota-workbench", "negative-profit")
+ServiceMcpId = Literal["aftersales-quality", "quota-workbench", "negative-profit"]
+McpId = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
+# These services have server-owned business connections, unlike general catalog entries.
+MCP_IDS: tuple[ServiceMcpId, ...] = ("aftersales-quality", "quota-workbench", "negative-profit")
 _PURPOSE = "enterprise_managed_mcp_fernet"
 
 
 class MemberSelection(StrictModel):
     user_id: int = Field(gt=0)
-    mcp_ids: list[McpId] = Field(default_factory=list, max_length=3)
+    mcp_ids: list[McpId] = Field(default_factory=list, max_length=1000)
     companion: bool = False
 
 
 class MemberAccessStatus(StrictModel):
     configured: bool
     revision: int = Field(ge=0)
-    mcp_ids: list[McpId]
+    # Keep the session wire shape accepted by already-installed clients. The MCP
+    # catalog carries the full, dynamically filtered entitlement list.
+    mcp_ids: list[ServiceMcpId]
     companion: bool
 
 
@@ -48,7 +55,10 @@ class AccessDocument(StrictModel):
     schema_version: Literal[1] = 1
     revision: int = Field(default=0, ge=0)
     members: list[MemberGrant] = Field(default_factory=list, max_length=10000)
-    connections: dict[McpId, ServiceConnection] = Field(default_factory=dict)
+    connections: dict[ServiceMcpId, ServiceConnection] = Field(default_factory=dict)
+    managed_mcp_ids: list[McpId] = Field(
+        default_factory=lambda: [str(value) for value in MCP_IDS], max_length=1000
+    )
 
 
 class MemberAccess:
@@ -85,6 +95,30 @@ class MemberAccess:
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         return center_for(self.server).require_employee(user)
 
+    def _catalog(self) -> CatalogSnapshot:
+        from octop.infra.connectors.enterprise_catalog import EnterpriseMcpCatalog
+
+        return EnterpriseMcpCatalog(self.server)._read()[1].published
+
+    def _etag(self, raw: str | None, catalog: CatalogSnapshot | None = None) -> str:
+        return digest([raw or "", (catalog or self._catalog()).checksum])
+
+    @staticmethod
+    def _mcp_ids(
+        document: AccessDocument,
+        grant: MemberGrant | None,
+        identity: str,
+        catalog: CatalogSnapshot,
+    ) -> list[str]:
+        # Preserve explicit audiences for entries published before this grid
+        # managed them. An empty audience never auto-enables a new MCP/member.
+        inherited = [
+            entry.entry_id
+            for entry in catalog.entries
+            if entry.entry_id not in document.managed_mcp_ids and identity in entry.allowed_subjects
+        ]
+        return list(dict.fromkeys([*(grant.mcp_ids if grant else []), *inherited]))
+
     def status(self, user: User) -> dict[str, Any]:
         identity = self._identity(user)
         raw, document = self._read()
@@ -96,7 +130,7 @@ class MemberAccess:
         return {
             "configured": True,
             "revision": document.revision,
-            "mcp_ids": list(grant.mcp_ids) if grant else [],
+            "mcp_ids": self._mcp_ids(document, grant, identity, self._catalog()),
             "companion": bool(grant and grant.companion),
         }
 
@@ -108,12 +142,13 @@ class MemberAccess:
 
     def connection_fingerprint(self, entry_id: str) -> str:
         _, document = self._read()
-        reference = document.connections.get(cast(McpId, entry_id))
+        reference = document.connections.get(cast(ServiceMcpId, entry_id))
         return digest(canonical(reference.model_dump() if reference else {"entry_id": entry_id}))
 
     def admin(self, user: User) -> dict[str, Any]:
         self._admin(user)
         raw, document = self._read()
+        catalog = self._catalog()
         grants = {g.user_id: g for g in document.members}
         members = []
         for row in self.server.services.user_repo.list(include_disabled=True):
@@ -129,9 +164,13 @@ class MemberAccess:
                     "user_id": row.id,
                     "username": row.username,
                     "display_name": row.display_name or row.username,
-                    "disabled": row.disabled,
+                    "disabled": bool(row.disabled),
                     "verified": bool(identity),
-                    "mcp_ids": list(grant.mcp_ids) if current and grant else [],
+                    "mcp_ids": self._mcp_ids(
+                        document, grant if current else None, identity, catalog
+                    )
+                    if identity
+                    else [],
                     "companion": bool(current and grant and grant.companion),
                 }
             )
@@ -149,11 +188,19 @@ class MemberAccess:
                 }
             )
         return {
-            "etag": digest(raw or ""),
+            "etag": self._etag(raw, catalog),
             "configured": raw is not None,
             "revision": document.revision,
             "members": members,
             "services": services,
+            "mcp_options": [
+                {
+                    "entry_id": entry.entry_id,
+                    "display_name": entry.display_name,
+                    "enabled": entry.enabled,
+                }
+                for entry in catalog.entries
+            ],
         }
 
     def save(
@@ -161,12 +208,20 @@ class MemberAccess:
     ) -> dict[str, Any]:
         self._admin(user)
         raw, document = self._read()
-        if digest(raw or "") != expected_etag:
+        catalog = self._catalog()
+        if self._etag(raw, catalog) != expected_etag:
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_CONFLICT)
         if len({row.user_id for row in selections}) != len(selections):
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_INVALID)
         grants = []
+        known_ids = (
+            set(document.managed_mcp_ids)
+            | set(MCP_IDS)
+            | {entry.entry_id for entry in catalog.entries}
+        )
         for row in selections:
+            if not set(row.mcp_ids) <= known_ids:
+                raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_INVALID)
             if not row.mcp_ids and not row.companion:
                 continue
             member = self.server.user_manager.get_by_id(row.user_id)
@@ -174,7 +229,13 @@ class MemberAccess:
                 raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_INVALID)
             identity = self._identity(member)
             grants.append(MemberGrant(**row.model_dump(), identity=identity))
-        updated = document.model_copy(update={"members": grants, "revision": document.revision + 1})
+        updated = document.model_copy(
+            update={
+                "members": grants,
+                "revision": document.revision + 1,
+                "managed_mcp_ids": sorted(known_ids),
+            }
+        )
         serialized = canonical(updated.model_dump(mode="json"))
         if not self.settings.compare_and_set(ACCESS_KEY, raw, serialized):
             raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_CONFLICT)
@@ -216,11 +277,11 @@ class MemberAccess:
 
         def save_reference() -> dict[str, Any]:
             raw, document = self._read()
-            if digest(raw or "") != expected_etag:
+            if self._etag(raw) != expected_etag:
                 raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_POLICY_CONFLICT)
             connections = {
                 **document.connections,
-                cast(McpId, entry_id): ServiceConnection(
+                cast(ServiceMcpId, entry_id): ServiceConnection(
                     owner_user_id=user.id, owner_identity=identity, account_id=account_id
                 ),
             }
@@ -304,12 +365,12 @@ class MemberAccess:
     async def initialize_owner(self, user: User, connections: dict[str, str]) -> dict[str, Any]:
         await asyncio.to_thread(self._admin, user)
         identity = await asyncio.to_thread(self._identity, user)
-        references: dict[McpId, ServiceConnection] = {}
+        references: dict[ServiceMcpId, ServiceConnection] = {}
         for entry_id, account_id in connections.items():
             choices = await self.connection_choices(user, entry_id)
             if not any(row["account_id"] == account_id for row in choices["accounts"]):
                 raise OctopError.localized(ErrorCode.ENTERPRISE_ACCESS_DENIED)
-            references[cast(McpId, entry_id)] = ServiceConnection(
+            references[cast(ServiceMcpId, entry_id)] = ServiceConnection(
                 owner_user_id=user.id, owner_identity=identity, account_id=account_id
             )
         document = AccessDocument(

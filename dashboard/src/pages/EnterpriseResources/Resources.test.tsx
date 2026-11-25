@@ -172,7 +172,7 @@ describe("company resource draft publishing", { timeout: 15000 }, () => {
       ...admin,
       etag: "b".repeat(64),
     });
-    render(<ResourceAdmin />);
+    render(<ResourceAdmin resourceKind="expert" />);
     await screen.findByText("enterpriseResources.emptyDraft");
     fireEvent.click(
       screen.getByRole("button", { name: "enterpriseResources.addExpert" }),

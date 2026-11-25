@@ -6112,7 +6112,8 @@
     "prepareExpertUnavailable": "小通暂未启动完成，请重试准备。",
     "prepareFailed": "工作台准备暂未完成",
     "prepareRecoveryHint": "可以直接重试，无需重新配置模型或重复注册账号。",
-    "toolsAccessHint": "基础对话与企业工具分别准备；MCP 和桌宠会按管理员开放范围显示。"
+    "toolsAccessHint": "基础对话与企业工具分别准备；MCP 和桌宠会按管理员开放范围显示。",
+    "centerTitle": "企业授权中心"
   },
   "login": {
     "checkingConfiguration": "正在确认登录方式…",
@@ -8166,10 +8167,10 @@
     "version": "已发布 v{{revision}}",
     "refresh": "刷新目录",
     "addExpert": "新增专家",
-    "addSkill": "新增 Skill",
+    "addSkill": "新增技能包",
     "import": "导入资源包",
     "publish": "发布给成员",
-    "publishConfirm": "发布当前草稿？成员端将在空闲时自动同步。",
+    "publishConfirm": "发布当前目录中的全部专家和技能包草稿？成员端将在空闲时自动同步。",
     "emptyDraft": "暂无草稿。可新增内容，或从本机导出后导入。",
     "expert": "专家",
     "skill": "Skill",
@@ -8237,7 +8238,10 @@
       "retired": "已停止分发，本地保留"
     },
     "avatar": "头像",
-    "localModified": "含本地修改"
+    "localModified": "含本地修改",
+    "expertsTitle": "企业专家",
+    "skillsTitle": "企业技能包",
+    "wrongResourceKind": "资源包类型不匹配，请切换到对应的企业专家或企业技能包页签。"
   },
   "companion": {
     "title": "哆啦桌宠",
@@ -8279,7 +8283,7 @@
     "modelServiceLoadFailed": "模型服务加载失败",
     "independentHint": "首次会自动准备桌宠组件。打开后可关闭 Octop，桌宠仍会独立运行。",
     "notOpened": "桌宠尚未开放",
-    "contactAdmin": "请联系超级管理员，在成员开放权限中为你勾选桌宠。",
+    "contactAdmin": "请联系超级管理员，在MCP开放权限中为你勾选桌宠。",
     "preparing": "正在准备并打开桌宠…",
     "firstInstallHint": "首次需要下载组件，请稍候。安装和启动前会核对企业授权及发布签名。",
     "opened": "已打开独立桌宠",
@@ -8312,8 +8316,8 @@
     "refreshHint": "每 30 秒刷新；估算值不作为精确账单"
   },
   "memberAccess": {
-    "title": "成员开放权限",
-    "hint": "按 Octop 登录名单勾选即可。三个 MCP 使用服务器统一配置的只读连接；桌宠可独立运行。新成员默认关闭。",
+    "title": "MCP开放权限",
+    "hint": "按 Octop 登录名单开放 MCP。列表随已发布的企业 MCP 目录更新；桌宠可独立运行。新成员默认关闭。",
     "aftersales": "售后质量",
     "workbench": "词元管理",
     "negative": "负利润mcp",
@@ -8325,7 +8329,7 @@
     "notLinked": "尚未关联飞书",
     "search": "搜索姓名或登录账号",
     "save": "保存开放范围",
-    "refresh": "刷新登录名单",
+    "refresh": "刷新名单与MCP",
     "reset": "撤销修改",
     "saved": "开放范围已保存",
     "newMemberHint": "让同事先使用公司飞书登录一次，就会出现在这里。取消 MCP 勾选会阻止后续调用；取消桌宠勾选会阻止新的提问，保留原有聊天和文件。",

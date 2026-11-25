@@ -1,0 +1,46 @@
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.intro :global(.octop-typography) {
+  margin-bottom: 4px;
+}
+
+.panel :global(.octop-typography-secondary) {
+  color: var(--fn-text-secondary);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--fn-border-primary);
+  border-radius: 10px;
+  background: var(--fn-bg-secondary);
+}
+
+.search {
+  width: min(100%, 340px);
+
+  :global(input::placeholder) {
+    color: var(--fn-text-secondary);
+  }
+}
+
+.table {
+  :global(.octop-table-container) {
+    border: 1px solid var(--fn-border-primary);
+    border-radius: 10px;
+  }
+
+  :global(.octop-table-thead > tr > th) {
+    background: var(--fn-bg-secondary);
+    color: var(--fn-text-secondary);
+  }
+}

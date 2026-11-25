@@ -21,8 +21,9 @@ import {
 } from "../../api/modules/memberAccess";
 import { apiErrorMessage } from "../../utils/apiError";
 import { message } from "../../utils/antdMessage";
+import styles from "./MemberAccessAdmin.module.less";
 
-const ids: ManagedMcpId[] = [
+const legacyIds: ManagedMcpId[] = [
   "aftersales-quality",
   "quota-workbench",
   "negative-profit",
@@ -44,7 +45,16 @@ export default function MemberAccessAdmin() {
     "aftersales-quality": t("memberAccess.aftersales"),
     "quota-workbench": t("memberAccess.workbench"),
     "negative-profit": t("memberAccess.negative"),
+    ...Object.fromEntries(
+      (state?.mcp_options || []).map((entry) => [
+        entry.entry_id,
+        entry.display_name,
+      ]),
+    ),
   };
+  const ids = state?.mcp_options?.length
+    ? state.mcp_options.map((entry) => entry.entry_id)
+    : legacyIds;
   function apply(next: MemberAccessState) {
     setState(next);
     setMembers(
@@ -66,6 +76,11 @@ export default function MemberAccessAdmin() {
   useEffect(() => {
     void load();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (busy || dirty) return;
+    const timer = window.setInterval(() => void load(), 30_000);
+    return () => window.clearInterval(timer);
+  }, [busy, dirty]); // eslint-disable-line react-hooks/exhaustive-deps
   function change(
     user: number,
     id: ManagedMcpId | "companion",
@@ -134,33 +149,58 @@ export default function MemberAccessAdmin() {
       .includes(query.trim().toLocaleLowerCase()),
   );
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Alert
-        type="info"
-        showIcon
-        message={t("memberAccess.title")}
-        description={t("memberAccess.hint")}
-      />
+    <section className={styles.panel} aria-labelledby="member-access-title">
+      <div className={styles.intro}>
+        <Typography.Title level={4} id="member-access-title">
+          {t("memberAccess.title")}
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          {t("memberAccess.hint")}
+        </Typography.Text>
+      </div>
       {error && <Alert role="alert" type="error" message={error} />}
-      <Input.Search
-        aria-label={t("memberAccess.search")}
-        placeholder={t("memberAccess.search")}
-        allowClear
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        style={{ maxWidth: 360 }}
-      />
+      <div className={styles.toolbar}>
+        <Input.Search
+          aria-label={t("memberAccess.search")}
+          placeholder={t("memberAccess.search")}
+          allowClear
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className={styles.search}
+        />
+        <Space wrap>
+          <Button
+            type="primary"
+            disabled={!state || busy || !dirty}
+            loading={busy}
+            onClick={() => void save()}
+          >
+            {t("memberAccess.save")}
+          </Button>
+          <Button disabled={busy || dirty} onClick={() => void load()}>
+            {t("memberAccess.refresh")}
+          </Button>
+          {dirty && state && (
+            <Button disabled={busy} onClick={() => apply(state)}>
+              {t("memberAccess.reset")}
+            </Button>
+          )}
+        </Space>
+      </div>
       <Table<MemberAccessRow>
+        className={styles.table}
         rowKey="user_id"
         loading={busy}
         dataSource={filtered}
         size="middle"
-        scroll={{ x: 660 }}
+        scroll={{ x: "max-content" }}
         pagination={{ pageSize: 20, hideOnSinglePage: true }}
         columns={[
           {
             title: t("memberAccess.member"),
             key: "member",
+            fixed: "left",
+            width: 190,
             render: (_, row) => (
               <Space direction="vertical" size={0}>
                 <Typography.Text strong>{row.display_name}</Typography.Text>
@@ -173,6 +213,7 @@ export default function MemberAccessAdmin() {
           ...ids.map((id) => ({
             title: names[id],
             key: id,
+            width: 150,
             align: "center" as const,
             render: (_: unknown, row: MemberAccessRow) => (
               <Checkbox
@@ -223,24 +264,6 @@ export default function MemberAccessAdmin() {
           },
         ]}
       />
-      <Space wrap>
-        <Button
-          type="primary"
-          disabled={!state || busy || !dirty}
-          loading={busy}
-          onClick={() => void save()}
-        >
-          {t("memberAccess.save")}
-        </Button>
-        <Button disabled={busy || dirty} onClick={() => void load()}>
-          {t("memberAccess.refresh")}
-        </Button>
-        {dirty && state && (
-          <Button disabled={busy} onClick={() => apply(state)}>
-            {t("memberAccess.reset")}
-          </Button>
-        )}
-      </Space>
       <Typography.Text type="secondary">
         {t("memberAccess.newMemberHint")}
       </Typography.Text>
@@ -309,6 +332,6 @@ export default function MemberAccessAdmin() {
           }))}
         />
       </Modal>
-    </Space>
+    </section>
   );
 }

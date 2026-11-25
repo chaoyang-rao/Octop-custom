@@ -16,6 +16,7 @@ import {
   Typography,
 } from "antd";
 import { useTranslation } from "react-i18next";
+import { Bot, Layers3, RefreshCw, Upload } from "lucide-react";
 import {
   resourcesApi,
   decodeText,
@@ -31,8 +32,13 @@ import {
 import { apiErrorMessage } from "../../utils/apiError";
 import { useServerTimezone } from "../../hooks/useServerTimezone";
 import { formatServerDateTime } from "../../utils/formatMessageTime";
+import styles from "./Admin.module.less";
 
-export default function ResourceAdmin() {
+export default function ResourceAdmin({
+  resourceKind,
+}: {
+  resourceKind: ResourceDefinition["kind"];
+}) {
   const { t } = useTranslation();
   const zone = useServerTimezone();
   const [state, setState] = useState<ResourceAdminState | null>(null);
@@ -126,151 +132,190 @@ export default function ResourceAdmin() {
   const active = files.find((f) => f.path === selected);
   const text = active ? decodeText(active.content_base64) : null;
   const kind = Form.useWatch("kind", form) ?? editing?.kind;
+  const draft =
+    state?.draft.filter((entry) => entry.kind === resourceKind) ?? [];
+  const isExpert = resourceKind === "expert";
   return (
-    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-      <Alert
-        type="info"
-        showIcon
-        message={t("enterpriseResources.adminHint")}
-      />
+    <section className={styles.panel} aria-labelledby="resource-catalog-title">
+      <div className={styles.intro}>
+        <Typography.Title level={4} id="resource-catalog-title">
+          {t(
+            isExpert
+              ? "enterpriseResources.expertsTitle"
+              : "enterpriseResources.skillsTitle",
+          )}
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          {t("enterpriseResources.adminHint")}
+        </Typography.Text>
+      </div>
       {error && (
         <div role="alert" tabIndex={-1} ref={errorRef}>
           <Alert type="error" message={error} />
         </div>
       )}
-      <Space wrap>
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          {t("enterpriseResources.version", {
-            revision: state?.published.revision ?? 0,
-          })}
-        </Typography.Title>
-        <Button loading={busy} onClick={() => void load()}>
-          {t("enterpriseResources.refresh")}
-        </Button>
-        <Button disabled={busy} onClick={() => create("expert")}>
-          {t("enterpriseResources.addExpert")}
-        </Button>
-        <Button disabled={busy} onClick={() => create("skill")}>
-          {t("enterpriseResources.addSkill")}
-        </Button>
-        <Button disabled={busy} onClick={() => input.current?.click()}>
-          {t("enterpriseResources.import")}
-        </Button>
-        <input
-          type="file"
-          accept=".json,application/json"
-          ref={input}
-          style={{ display: "none" }}
-          aria-label={t("enterpriseResources.import")}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (file)
-              void run(async () => {
-                if (file.size > 12 * 1024 * 1024)
-                  throw new Error(t("enterpriseResources.invalidPack"));
-                const value: unknown = JSON.parse(await file.text());
-                if (
-                  !value ||
-                  typeof value !== "object" ||
-                  !("files" in value) ||
-                  !Array.isArray(value.files) ||
-                  !("kind" in value) ||
-                  !["expert", "skill"].includes(String(value.kind)) ||
-                  !value.files.length ||
-                  value.files.some(
-                    (f) =>
-                      typeof f.path !== "string" ||
-                      typeof f.content_base64 !== "string",
-                  )
-                )
-                  throw new Error(t("enterpriseResources.invalidPack"));
-                edit(value as ResourceDefinition);
-              });
-          }}
-        />
-        <Popconfirm
-          title={t("enterpriseResources.publishConfirm")}
-          disabled={!state || busy}
-          onConfirm={() =>
-            run(async () => {
-              if (state) setState(await resourcesApi.publish(state.etag));
-            })
-          }
-        >
-          <Button type="primary" disabled={!state || busy}>
-            {t("enterpriseResources.publish")}
+      <div className={styles.toolbar}>
+        {state && (
+          <Tag color="processing">
+            {t("enterpriseResources.version", {
+              revision: state.published.revision,
+            })}
+          </Tag>
+        )}
+        <Space wrap>
+          <Button
+            icon={<RefreshCw size={15} />}
+            loading={busy}
+            onClick={() => void load()}
+          >
+            {t("enterpriseResources.refresh")}
           </Button>
-        </Popconfirm>
-      </Space>
+          <Button
+            icon={isExpert ? <Bot size={15} /> : <Layers3 size={15} />}
+            disabled={busy}
+            onClick={() => create(resourceKind)}
+          >
+            {t(
+              isExpert
+                ? "enterpriseResources.addExpert"
+                : "enterpriseResources.addSkill",
+            )}
+          </Button>
+          <Button
+            icon={<Upload size={15} />}
+            disabled={busy}
+            onClick={() => input.current?.click()}
+          >
+            {t("enterpriseResources.import")}
+          </Button>
+          <input
+            type="file"
+            accept=".json,application/json"
+            ref={input}
+            style={{ display: "none" }}
+            aria-label={t("enterpriseResources.import")}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file)
+                void run(async () => {
+                  if (file.size > 12 * 1024 * 1024)
+                    throw new Error(t("enterpriseResources.invalidPack"));
+                  const value: unknown = JSON.parse(await file.text());
+                  if (
+                    !value ||
+                    typeof value !== "object" ||
+                    !("files" in value) ||
+                    !Array.isArray(value.files) ||
+                    !("kind" in value) ||
+                    !["expert", "skill"].includes(String(value.kind)) ||
+                    !value.files.length ||
+                    value.files.some(
+                      (f) =>
+                        typeof f.path !== "string" ||
+                        typeof f.content_base64 !== "string",
+                    )
+                  )
+                    throw new Error(t("enterpriseResources.invalidPack"));
+                  if (value.kind !== resourceKind)
+                    throw new Error(t("enterpriseResources.wrongResourceKind"));
+                  edit(value as ResourceDefinition);
+                });
+            }}
+          />
+          <Popconfirm
+            title={t("enterpriseResources.publishConfirm")}
+            disabled={!state || busy}
+            onConfirm={() =>
+              run(async () => {
+                if (state) setState(await resourcesApi.publish(state.etag));
+              })
+            }
+          >
+            <Button type="primary" disabled={!state || busy}>
+              {t("enterpriseResources.publish")}
+            </Button>
+          </Popconfirm>
+        </Space>
+      </div>
       {busy && !state && <Spin />}
-      {state?.draft.length === 0 && (
+      {state && draft.length === 0 && (
         <Empty description={t("enterpriseResources.emptyDraft")} />
       )}
-      {state?.draft.map((entry) => (
-        <Card
-          key={entry.resource_id}
-          size="small"
-          title={
-            <Space wrap>
-              <Tag>{t(`enterpriseResources.${entry.kind}`)}</Tag>
-              <span>{entry.display_name}</span>
-              <Typography.Text type="secondary">
-                {entry.resource_id}
+      {state && draft.length > 0 && (
+        <div className={styles.entries}>
+          {draft.map((entry) => (
+            <Card
+              key={entry.resource_id}
+              size="small"
+              className={styles.entry}
+              title={
+                <Space wrap>
+                  <Tag>{t(`enterpriseResources.${entry.kind}`)}</Tag>
+                  <span>{entry.display_name}</span>
+                  <Typography.Text type="secondary" code>
+                    {entry.resource_id}
+                  </Typography.Text>
+                  <Tag color={entry.enabled ? "green" : "default"}>
+                    {t(
+                      entry.enabled
+                        ? "enterpriseResources.enabled"
+                        : "enterpriseResources.disabled",
+                    )}
+                  </Tag>
+                </Space>
+              }
+              extra={
+                <Space wrap>
+                  <Button disabled={busy} onClick={() => void openEntry(entry)}>
+                    {t("enterpriseResources.edit")}
+                  </Button>
+                  <Popconfirm
+                    title={t("enterpriseResources.removeConfirm")}
+                    onConfirm={() =>
+                      run(async () =>
+                        setState(
+                          await resourcesApi.remove(
+                            entry.resource_id,
+                            state.etag,
+                          ),
+                        ),
+                      )
+                    }
+                  >
+                    <Button type="text" danger disabled={busy}>
+                      {t("enterpriseResources.remove")}
+                    </Button>
+                  </Popconfirm>
+                </Space>
+              }
+            >
+              {entry.description && (
+                <Typography.Paragraph className={styles.description}>
+                  {entry.description}
+                </Typography.Paragraph>
+              )}
+              <Typography.Text type="secondary" className={styles.visibility}>
+                {t("enterpriseResources.visibility")}:{" "}
+                {entry.allowed_subjects.length
+                  ? entry.allowed_subjects
+                      .map(
+                        (s) =>
+                          members.find((m) => m.subject === s)?.display_name ??
+                          s.slice(0, 8),
+                      )
+                      .join(", ")
+                  : t("enterpriseResources.allMembers")}
               </Typography.Text>
-              <Tag color={entry.enabled ? "green" : "default"}>
-                {t(
-                  entry.enabled
-                    ? "enterpriseResources.enabled"
-                    : "enterpriseResources.disabled",
-                )}
-              </Tag>
-            </Space>
-          }
-          extra={
-            <Space>
-              <Button disabled={busy} onClick={() => void openEntry(entry)}>
-                {t("enterpriseResources.edit")}
-              </Button>
-              <Popconfirm
-                title={t("enterpriseResources.removeConfirm")}
-                onConfirm={() =>
-                  run(async () =>
-                    setState(
-                      await resourcesApi.remove(entry.resource_id, state.etag),
-                    ),
-                  )
-                }
-              >
-                <Button danger disabled={busy}>
-                  {t("enterpriseResources.remove")}
-                </Button>
-              </Popconfirm>
-            </Space>
-          }
-        >
-          <Typography.Paragraph style={{ margin: 0 }}>
-            {entry.description}
-          </Typography.Paragraph>
-          <Typography.Text type="secondary">
-            {t("enterpriseResources.visibility")}:{" "}
-            {entry.allowed_subjects.length
-              ? entry.allowed_subjects
-                  .map(
-                    (s) =>
-                      members.find((m) => m.subject === s)?.display_name ??
-                      s.slice(0, 8),
-                  )
-                  .join(", ")
-              : t("enterpriseResources.allMembers")}
-          </Typography.Text>
-        </Card>
-      ))}
+            </Card>
+          ))}
+        </div>
+      )}
       {!!state?.history.length && (
         <Card size="small" title={t("enterpriseResources.history")}>
           <Space wrap>
             <Select
-              style={{ minWidth: 260 }}
+              className={styles.historySelect}
               aria-label={t("enterpriseResources.history")}
               value={revision}
               onChange={setRevision}
@@ -540,6 +585,6 @@ export default function ResourceAdmin() {
             </Typography.Text>
           ))}
       </Modal>
-    </Space>
+    </section>
   );
 }
