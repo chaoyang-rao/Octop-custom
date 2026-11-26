@@ -12,7 +12,7 @@
 
 ## 开发者联合发行
 
-每次联合发行同时递增 `.github/workflows/custom-release.yml` 的主客户端定制版本/默认 tag，以及 Windows 和 Mac 相同的桌宠版本（`desktop-companion/package*.json`、`desktop-companion/windows/package*.json`、NSIS 与安装验收文件）。同一个桌宠版本不能重新发布不同的字节。
+每次联合发行递增 `scripts/custom/upstream-lock.json` 的主客户端定制版本，工作流直接读取该唯一版本锁；选择新的发行 tag，并同时递增 Windows 和 Mac 相同的桌宠版本（`desktop-companion/package*.json`、`desktop-companion/windows/package*.json`、NSIS 与安装验收文件）。同一个桌宠版本不能重新发布不同的字节。
 
 在 GitHub Actions 运行 `Octop Custom three-platform release`，选择 `custom/main` 和新的不可变 tag。该流程会验证三个主客户端包、Mac/Windows 桌宠、安装及回滚，再把客户端九个包和桌宠五个包一起上传至一个 Release。桌宠更新包为 `Dora-update-{windows-amd64,darwin-amd64,darwin-arm64}-<版本>.zip`；引导安装器为 `Dora-Windows-x64-<版本>-Setup.exe` 和 `Dora-macos-universal-<版本>.dmg`。只有完整、校验通过的套件才能发布。
 
