@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.7.3"
+VERSION = json.loads((ROOT / "package.json").read_text())["version"]
 
 
 def run(*args: str, **kwargs: object) -> None:
@@ -25,15 +25,9 @@ def main() -> None:
     parser.add_argument("--no-dmg", action="store_true")
     parser.add_argument("--skip-web", action="store_true")
     parser.add_argument("--engine-dir", type=Path, default=ROOT / "build/engine")
-    parser.add_argument("--pet-dir", type=Path, default=ROOT / "assets/internal/dora3d/frames")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "dist")
     args = parser.parse_args()
-    if not args.pet_dir.is_dir() or not (args.pet_dir / "pet.json").is_file():
-        parser.error("Provide the approved internal character pack with --pet-dir; artwork is not downloaded or published automatically")
-    pet_manifest=json.loads((args.pet_dir/"pet.json").read_text())
-    for animation in pet_manifest["animations"].values():
-        for name in animation["frames"]:
-            if Path(name).name!=name or not name.endswith('.png') or not (args.pet_dir/name).is_file():
-                parser.error("Invalid internal sprite frame path")
+    args.output_dir = args.output_dir.resolve()
     if not args.skip_web:
         if not (ROOT / "node_modules").is_dir():
             run("npm", "ci", "--no-audit", "--no-fund")
@@ -44,6 +38,7 @@ def main() -> None:
         ["xcrun", "--sdk", "macosx", "--show-sdk-path"], text=True
     ).strip()
     sources = [str(path) for path in sorted((ROOT / "macos").glob("*.swift"))]
+    sources += [str(path) for path in sorted((ROOT / "macos/KuroCat").glob("*.swift"))]
     architectures = ["arm64", "x86_64"] if args.arch == "universal" else [args.arch]
     binaries = []
     for arch in architectures:
@@ -71,12 +66,16 @@ def main() -> None:
             "Speech",
             "-framework",
             "Carbon",
+            "-framework", "QuartzCore",
+            "-framework", "IOKit",
+            "-framework", "ApplicationServices",
             *sources,
             "-o",
             str(binary),
         )
         binaries.append(binary)
-    app = ROOT / "dist/哆啦.app"
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    app = args.output_dir / "哆啦.app"
     if app.exists():
         shutil.rmtree(app)
     contents = app / "Contents"
@@ -95,10 +94,9 @@ def main() -> None:
     shutil.copytree(args.engine_dir, resources / "Engine")
     shutil.copy2(ROOT / "scripts/engine_entry.py", resources / "engine_entry.py")
     shutil.copy2(ROOT / "HELP.html", resources / "HELP.html")
-    shutil.copytree(args.pet_dir, resources / "Pet")
-    shutil.copy2(
-        args.pet_dir / "ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt"
-    )
+    shutil.copy2(ROOT / "macos/KuroCat/LICENSE", resources / "KuroCat-LICENSE.txt")
+    shutil.copy2(ROOT / "macos/KuroCat/UPSTREAM.json", resources / "KuroCat-UPSTREAM.json")
+    (resources / "ASSET-NOTICE.txt").write_text("KuroCat native cat renderer and motion engine, Copyright (c) 2026 chanke17.\nSource: https://github.com/chanke17/KuroCat\nMIT License: see KuroCat-LICENSE.txt.\nOctop retains its own application license.\n")
     info = {
         "CFBundleName": "哆啦",
         "CFBundleDisplayName": "哆啦",
@@ -106,7 +104,7 @@ def main() -> None:
         "CFBundleExecutable": "OctopCompanion",
         "CFBundlePackageType": "APPL",
         "CFBundleShortVersionString": VERSION,
-        "CFBundleVersion": "2026112204",
+        "CFBundleVersion": "2026112601",
         "CFBundleURLTypes": [{"CFBundleURLName": "Dora desktop companion", "CFBundleURLSchemes": ["octop-companion"], "CFBundleTypeRole": "Viewer"}],
         "LSMinimumSystemVersion": "13.0",
         "LSUIElement": True,
@@ -119,6 +117,7 @@ def main() -> None:
     run("codesign", "--force", "--deep", "--sign", "-", str(app))
     run("codesign", "--verify", "--deep", "--strict", str(app))
     run(str(executable), "--self-test")
+    run(str(executable), "--verify-kurocat", str(build / "kurocat-verification"))
     artifacts = []
     if not args.no_dmg:
         stage = build / "dmg-stage"
@@ -127,7 +126,7 @@ def main() -> None:
         stage.mkdir()
         shutil.copytree(app, stage / app.name)
         (stage / "Applications").symlink_to("/Applications", target_is_directory=True)
-        dmg = ROOT / "dist" / f"Dora-macos-{args.arch}-{VERSION}-internal.dmg"
+        dmg = args.output_dir / f"Dora-macos-{args.arch}-{VERSION}.dmg"
         run(
             "hdiutil",
             "create",
@@ -156,11 +155,11 @@ def main() -> None:
         "backend_included": True,
         "external_octop_required": False,
         "engine_data_directory": "~/Library/Application Support/OctopCompanion/Data",
-        "character": pet_manifest["name"],
-        "artwork_distribution_terms": "internal small-team use; generated artwork; character rights remain separate",
+        "character": "KuroCat classic black cat",
+        "artwork_distribution_terms": "MIT; Copyright (c) 2026 chanke17",
         "artifacts": artifacts,
     }
-    (ROOT / "dist/build-report.json").write_text(json.dumps(report, indent=2) + "\n")
+    (args.output_dir / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
 

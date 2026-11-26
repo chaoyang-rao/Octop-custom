@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/chanke17/KuroCat",
+  "revision": "1d83d7bd31a2b0b87537838535e2a70e50356e25",
+  "license": "MIT",
+  "files": {
+    "CatPhysics.swift": "11ba685801e27f339ea278afeffdc5384c51f8c7cb79af19483a22ee1d7a98e7",
+    "CatRenderer.swift": "a80c8d59bf4b30137c3ac3e6d0601c93cc38b45b2266ba84ebd680b6a6bb0a78",
+    "CoatPatterns.swift": "119241bc9ddc7c2ce4f963c669aa673af3e0903eba3e7e4624768e7b6b094bda",
+    "InputEngine.swift": "bb1bf86ab170a94e62fadcb87e20d1bd76d7a262de1bb35655ddec5758fd7feb",
+    "KeyMap.swift": "18cf0cfb2f28908917dfc96bf23fc449082c9c1a3cf2bcbeb313d33cb466df15"
+  },
+  "integration": "Original native renderer, physics and input engine. Octop owns window, chat, auth and packaging; upstream app lifecycle and updater are not included."
+}
