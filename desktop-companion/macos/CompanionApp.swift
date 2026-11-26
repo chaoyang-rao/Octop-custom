@@ -37,9 +37,8 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private var voiceEnabled = true
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        do {
             let resources = Bundle.main.resourceURL!
-            pet = try PetView(root: resources.appendingPathComponent("Pet"))
+            pet = PetView()
             makeApplicationMenu()
             makeWindows(resources: resources)
             makeMenuBar()
@@ -64,9 +63,6 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             if ProcessInfo.processInfo.arguments.contains("--show-size") { showSizeControls() }
             if ProcessInfo.processInfo.arguments.contains("--login") { Task { do { try await ensureEngine(); showFullOctop(path: "/login", login: true) } catch { event(["type": "error", "error": error.localizedDescription]) } } }
             if let action = pendingLaunchAction { pendingLaunchAction = nil; performLaunchAction(action) }
-        } catch {
-            let alert = NSAlert(); alert.messageText = "哆啦暂时无法启动"; alert.informativeText = error.localizedDescription; alert.runModal(); NSApp.terminate(nil)
-        }
     }
 
     private func makeApplicationMenu() {
@@ -110,7 +106,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         petWindow.level = CompanionWindowLevels.pet; petWindow.hidesOnDeactivate = false; petWindow.isMovableByWindowBackground = false
         petWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
         petWindow.contentView = pet; pet.clampToScreen()
-        pet.edgeHiding = defaults.object(forKey: "petEdgeHiding") == nil || defaults.bool(forKey: "petEdgeHiding")
+        pet.edgeHiding = defaults.bool(forKey: "petEdgeHiding")
         pet.onOpen = { [weak self] in self?.toggleChatFromPet() }
         pet.onMenu = { [weak self] event in guard let self else { return }; NSMenu.popUpContextMenu(self.contextMenu(), with: event, for: self.pet) }
         pet.onMoved = { [weak self] in self?.savePosition() }
@@ -173,6 +169,19 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         item("移到右下角", #selector(moveRight)); item("移到左下角", #selector(moveLeft))
         item("宠物大小…", #selector(showSizeControls))
         item(pet.paused ? "恢复动作" : "暂停动作", #selector(toggleAnimation))
+        if !pet.keyboardAllowed { item("允许小黑猫响应键盘…", #selector(allowCatKeyboard)) }
+        let motionItem = NSMenuItem(title: "小黑猫动作", action: nil, keyEquivalent: "")
+        let motions = NSMenu()
+        for (title, key, enabled) in [("摸头互动", "petInteraction", CatSettings.shared.petInteraction),
+            ("三键用脚按", "footEasterEgg", CatSettings.shared.footEasterEgg),
+            ("四键用尾巴按", "tailEasterEgg", CatSettings.shared.tailEasterEgg),
+            ("键盘跑马灯", "keyboardMarquee", CatSettings.shared.keyboardMarquee),
+            ("快速打字生气", "enableAnger", CatSettings.shared.enableAnger),
+            ("拖动提起动作", "enableDragAnimation", CatSettings.shared.enableDragAnimation)] {
+            let entry = NSMenuItem(title: title, action: #selector(toggleCatMotion(_:)), keyEquivalent: "")
+            entry.target = self; entry.representedObject = key; entry.state = enabled ? .on : .off; motions.addItem(entry)
+        }
+        motionItem.submenu = motions; menu.addItem(motionItem)
         item("边缘收起", #selector(toggleEdgeHiding)).state = pet.edgeHiding ? .on : .off
         item("自动朗读", #selector(toggleVoice)).state = voiceEnabled ? .on : .off
         menu.addItem(.separator())
@@ -205,6 +214,19 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     }
     @objc private func togglePet() { if petWindow.isVisible { petWindow.orderOut(nil) } else { petWindow.orderFrontRegardless() } }
     @objc private func toggleAnimation() { pet.paused.toggle() }
+    @objc private func allowCatKeyboard() { pet.requestKeyboard() }
+    @objc private func toggleCatMotion(_ sender: NSMenuItem) {
+        let settings = CatSettings.shared
+        switch sender.representedObject as? String {
+        case "petInteraction": settings.petInteraction.toggle()
+        case "footEasterEgg": settings.footEasterEgg.toggle()
+        case "tailEasterEgg": settings.tailEasterEgg.toggle()
+        case "keyboardMarquee": settings.keyboardMarquee.toggle()
+        case "enableAnger": settings.enableAnger.toggle()
+        case "enableDragAnimation": settings.enableDragAnimation.toggle()
+        default: break
+        }
+    }
     @objc private func moveRight() { movePet(right: true) }
     @objc private func moveLeft() { movePet(right: false) }
     private func movePet(right: Bool) { pet.expandForPlacement(); guard let area = NSScreen.main?.visibleFrame else { return }; petWindow.setFrameOrigin(NSPoint(x: right ? area.maxX - petWindow.frame.width - 28 : area.minX + 28, y: area.minY + 28)); savePosition() }
@@ -301,7 +323,7 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
         case .size: showSizeControls()
         }
     }
-    func applicationWillTerminate(_ notification: Notification) { closeSockets(); speech.stopRecognition(); speech.stopSpeaking(); engine.stop(); if let hotKey { UnregisterEventHotKey(hotKey) }; if let hotKeyHandler { RemoveEventHandler(hotKeyHandler) } }
+    func applicationWillTerminate(_ notification: Notification) { pet?.stop(); closeSockets(); speech.stopRecognition(); speech.stopSpeaking(); engine.stop(); if let hotKey { UnregisterEventHotKey(hotKey) }; if let hotKeyHandler { RemoveEventHandler(hotKeyHandler) } }
     private func registerShortcut() {
         var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         InstallEventHandler(GetApplicationEventTarget(), { _, _, context in
@@ -598,6 +620,10 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
 @main
 struct Main {
     @MainActor static func main() {
+        if let index = ProcessInfo.processInfo.arguments.firstIndex(of: "--verify-kurocat"), index + 1 < ProcessInfo.processInfo.arguments.count {
+            do { try KuroCatVerification.run(output: URL(fileURLWithPath: ProcessInfo.processInfo.arguments[index + 1])); exit(0) }
+            catch { fputs("KuroCat verification: \(error.localizedDescription)\n", stderr); exit(1) }
+        }
         if ProcessInfo.processInfo.arguments.contains("--self-test") {
             do {
                 for value in ["http://127.0.0.1:8088", "https://localhost:8443", "http://[::1]:8088"] { _ = try EndpointPolicy.origin(value) }
@@ -617,8 +643,6 @@ struct Main {
                 precondition(sessions.read(origin: origin) == nil)
                 for action in ["open", "size"] { precondition(CompanionLaunchAction(url: URL(string: "octop-companion://\(action)")!) != nil) }
                 for url in ["octop-companion://open?token=bad", "octop-companion://size/evil", "octop-companion://open#token", "octop-companion://user@open", "https://open", "octop-companion://login"] { precondition(CompanionLaunchAction(url: URL(string: url)!) == nil) }
-                let manifest = try JSONDecoder().decode(PetManifest.self, from: Data(contentsOf: Bundle.main.resourceURL!.appendingPathComponent("Pet/pet.json")))
-                for animation in manifest.animations.values { guard !animation.frames.isEmpty else { fatalError("Empty animation") } }
                 PetEdgeDocking.selfTest(); CompanionWindowPlacement.selfTest()
                 var flight = PetDragMotion()
                 flight.begin(at: 10)
@@ -632,7 +656,7 @@ struct Main {
                 precondition(flight.presentation(activity: "speaking") == "landing")
                 flight.advance(at: 11.4)
                 precondition(flight.presentation(activity: "speaking") == "speaking")
-                print("{\"endpoint_policy\":\"passed\",\"session_only_credentials\":\"passed\",\"launcher_policy\":\"passed\",\"continuous_sizing_geometry\":\"passed\",\"pet_states\":\(manifest.animations.count),\"speech_voices\":\(AVSpeechSynthesisVoice.speechVoices().count),\"microphone_requested\":false}")
+                print("{\"endpoint_policy\":\"passed\",\"session_only_credentials\":\"passed\",\"launcher_policy\":\"passed\",\"continuous_sizing_geometry\":\"passed\",\"pet_renderer\":\"chanke17/KuroCat native\",\"speech_voices\":\(AVSpeechSynthesisVoice.speechVoices().count),\"microphone_requested\":false}")
                 exit(0)
             } catch { fputs("Self test failed: \(error.localizedDescription)\n", stderr); exit(1) }
         }

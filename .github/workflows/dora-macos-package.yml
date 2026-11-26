@@ -1,4 +1,4 @@
-name: Dora standalone Mac source checks
+name: Dora standalone Mac package
 
 on:
   workflow_dispatch:
@@ -50,9 +50,13 @@ jobs:
             xcrun swiftc -swift-version 5 -parse-as-library -sdk "$sdk" \
               -target "$arch-apple-macosx13.0" \
               -framework AppKit -framework WebKit -framework AVFoundation \
-              -framework Speech -framework Carbon \
-              desktop-companion/macos/*.swift -o "desktop-companion/build/Dora-$arch"
+              -framework Speech -framework Carbon -framework QuartzCore \
+              -framework IOKit -framework ApplicationServices \
+              desktop-companion/macos/*.swift desktop-companion/macos/KuroCat/*.swift \
+              -o "desktop-companion/build/Dora-$arch"
           done
+          arch=$(uname -m)
+          "desktop-companion/build/Dora-$arch" --verify-kurocat desktop-companion/build/kurocat-verification
       - name: Verify edge docking without internal artwork
         run: |
           xcrun swiftc -swift-version 5 -parse-as-library \
@@ -71,8 +75,11 @@ jobs:
       - name: Verify fixed character scale without internal artwork
         run: |
           xcrun swiftc -swift-version 5 -parse-as-library \
+            -framework AppKit -framework QuartzCore -framework IOKit -framework ApplicationServices \
             desktop-companion/macos/SecurityCore.swift \
             desktop-companion/macos/PetWindow.swift \
+            desktop-companion/macos/KuroCatIntegration.swift \
+            desktop-companion/macos/KuroCat/*.swift \
             desktop-companion/macos/PetSizing.swift \
             desktop-companion/macos/PetDragMotion.swift \
             desktop-companion/macos/PetEdgeDocking.swift \
@@ -90,3 +97,27 @@ jobs:
             desktop-companion/tests/chat-transport.swift \
             -o desktop-companion/build/chat-transport-check
           desktop-companion/build/chat-transport-check
+      - name: Prepare locked independent engine archives
+        run: uv run --no-project python desktop-companion/scripts/prepare_engine.py
+      - name: Build and verify universal Mac installer
+        run: uv run --no-project python desktop-companion/scripts/build_macos.py --skip-web --output-dir "${{ runner.temp }}/dora-macos"
+      - name: Write installer checksums
+        env:
+          INSTALLER_DIR: ${{ runner.temp }}/dora-macos
+        run: |
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          root = Path(os.environ['INSTALLER_DIR'])
+          files = sorted(root.glob('*.dmg'))
+          assert len(files) == 1
+          (root / 'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dora-macos-universal
+          path: |
+            ${{ runner.temp }}/dora-macos/*.dmg
+            ${{ runner.temp }}/dora-macos/SHA256SUMS.txt
+            ${{ runner.temp }}/dora-macos/build-report.json
+          if-no-files-found: error
