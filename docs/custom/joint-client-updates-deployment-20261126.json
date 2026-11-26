@@ -1,0 +1,33 @@
+{
+  "status": "deployed",
+  "source_commit": "123b91d18c47e1069dd66eb41456e84d3908dff6",
+  "backup": "/opt/octop-enterprise/backups/joint-updates-1795685670",
+  "backend_files": 6,
+  "frontend_additions": 6,
+  "non_target_files_unchanged": 6778,
+  "protected_state_unchanged": true,
+  "users": 3,
+  "health": {
+    "ok": true,
+    "started_at": 1795685693,
+    "db": true,
+    "users_loaded": 3,
+    "agents_running": 0,
+    "custom_release": "1.0.3b3.post2026111801"
+  },
+  "target_hashes": {
+    "infra/client_updates/catalog.py": "32be368aa5d8939b21259071f340af2ccd0b92d71172f19390024829e6f6ae40",
+    "infra/client_updates/models.py": "318c6c34ce0b852f2f597681b980672b1bf5d8780962b6528bb30e7d4097b2c9",
+    "infra/client_updates/node.py": "0b64e7c86c3819b62af0870176c42aa99fb595c75134d6763432162b984aabe9",
+    "infra/client_updates/github.py": "f565801680e87ec9e055a8e67d722e97fe0937734210363015813edc856e71f1",
+    "dashboard/client-update-center/index.html": "a82dc2c747652201abf4bacca848c7a69fbebf1d946741c300d6b5b2837daf13",
+    "dashboard/assets/client-update-center-112601.js": "8934ea317b947a4343f0f2b2103b79f934e1cb7f3840a03de8fe1f1eb25fbffe",
+    "dashboard/client-update-center/assets/en-B23nNzzu.js": "734c565b9232cfbfe406c202abfae37f2143b4997c81fa637dd5f632a7cd8e1d",
+    "dashboard/client-update-center/assets/index-BdOndhxL.css": "98adf782bd027847cfeac99bc2f2735177375ea17bb836601ce1d7290ca699c5",
+    "dashboard/client-update-center/assets/zh-DLcyVY0C.js": "3734da59b61257c16da9af6e723f9a60a157ba9f31123239ce2eef35c7c1a73e",
+    "dashboard/client-update-center/assets/index-DNa7SBUN.js": "472a912587e83f0bced5a2ef8af22886de25f10b8da1ff35a58fee6d43e73f09",
+    "api/routers/companion.py": "990a5ebc2da3bb98df5aa8d882e94afc575e9a7b1979031f711f4542ad9b2d9e",
+    "api/routers/client_updates.py": "50619e75819ee0de07e69a9933e1c09cfd2ed38364c31517056739bc0e10d640",
+    "dashboard/index.html": "1b911c4fc90697208c8c00cde507cfb4416e6bb645061d016eb3720ac749c9af"
+  }
+}

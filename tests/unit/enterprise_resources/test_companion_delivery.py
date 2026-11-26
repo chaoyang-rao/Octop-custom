@@ -216,15 +216,23 @@ def test_windows_install_preserves_data_and_rejects_alias_paths(tmp_path):
     target = companion_windows.install(archive, metadata, tmp_path / "Programs")
     assert companion_windows.installed_version(target) == (0, 8, 0)
     assert data.read_text() == "existing member history"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("Dora/resources/web/index.html", b"valid nested application file")
+    companion_windows.validate_archive(archive)
     for name in (
         "Dora/../../outside",
         "Dora/NUL.txt",
         "Dora/file:stream",
         "Dora/trailing.",
         "Dora/a\\b",
+        "Dora/a\x00b",
     ):
         with zipfile.ZipFile(archive, "w") as bundle:
-            bundle.writestr(name, b"bad")
+            # ZipInfo normally converts backslashes on Windows before writing.
+            # Keep the raw archive name so every OS tests the same invalid bytes.
+            entry = zipfile.ZipInfo()
+            entry.filename = entry.orig_filename = name
+            bundle.writestr(entry, b"bad")
         with pytest.raises(OctopError):
             companion_windows.validate_archive(archive)
     with zipfile.ZipFile(archive, "w") as bundle:

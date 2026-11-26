@@ -43,12 +43,14 @@ def validate_archive(archive: Path) -> None:
         if not entries or len(entries) > 100000 or sum(e.file_size for e in entries) > 3 * 1024**3:
             raise OctopError.localized(ErrorCode.COMPANION_INSTALL_FAILED)
         for entry in entries:
-            parts = entry.filename.rstrip("/").split("/")
+            original = entry.orig_filename
+            parts = original.rstrip("/").split("/")
             key = "/".join(parts).casefold()
             if (
                 parts[0] != "Dora"
+                or original != entry.filename
                 or key in seen
-                or "\\" in entry.filename
+                or "\\" in original
                 or any(
                     not p
                     or p in {".", ".."}
