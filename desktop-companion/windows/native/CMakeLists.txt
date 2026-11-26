@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(DoraKuroCat LANGUAGES CXX RC)
+add_executable(DoraKuroCat bridge.cpp bridge.rc)
+target_compile_features(DoraKuroCat PRIVATE cxx_std_17)
+target_compile_definitions(DoraKuroCat PRIVATE UNICODE _UNICODE NOMINMAX _WIN32_WINNT=0x0A00 WINVER=0x0A00)
+target_compile_options(DoraKuroCat PRIVATE /O2 /MT /EHsc /utf-8 /W3)
+target_link_options(DoraKuroCat PRIVATE /MANIFEST:NO)
+target_link_libraries(DoraKuroCat PRIVATE user32 gdi32 gdiplus advapi32)

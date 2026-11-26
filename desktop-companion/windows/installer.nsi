@@ -1,7 +1,7 @@
 Unicode true
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
-!define VERSION "0.8.0"
+!define VERSION "0.9.0"
 Name "哆啦"
 OutFile "..\build\windows\Dora-Windows-x64-${VERSION}-Setup.exe"
 InstallDir "$LOCALAPPDATA\Programs\OctopCompanion"
@@ -19,9 +19,9 @@ RequestExecutionLevel user
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_LANGUAGE "SimpChinese"
 !insertmacro MUI_LANGUAGE "English"
-VIProductVersion "0.8.0.0"
+VIProductVersion "0.9.0.0"
 VIAddVersionKey "ProductName" "哆啦"
-VIAddVersionKey "FileVersion" "0.8.0"
+VIAddVersionKey "FileVersion" "0.9.0"
 VIAddVersionKey "FileDescription" "哆啦独立桌宠"
 VIAddVersionKey "LegalCopyright" "Octop Custom contributors"
 Section "哆啦" SEC_MAIN
