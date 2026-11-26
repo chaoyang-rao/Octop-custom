@@ -1,0 +1,87 @@
+name: Publish verified Mac Dora
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful Dora standalone Mac package run
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: dora-macos-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'chaoyang-rao/Octop-custom' && github.ref == 'refs/heads/custom/main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.build_run_id }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify build provenance and integrated source
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          def api(path):
+              return json.loads(subprocess.check_output(['gh', 'api', '/repos/' + os.environ['GH_REPO'] + path]))
+          run = os.environ['BUILD_RUN']
+          assert run.isdigit()
+          build = api('/actions/runs/' + run)
+          assert build['name'] == 'Dora standalone Mac package' and build['conclusion'] == 'success'
+          workflow = '.github/workflows/dora-macos-package.yml'
+          assert build['path'] == workflow
+          released_sha = os.environ['GITHUB_SHA']
+          assert api('/compare/' + build['head_sha'] + '...' + released_sha)['status'] in {'ahead', 'identical'}
+          def inputs(sha):
+              tree = api('/git/commits/' + sha)['tree']['sha']
+              return {x['path']: x['sha'] for x in api('/git/trees/' + tree)['tree']}
+          built, released = inputs(build['head_sha']), inputs(released_sha)
+          for path in ['src', 'customization', 'desktop-companion', 'scripts', 'pyproject.toml', 'uv.lock']:
+              assert built[path] == released[path], 'Release inputs changed: ' + path
+          assert api('/contents/' + workflow + '?ref=' + build['head_sha'])['sha'] == api('/contents/' + workflow + '?ref=' + released_sha)['sha']
+          version = json.load(open('desktop-companion/package.json'))['version']
+          assert re.fullmatch(r'\d+\.\d+\.\d+', version)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'RELEASE_TAG=dora-macos-v{version}\nINSTALLER=Dora-macos-universal-{version}.dmg\nMAC_VERSION={version}\n')
+          PY
+      - name: Download and verify the accepted installer
+        run: |
+          gh run download "$BUILD_RUN" -n Dora-macos-universal -D dist
+          cd dist
+          sha256sum --check SHA256SUMS.txt
+          test -s "$INSTALLER"
+          python3 - <<'PY'
+          import json, os
+          report = json.load(open('build-report.json'))
+          assert report['version'] == os.environ['MAC_VERSION']
+          assert set(report['architectures']) == {'arm64', 'x86_64'}
+          assert report['character'] == 'KuroCat classic black cat'
+          PY
+      - name: Publish immutable installer assets
+        run: |
+          cat > release-notes.txt <<'TEXT'
+          Mac 独立哆啦 · KuroCat 小黑猫，macOS 13+，Intel 与 Apple 芯片通用。
+          包含独立问答引擎，无需预装 Octop 或 Python；沿用企业飞书登录、账号和聊天数据目录。
+          保留原生键鼠动作、转头、捕猎、摸头、睡眠与多键彩蛋；修复左右镜像及反向跟随，默认不吸附屏幕边缘。
+          全局键盘动作需在 macOS 输入监控中允许哆啦。开发签名更新后若旧授权失效，请移除旧条目并重新添加实际安装的应用。
+          自动检查包含动作/方向回归、聊天窗口、程序完整性与双架构构建；真实物理键盘和企业业务问答需在实际设备上确认。
+          安装包采用 ad hoc 签名，未作 Developer ID 公证。KuroCat 来源与 MIT 许可随包提供；不含内部哆啦角色素材或个人数据。
+          Windows 当前版本仍为 0.8.0，尚未移植本次 Mac 小黑猫渲染。
+          TEXT
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > release-state.txt; then
+            test "$(cat release-state.txt)" = true
+            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --title "哆啦 Mac $MAC_VERSION · KuroCat 小黑猫" --notes-file release-notes.txt
+          else
+            gh release create "$RELEASE_TAG" --draft --latest=false --target "$GITHUB_SHA" --title "哆啦 Mac $MAC_VERSION · KuroCat 小黑猫" --notes-file release-notes.txt
+          fi
+          gh release upload "$RELEASE_TAG" "dist/$INSTALLER" dist/SHA256SUMS.txt dist/build-report.json --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest=false
+          gh release view "$RELEASE_TAG" --json url --jq .url >> "$GITHUB_STEP_SUMMARY"
