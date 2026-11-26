@@ -1,6 +1,6 @@
 // Real Electron windows and production IPC/HTTP/WS code, isolated synthetic service/artwork.
 // This fixture never signs in to a real employee account or ships in the application.
-const { app, BrowserWindow, nativeImage } = require("electron");
+const { app, BrowserWindow, nativeImage, Menu } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
@@ -197,6 +197,36 @@ sockets.on("connection", (socket) =>
     path.join(build, "windows-native-kurocat.png"),
     (await pet.webContents.capturePage()).toPNG(),
   );
+  const togglePet = async (label) => {
+    const original = Menu.buildFromTemplate;
+    let template;
+    Menu.buildFromTemplate = (items) => {
+      template = items;
+      return { popup() {} };
+    };
+    try {
+      await pet.webContents.executeJavaScript(
+        "window.companionNative.invoke('petMenu')",
+      );
+    } finally {
+      Menu.buildFromTemplate = original;
+    }
+    template.find((item) => item.label === label).click();
+  };
+  await togglePet("隐藏哆啦");
+  await call("status");
+  await wait(250);
+  assert.equal(pet.isVisible(), false);
+  assert.equal(
+    (
+      await pet.webContents.executeJavaScript(
+        "window.companionNative.invoke('petModel')",
+      )
+    ).ready,
+    false,
+  );
+  await togglePet("显示哆啦");
+  await until(() => pet.isVisible());
   assert.equal(pet.isAlwaysOnTop(), true);
   assert.equal(chat.isAlwaysOnTop(), true);
   assert.equal(
@@ -264,6 +294,7 @@ sockets.on("connection", (socket) =>
     small_window_no_horizontal_overflow: true,
     close_hides_chat: true,
     logout_hides_pet: true,
+    explicit_hide_survives_status_refresh: true,
     real_employee_sso_tested: false,
   };
   fs.writeFileSync(

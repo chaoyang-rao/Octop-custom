@@ -98,3 +98,16 @@ jobs:
             desktop-companion/build/windows-kurocat-poses/*.png
           if-no-files-found: warn
           retention-days: 14
+      - name: Upload small Windows visual acceptance evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Dora-Windows-KuroCat-Verification
+          path: |
+            desktop-companion/build/windows-native-*.json
+            desktop-companion/build/windows-native-*.png
+            desktop-companion/build/windows-installer-check.json
+            desktop-companion/build/windows-kurocat-input.json
+            desktop-companion/build/windows-kurocat-poses/*.png
+          if-no-files-found: warn
+          retention-days: 14

@@ -29,8 +29,8 @@ const home =
   !app.isPackaged && process.env.DORA_TEST_HOME
     ? path.resolve(process.env.DORA_TEST_HOME)
     : process.platform === "win32"
-    ? path.join(app.getPath("appData"), "..", "Local", "OctopCompanion")
-    : path.join(app.getPath("userData"), "WindowsAcceptance");
+      ? path.join(app.getPath("appData"), "..", "Local", "OctopCompanion")
+      : path.join(app.getPath("userData"), "WindowsAcceptance");
 app.setPath("userData", path.join(home, "WebProfile"));
 const resources = app.isPackaged
   ? process.resourcesPath
@@ -48,6 +48,7 @@ let chat,
   client,
   engine,
   petRenderer,
+  petHidden = false,
   quitting = false,
   startupError = "",
   progress = "",
@@ -197,7 +198,11 @@ function petMenu() {
     { label: "打开聊天", accelerator: "Control+Alt+Space", click: showChat },
     {
       label: pet.isVisible() ? "隐藏哆啦" : "显示哆啦",
-      click: () => (pet.isVisible() ? stopPet() : void loadPet()),
+      click: () => {
+        petHidden = pet.isVisible();
+        if (petHidden) stopPet();
+        else void loadPet();
+      },
     },
     { label: "靠左停放", click: () => movePet("left") },
     { label: "靠右停放", click: () => movePet("right") },
@@ -308,6 +313,7 @@ async function ready() {
   return client;
 }
 async function loadPet() {
+  if (petHidden) return;
   if (!client?.token) {
     showChat();
     return;
@@ -315,7 +321,7 @@ async function loadPet() {
   const revision = client.revision;
   try {
     const access = await client.data("/api/companion/access");
-    if (revision !== client.revision) return;
+    if (revision !== client.revision || petHidden) return;
     if (!access.allowed) {
       stopPet();
       return;
@@ -336,7 +342,7 @@ async function loadPet() {
       });
     }
     await renderer.start();
-    if (revision !== client.revision || petRenderer !== renderer) {
+    if (revision !== client.revision || petRenderer !== renderer || petHidden) {
       renderer.stop();
       return;
     }
