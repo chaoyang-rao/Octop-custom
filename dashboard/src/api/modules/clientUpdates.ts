@@ -43,6 +43,7 @@ export interface ClientReleaseOption {
   version: string;
   source_commit: string;
   notes: string;
+  companion_version?: string | null;
 }
 export interface ClientRelease extends ClientReleaseOption {
   revision: number;
@@ -51,6 +52,7 @@ export interface ClientRelease extends ClientReleaseOption {
   allowed_subjects: string[];
 }
 export interface ClientDeviceReport {
+  product: "octop-desktop" | "octop-companion";
   device_id: string;
   user_id: number;
   display_name: string;
@@ -66,8 +68,13 @@ export interface ClientUpdateAdmin {
   etag: string;
   revision: number;
   signing_configured: boolean;
-  draft: ClientReleaseOption | null;
-  published: { release: ClientRelease } | null;
+  draft:
+    | (ClientReleaseOption & { companion?: ClientReleaseOption | null })
+    | null;
+  published: {
+    release: ClientRelease;
+    companion?: { release: ClientRelease } | null;
+  } | null;
   history: { release: ClientRelease; published_by: string }[];
   devices: ClientDeviceReport[];
 }

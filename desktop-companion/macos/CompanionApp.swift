@@ -8,6 +8,7 @@ import WebKit
 final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private let defaults = UserDefaults.standard
     private let engine = EngineRuntime()
+    private let updater = ManagedUpdater()
     private lazy var client = BackendClient(origin: URL(string: "http://127.0.0.1:1")!)
     private let speech = SpeechController()
     private var petWindow: PetPanel!
@@ -37,6 +38,18 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
     private var voiceEnabled = true
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { @MainActor in
+            do {
+                guard try await updater.initialize(engine: engine) else { NSApp.terminate(nil); return }
+                finishLaunching()
+            } catch {
+                engine.stop()
+                let alert = NSAlert(); alert.messageText = "哆啦更新未完成"; alert.informativeText = error.localizedDescription; alert.runModal()
+                NSApp.terminate(nil)
+            }
+        }
+    }
+    private func finishLaunching() {
             let resources = Bundle.main.resourceURL!
             pet = PetView()
             makeApplicationMenu()
@@ -356,8 +369,48 @@ final class CompanionApp: NSObject, NSApplicationDelegate, NSWindowDelegate, WKS
             catch { reply(id, error: error.localizedDescription) }
         }
     }
+    private func updateRequest(_ path: String, method: String = "GET") async throws -> Any {
+        try await ensureEngine()
+        let (data, response) = try await client.request(path, method: method)
+        guard (200..<300).contains(response.statusCode) else {
+            let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            throw CompanionError.unavailable(value?["message"] as? String ?? "更新暂不可用，请完成任务或重新检查更新。")
+        }
+        return try JSONSerialization.jsonObject(with: data)
+    }
     private func handle(op: String, args: [String: Any]) async throws -> Any {
+        if updater.installing { throw CompanionError.unavailable("正在更新哆啦，请等待程序重启。") }
         switch op {
+        case "updateStatus": return try await updateRequest("/api/client-updates/status")
+        case "updateCheck": return try await updateRequest("/api/client-updates/check", method: "POST")
+        case "updateDownload": return try await updateRequest("/api/client-updates/download", method: "POST")
+        case "updateCancel":
+            guard let id = args["jobId"] as? String, ManagedUpdater.validID(id) else { throw CompanionError.invalidPath }
+            return try await updateRequest("/api/client-updates/jobs/\(id)/cancel", method: "POST")
+        case "updateInstall":
+            guard let id = args["jobId"] as? String, ManagedUpdater.validID(id), let pid = engine.processIdentifier else { throw CompanionError.invalidPath }
+            let revision = loginRevision
+            _ = try await updateRequest("/api/client-updates/jobs/\(id)/prepare", method: "POST")
+            do {
+                guard revision == loginRevision else { throw CompanionError.signedOut }
+                try await updater.start(id: id, backendPID: pid)
+            } catch {
+                _ = try? await updateRequest("/api/client-updates/jobs/\(id)/abort-install", method: "POST")
+                throw error
+            }
+            pet.stop(); closeSockets(); speech.stopRecognition(); speech.stopSpeaking(); engine.stop()
+            Task { @MainActor in
+                do {
+                    let phase = try await updater.monitor(id: id) { [weak self] phase in self?.event(["type": "updateProgress", "data": phase]) }
+                    if phase != "ready_to_swap" {
+                        updater.resumeAfterFailure(); try await ensureEngine()
+                        event(["type": "notice", "text": "更新未完成，原版本已恢复，可以重新检查更新。"])
+                        return
+                    }
+                } catch {}
+                NSApp.terminate(nil)
+            }
+            return true
         case "voicePreference":
             guard let enabled=args["enabled"] as? Bool else { throw CompanionError.invalidPath }
             voiceEnabled=enabled;return true

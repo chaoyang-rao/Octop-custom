@@ -14,8 +14,10 @@ from octop.infra.client_updates.models import (
     REPOSITORY,
     ClientPackage,
     asset_name,
+    companion_asset_name,
     failure,
     release_asset_url,
+    valid_companion_version,
     valid_version,
 )
 from octop.infra.errors import ErrorCode
@@ -93,3 +95,50 @@ def package_metadata(raw: dict[str, Any]) -> tuple[str, str, str, list[ClientPac
             )
         )
     return tag, version, commit, packages, str(raw.get("body") or "")[:20000]
+
+
+def companion_metadata(raw: dict[str, Any]) -> dict[str, Any] | None:
+    """A companion set belongs to the same immutable, complete client release."""
+    tag, _, commit, _, notes = package_metadata(raw)
+    assets = {a.get("name"): a for a in raw.get("assets", []) if isinstance(a, dict)}
+    names = [name for name in assets if isinstance(name, str) and name.startswith("Dora-update-")]
+    if not names:
+        return None
+    prefix = "Dora-update-windows-amd64-"
+    versions = [
+        name[len(prefix) : -4]
+        for name in names
+        if name.startswith(prefix) and name.endswith(".zip")
+    ]
+    if len(versions) != 1 or len(names) != 3:
+        raise failure()
+    version = valid_companion_version(versions[0])
+    packages = []
+    for platform in PLATFORMS:
+        name = companion_asset_name(platform, version)
+        item = assets.get(name, {})
+        digest = str(item.get("digest", ""))
+        size = item.get("size")
+        if (
+            not re.fullmatch(r"sha256:[0-9a-f]{64}", digest)
+            or not isinstance(size, int)
+            or not 100_000_000 < size <= MAX_ARCHIVE
+            or item.get("browser_download_url") != release_asset_url(tag, name)
+        ):
+            raise failure()
+        packages.append(
+            ClientPackage(
+                platform=platform,
+                filename=name,
+                url=release_asset_url(tag, name),
+                sha256=digest[7:],
+                size=size,
+            )
+        )
+    return {
+        "version": version,
+        "tag": tag,
+        "source_commit": commit,
+        "notes": notes,
+        "packages": [p.model_dump(mode="json") for p in packages],
+    }

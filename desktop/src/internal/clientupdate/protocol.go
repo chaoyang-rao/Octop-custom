@@ -24,6 +24,7 @@ import (
 var trustJSON []byte
 
 const Product = "octop-desktop"
+const CompanionProduct = "octop-companion"
 const Protocol = 1
 const Repository = "chaoyang-rao/Octop-custom"
 const BundleID = "com.chaoyangrao.octopcustom"
@@ -45,6 +46,7 @@ type Package struct {
 	Size     int64  `json:"size"`
 }
 type Release struct {
+	Product      string    `json:"product,omitempty"`
 	Schema       int       `json:"schema_version"`
 	Protocol     int       `json:"protocol"`
 	Authority    string    `json:"authority"`
@@ -65,6 +67,7 @@ type Build struct {
 	Authority string `json:"authority"`
 }
 type Job struct {
+	Product        string   `json:"product,omitempty"`
 	Schema         int      `json:"schema_version"`
 	ID             string   `json:"id"`
 	Owner          int      `json:"owner_user_id"`
@@ -138,12 +141,19 @@ func VerifyWithTrust(envelope Envelope, authority string, trusted []byte) (Relea
 	if !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(release.SourceCommit) || len(release.Packages) != 3 || !strings.HasPrefix(release.Tag, "custom-") || strings.ContainsAny(release.Tag, "/\\?#") {
 		return release, errors.New("invalid release identity")
 	}
+	if release.Product != "" && release.Product != CompanionProduct {
+		return release, errors.New("unsupported update product")
+	}
 	seen := map[string]bool{}
 	for _, item := range release.Packages {
 		if item.Platform != "windows-amd64" && item.Platform != "darwin-amd64" && item.Platform != "darwin-arm64" {
 			return release, errors.New("unsupported platform")
 		}
-		name := "OctopCustom-update-" + item.Platform + "-" + release.Version + ".zip"
+		prefix := "OctopCustom-update-"
+		if release.Product == CompanionProduct {
+			prefix = "Dora-update-"
+		}
+		name := prefix + item.Platform + "-" + release.Version + ".zip"
 		if seen[item.Platform] || item.Filename != name || item.URL != "https://github.com/"+Repository+"/releases/download/"+release.Tag+"/"+name || !digestPattern.MatchString(item.SHA256) || item.Size <= 0 || item.Size > 2<<30 {
 			return release, errors.New("invalid update package")
 		}
@@ -238,6 +248,21 @@ func ValidateJob(job *Job, build Build, now time.Time) (Package, error) {
 	if err != nil {
 		return Package{}, err
 	}
+	product := release.Product
+	if product == "" {
+		product = Product
+	}
+	jobProduct := job.Product
+	if jobProduct == "" {
+		jobProduct = Product
+	}
+	buildProduct := build.Product
+	if buildProduct == "" {
+		buildProduct = Product
+	}
+	if product != buildProduct || jobProduct != buildProduct {
+		return Package{}, errors.New("update product mismatch")
+	}
 	if !digestPattern.MatchString(job.Subject) || release.Version != job.TargetVersion || release.Revision != job.Revision || CompareVersions(release.Version, build.Version) <= 0 {
 		return Package{}, errors.New("stale update target")
 	}
@@ -258,6 +283,29 @@ func ValidateJob(job *Job, build Build, now time.Time) (Package, error) {
 		}
 	}
 	return Package{}, errors.New("missing platform package")
+}
+
+func ValidateCandidate(job *Job, build Build) error {
+	release, err := Verify(job.Envelope, build.Authority)
+	if err != nil {
+		return err
+	}
+	product := release.Product
+	if product == "" {
+		product = Product
+	}
+	if job.Product != CompanionProduct || build.Product != CompanionProduct || product != CompanionProduct || job.Phase != "starting" || job.Platform != HostPlatform() || release.Version != build.Version || job.TargetVersion != build.Version || job.Revision != release.Revision || !digestPattern.MatchString(job.Subject) {
+		return errors.New("invalid companion candidate")
+	}
+	if len(release.Subjects) > 0 {
+		for _, subject := range release.Subjects {
+			if subject == job.Subject {
+				return nil
+			}
+		}
+		return errors.New("candidate audience mismatch")
+	}
+	return nil
 }
 
 func HashFile(path string) (string, int64, error) {
@@ -297,34 +345,61 @@ func ProgramRoot(executable string) (string, error) {
 }
 
 func Executable(root, platform string) string {
+	return ExecutableForProduct(root, platform, Product)
+}
+func ExecutableForProduct(root, platform, product string) string {
+	if product == CompanionProduct {
+		if strings.HasPrefix(platform, "darwin-") {
+			return filepath.Join(root, "Contents", "MacOS", "OctopCompanion")
+		}
+		return filepath.Join(root, "Dora.exe")
+	}
 	if strings.HasPrefix(platform, "darwin-") {
 		return filepath.Join(root, "Contents", "MacOS", "OctopCustom")
 	}
 	return filepath.Join(root, "OctopCustom.exe")
 }
 func Helper(root, platform string) string {
+	return HelperForProduct(root, platform, Product)
+}
+func HelperForProduct(root, platform, product string) string {
 	if strings.HasPrefix(platform, "darwin-") {
 		return filepath.Join(root, "Contents", "Helpers", "client-updater")
+	}
+	if product == CompanionProduct {
+		return filepath.Join(root, "resources", "client-updater.exe")
 	}
 	return filepath.Join(root, "client-updater.exe")
 }
 func BuildFile(root, platform string) string {
+	return BuildFileForProduct(root, platform, Product)
+}
+func BuildFileForProduct(root, platform, product string) string {
 	if strings.HasPrefix(platform, "darwin-") {
 		return filepath.Join(root, "Contents", "Resources", "client-update-build.json")
+	}
+	if product == CompanionProduct {
+		return filepath.Join(root, "resources", "client-update-build.json")
 	}
 	return filepath.Join(root, "client-update-build.json")
 }
 
 func LoadBuild(root, platform string) (Build, error) {
+	return LoadBuildForProduct(root, platform, Product)
+}
+func LoadBuildForProduct(root, platform, product string) (Build, error) {
+	if product == "" {
+		product = Product
+	}
 	var build Build
-	data, err := os.ReadFile(BuildFile(root, platform))
+	data, err := os.ReadFile(BuildFileForProduct(root, platform, product))
 	if err != nil {
 		return build, err
 	}
 	if err = decodeStrict(data, &build); err != nil {
 		return build, err
 	}
-	if build.Product != Product || build.Protocol != Protocol || !versionPattern.MatchString(build.Version) {
+	if (product != Product && product != CompanionProduct) || build.Product != product || build.Protocol != Protocol || !versionPattern.MatchString(build.Version) {
 		return build, fmt.Errorf("invalid desktop build metadata")
 	}
 	return build, nil

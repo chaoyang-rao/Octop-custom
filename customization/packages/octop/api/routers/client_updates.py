@@ -15,6 +15,7 @@ from octop.infra.client_updates.catalog import ClientUpdateCatalog
 from octop.infra.client_updates.models import (
     ClientPackage,
     ClientRelease,
+    CompanionRelease,
     DeviceReport,
     Phase,
     Platform,
@@ -60,20 +61,37 @@ class ReleaseOption(BaseModel):
     version: str
     source_commit: str
     notes: str
+    companion_version: str | None = None
+
+
+class CompanionDraft(BaseModel):
+    tag: str
+    version: str
+    source_commit: str
+    notes: str
+    packages: list[ClientPackage]
 
 
 class DraftRelease(ReleaseOption):
     packages: list[ClientPackage]
+    companion: CompanionDraft | None = None
+
+
+class PublishedCompanion(BaseModel):
+    release: CompanionRelease
+    envelope: SignedRelease
 
 
 class PublishedRelease(BaseModel):
     release: ClientRelease
     envelope: SignedRelease
+    companion: PublishedCompanion | None = None
 
 
 class ReleaseHistory(BaseModel):
     release: ClientRelease
     published_by: str
+    companion: CompanionRelease | None = None
 
 
 class ClientDeviceReport(DeviceReport):
@@ -115,6 +133,7 @@ class PublishRelease(VersionCheck):
 class MemberCatalog(BaseModel):
     revision: int
     envelope: SignedRelease | None
+    companion_envelope: SignedRelease | None = None
 
 
 class UpdateJob(BaseModel):

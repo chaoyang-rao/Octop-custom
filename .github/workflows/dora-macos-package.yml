@@ -21,6 +21,13 @@ jobs:
           cache-dependency-path: |
             dashboard/package-lock.json
             desktop-companion/package-lock.json
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: desktop/src/go.mod
+          cache: false
+      - name: Verify signed update helper and native rollback
+        working-directory: desktop/src
+        run: go test ./internal/clientupdate ./cmd/client-updater
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
@@ -109,8 +116,8 @@ jobs:
           import hashlib, os
           from pathlib import Path
           root = Path(os.environ['INSTALLER_DIR'])
-          files = sorted(root.glob('*.dmg'))
-          assert len(files) == 1
+          files = sorted([*root.glob('*.dmg'), *root.glob('Dora-update-*.zip')])
+          assert len(files) == 3
           (root / 'SHA256SUMS.txt').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in files))
           PY
       - uses: actions/upload-artifact@v4
@@ -118,6 +125,7 @@ jobs:
           name: Dora-macos-universal
           path: |
             ${{ runner.temp }}/dora-macos/*.dmg
+            ${{ runner.temp }}/dora-macos/Dora-update-*.zip
             ${{ runner.temp }}/dora-macos/SHA256SUMS.txt
             ${{ runner.temp }}/dora-macos/build-report.json
           if-no-files-found: error

@@ -8359,6 +8359,15 @@
     "serviceSaved": "服务器只读连接已保存"
   },
   "clientUpdates": {
+    "bundleVersion": "客户端 {{client}} · 桌宠 {{companion}}",
+    "companionVersion": "待发布桌宠版本：",
+    "companionNotIncluded": "未包含桌宠更新",
+    "companionMissing": "该发行版只包含客户端。选择包含桌宠更新包的完整发行版，才能一同发布。",
+    "publishTogether": "一同发布客户端和桌宠",
+    "currentCompanion": "当前发布桌宠：",
+    "product": "产品",
+    "companionProduct": "哆啦桌宠",
+    "desktopProduct": "Octop 客户端",
     "title": "企业客户端更新",
     "available": "公司发布了新版 {{version}}",
     "memberHint": "更新前会备份本机账号、聊天、记忆和配置。请先保存输入；所有专家任务空闲后才能安装。",

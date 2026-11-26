@@ -6,8 +6,8 @@
 
 ## 安装包
 
-- [Mac 0.7.4 通用安装包](https://github.com/chaoyang-rao/Octop-custom/releases/tag/dora-macos-v0.7.4)：KuroCat 小黑猫，Intel 和 Apple 芯片通用，默认不吸附屏幕边缘。
-- [Windows 0.9.0 小黑猫安装包](https://github.com/chaoyang-rao/Octop-custom/releases/tag/dora-windows-v0.9.0)：KuroCat 原生绘制和键鼠动作，包含独立问答引擎，默认不吸附屏幕边缘。
+- [Mac 0.10.0 通用引导安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261126.1/Dora-macos-universal-0.10.0.dmg)：Intel 和 Apple 芯片通用，接入企业统一更新。
+- [Windows 0.10.0 引导安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261126.1/Dora-Windows-x64-0.10.0-Setup.exe)：内置独立引擎，接入企业统一更新。两版均保留小黑猫键鼠动作，默认不吸附屏幕边缘。
 
 ![Mac 小黑猫原生绘制预览](../docs/images/dora-kurocat.png)
 
@@ -101,7 +101,7 @@ open dist/哆啦.app --args --show-chat
 
 Mac 构建不再需要下载或提供内部哆啦A梦图集。Windows 0.9.0 同样不再下载内部角色图集，原生代码与许可由安装包提供；历史素材和记录保留追溯。
 
-Mac 0.7.4 使用 GitHub 的独立安装包发布，通用 DMG 同时支持 Intel 和 Apple 芯片。公开构建工作流会检查源码、动作、聊天窗口及双架构，再准备固定来源的独立引擎并生成安装包与 SHA-256 校验文件。Windows 0.9.0 使用独立发行，采用同一固定上游的Windows原生绘制与动作实现。
+从 0.10.0 起，Mac 和 Windows 桌宠可随主客户端完整 Release 一同发行，企业中心一次发布、同一成员范围和撤回，两种应用各自提示升级。旧桌宠首次需手动安装本引导版，之后在聊天窗口或功能与设置中检查企业更新。详见 [统一发布与更新说明](../docs/custom/company-client-updates.md)。独立打包工作流继续用于平台验收；旧的公开发行版保持不变。
 
 ## 历史内部立体素材
 

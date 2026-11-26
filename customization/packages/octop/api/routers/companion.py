@@ -43,6 +43,8 @@ class PolicyUpdate(StrictModel):
 class EngineHealth(BaseModel):
     companion: bool
     instance: str
+    companion_version: str = ""
+    client_update_pending: bool = False
 
 
 class LaunchRequest(StrictModel):
@@ -190,10 +192,18 @@ async def local_artwork_file(
     response_model=EngineHealth,
     summary="Identify the companion-owned local engine",
 )
-async def health() -> dict[str, Any]:
+async def health(server: Any = Depends(get_server)) -> dict[str, Any]:
     return {
         "companion": companion_mode(),
         "instance": os.environ.get("OCTOP_COMPANION_INSTANCE", ""),
+        "companion_version": os.environ.get("OCTOP_DESKTOP_CLIENT_VERSION", "")
+        if companion_mode()
+        else "",
+        "client_update_pending": bool(
+            os.environ.get("OCTOP_CLIENT_UPDATE_PENDING")
+            and getattr(server, "_client_updates", None)
+            and server._client_updates.pending_activation()
+        ),
     }
 
 

@@ -28,6 +28,9 @@ func (installer *Installer) directories() (string, string) {
 	job := installer.Job
 	directory, _ := JobDir(job.DataRoot, job.ID)
 	stage := ".OctopCustom-stage-" + job.ID
+	if installer.Build.Product == CompanionProduct {
+		stage = ".Dora-stage-" + job.ID
+	}
 	if strings.HasPrefix(job.Platform, "darwin-") {
 		stage += ".app"
 	}
@@ -105,10 +108,10 @@ func (installer *Installer) Install(ctx context.Context) error {
 	if err = SaveJob(job); err != nil {
 		return err
 	}
-	if err = ExtractPackage(filepath.Join(directory, "payload.zip"), stage, job.Platform); err != nil {
+	if err = ExtractPackageForProduct(filepath.Join(directory, "payload.zip"), stage, job.Platform, installer.Build.Product); err != nil {
 		return err
 	}
-	candidate, err := LoadBuild(stage, job.Platform)
+	candidate, err := LoadBuildForProduct(stage, job.Platform, installer.Build.Product)
 	if err != nil || candidate.Version != job.TargetVersion || candidate.Authority != installer.Build.Authority {
 		return errors.New("candidate build mismatch")
 	}
@@ -136,7 +139,7 @@ func (installer *Installer) Install(ctx context.Context) error {
 	if err = installer.phase("installing"); err != nil {
 		return err
 	}
-	if err = replaceProgram(stage, job.AppRoot, job.Platform); err != nil {
+	if err = replaceProgramForProduct(stage, job.AppRoot, job.Platform, installer.Build.Product); err != nil {
 		return err
 	}
 	job.ProgramMoved = true
@@ -150,7 +153,7 @@ func (installer *Installer) Install(ctx context.Context) error {
 	if launch == nil {
 		launch = launchApplication
 	}
-	pid, err := launch(Executable(job.AppRoot, job.Platform), []string{"--managed-client-update", job.ID}, withHome(os.Environ(), job.DataRoot))
+	pid, err := launch(ExecutableForProduct(job.AppRoot, job.Platform, installer.Build.Product), []string{"--managed-client-update", job.ID}, withHome(os.Environ(), job.DataRoot))
 	if err != nil {
 		return err
 	}
@@ -166,7 +169,7 @@ func (installer *Installer) Install(ctx context.Context) error {
 	for {
 		current, readErr := ReadJob(job.DataRoot, job.ID)
 		if readErr == nil && current.Phase == "candidate_ready" {
-			if current.CandidatePID != pid || !candidateHealthy(current) {
+			if current.CandidatePID != pid || !candidateHealthyForProduct(current, installer.Build.Product) {
 				return errors.New("candidate readiness mismatch")
 			}
 			installer.Job = current
@@ -184,22 +187,37 @@ func (installer *Installer) Install(ctx context.Context) error {
 }
 
 func candidateHealthy(job *Job) bool {
+	return candidateHealthyForProduct(job, Product)
+}
+func candidateHealthyForProduct(job *Job, product string) bool {
 	base, err := url.Parse(job.CandidateBase)
 	if err != nil || base.Scheme != "http" || base.Hostname() != "127.0.0.1" || base.Port() == "" || base.User != nil || base.Path != "" || base.RawQuery != "" {
 		return false
 	}
 	client := &http.Client{Timeout: 5 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	response, err := client.Get(job.CandidateBase + "/api/health")
+	endpoint := "/api/health"
+	if product == CompanionProduct {
+		endpoint += "/companion"
+	}
+	response, err := client.Get(job.CandidateBase + endpoint)
 	if err != nil {
 		return false
 	}
 	defer response.Body.Close()
 	var health struct {
-		OK      bool   `json:"ok"`
-		Version string `json:"custom_release"`
-		Pending bool   `json:"client_update_pending"`
+		OK               bool   `json:"ok"`
+		Version          string `json:"custom_release"`
+		Pending          bool   `json:"client_update_pending"`
+		Companion        bool   `json:"companion"`
+		CompanionVersion string `json:"companion_version"`
 	}
-	return response.StatusCode == 200 && json.NewDecoder(response.Body).Decode(&health) == nil && health.OK && health.Pending && health.Version == job.TargetVersion
+	if response.StatusCode != 200 || json.NewDecoder(response.Body).Decode(&health) != nil || !health.Pending {
+		return false
+	}
+	if product == CompanionProduct {
+		return health.Companion && health.CompanionVersion == job.TargetVersion
+	}
+	return health.OK && health.Version == job.TargetVersion
 }
 
 func (installer *Installer) Rollback(ctx context.Context) error {
@@ -232,7 +250,7 @@ func (installer *Installer) Rollback(ctx context.Context) error {
 		if err := CopyTree(filepath.Join(directory, "backup", "program"), stage, nil); err != nil {
 			return err
 		}
-		if err := replaceProgram(stage, job.AppRoot, job.Platform); err != nil {
+		if err := replaceProgramForProduct(stage, job.AppRoot, job.Platform, installer.Build.Product); err != nil {
 			return err
 		}
 	}
@@ -252,13 +270,56 @@ func (installer *Installer) Rollback(ctx context.Context) error {
 	if launch == nil {
 		launch = launchApplication
 	}
-	_, err := launch(Executable(job.AppRoot, job.Platform), nil, withHome(os.Environ(), job.DataRoot))
+	_, err := launch(ExecutableForProduct(job.AppRoot, job.Platform, installer.Build.Product), nil, withHome(os.Environ(), job.DataRoot))
 	return err
 }
 
 func replaceProgram(candidate, target, platform string) error {
+	return replaceProgramForProduct(candidate, target, platform, Product)
+}
+func replaceProgramForProduct(candidate, target, platform, product string) error {
 	if strings.HasPrefix(platform, "darwin-") {
 		return swapDirectories(candidate, target)
+	}
+	if product == CompanionProduct {
+		// The native host waits outside the application while its backend and
+		// input renderer stop. Keep Dora.exe as the final atomic replacement.
+		err := filepath.WalkDir(candidate, func(path string, entry os.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			relative, err := filepath.Rel(candidate, path)
+			if err != nil {
+				return err
+			}
+			if relative == "." || relative == "Dora.exe" {
+				return nil
+			}
+			destination := filepath.Join(target, relative)
+			if entry.IsDir() {
+				if info, err := os.Lstat(destination); err == nil && info.Mode()&os.ModeSymlink != 0 {
+					return errors.New("linked Windows installation directory")
+				}
+				return os.MkdirAll(destination, 0755)
+			}
+			info, err := entry.Info()
+			if err != nil || !info.Mode().IsRegular() {
+				return errors.New("invalid Windows companion entry")
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			return AtomicWrite(destination, data, info.Mode().Perm())
+		})
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(filepath.Join(candidate, "Dora.exe"))
+		if err != nil {
+			return err
+		}
+		return AtomicWrite(filepath.Join(target, "Dora.exe"), data, 0755)
 	}
 	// Windows packages contain exactly these files. Replace the executable last,
 	// atomically, so a crash cannot remove the application's launch path.

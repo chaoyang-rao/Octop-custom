@@ -6,11 +6,14 @@ import shutil
 import struct
 import subprocess
 import zlib
+import sys
 
 ROOT = Path(__file__).resolve().parent
 COMPANION = ROOT.parent
 BUILD = COMPANION / "build/windows"
 VERSION = json.loads((ROOT / "package.json").read_text())["version"]
+sys.path.insert(0, str(COMPANION / "scripts"))
+from companion_updates import prepare as prepare_update
 
 
 def icon() -> bytes:
@@ -84,7 +87,9 @@ def main() -> None:
     )
     # Engine and application contain no member data, log files or private artwork.
     assert not list(target.rglob("pet.json"))
-    shutil.make_archive(str(BUILD / ("Dora-Windows-x64-" + VERSION)), "zip", BUILD, "Dora")
+    prepare_update(target, VERSION, "windows-amd64")
+    public_zip = shutil.make_archive(str(BUILD / ("Dora-Windows-x64-" + VERSION)), "zip", BUILD, "Dora")
+    shutil.copy2(public_zip, BUILD / f"Dora-update-windows-amd64-{VERSION}.zip")
     print(
         json.dumps(
             {"version": VERSION, "renderer": "chanke17/KuroCat native Windows", "internal_artwork_included": False, "member_data_included": False}

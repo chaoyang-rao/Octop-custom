@@ -24,6 +24,7 @@ from octop.infra.client_updates.models import (
     ClientRelease,
     DeviceReport,
     Platform,
+    Product,
     SignedRelease,
     canonical,
     failure,
@@ -73,6 +74,17 @@ class ClientUpdateNode:
         self._pending = bool(
             re.fullmatch(r"[0-9a-f]{32}", os.environ.get("OCTOP_CLIENT_UPDATE_PENDING", ""))
         )
+
+    @property
+    def product(self) -> Product:
+        return (
+            "octop-companion"
+            if os.environ.get("OCTOP_DESKTOP_CLIENT_PRODUCT") == "octop-companion"
+            else "octop-desktop"
+        )
+
+    def _verify(self, envelope: SignedRelease, authority: str) -> ClientRelease:
+        return verify_release(envelope, authority, product=self.product)
 
     @property
     def native_version(self) -> str:
@@ -163,13 +175,10 @@ class ClientUpdateNode:
         revision = int(response["revision"])
         if revision < state["revision"]:
             raise failure(ErrorCode.CLIENT_UPDATE_INTEGRITY)
-        envelope = (
-            SignedRelease.model_validate(response["envelope"]) if response.get("envelope") else None
-        )
+        key = "companion_envelope" if self.product == "octop-companion" else "envelope"
+        envelope = SignedRelease.model_validate(response[key]) if response.get(key) else None
         release = (
-            await asyncio.to_thread(verify_release, envelope, client.authority)
-            if envelope
-            else None
+            await asyncio.to_thread(self._verify, envelope, client.authority) if envelope else None
         )
         if release and release.revision != revision:
             raise failure(ErrorCode.CLIENT_UPDATE_INTEGRITY)
@@ -241,7 +250,7 @@ class ClientUpdateNode:
                 state, release = await self._fetch(user)
             elif client and state["envelope"]:
                 release = await asyncio.to_thread(
-                    verify_release,
+                    self._verify,
                     SignedRelease.model_validate(state["envelope"]),
                     client.authority,
                 )
@@ -320,6 +329,8 @@ class ClientUpdateNode:
                 "envelope": state["envelope"],
                 "error_code": None,
             }
+            if self.product == "octop-companion":
+                value["product"] = self.product
             await asyncio.to_thread(self._write_job, value)
             await asyncio.to_thread(self._change, user.id, {"job_id": identifier})
             self._downloads[identifier] = asyncio.create_task(
@@ -484,6 +495,7 @@ class ClientUpdateNode:
         if value and value.get("subject") != credentials["subject"]:
             return
         report = DeviceReport(
+            product=self.product,
             platform=self.platform,
             device_name=platform.node()[:80],
             current_version=self.native_version,

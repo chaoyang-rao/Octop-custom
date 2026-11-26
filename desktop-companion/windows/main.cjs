@@ -22,6 +22,7 @@ const readline = require("node:readline");
 const { Engine } = require("./engine.cjs");
 const { BackendClient } = require("./backend.cjs");
 const { createNativePet, MOTIONS } = require("./native-pet.cjs");
+const { CompanionUpdater, validId: validUpdateId } = require("./updater.cjs");
 const policy = require("./security.cjs");
 const geometry = require("./geometry.cjs");
 
@@ -29,8 +30,8 @@ const home =
   !app.isPackaged && process.env.DORA_TEST_HOME
     ? path.resolve(process.env.DORA_TEST_HOME)
     : process.platform === "win32"
-      ? path.join(app.getPath("appData"), "..", "Local", "OctopCompanion")
-      : path.join(app.getPath("userData"), "WindowsAcceptance");
+    ? path.join(app.getPath("appData"), "..", "Local", "OctopCompanion")
+    : path.join(app.getPath("userData"), "WindowsAcceptance");
 app.setPath("userData", path.join(home, "WebProfile"));
 const resources = app.isPackaged
   ? process.resourcesPath
@@ -48,6 +49,7 @@ let chat,
   client,
   engine,
   petRenderer,
+  updater,
   petHidden = false,
   quitting = false,
   startupError = "",
@@ -497,7 +499,59 @@ async function imageBytes(source) {
   return { bytes, mime: mime.split(";")[0] };
 }
 async function native(op, args) {
+  if (updater?.installing) throw new Error("正在更新哆啦，请等待程序重启。");
   switch (op) {
+    case "updateStatus":
+      return (await ready()).data("/api/client-updates/status");
+    case "updateCheck":
+      return (await ready()).data("/api/client-updates/check", {
+        method: "POST",
+      });
+    case "updateDownload":
+      return (await ready()).data("/api/client-updates/download", {
+        method: "POST",
+      });
+    case "updateCancel":
+      if (!validUpdateId(args.jobId)) throw new Error("更新作业编号无效。");
+      return (await ready()).data(
+        `/api/client-updates/jobs/${args.jobId}/cancel`,
+        { method: "POST" },
+      );
+    case "updateInstall": {
+      if (!updater || !validUpdateId(args.jobId))
+        throw new Error("当前安装不支持更新。");
+      const c = await ready(),
+        revision = c.revision;
+      await c.data(`/api/client-updates/jobs/${args.jobId}/prepare`, {
+        method: "POST",
+      });
+      try {
+        if (revision !== c.revision)
+          throw new Error("登录状态已变更，请重新检查更新。");
+        await updater.start(args.jobId, engine.child.pid);
+      } catch (error) {
+        await c
+          .data(`/api/client-updates/jobs/${args.jobId}/abort-install`, {
+            method: "POST",
+          })
+          .catch(() => {});
+        throw error;
+      }
+      stopPet();
+      stopSpeech();
+      c.closeAll();
+      engine.stop();
+      void updater
+        .monitor(args.jobId, (phase) =>
+          event({ type: "updateProgress", data: phase }),
+        )
+        .then((phase) => {
+          if (phase !== "ready_to_swap") app.relaunch();
+          app.quit();
+        })
+        .catch(() => app.quit());
+      return true;
+    }
     case "status": {
       if (!client)
         return {
@@ -769,6 +823,18 @@ else {
     .whenReady()
     .then(async () => {
       await fsp.mkdir(home, { recursive: true });
+      engine = new Engine(resources, home, log);
+      if (app.isPackaged) {
+        updater = new CompanionUpdater(
+          resources,
+          home,
+          path.dirname(process.execPath),
+        );
+        if (!(await updater.initialize(engine, process.argv))) {
+          app.quit();
+          return;
+        }
+      }
       try {
         preferences = {
           ...preferences,
@@ -892,7 +958,6 @@ else {
         updatePetFrame();
       });
       try {
-        engine = new Engine(resources, home, log);
         const origin = await engine.start((value) => {
           progress = value;
           event({ type: "engineStatus", text: value });

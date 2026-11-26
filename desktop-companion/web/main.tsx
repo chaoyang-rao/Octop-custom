@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { UpdateNotice } from "./UpdateNotice";
 import {
   ArrowUp,
   Check,
@@ -2026,6 +2027,11 @@ function App() {
           )}
         </div>
       </header>
+      <UpdateNotice
+        key={ownerKey || "signed-out"}
+        authenticated={status.authenticated}
+        settings={showSettings}
+      />
       <section
         ref={settingsRef}
         className="settings-dialog settings-panel settings-page"

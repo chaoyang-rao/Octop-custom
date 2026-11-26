@@ -33,7 +33,22 @@ const service = http.createServer((req, res) => {
     return;
   }
   res.setHeader("content-type", "application/json");
-  if (req.url === "/api/auth/me")
+  if (req.url === "/api/client-updates/status")
+    res.end(
+      JSON.stringify({
+        supported: true,
+        available: true,
+        current_version: "0.10.0",
+        version: "0.11.0",
+        notes: "隔离更新界面验收，不是实际发布。",
+        busy: false,
+        job: null,
+        revision: 1,
+        last_check: 1795672000,
+        error_code: null,
+      }),
+    );
+  else if (req.url === "/api/auth/me")
     res.end(
       '{"id":711,"username":"isolated-fixture","display_name":"Windows隔离验收"}',
     );
@@ -172,6 +187,15 @@ sockets.on("connection", (socket) =>
     chat.webContents.executeJavaScript("!!document.querySelector('textarea')"),
   );
   const pet = BrowserWindow.getAllWindows().find((w) => w !== chat);
+  await until(() =>
+    chat.webContents.executeJavaScript(
+      "[...document.querySelectorAll('button')].some(b=>b.textContent==='下载更新')",
+    ),
+  );
+  fs.writeFileSync(
+    path.join(build, "windows-native-update.png"),
+    (await chat.webContents.capturePage()).toPNG(),
+  );
   assert.ok(pet);
   await until(
     async () =>
@@ -295,6 +319,7 @@ sockets.on("connection", (socket) =>
     close_hides_chat: true,
     logout_hides_pet: true,
     explicit_hide_survives_status_refresh: true,
+    enterprise_update_notice: true,
     real_employee_sso_tested: false,
   };
   fs.writeFileSync(

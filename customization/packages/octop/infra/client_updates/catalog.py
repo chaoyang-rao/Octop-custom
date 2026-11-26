@@ -14,9 +14,10 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from packaging.version import Version
 
 from octop.infra.auth.enterprise import center_for
-from octop.infra.client_updates.github import package_metadata, release_index
+from octop.infra.client_updates.github import companion_metadata, package_metadata, release_index
 from octop.infra.client_updates.models import (
     ClientRelease,
+    CompanionRelease,
     DeviceReport,
     SignedRelease,
     canonical,
@@ -157,8 +158,15 @@ class ClientUpdateCatalog:
         for row in await release_index():
             try:
                 tag, version, commit, _, notes = package_metadata(row)
+                companion = companion_metadata(row)
                 result.append(
-                    {"tag": tag, "version": version, "source_commit": commit, "notes": notes}
+                    {
+                        "tag": tag,
+                        "version": version,
+                        "source_commit": commit,
+                        "notes": notes,
+                        "companion_version": companion["version"] if companion else None,
+                    }
                 )
             except (OctopError, ValueError, TypeError, KeyError):
                 continue
@@ -173,12 +181,14 @@ class ClientUpdateCatalog:
         if chosen is None:
             raise failure()
         tag, version, commit, packages, notes = package_metadata(chosen)
+        companion = companion_metadata(chosen)
         state["draft"] = {
             "version": version,
             "tag": tag,
             "source_commit": commit,
             "notes": notes,
             "packages": [item.model_dump(mode="json") for item in packages],
+            "companion": companion,
         }
         return await asyncio.to_thread(self._save, user, raw, state, "import")
 
@@ -192,6 +202,8 @@ class ClientUpdateCatalog:
         draft = state["draft"]
         if not draft:
             raise failure()
+        draft = dict(draft)
+        companion_draft = draft.pop("companion", None)
         eligible = {item.subject for item in EnterpriseMcpCatalog(self.server).members(user)}
         if not set(allowed_subjects) <= eligible:
             raise failure()
@@ -209,15 +221,45 @@ class ClientUpdateCatalog:
             allowed_subjects=allowed_subjects,
         )
         envelope = self._sign(release)
+        companion_published = None
+        if companion_draft:
+            for previous in state["history"]:
+                old = previous.get("companion")
+                if old and (
+                    Version(companion_draft["version"]) < Version(old["version"])
+                    or (
+                        companion_draft["version"] == old["version"]
+                        and companion_draft["packages"] != old["packages"]
+                    )
+                ):
+                    raise failure(ErrorCode.CLIENT_UPDATE_CONFLICT)
+            companion = CompanionRelease(
+                **companion_draft,
+                authority=release.authority,
+                revision=release.revision,
+                published_at=release.published_at,
+                allowed_subjects=allowed_subjects,
+            )
+            companion_published = {
+                "release": companion.model_dump(mode="json"),
+                "envelope": self._sign(companion).model_dump(mode="json"),
+            }
         state.update(
             revision=release.revision,
             published={
                 "release": release.model_dump(mode="json"),
                 "envelope": envelope.model_dump(mode="json"),
+                "companion": companion_published,
             },
         )
         state["history"] = (
-            [{"release": release.model_dump(mode="json"), "published_by": user.username}]
+            [
+                {
+                    "release": release.model_dump(mode="json"),
+                    "published_by": user.username,
+                    "companion": companion_published["release"] if companion_published else None,
+                }
+            ]
             + state["history"]
         )[:30]
         return self._save(user, raw, state, "publish")
@@ -230,11 +272,21 @@ class ClientUpdateCatalog:
         release = ClientRelease.model_validate(state["published"]["release"]).model_copy(
             update={"enabled": False, "revision": state["revision"] + 1}
         )
+        companion_published = state["published"].get("companion")
+        if companion_published:
+            companion = CompanionRelease.model_validate(companion_published["release"]).model_copy(
+                update={"enabled": False, "revision": release.revision}
+            )
+            companion_published = {
+                "release": companion.model_dump(mode="json"),
+                "envelope": self._sign(companion).model_dump(mode="json"),
+            }
         state.update(
             revision=release.revision,
             published={
                 "release": release.model_dump(mode="json"),
                 "envelope": self._sign(release).model_dump(mode="json"),
+                "companion": companion_published,
             },
         )
         return self._save(user, raw, state, "withdraw")
@@ -247,9 +299,11 @@ class ClientUpdateCatalog:
             return {"revision": state["revision"], "envelope": None}
         release = ClientRelease.model_validate(published["release"])
         permitted = not release.allowed_subjects or subject in release.allowed_subjects
+        companion = published.get("companion")
         return {
             "revision": state["revision"],
             "envelope": published["envelope"] if permitted else None,
+            "companion_envelope": companion["envelope"] if permitted and companion else None,
         }
 
     def report(self, user: User, token: str, report: DeviceReport) -> dict[str, bool]:
@@ -258,6 +312,8 @@ class ClientUpdateCatalog:
         if session.user_id != user.id or session.scopes != ("enterprise",):
             raise failure(ErrorCode.ENTERPRISE_ACCESS_DENIED)
         device_id = profile["device_id"]
+        if report.product == "octop-companion":
+            device_id += ":octop-companion"
         value = {
             **report.model_dump(mode="json"),
             "device_id": device_id,

@@ -74,7 +74,7 @@ jobs:
           全局键盘动作需在 macOS 输入监控中允许哆啦。开发签名更新后若旧授权失效，请移除旧条目并重新添加实际安装的应用。
           自动检查包含动作/方向回归、聊天窗口、程序完整性与双架构构建；真实物理键盘和企业业务问答需在实际设备上确认。
           安装包采用 ad hoc 签名，未作 Developer ID 公证。KuroCat 来源与 MIT 许可随包提供；不含内部哆啦角色素材或个人数据。
-          Windows 当前版本仍为 0.8.0，尚未移植本次 Mac 小黑猫渲染。
+          本版包含企业统一更新通道；管理员可随主客户端一同发布，桌宠独立提示升级。旧桌宠需先安装一次本引导版。
           TEXT
           if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft > release-state.txt; then
             test "$(cat release-state.txt)" = true
@@ -82,6 +82,6 @@ jobs:
           else
             gh release create "$RELEASE_TAG" --draft --latest=false --target "$GITHUB_SHA" --title "哆啦 Mac $MAC_VERSION · KuroCat 小黑猫" --notes-file release-notes.txt
           fi
-          gh release upload "$RELEASE_TAG" "dist/$INSTALLER" dist/SHA256SUMS.txt dist/build-report.json --clobber
+          gh release upload "$RELEASE_TAG" "dist/$INSTALLER" dist/Dora-update-*.zip dist/SHA256SUMS.txt dist/build-report.json --clobber
           gh release edit "$RELEASE_TAG" --draft=false --latest=false
           gh release view "$RELEASE_TAG" --json url --jq .url >> "$GITHUB_STEP_SUMMARY"
