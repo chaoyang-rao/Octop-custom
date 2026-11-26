@@ -49,6 +49,17 @@ func main() {
 	installer := &clientupdate.Installer{Job: job, Build: build}
 	if *recover {
 		release, verifyErr := clientupdate.Verify(job.Envelope, build.Authority)
+		releaseProduct := release.Product
+		if releaseProduct == "" {
+			releaseProduct = clientupdate.Product
+		}
+		jobProduct := job.Product
+		if jobProduct == "" {
+			jobProduct = clientupdate.Product
+		}
+		if releaseProduct != build.Product || jobProduct != build.Product {
+			os.Exit(2)
+		}
 		if verifyErr != nil || release.Version != job.TargetVersion || job.Phase == "accepted" || job.Phase == "rolled_back" || !job.BackupReady {
 			os.Exit(2)
 		}

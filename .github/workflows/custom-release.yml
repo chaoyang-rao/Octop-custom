@@ -51,6 +51,9 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: npm ci --prefix dashboard
+      - name: Build the scoped enterprise update-center entry
+        working-directory: dashboard
+        run: npx vite build --config client-update-center/vite.config.ts
       - name: Verify archived 1.0.2 patch fixtures and preserved contracts
         run: |
           python customization/frontend/test_prune_assets.py
