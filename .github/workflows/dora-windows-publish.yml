@@ -12,6 +12,10 @@ permissions:
   contents: write
   actions: read
 
+concurrency:
+  group: dora-windows-publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     if: github.repository == 'chaoyang-rao/Octop-custom' && github.ref == 'refs/heads/custom/main'
@@ -25,7 +29,7 @@ jobs:
       - name: Verify build provenance and integration ancestry
         run: |
           python3 - <<'PY'
-          import json, os, subprocess
+          import json, os, re, subprocess
           def api(path):
               return json.loads(subprocess.check_output(['gh', 'api', '/repos/' + os.environ['GH_REPO'] + path]))
           run = os.environ['BUILD_RUN']
@@ -41,6 +45,12 @@ jobs:
           built, released = inputs(build['head_sha']), inputs(os.environ['GITHUB_SHA'])
           for path in ['src', 'customization', 'desktop-companion', 'scripts', 'pyproject.toml', 'uv.lock']:
               assert built[path] == released[path], 'Release inputs changed since acceptance: ' + path
+          workflow = '.github/workflows/dora-windows-package.yml'
+          assert api('/contents/' + workflow + '?ref=' + build['head_sha'])['sha'] == api('/contents/' + workflow + '?ref=' + os.environ['GITHUB_SHA'])['sha']
+          version = json.load(open('desktop-companion/windows/package.json'))['version']
+          assert re.fullmatch(r'\d+\.\d+\.\d+', version)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write(f'WIN_VERSION={version}\nRELEASE_TAG=dora-windows-v{version}\n')
           PY
       - name: Download and verify the final installer
         run: |
@@ -48,15 +58,15 @@ jobs:
           cd dist/windows
           sed -i 's/\r$//' SHA256SUMS.txt
           sha256sum --check SHA256SUMS.txt
-          test -s Dora-Windows-x64-0.8.0-Setup.exe
-          test -s Dora-Windows-x64-0.8.0.zip
+          test -s "Dora-Windows-x64-$WIN_VERSION-Setup.exe"
+          test -s "Dora-Windows-x64-$WIN_VERSION.zip"
       - name: Publish code-only installer
         run: |
           cat > release-notes.txt <<'TEXT'
           Windows 10/11 x64 独立哆啦，可独立安装和运行，无需预装 Octop 或 Python。
-          使用企业飞书登录，模型、专家、团队和 MCP 按现有服务器权限同步。角色形象在获授权后自动下载；公开安装包不含内部角色素材。
-          支持置顶、边缘探头、拖动、连续缩放、专家切换、团队、附件及打断。关闭聊天会隐藏窗口，退出请使用系统托盘。
-          Windows 原生窗口、隔离登录、打断、实际引擎启动与最终安装/卸载数据保留已由构建验证。真实员工飞书登录和实体麦克风未由 CI 验证。
+          使用企业飞书登录，模型、专家、团队和 MCP 按现有服务器权限同步。获得桌宠权限后显示内置KuroCat小黑猫；公开安装包包含原生渲染器和MIT许可，不含内部角色素材。
+          支持原生键鼠动作、同向转头、捕猎、摸头、睡眠和多键彩蛋；支持置顶、拖动提起、连续缩放、专家切换、团队、附件及打断，默认不吸附屏幕边缘。关闭聊天会隐藏窗口，退出请使用系统托盘。
+          Windows 原生绘制与方向、Raw Input注册与合成系统按键、隔离登录、打断、实际引擎启动与最终安装/卸载数据保留已由构建验证。真实物理键盘和游戏兼容性仍需实际设备确认。真实员工飞书登录和实体麦克风未由 CI 验证。
           安装器未配置 Windows 发布者签名。请从本发布页下载，并可用 SHA256SUMS.txt 校验。
           TEXT
-          gh release create dora-windows-v0.8.0 --latest=false --target "$GITHUB_SHA" --title '哆啦 Windows 0.8.0' --notes-file release-notes.txt dist/windows/*.exe dist/windows/*.zip dist/windows/SHA256SUMS.txt
+          gh release create "$RELEASE_TAG" --latest=false --target "$GITHUB_SHA" --title "哆啦 Windows $WIN_VERSION · KuroCat 小黑猫" --notes-file release-notes.txt dist/windows/*.exe dist/windows/*.zip dist/windows/SHA256SUMS.txt

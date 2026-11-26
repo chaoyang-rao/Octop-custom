@@ -1,6 +1,9 @@
-This Windows installer contains program code and an original speech-bubble app icon.
-Internal character artwork is downloaded separately after enterprise authorization.
+Windows Dora includes the pinned native KuroCat renderer, motion physics,
+Raw Input and keyboard-hook engine from https://github.com/chanke17/KuroCat.
+Copyright (c) 2026 chanke17. MIT License; see KuroCat-LICENSE.txt.
+The upstream revision and file checksums are provided in KuroCat-UPSTREAM.json.
 
-The Doraemon character remains the property of Fujiko F. Fujio / Shogakukan and the relevant rights holders. Redrawing does not grant a character licence. The internal images are not offered under MIT, CC0 or an unrestricted commercial licence.
-
-Only the program code carries the repository's software licence. Internal character frames are not uploaded to the public GitHub repository or public release assets.
+Octop owns the independent assistant, account, chat, window and packaging code
+under its repository license. No internal Doraemon images or member data are
+included. KuroCat's standalone updater, registry profile and online workshop
+are not connected; motion settings remain within Dora's own profile.

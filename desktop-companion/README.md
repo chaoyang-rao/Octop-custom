@@ -7,7 +7,7 @@
 ## 安装包
 
 - [Mac 0.7.4 通用安装包](https://github.com/chaoyang-rao/Octop-custom/releases/tag/dora-macos-v0.7.4)：KuroCat 小黑猫，Intel 和 Apple 芯片通用，默认不吸附屏幕边缘。
-- [Windows 0.8.0 安装包](https://github.com/chaoyang-rao/Octop-custom/releases/tag/dora-windows-v0.8.0)：既有 Windows 独立版，仍使用现有角色分发；尚未移植 Mac 的小黑猫渲染。
+- [Windows 0.9.0 小黑猫安装包](https://github.com/chaoyang-rao/Octop-custom/releases/tag/dora-windows-v0.9.0)：KuroCat 原生绘制和键鼠动作，包含独立问答引擎，默认不吸附屏幕边缘。
 
 ![Mac 小黑猫原生绘制预览](../docs/images/dora-kurocat.png)
 
@@ -99,9 +99,9 @@ open dist/哆啦.app --args --show-chat
 
 当前 Mac 小黑猫直接复用 chanke17/KuroCat 的原生 CoreGraphics 绘制、动作物理、键盘映射及输入引擎。固定上游版本与文件校验记录在 `macos/KuroCat/UPSTREAM.json`，原始 MIT 许可保留在同目录 `LICENSE`，安装包附 `KuroCat-LICENSE.txt` 与 `ASSET-NOTICE.txt`。上游应用的独立生命周期、自动更新和联网工坊未接入，客户端继续使用哆啦原有的启动、账号、聊天和分发机制。
 
-Mac 构建不再需要下载或提供内部哆啦A梦图集。Windows 原有角色分发独立保持；历史素材、脚本和许可记录保留追溯，不自动转换成小黑猫素材。
+Mac 构建不再需要下载或提供内部哆啦A梦图集。Windows 0.9.0 同样不再下载内部角色图集，原生代码与许可由安装包提供；历史素材和记录保留追溯。
 
-Mac 0.7.4 使用 GitHub 的独立安装包发布，通用 DMG 同时支持 Intel 和 Apple 芯片。公开构建工作流会检查源码、动作、聊天窗口及双架构，再准备固定来源的独立引擎并生成安装包与 SHA-256 校验文件。Windows 0.8.0 继续使用既有独立发行，两端版本和功能范围分别说明。
+Mac 0.7.4 使用 GitHub 的独立安装包发布，通用 DMG 同时支持 Intel 和 Apple 芯片。公开构建工作流会检查源码、动作、聊天窗口及双架构，再准备固定来源的独立引擎并生成安装包与 SHA-256 校验文件。Windows 0.9.0 使用独立发行，采用同一固定上游的Windows原生绘制与动作实现。
 
 ## 历史内部立体素材
 
@@ -113,6 +113,6 @@ Mac 0.7.4 使用 GitHub 的独立安装包发布，通用 DMG 同时支持 Intel
 
 Windows 10/11 x64 使用独立的 Electron 窗口，复用相同的聊天界面和专家、团队协议。程序内置 Python 问答引擎，不需要安装 Octop 主程序或另装 Python；与主程序分别保存数据，目录为 `%LOCALAPPDATA%\OctopCompanion\Data`。企业飞书登录后，服务器按当前成员权限同步模型、专家和 MCP，专家绑定无需重复勾选。
 
-Windows 的公开安装包仅包含程序。内部角色帧通过企业授权接口单独下载，客户端校验发布签名、大小与 SHA-256；原有 Mac 分发清单保持兼容。关闭聊天只隐藏窗口；`Ctrl+Alt+空格`切换聊天，退出请用托盘菜单。卸载保留独立数据目录。中文听写需安装 Windows 中文语音识别语言包，系统麦克风权限与实体设备需另行确认。
+Windows 0.9.0 的公开安装包内置KuroCat原生动作进程，通过受限本机像素通道接入独立桌宠窗口；键盘、鼠标数据只用于本地动画。既有登录与桌宠成员权限继续校验，退出或隐藏小猫会停止原生进程；旧角色缓存和聊天数据保留。关闭聊天只隐藏窗口；`Ctrl+Alt+空格`切换聊天，退出请用托盘菜单。卸载保留独立数据目录。中文听写需安装 Windows 中文语音识别语言包，系统麦克风权限与实体设备需另行确认。
 
 构建入口为 `.github/workflows/dora-windows-package.yml`。Windows runner 安装锁定 npm 依赖、运行原生窗口/隔离登录/打断测试、准备独立引擎、编译系统语音桥，再生成 NSIS 安装包及 ZIP，并验证安装后启动和卸载保留数据。隔离协议测试使用原创纯色帧，不使用内部角色素材，也不等同于真实员工飞书登录验收。

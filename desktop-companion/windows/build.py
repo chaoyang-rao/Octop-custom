@@ -1,4 +1,4 @@
-"""Assemble a code-only Windows Dora distribution. Internal pet frames are never bundled."""
+"""Assemble Windows Dora with the pinned native KuroCat renderer and independent engine."""
 
 from pathlib import Path
 import json
@@ -66,6 +66,9 @@ def main() -> None:
     shutil.copytree(COMPANION / "build/windows-engine", resources / "engine")
     shutil.copy2(COMPANION / "scripts/engine_entry.py", resources / "engine_entry.py")
     shutil.copy2(COMPANION / "build/DoraSpeech.exe", resources / "DoraSpeech.exe")
+    shutil.copy2(COMPANION / "build/kurocat-windows/Release/DoraKuroCat.exe", resources / "DoraKuroCat.exe")
+    shutil.copy2(ROOT / "native/kurocat/LICENSE", resources / "KuroCat-LICENSE.txt")
+    shutil.copy2(ROOT / "native/kurocat/UPSTREAM.json", resources / "KuroCat-UPSTREAM.json")
     shutil.copy2(ROOT / "使用说明.txt", resources / "使用说明.txt")
     shutil.copy2(ROOT / "ASSET-NOTICE.txt", resources / "ASSET-NOTICE.txt")
     png = icon()
@@ -84,7 +87,7 @@ def main() -> None:
     shutil.make_archive(str(BUILD / ("Dora-Windows-x64-" + VERSION)), "zip", BUILD, "Dora")
     print(
         json.dumps(
-            {"version": VERSION, "internal_artwork_included": False, "member_data_included": False}
+            {"version": VERSION, "renderer": "chanke17/KuroCat native Windows", "internal_artwork_included": False, "member_data_included": False}
         )
     )
 

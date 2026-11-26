@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/chanke17/KuroCat",
+  "revision": "1d83d7bd31a2b0b87537838535e2a70e50356e25",
+  "license": "MIT",
+  "files": {
+    "windows/src/CatRenderer.hpp": "d65ad5a7338b6714f198eb98b5eeb62d43eee1e636e8eaee125fbfb9ec91e239",
+    "windows/src/CatPhysics.hpp": "0275602049a124a708c0d6852f2a1cdd8d68bf2477132c0e8252120a7a140d96",
+    "windows/src/InputEngine.hpp": "8438178c2f9f3c68ed61c2f56c1bebdc3bee00194ef4dec4c1ffcd49833f250f",
+    "windows/src/KeyMap.hpp": "83754f20ad0904771d0707615edc544e63f09fdb4bb7a1c4ac0c5da0a4676130",
+    "windows/src/TabbyCoat.hpp": "e52a6163c5cfe7666460c6afcfdc40065a0a0f997e75e8fda7e5b7351d4b3098",
+    "shared/CoatPatterns.hpp": "4e43b21b42224ce4a4305087b1875a2749571ffceafa152b043d55c594cd8f84",
+    "shared/SkinSpec.hpp": "a214c15724c1df47cecac59dcbb51a70478ec4382be87102d8373f041d04b4b3",
+    "shared/KeyboardSkinSpec.hpp": "3164c3510d84c070f393b10495042965f8aa148cf746f3fb393ace2f04931df8",
+    "windows/app.manifest": "8575a25d1241d120621984c39022a1d3749f8a41b36e54aec83703d02cf92563"
+  },
+  "integration": "Pinned original Windows GDI+ renderer, physics and Raw Input/keyboard hook. Octop owns the parent lifecycle, windows, settings, authentication and IPC. Standalone upstream main, updater and registry preference lifecycle are excluded."
+}

@@ -133,55 +133,14 @@ sockets.on("connection", (socket) =>
     ]),
   );
   assert.equal(png.isEmpty(), false);
-  const frameDir = path.join(build, "fixture-frames");
-  fs.mkdirSync(frameDir, { recursive: true });
-  fs.writeFileSync(path.join(frameDir, "idle.png"), png.toPNG());
   fs.writeFileSync(
     path.join(process.env.DORA_TEST_RESOURCES, "tray.png"),
     png.toPNG(),
   );
-  const animations = Object.fromEntries(
-    [
-      "idle",
-      "working",
-      "thinking",
-      "listening",
-      "speaking",
-      "takeoff",
-      "dragging",
-      "landing",
-      "success",
-      "error",
-      "sleep",
-      "walking",
-    ].map((k) => [k, { frames: ["idle.png"], frameDelay: 0.2 }]),
+  fs.copyFileSync(
+    path.join(build, "kurocat-windows/Release/DoraKuroCat.exe"),
+    path.join(process.env.DORA_TEST_RESOURCES, "DoraKuroCat.exe"),
   );
-  fs.writeFileSync(
-    path.join(frameDir, "pet.json"),
-    JSON.stringify({
-      animations,
-      registration: {
-        headWidth: 0.526,
-        anchor: [0.5, 0.33],
-        frames: { "idle.png": [0.1, 0.1, 0.8, 0.8] },
-      },
-      peek: {
-        right: {
-          frame: "idle.png",
-          crop: [0.49, 0.14, 0.42, 0.75],
-          headWidth: 0.6,
-          grip: 0.882,
-        },
-        bottom: {
-          frame: "idle.png",
-          crop: [0.13, 0.22, 0.74, 0.71],
-          headWidth: 0.69,
-          grip: 0.056,
-        },
-      },
-    }),
-  );
-  require("../artwork.cjs").ensureArtwork = async () => frameDir;
   require("../main.cjs");
   const chat = await until(() =>
     BrowserWindow.getAllWindows().find((w) => w.getTitle() === "哆啦"),
@@ -214,6 +173,30 @@ sockets.on("connection", (socket) =>
   );
   const pet = BrowserWindow.getAllWindows().find((w) => w !== chat);
   assert.ok(pet);
+  await until(
+    async () =>
+      (
+        await pet.webContents.executeJavaScript(
+          "window.companionNative.invoke('petModel')",
+        )
+      ).ready,
+  );
+  const cat = await pet.webContents.executeJavaScript(
+    "window.companionNative.invoke('petModel')",
+  );
+  assert.equal(cat.renderer, "kurocat");
+  assert.equal(cat.ready.rawInput, true);
+  assert.equal(cat.ready.keyboardHook, true);
+  assert.deepEqual(await call("petPreferences"), { edgeHiding: false });
+  await until(async () =>
+    pet.webContents.executeJavaScript(
+      "(()=>{const c=document.querySelector('canvas');return c.width>0&&[...c.getContext('2d').getImageData(0,0,c.width,c.height).data].some((v,i)=>i%4===3&&v>20)})()",
+    ),
+  );
+  fs.writeFileSync(
+    path.join(build, "windows-native-kurocat.png"),
+    (await pet.webContents.capturePage()).toPNG(),
+  );
   assert.equal(pet.isAlwaysOnTop(), true);
   assert.equal(chat.isAlwaysOnTop(), true);
   assert.equal(
@@ -271,6 +254,9 @@ sockets.on("connection", (socket) =>
   const report = {
     native_windows: true,
     transparent_pet: true,
+    renderer: "chanke17/KuroCat native Windows",
+    native_input_registered: true,
+    default_no_edge_snapping: true,
     always_on_top: true,
     isolated_login_roundtrip: true,
     fresh_mcp_binding: true,

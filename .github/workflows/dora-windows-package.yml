@@ -41,6 +41,16 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Native Windows transparent window and login transport checks
         run: |
+          cmake -S desktop-companion/windows/native -B desktop-companion/build/kurocat-windows -A x64
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cmake --build desktop-companion/build/kurocat-windows --config Release
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & desktop-companion/build/kurocat-windows/Release/DoraKuroCat.exe --verify desktop-companion/build/windows-kurocat-poses
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & desktop-companion/build/kurocat-windows/Release/DoraKuroCat.exe --input-probe desktop-companion/build/windows-kurocat-input.json
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Native Windows KuroCat, login and chat transport checks
+        run: |
           & desktop-companion/windows/node_modules/.bin/electron.cmd desktop-companion/windows/tests/native.cjs
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Prepare independent engine from frozen public inputs
@@ -84,5 +94,7 @@ jobs:
             desktop-companion/build/windows-native-*.json
             desktop-companion/build/windows-native-*.png
             desktop-companion/build/windows-installer-check.json
+            desktop-companion/build/windows-kurocat-input.json
+            desktop-companion/build/windows-kurocat-poses/*.png
           if-no-files-found: warn
           retention-days: 14

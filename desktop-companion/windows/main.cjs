@@ -21,7 +21,7 @@ const { pathToFileURL } = require("node:url");
 const readline = require("node:readline");
 const { Engine } = require("./engine.cjs");
 const { BackendClient } = require("./backend.cjs");
-const { ensureArtwork, readModel } = require("./artwork.cjs");
+const { createNativePet, MOTIONS } = require("./native-pet.cjs");
 const policy = require("./security.cjs");
 const geometry = require("./geometry.cjs");
 
@@ -47,20 +47,21 @@ let chat,
   tray,
   client,
   engine,
-  artwork,
-  model,
+  petRenderer,
   quitting = false,
   startupError = "",
   progress = "",
   dragging = null,
-  dockEdge = null,
-  collapsed = false,
   savedFrame,
-  collapseAt = 0,
-  phaseTimer,
   speech;
-let pose = { animation: "idle", phase: "rest", facingLeft: false },
-  preferences = { edgeHiding: true, scale: 1, voice: true };
+let pose = { animation: "idle" },
+  preferences = {
+    edgeHiding: false,
+    scale: 1,
+    voice: true,
+    paused: false,
+    motions: {},
+  };
 const logDirectory = path.join(home, "Logs");
 function log(value) {
   try {
@@ -78,8 +79,7 @@ function send(window, value) {
 function event(value) {
   if (value.type === "authExpired") {
     stopSpeech();
-    artwork = model = null;
-    pet?.hide();
+    stopPet();
   }
   send(chat, value);
 }
@@ -121,44 +121,21 @@ function area() {
   return screen.getDisplayMatching(savedFrame || pet.getBounds()).workArea;
 }
 function publishPose() {
-  send(pet, { type: "petState", data: { ...pose, edge: dockEdge, collapsed } });
+  petRenderer?.state(pose.animation);
 }
-function phase(value) {
-  clearTimeout(phaseTimer);
-  pose.phase = value;
-  publishPose();
-  if (value === "takeoff" || value === "landing")
-    phaseTimer = setTimeout(
-      () => phase(value === "takeoff" ? "flying" : "rest"),
-      value === "takeoff" ? 320 : 360,
-    );
+function updatePetFrame() {
+  if (!petRenderer || !pet || pet.isDestroyed()) return;
+  const bounds = pet.getBounds();
+  const physical =
+    process.platform === "win32" ? screen.dipToScreenRect(pet, bounds) : bounds;
+  petRenderer.place(physical, screen.getDisplayMatching(bounds).scaleFactor);
 }
-function reveal() {
-  if (!collapsed || !savedFrame) return;
-  collapsed = false;
-  pet.setBounds(savedFrame);
-  publishPose();
-  collapseAt = Date.now() + 1200;
-}
-function collapse() {
-  if (!dockEdge || collapsed || dragging || !model || !preferences.edgeHiding)
-    return;
-  savedFrame = pet.getBounds();
-  const peek =
-    model.manifest.peek[
-      ["left", "right"].includes(dockEdge) ? "right" : "bottom"
-    ];
-  pet.setBounds(
-    geometry.peekFrame(
-      savedFrame,
-      area(),
-      dockEdge,
-      peek,
-      model.manifest.registration,
-    ),
-  );
-  collapsed = true;
-  publishPose();
+function stopPet() {
+  const old = petRenderer;
+  petRenderer = null;
+  old?.stop();
+  pet?.hide();
+  send(pet, { type: "petReload" });
 }
 function placeInitial() {
   const a = screen.getPrimaryDisplay().workArea,
@@ -206,15 +183,13 @@ function showChat() {
   chat.focus();
 }
 function movePet(edge) {
-  reveal();
   const a = area(),
     f = pet.getBounds();
-  f.x = edge === "left" ? a.x : a.x + a.width - f.width;
-  f.y = a.y + a.height - f.height;
+  f.x = edge === "left" ? a.x + 28 : a.x + a.width - f.width - 28;
+  f.y = a.y + a.height - f.height - 28;
   pet.setBounds(f);
   savedFrame = f;
-  dockEdge = edge;
-  collapseAt = Date.now() + 1000;
+  updatePetFrame();
   savePreferences();
 }
 function petMenu() {
@@ -222,7 +197,7 @@ function petMenu() {
     { label: "打开聊天", accelerator: "Control+Alt+Space", click: showChat },
     {
       label: pet.isVisible() ? "隐藏哆啦" : "显示哆啦",
-      click: () => (pet.isVisible() ? pet.hide() : pet.showInactive()),
+      click: () => (pet.isVisible() ? stopPet() : void loadPet()),
     },
     { label: "靠左停放", click: () => movePet("left") },
     { label: "靠右停放", click: () => movePet("right") },
@@ -237,14 +212,35 @@ function petMenu() {
       })),
     },
     {
-      label: "边缘躲藏",
-      type: "checkbox",
-      checked: preferences.edgeHiding,
-      click: (item) => {
-        preferences.edgeHiding = item.checked;
-        reveal();
+      label: preferences.paused ? "恢复动作" : "暂停动作",
+      click: () => {
+        preferences.paused = !preferences.paused;
+        petRenderer?.pause(preferences.paused);
         savePreferences();
       },
+    },
+    {
+      label: "小黑猫动作",
+      submenu: [...MOTIONS].map((name) => ({
+        label: {
+          petInteraction: "摸头互动",
+          footEasterEgg: "三键用脚按",
+          tailEasterEgg: "四键用尾巴按",
+          keyboardMarquee: "键盘跑马灯",
+          enableAnger: "快速打字生气",
+          enableDragAnimation: "拖动提起动作",
+        }[name],
+        type: "checkbox",
+        checked: preferences.motions?.[name] !== false,
+        click: (item) => {
+          preferences.motions = {
+            ...preferences.motions,
+            [name]: item.checked,
+          };
+          petRenderer?.motion(name, item.checked);
+          savePreferences();
+        },
+      })),
     },
     {
       label: "自动朗读",
@@ -297,13 +293,12 @@ function showSize() {
   });
 }
 function resize(scale) {
-  reveal();
   preferences.scale = geometry.clamp(scale, 0.5, 2.5);
   pet.setBounds(
     geometry.fullFrame(pet.getBounds(), 158 * preferences.scale, area()),
   );
   savedFrame = pet.getBounds();
-  dockEdge = null;
+  updatePetFrame();
   publishPose();
   savePreferences();
 }
@@ -312,19 +307,48 @@ async function ready() {
   if (!client) throw new Error(progress || "问答引擎正在启动，请稍候。");
   return client;
 }
-async function loadArtwork() {
+async function loadPet() {
+  if (!client?.token) {
+    showChat();
+    return;
+  }
   const revision = client.revision;
   try {
-    const directory = await ensureArtwork(client, home);
-    const value = await readModel(directory);
+    const access = await client.data("/api/companion/access");
     if (revision !== client.revision) return;
-    artwork = directory;
-    model = value;
+    if (!access.allowed) {
+      stopPet();
+      return;
+    }
+    const renderer =
+      petRenderer || createNativePet(path.join(resources, "DoraKuroCat.exe"));
+    if (!petRenderer) {
+      petRenderer = renderer;
+      renderer.on("frame", (data) => {
+        if (petRenderer === renderer && revision === client.revision)
+          send(pet, { type: "petFrame", data });
+      });
+      renderer.on("failure", (e) => {
+        if (petRenderer === renderer) {
+          stopPet();
+          event({ type: "notice", text: e.message });
+        }
+      });
+    }
+    await renderer.start();
+    if (revision !== client.revision || petRenderer !== renderer) {
+      renderer.stop();
+      return;
+    }
+    updatePetFrame();
+    for (const name of MOTIONS)
+      renderer.motion(name, preferences.motions?.[name] !== false);
+    renderer.pause(preferences.paused);
     publishPose();
-    send(pet, { type: "petReload" });
     pet.showInactive();
   } catch (e) {
     if (revision !== client.revision) return;
+    stopPet();
     event({ type: "notice", text: e.message });
     log(e.message + "\n");
   }
@@ -365,8 +389,7 @@ async function openLogin(relative = "/login") {
 async function logout() {
   client?.logout();
   stopSpeech();
-  artwork = model = null;
-  pet.hide();
+  stopPet();
   send(pet, { type: "petReload" });
   if (login && !login.isDestroyed()) login.close();
   await session.defaultSession.clearStorageData({
@@ -421,10 +444,7 @@ function speechCommand(op, text = "") {
   if (op === "startListening") event({ type: "voice", data: "started" });
   if (op === "speak") {
     event({ type: "speech", data: "started" });
-    send(pet, {
-      type: "petState",
-      data: { ...pose, animation: "speaking", edge: dockEdge, collapsed },
-    });
+    petRenderer?.state("speaking");
   }
 }
 function stopSpeech() {
@@ -491,7 +511,10 @@ async function native(op, args) {
         try {
           user = await client.user();
           allowed = (await client.data("/api/companion/access")).allowed;
-          if (revision === client.revision && !allowed) pet.hide();
+          if (revision === client.revision) {
+            if (!allowed) stopPet();
+            else if (!petRenderer) void loadPet();
+          }
         } catch (e) {
           log(e.message);
         }
@@ -615,10 +638,9 @@ async function native(op, args) {
       publishPose();
       return true;
     case "petPreferences":
-      return { edgeHiding: preferences.edgeHiding };
+      return { edgeHiding: false };
     case "setEdgeHiding":
-      preferences.edgeHiding = !!args.enabled;
-      reveal();
+      preferences.edgeHiding = false;
       savePreferences();
       return true;
     case "petSize":
@@ -648,19 +670,18 @@ ipcMain.handle("login-token", async (e, token) => {
     if (purpose === "/login" && current && !current.isDestroyed()) {
       current.close();
       showChat();
-      void loadArtwork();
+      void loadPet();
     }
     return true;
   }
   await client.acceptToken(token);
   stopSpeech();
-  artwork = model = null;
-  pet.hide();
+  stopPet();
   event({ type: "authChanged" });
   if (current && !current.isDestroyed() && purpose === "/login")
     current.close();
   showChat();
-  void loadArtwork();
+  void loadPet();
   return true;
 });
 ipcMain.handle("companion", async (e, op, args = {}) => {
@@ -684,7 +705,11 @@ ipcMain.handle("companion", async (e, op, args = {}) => {
     throw new Error("窗口来源无效。");
   switch (op) {
     case "petModel":
-      return model;
+      return {
+        renderer: "kurocat",
+        ready: petRenderer?.ready || null,
+        statistics: petRenderer?.statistics || {},
+      };
     case "showChat":
       showChat();
       return true;
@@ -693,32 +718,25 @@ ipcMain.handle("companion", async (e, op, args = {}) => {
       return true;
     case "petHit":
       pet.setIgnoreMouseEvents(!args.hit && !dragging, { forward: true });
-      if (args.hit) {
-        if (collapsed) reveal();
-        collapseAt = Date.now() + 1200;
-      }
+      return true;
+    case "petHover":
+      petRenderer?.hover(args.x, args.y);
       return true;
     case "petDragStart":
-      reveal();
-      dockEdge = null;
       dragging = {
         pointer: screen.getCursorScreenPoint(),
         frame: pet.getBounds(),
+        last: screen.getCursorScreenPoint(),
       };
       pet.setIgnoreMouseEvents(false);
-      phase("takeoff");
+      petRenderer?.drag(true);
       return true;
     case "petDragEnd":
       if (!dragging) return true;
       dragging = null;
-      phase("landing");
+      petRenderer?.drag(false);
       savedFrame = pet.getBounds();
-      dockEdge = geometry.dock(
-        savedFrame,
-        area(),
-        screen.getAllDisplays().map((d) => d.bounds),
-      );
-      collapseAt = Date.now() + 1000;
+      updatePetFrame();
       savePreferences();
       return true;
     default:
@@ -737,6 +755,7 @@ else {
     engine?.stop();
     client?.closeAll();
     stopSpeech();
+    stopPet();
     globalShortcut.unregisterAll();
   });
   app.on("window-all-closed", () => {});
@@ -752,6 +771,7 @@ else {
           ),
         };
       } catch {}
+      preferences.edgeHiding = false;
       session.defaultSession.setPermissionRequestHandler(
         (_wc, _permission, callback) => callback(false),
       );
@@ -840,11 +860,13 @@ else {
             y = dragging.frame.y + pointer.y - dragging.pointer.y;
           pet.setPosition(Math.round(x), Math.round(y));
           savedFrame = pet.getBounds();
-          pose.facingLeft = geometry.facing(
-            savedFrame,
-            area(),
-            pose.facingLeft,
+          petRenderer?.drag(
+            true,
+            pointer.x - dragging.last.x,
+            pointer.y - dragging.last.y,
           );
+          dragging.last = pointer;
+          updatePetFrame();
           publishPose();
         } else if (pet.isVisible()) {
           const f = pet.getBounds();
@@ -852,17 +874,16 @@ else {
             type: "hitTest",
             data: { x: pointer.x - f.x, y: pointer.y - f.y },
           });
-          if (Date.now() >= collapseAt) collapse();
         }
       }, 35).unref();
       setInterval(() => client?.ping(), 25000).unref();
       screen.on("display-removed", () => {
-        reveal();
         const f = pet.getBounds();
         pet.setBounds(
           geometry.fullFrame(f, f.width, screen.getDisplayMatching(f).workArea),
         );
         savedFrame = pet.getBounds();
+        updatePetFrame();
       });
       try {
         engine = new Engine(resources, home, log);
