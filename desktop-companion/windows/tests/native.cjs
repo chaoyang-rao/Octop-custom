@@ -223,7 +223,7 @@ sockets.on("connection", (socket) =>
         "window.companionNative.invoke('petModel')",
       )
     ).ready,
-    false,
+    null,
   );
   await togglePet("显示哆啦");
   await until(() => pet.isVisible());
