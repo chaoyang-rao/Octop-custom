@@ -81,7 +81,12 @@ export default function ClientUpdateAdmin() {
               style={{ minWidth: 280 }}
               options={releases.map((item) => ({
                 value: item.tag,
-                label: item.version,
+                label: item.companion_version
+                  ? t("clientUpdates.bundleVersion", {
+                      client: item.version,
+                      companion: item.companion_version,
+                    })
+                  : item.version,
               }))}
               onChange={setTag}
             />
@@ -104,6 +109,20 @@ export default function ClientUpdateAdmin() {
           <Typography.Text>
             {t("clientUpdates.draftVersion")} {state?.draft?.version || "—"}
           </Typography.Text>
+          {state?.draft && (
+            <Typography.Text>
+              {t("clientUpdates.companionVersion")}{" "}
+              {state.draft.companion?.version ||
+                t("clientUpdates.companionNotIncluded")}
+            </Typography.Text>
+          )}
+          {state?.draft && !state.draft.companion && (
+            <Alert
+              type="warning"
+              showIcon
+              message={t("clientUpdates.companionMissing")}
+            />
+          )}
           <Select
             mode="multiple"
             allowClear
@@ -130,7 +149,11 @@ export default function ClientUpdateAdmin() {
                 )
               }
             >
-              {t("clientUpdates.publish")}
+              {t(
+                state?.draft?.companion
+                  ? "clientUpdates.publishTogether"
+                  : "clientUpdates.publish",
+              )}
             </Button>
             <Button
               danger
@@ -159,6 +182,12 @@ export default function ClientUpdateAdmin() {
               <Tag>{t("clientUpdates.withdrawn")}</Tag>
             )}
           </Typography.Text>
+          {state?.published?.companion && (
+            <Typography.Text>
+              {t("clientUpdates.currentCompanion")}{" "}
+              {state.published.companion.release.version}
+            </Typography.Text>
+          )}
         </Space>
       </Card>
       <Card title={t("clientUpdates.devicesTitle")}>
@@ -174,6 +203,15 @@ export default function ClientUpdateAdmin() {
           scroll={{ x: 860 }}
           pagination={{ pageSize: 15 }}
           columns={[
+            {
+              title: t("clientUpdates.product"),
+              render: (_, row) =>
+                t(
+                  row.product === "octop-companion"
+                    ? "clientUpdates.companionProduct"
+                    : "clientUpdates.desktopProduct",
+                ),
+            },
             { title: t("clientUpdates.member"), dataIndex: "display_name" },
             {
               title: t("clientUpdates.device"),
@@ -205,7 +243,7 @@ export default function ClientUpdateAdmin() {
             {
               title: t("clientUpdates.lastSeen"),
               dataIndex: "last_seen_at",
-              render: (value) => formatServerDateTime(value * 1000, timezone),
+              render: (value) => formatServerDateTime(value, timezone),
             },
             {
               title: t("clientUpdates.result"),

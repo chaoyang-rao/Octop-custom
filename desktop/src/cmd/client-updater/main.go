@@ -16,6 +16,9 @@ func main() {
 	identifier := flag.String("job", "", "approved local update id")
 	recover := flag.Bool("recover", false, "recover interrupted installation")
 	waitPID := flag.Int("wait-pid", 0, "GUI process that must exit before recovery")
+	product := flag.String("product", clientupdate.Product, "fixed local application product")
+	validate := flag.Bool("validate", false, "validate a native handoff without installing")
+	candidate := flag.Bool("candidate", false, "validate candidate startup without installing")
 	flag.Parse()
 	if *home == "" || !filepath.IsAbs(*home) {
 		os.Exit(2)
@@ -24,16 +27,39 @@ func main() {
 	if err != nil {
 		os.Exit(2)
 	}
-	build, err := clientupdate.LoadBuild(job.AppRoot, job.Platform)
+	build, err := clientupdate.LoadBuildForProduct(job.AppRoot, job.Platform, *product)
 	if err != nil {
 		_ = clientupdate.Fail(job, "CLIENT_UPDATE_INTEGRITY")
 		os.Exit(2)
+	}
+	if *validate {
+		if _, err := clientupdate.ValidateJob(job, build, time.Now()); err != nil {
+			os.Exit(2)
+		}
+		return
+	}
+	if *candidate {
+		if clientupdate.ValidateCandidate(job, build) != nil {
+			os.Exit(2)
+		}
+		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	installer := &clientupdate.Installer{Job: job, Build: build}
 	if *recover {
 		release, verifyErr := clientupdate.Verify(job.Envelope, build.Authority)
+		releaseProduct := release.Product
+		if releaseProduct == "" {
+			releaseProduct = clientupdate.Product
+		}
+		jobProduct := job.Product
+		if jobProduct == "" {
+			jobProduct = clientupdate.Product
+		}
+		if releaseProduct != build.Product || jobProduct != build.Product {
+			os.Exit(2)
+		}
 		if verifyErr != nil || release.Version != job.TargetVersion || job.Phase == "accepted" || job.Phase == "rolled_back" || !job.BackupReady {
 			os.Exit(2)
 		}

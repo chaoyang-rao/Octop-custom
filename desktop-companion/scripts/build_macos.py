@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from companion_updates import prepare as prepare_update, archive as archive_updates
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = json.loads((ROOT / "package.json").read_text())["version"]
@@ -114,8 +115,11 @@ def main() -> None:
         "NSHighResolutionCapable": True,
     }
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
+    update_platform = "darwin-universal" if args.arch == "universal" else "darwin-" + ("amd64" if args.arch == "x86_64" else "arm64")
+    prepare_update(app, VERSION, update_platform)
     run("codesign", "--force", "--deep", "--sign", "-", str(app))
     run("codesign", "--verify", "--deep", "--strict", str(app))
+    archive_updates(app, VERSION, update_platform, args.output_dir)
     run(str(executable), "--self-test")
     run(str(executable), "--verify-kurocat", str(build / "kurocat-verification"))
     artifacts = []

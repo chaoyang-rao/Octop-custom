@@ -8359,6 +8359,15 @@
     "serviceSaved": "Server read-only connection saved"
   },
   "clientUpdates": {
+    "bundleVersion": "Client {{client}} · Companion {{companion}}",
+    "companionVersion": "Draft companion version:",
+    "companionNotIncluded": "No companion update included",
+    "companionMissing": "This release contains only the client. Choose a complete release with companion update packages to publish both together.",
+    "publishTogether": "Publish client and companion together",
+    "currentCompanion": "Published companion:",
+    "product": "Product",
+    "companionProduct": "Dora companion",
+    "desktopProduct": "Octop client",
     "title": "Company client update",
     "available": "Company update {{version}} is available",
     "memberHint": "Accounts, chats, memory and settings are backed up before installation. Save drafts and finish all expert tasks first.",

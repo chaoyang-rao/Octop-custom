@@ -93,6 +93,12 @@ func RestoreData(snapshot, home string) error {
 }
 
 func ExtractPackage(archivePath, destination, platform string) error {
+	return ExtractPackageForProduct(archivePath, destination, platform, Product)
+}
+func ExtractPackageForProduct(archivePath, destination, platform, product string) error {
+	if product == "" {
+		product = Product
+	}
 	archive, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return err
@@ -104,6 +110,14 @@ func ExtractPackage(archivePath, destination, platform string) error {
 	prefix := "OctopCustom/"
 	if strings.HasPrefix(platform, "darwin-") {
 		prefix = "OctopCustom.app/"
+	}
+	if product == CompanionProduct {
+		prefix = "Dora/"
+		if strings.HasPrefix(platform, "darwin-") {
+			prefix = "Dora.app/"
+		}
+	} else if product != Product {
+		return errors.New("unsupported package product")
 	}
 	seen := map[string]bool{}
 	links := map[string]string{}
@@ -201,7 +215,7 @@ func ExtractPackage(archivePath, destination, platform string) error {
 			return errors.New("invalid resolved package link")
 		}
 	}
-	for _, required := range []string{Executable(destination, platform), Helper(destination, platform), BuildFile(destination, platform)} {
+	for _, required := range []string{ExecutableForProduct(destination, platform, product), HelperForProduct(destination, platform, product), BuildFileForProduct(destination, platform, product)} {
 		info, err := os.Stat(required)
 		if err != nil || !info.Mode().IsRegular() {
 			return errors.New("incomplete application update")

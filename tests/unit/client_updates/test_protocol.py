@@ -11,7 +11,11 @@ import pytest
 from pydantic import ValidationError
 
 from octop.infra.client_updates.catalog import ClientUpdateCatalog, initialize_signer
-from octop.infra.client_updates.github import github_download_host, package_metadata
+from octop.infra.client_updates.github import (
+    companion_metadata,
+    github_download_host,
+    package_metadata,
+)
 from octop.infra.client_updates.models import (
     PLATFORMS,
     ClientPackage,
@@ -19,6 +23,7 @@ from octop.infra.client_updates.models import (
     SignedRelease,
     asset_name,
     canonical,
+    companion_asset_name,
     release_asset_url,
     verify_release,
 )
@@ -102,6 +107,8 @@ def company(
 
 def publish(
     company: tuple[ClientUpdateCatalog, User, dict[str, dict[str, str]]],
+    *,
+    companion: bool = False,
 ) -> tuple[SignedRelease, ClientRelease]:
     catalog, admin, _ = company
     _, state = catalog._read()
@@ -112,6 +119,14 @@ def publish(
         "notes": "Changes",
         "packages": [p.model_dump() for p in packages()],
     }
+    if companion:
+        state["draft"]["companion"] = {
+            "version": "0.10.0",
+            "tag": TAG,
+            "source_commit": "b" * 40,
+            "notes": "Companion update",
+            "packages": companion_packages(),
+        }
     catalog.settings.compare_and_set(
         "enterprise.client_updates.catalog.v1", None, canonical(state).decode()
     )
@@ -119,6 +134,67 @@ def publish(
     return SignedRelease.model_validate(
         result["published"]["envelope"]
     ), ClientRelease.model_validate(result["published"]["release"])
+
+
+def companion_packages() -> list[dict[str, object]]:
+    return [
+        {
+            **p.model_dump(),
+            "filename": companion_asset_name(p.platform, "0.10.0"),
+            "url": release_asset_url(TAG, companion_asset_name(p.platform, "0.10.0")),
+        }
+        for p in packages()
+    ]
+
+
+def test_joint_publication_keeps_legacy_signature_and_separate_product_identity(
+    company: tuple[ClientUpdateCatalog, User, dict[str, dict[str, str]]],
+) -> None:
+    catalog, admin, trust = company
+    desktop_envelope, desktop = publish(company, companion=True)
+    assert verify_release(desktop_envelope, ORIGIN, trust) == desktop
+    legacy_payload = json.loads(base64.b64decode(desktop_envelope.payload))
+    assert "product" not in legacy_payload and "companion" not in legacy_payload
+    companion = catalog.admin(admin)["published"]["companion"]
+    envelope = SignedRelease.model_validate(companion["envelope"])
+    release = verify_release(envelope, ORIGIN, trust, product="octop-companion")
+    assert release.version == "0.10.0" and release.revision == desktop.revision
+    with pytest.raises(OctopError):
+        verify_release(envelope, ORIGIN, trust)
+    with pytest.raises(OctopError):
+        verify_release(desktop_envelope, ORIGIN, trust, product="octop-companion")
+    withdrawn = catalog.withdraw(admin, catalog.admin(admin)["etag"])
+    revoked = verify_release(
+        SignedRelease.model_validate(withdrawn["published"]["companion"]["envelope"]),
+        ORIGIN,
+        trust,
+        product="octop-companion",
+    )
+    assert not revoked.enabled and revoked.revision == withdrawn["revision"]
+    assert withdrawn["history"][0]["companion"]["version"] == "0.10.0"
+
+
+def test_joint_import_requires_all_companion_platforms_with_digests() -> None:
+    all_packages = [p.model_dump() for p in packages()] + companion_packages()
+    raw = {
+        "tag_name": TAG,
+        "target_commitish": "b" * 40,
+        "assets": [
+            {
+                "name": p["filename"],
+                "size": p["size"],
+                "browser_download_url": p["url"],
+                "digest": "sha256:" + str(p["sha256"]),
+            }
+            for p in all_packages
+        ],
+    }
+    assert companion_metadata(raw)["version"] == "0.10.0"  # type: ignore[index]
+    raw["assets"].pop()
+    with pytest.raises(OctopError):
+        companion_metadata(raw)
+    raw["assets"] = raw["assets"][:3]
+    assert companion_metadata(raw) is None
 
 
 def test_signer_stays_private_and_is_stable(

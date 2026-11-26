@@ -1427,3 +1427,47 @@ html[data-platform="windows"] .header-actions {
 html[data-platform="windows"] .topbar { padding-left: 12px; }
 html[data-platform="windows"] .expert-picker { left: 90px; right: 108px; -webkit-app-region: no-drag; }
 html[data-platform="windows"] .settings-open .expert-picker { right: 76px; }
+
+.companion-update {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.companion-update > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.companion-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.companion-update-actions button {
+  padding: 6px 10px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.companion-update-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.companion-update progress {
+  width: 100%;
+  height: 5px;
+}
+.companion-update details {
+  margin-top: 6px;
+}
+.companion-update details p {
+  white-space: pre-wrap;
+  max-height: 140px;
+  overflow: auto;
+}

@@ -129,6 +129,32 @@ class Engine {
       PYTHONDONTWRITEBYTECODE: "1",
       PYTHONUTF8: "1",
     });
+    try {
+      const update = JSON.parse(
+        await fs.readFile(
+          path.join(this.resources, "client-update-build.json"),
+          "utf8",
+        ),
+      );
+      if (
+        update.product !== "octop-companion" ||
+        update.protocol !== 1 ||
+        update.authority !== manifest.authority ||
+        !/^\d+\.\d+\.\d+$/.test(update.version)
+      )
+        throw new Error("桌宠更新信息无效。");
+      Object.assign(env, {
+        OCTOP_DESKTOP_CLIENT_PRODUCT: update.product,
+        OCTOP_DESKTOP_CLIENT_VERSION: update.version,
+        OCTOP_DESKTOP_UPDATER_PROTOCOL: "1",
+        OCTOP_DESKTOP_PROGRAM_ROOT: path.dirname(this.resources),
+        ...(this.pendingUpdateId
+          ? { OCTOP_CLIENT_UPDATE_PENDING: this.pendingUpdateId }
+          : {}),
+      });
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
     await fs.mkdir(path.join(this.home, "Data"), { recursive: true });
     progress("正在启动问答引擎…");
     this.child = spawn(
@@ -159,6 +185,7 @@ class Engine {
     });
     for (const stream of [this.child.stdout, this.child.stderr])
       stream.on("data", (c) => this.log(c));
+    if (this.onSpawn) await this.onSpawn(this.child.pid);
     for (let n = 0; n < 240; n++) {
       if (failure) throw failure;
       if (this.stopping) throw new Error("程序正在退出。");

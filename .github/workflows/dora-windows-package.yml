@@ -24,6 +24,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "24"
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: desktop/src/go.mod
+          cache: false
+      - name: Verify signed update helper and native rollback
+        working-directory: desktop/src
+        run: go test ./internal/clientupdate ./cmd/client-updater
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"

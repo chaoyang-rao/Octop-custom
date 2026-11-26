@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 
-from octop.infra.client_updates.models import verify_release
+from octop.infra.client_updates.models import CompanionRelease, verify_release
 from octop.infra.client_updates.node import ClientUpdateNode
 from octop.infra.errors import ErrorCode, OctopError
-from tests.unit.client_updates.test_protocol import ORIGIN, publish
+from tests.unit.client_updates.test_protocol import ORIGIN, companion_packages, publish
 from tests.unit.client_updates.test_protocol import company as company
 
 
@@ -50,7 +50,7 @@ def node(company, monkeypatch, tmp_path):
     monkeypatch.setattr("octop.infra.client_updates.node.client_for", lambda _: client)
     monkeypatch.setattr(
         "octop.infra.client_updates.node.verify_release",
-        lambda value, authority: verify_release(value, authority, trust),
+        lambda value, authority, **kwargs: verify_release(value, authority, trust, **kwargs),
     )
     monkeypatch.setenv("OCTOP_DESKTOP_CLIENT_VERSION", "1.0.3b3.post2026111703")
     monkeypatch.setenv("OCTOP_DESKTOP_UPDATER_PROTOCOL", "1")
@@ -223,3 +223,43 @@ async def test_idle_shared_expert_does_not_block_upgrade(shared_runtime):
 async def test_unknown_acp_state_blocks_upgrade(shared_runtime):
     shared_runtime.registry.acp_activity_snapshot.return_value = None
     assert await shared_runtime.node.manager.busy()
+
+
+async def test_companion_polls_only_its_signed_product_and_reports_its_own_version(
+    node, monkeypatch
+):
+    from octop.infra.client_updates.catalog import ClientUpdateCatalog
+
+    monkeypatch.setenv("OCTOP_DESKTOP_CLIENT_PRODUCT", "octop-companion")
+    monkeypatch.setenv("OCTOP_DESKTOP_CLIENT_VERSION", "0.9.0")
+    release = CompanionRelease(
+        authority=ORIGIN,
+        revision=node.release.revision,
+        version="0.10.0",
+        tag=node.release.tag,
+        source_commit=node.release.source_commit,
+        published_at=1,
+        packages=companion_packages(),
+    )
+    envelope = ClientUpdateCatalog(node.server)._sign(release)
+    node.client._remote.return_value = {
+        "revision": release.revision,
+        "envelope": node.envelope.model_dump(),
+        "companion_envelope": envelope.model_dump(),
+    }
+    status = await node.manager.status(node.user, refresh=True)
+    assert (
+        status["current_version"] == "0.9.0"
+        and status["version"] == "0.10.0"
+        and status["available"]
+    )
+    await node.manager.report(node.user)
+    report = node.client._remote.call_args.kwargs["body"]
+    assert report["product"] == "octop-companion" and report["current_version"] == "0.9.0"
+    node.client._remote.return_value = {
+        "revision": release.revision + 1,
+        "envelope": node.envelope.model_dump(),
+        "companion_envelope": None,
+    }
+    withdrawn = await node.manager.status(node.user, refresh=True)
+    assert not withdrawn["available"] and withdrawn["version"] is None

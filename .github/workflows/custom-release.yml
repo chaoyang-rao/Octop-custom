@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261122.2"
+        default: "custom-1.0.3b3-20261126.1"
         required: true
         type: string
       publish_release:
@@ -29,8 +29,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CUSTOM_VERSION: "1.0.3b3.post2026112202"
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261122.2' }}
+  CUSTOM_VERSION: "1.0.3b3.post2026112601"
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261126.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -51,6 +51,9 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: npm ci --prefix dashboard
+      - name: Build the scoped enterprise update-center entry
+        working-directory: dashboard
+        run: npx vite build --config client-update-center/vite.config.ts
       - name: Verify archived 1.0.2 patch fixtures and preserved contracts
         run: |
           python customization/frontend/test_prune_assets.py
@@ -128,6 +131,7 @@ jobs:
           src/pages/Agent/Connectors/EnterpriseMcpTab.test.tsx
           src/pages/EnterpriseResources/MemberAccessAdmin.test.tsx
           src/pages/EnterpriseResources/ClientUpdateNotice.test.tsx
+          src/pages/EnterpriseResources/ClientUpdateAdmin.test.tsx
           src/pages/DesktopPet.test.tsx
           src/pages/Agent/Connectors/ConnectorInstanceCard.test.tsx
           src/pages/Login/EnterpriseAdmin.test.tsx
@@ -380,9 +384,13 @@ jobs:
     name: Verify independent companion in native WebKit
     uses: ./.github/workflows/dora-macos-package.yml
 
+  companion_windows:
+    name: Verify independent companion on Windows
+    uses: ./.github/workflows/dora-windows-package.yml
+
   release:
     name: Publish all three platforms together
-    needs: [package, quality, windows_mcp, companion_native]
+    needs: [package, quality, windows_mcp, companion_native, companion_windows]
     if: github.repository == 'chaoyang-rao/Octop-custom' && github.event_name == 'workflow_dispatch' && inputs.publish_release
     runs-on: ubuntu-latest
     permissions:
@@ -399,7 +407,18 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Require the full nine-package set and write checksums
+      - uses: actions/download-artifact@v8
+        with:
+          name: Dora-macos-universal
+          path: companion-assets/mac
+      - uses: actions/download-artifact@v8
+        with:
+          name: Dora-Windows-x64
+          path: companion-assets/windows
+      - name: Add the accepted companion installers and three update packages
+        run: python3 scripts/custom/companion_release_assets.py --mac companion-assets/mac --windows companion-assets/windows/windows --output release-assets
+
+      - name: Require the full client and companion set and write checksums
         run: |
           python - <<'PY'
           import hashlib
@@ -440,7 +459,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112202：修复 DeepSeek 思考模式在空思考工具记录及旧会话中漏回传 reasoning_content 导致汇总失败的问题，保留真实思考与原始会话。模型汇总失败显示中断并保留专家成果，用户明确继续后可恢复失败模型节点，不重放工具或绕过审批。企业模型网关区分上游请求错误、限流和服务故障。保留 112201 的团队归属讨论、专家独立模型/MCP 与思考设置。
+          Octop Custom 112601：客户端与哆啦桌宠统一发布。完整发行版同时包含三个平台的客户端更新包，以及哆啦 0.10.0 的三个平台更新包和 Windows/Mac 引导安装器。企业授权中心一次发布、同一成员范围、一起撤回；客户端和桌宠各自提示升级，用户确认且任务空闲后独立安装。保留现有客户端协议和各自数据目录，更新前校验签名与 SHA-256、备份数据，启动失败回滚。
+
+          旧桌宠首次需手动安装本次 0.10.0 引导版，之后接收企业统一更新。小黑猫保留键鼠动作，默认不吸附边缘；首次安装未使用本地真实员工凭据或物理输入进行 CI 验收。
 
           保留企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
 

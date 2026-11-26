@@ -20,6 +20,7 @@ from octop.infra.errors import ErrorCode, OctopError
 
 REPOSITORY = "chaoyang-rao/Octop-custom"
 Platform = Literal["windows-amd64", "darwin-amd64", "darwin-arm64"]
+Product = Literal["octop-desktop", "octop-companion"]
 PLATFORMS: tuple[Platform, ...] = ("windows-amd64", "darwin-amd64", "darwin-arm64")
 Phase = Literal[
     "idle",
@@ -69,6 +70,16 @@ def asset_name(platform: str, version: str) -> str:
     return f"OctopCustom-update-{platform}-{version}.zip"
 
 
+def companion_asset_name(platform: str, version: str) -> str:
+    return f"Dora-update-{platform}-{version}.zip"
+
+
+def valid_companion_version(value: str) -> str:
+    if not re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", value):
+        raise ValueError("A stable companion version is required")
+    return value
+
+
 def release_asset_url(tag: str, name: str) -> str:
     return f"https://github.com/{REPOSITORY}/releases/download/{tag}/{name}"
 
@@ -97,6 +108,9 @@ class ClientRelease(StrictModel):
 
     _version = field_validator("version")(valid_version)
 
+    def package_name(self, platform: str) -> str:
+        return asset_name(platform, self.version)
+
     @model_validator(mode="after")
     def validate_release(self) -> Self:
         parsed = urlsplit(self.authority)
@@ -114,12 +128,21 @@ class ClientRelease(StrictModel):
         if {item.platform for item in self.packages} != set(PLATFORMS):
             raise ValueError("All three desktop packages are required")
         for item in self.packages:
-            name = asset_name(item.platform, self.version)
+            name = self.package_name(item.platform)
             if item.filename != name or item.url != release_asset_url(self.tag, name):
                 raise ValueError("Only this repository's release assets are accepted")
         if any(not re.fullmatch(r"[0-9a-f]{64}", item) for item in self.allowed_subjects):
             raise ValueError("Invalid audience")
         return self
+
+
+class CompanionRelease(ClientRelease):
+    product: Literal["octop-companion"] = "octop-companion"
+
+    _version = field_validator("version")(valid_companion_version)
+
+    def package_name(self, platform: str) -> str:
+        return companion_asset_name(platform, self.version)
 
 
 class SignedRelease(StrictModel):
@@ -129,7 +152,7 @@ class SignedRelease(StrictModel):
 
 
 class DeviceReport(StrictModel):
-    product: Literal["octop-desktop"] = "octop-desktop"
+    product: Product = "octop-desktop"
     platform: Platform
     device_name: str = Field(default="", max_length=80)
     current_version: str
@@ -138,7 +161,11 @@ class DeviceReport(StrictModel):
     phase: Phase
     error_code: str | None = Field(default=None, pattern=r"^[A-Z_]{1,80}$")
 
-    _version = field_validator("current_version")(valid_version)
+    @model_validator(mode="after")
+    def validate_version(self) -> Self:
+        validator = valid_companion_version if self.product == "octop-companion" else valid_version
+        validator(self.current_version)
+        return self
 
 
 def trust_document() -> dict[str, dict[str, str]]:
@@ -150,7 +177,11 @@ def trust_document() -> dict[str, dict[str, str]]:
 
 
 def verify_release(
-    envelope: SignedRelease, authority: str, trust: dict[str, dict[str, str]] | None = None
+    envelope: SignedRelease,
+    authority: str,
+    trust: dict[str, dict[str, str]] | None = None,
+    *,
+    product: Product = "octop-desktop",
 ) -> ClientRelease:
     try:
         keys = (trust if trust is not None else trust_document())[authority]
@@ -158,7 +189,8 @@ def verify_release(
         data = base64.b64decode(envelope.payload, validate=True)
         signature = base64.b64decode(envelope.signature, validate=True)
         Ed25519PublicKey.from_public_bytes(key).verify(signature, data)
-        release = ClientRelease.model_validate_json(data)
+        model = CompanionRelease if product == "octop-companion" else ClientRelease
+        release = model.model_validate_json(data)
         if release.authority != authority or canonical(release.model_dump(mode="json")) != data:
             raise ValueError
         return release

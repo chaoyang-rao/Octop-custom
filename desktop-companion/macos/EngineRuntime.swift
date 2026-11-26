@@ -14,6 +14,9 @@ final class EngineRuntime {
     private var starting: Task<URL, Error>?
     private(set) var origin: URL?
     private var logHandle: FileHandle?
+    var pendingUpdateID: String?
+    var onSpawn: ((Int32) throws -> Void)?
+    var processIdentifier: Int32? { process?.processIdentifier }
     private let dataName: String
     init(dataName: String = "Data") { precondition(["Data", "Acceptance"].contains(dataName)); self.dataName = dataName }
 
@@ -88,10 +91,18 @@ final class EngineRuntime {
         env["OCTOP_CUSTOM_BUILD"] = "1"; env["OCTOP_COMPANION_MODE"] = "1"
         env["OCTOP_COMPANION_INSTANCE"] = instance
         env["OCTOP_ENTERPRISE_AUTHORITY_URL"] = manifest.authority
+        if let build = try? JSONSerialization.jsonObject(with: Data(contentsOf: resources.appendingPathComponent("client-update-build.json"))) as? [String: Any],
+           build["product"] as? String == "octop-companion", build["protocol"] as? Int == 1,
+           build["authority"] as? String == manifest.authority, let version = build["version"] as? String {
+            env["OCTOP_DESKTOP_CLIENT_PRODUCT"] = "octop-companion"; env["OCTOP_DESKTOP_CLIENT_VERSION"] = version
+            env["OCTOP_DESKTOP_UPDATER_PROTOCOL"] = "1"; env["OCTOP_DESKTOP_PROGRAM_ROOT"] = Bundle.main.bundleURL.resolvingSymlinksInPath().path
+            if let pendingUpdateID { env["OCTOP_CLIENT_UPDATE_PENDING"] = pendingUpdateID }
+        }
         env["PYTHONNOUSERSITE"] = "1"; env["PYTHONDONTWRITEBYTECODE"] = "1"
         child.environment = env; child.standardOutput = logHandle; child.standardError = logHandle
         let pipe = Pipe(); parentPipe = pipe; child.standardInput = pipe
         try child.run(); process = child
+        try onSpawn?(child.processIdentifier)
         let candidate = URL(string: "http://127.0.0.1:\(port)")!
         let checker = BackendClient(origin: candidate)
         for _ in 0..<150 {

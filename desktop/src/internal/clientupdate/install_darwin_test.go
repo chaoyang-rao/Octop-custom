@@ -21,19 +21,33 @@ import (
 // Exercise the real Mac directory exchange, signed bundle validation, snapshot
 // and failure recovery without touching the installed application or user home.
 func TestNativeInstallFailureRestoresPreviousProgramAndData(t *testing.T) {
+	for _, product := range []string{Product, CompanionProduct} {
+		t.Run(product, func(t *testing.T) { nativeInstallFailure(t, product) })
+	}
+}
+func nativeInstallFailure(t *testing.T, product string) {
 	home := t.TempDir()
 	parent := t.TempDir()
 	app := filepath.Join(parent, "OctopCustom.app")
 	stageSource := filepath.Join(t.TempDir(), "OctopCustom.app")
+	if product == CompanionProduct {
+		app = filepath.Join(parent, "Dora.app")
+		stageSource = filepath.Join(t.TempDir(), "Dora.app")
+	}
 	platform := HostPlatform()
 	version := "1.0.3b3.post2026111802"
+	previousVersion := "1.0.3b3.post2026111801"
+	if product == CompanionProduct {
+		version = "0.10.0"
+		previousVersion = "0.9.0"
+	}
 	authority := "https://company.example"
 	binary, err := os.ReadFile("/usr/bin/true")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, root := range []string{app, stageSource} {
-		for _, name := range []string{Executable(root, platform), Helper(root, platform)} {
+		for _, name := range []string{ExecutableForProduct(root, platform, product), HelperForProduct(root, platform, product)} {
 			if err = os.MkdirAll(filepath.Dir(name), 0755); err != nil {
 				t.Fatal(err)
 			}
@@ -41,9 +55,13 @@ func TestNativeInstallFailureRestoresPreviousProgramAndData(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		data, _ := json.Marshal(Build{Product: Product, Protocol: 1, Version: version, Authority: authority})
-		writeTestFile(t, BuildFile(root, platform), string(data))
-		writeTestFile(t, filepath.Join(root, "Contents/Info.plist"), `<?xml version="1.0"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.chaoyangrao.octopcustom</string><key>CFBundleExecutable</key><string>OctopCustom</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>`)
+		data, _ := json.Marshal(Build{Product: product, Protocol: 1, Version: version, Authority: authority})
+		writeTestFile(t, BuildFileForProduct(root, platform, product), string(data))
+		binaryName := "OctopCustom"
+		if product == CompanionProduct {
+			binaryName = "OctopCompanion"
+		}
+		writeTestFile(t, filepath.Join(root, "Contents/Info.plist"), `<?xml version="1.0"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.chaoyangrao.octopcustom</string><key>CFBundleExecutable</key><string>`+binaryName+`</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>`)
 	}
 	writeTestFile(t, filepath.Join(app, "Contents/Resources/previous-marker"), "previous")
 	if out, err := exec.Command("/usr/bin/codesign", "--force", "--deep", "--sign", "-", stageSource).CombinedOutput(); err != nil {
@@ -93,6 +111,15 @@ func TestNativeInstallFailureRestoresPreviousProgramAndData(t *testing.T) {
 	raw, _ := base64.StdEncoding.DecodeString(envelope.Payload)
 	var release Release
 	json.Unmarshal(raw, &release)
+	if product == CompanionProduct {
+		release.Product = product
+		release.Version = version
+		for index := range release.Packages {
+			item := &release.Packages[index]
+			item.Filename = "Dora-update-" + item.Platform + "-" + version + ".zip"
+			item.URL = "https://github.com/" + Repository + "/releases/download/" + release.Tag + "/" + item.Filename
+		}
+	}
 	for index := range release.Packages {
 		if release.Packages[index].Platform == platform {
 			release.Packages[index].SHA256 = digest
@@ -109,9 +136,12 @@ func TestNativeInstallFailureRestoresPreviousProgramAndData(t *testing.T) {
 	trustJSON = pins
 	t.Cleanup(func() { trustJSON = previousTrust })
 	writeTestFile(t, filepath.Join(home, "octop.db"), "original chats, memory and credentials")
-	job := &Job{Schema: 1, ID: id, DataRoot: home, AppRoot: app, Platform: platform, Owner: 1, Subject: strings.Repeat("a", 64), CurrentVersion: "1.0.3b3.post2026111801", TargetVersion: version, Revision: 2, Phase: "applying", ApprovedAt: time.Now().Unix(), ExpiresAt: time.Now().Add(time.Minute).Unix(), Envelope: envelope}
+	job := &Job{Schema: 1, ID: id, DataRoot: home, AppRoot: app, Platform: platform, Owner: 1, Subject: strings.Repeat("a", 64), CurrentVersion: previousVersion, TargetVersion: version, Revision: 2, Phase: "applying", ApprovedAt: time.Now().Unix(), ExpiresAt: time.Now().Add(time.Minute).Unix(), Envelope: envelope}
+	if product == CompanionProduct {
+		job.Product = product
+	}
 	SaveJob(job)
-	installer := Installer{Job: job, Build: Build{Version: job.CurrentVersion, Authority: authority}, Launch: func(string, []string, []string) (int, error) {
+	installer := Installer{Job: job, Build: Build{Product: product, Version: job.CurrentVersion, Authority: authority}, Launch: func(string, []string, []string) (int, error) {
 		return 0, errors.New("injected candidate launch failure")
 	}}
 	if err = installer.Install(context.Background()); err == nil {
