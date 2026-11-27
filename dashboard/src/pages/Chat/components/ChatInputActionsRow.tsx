@@ -3,8 +3,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { ArrowUp } from "lucide-react";
 import {
+  ArrowUp,
   Square,
   MessageSquarePlus,
   Paperclip,
