@@ -1,23 +1,5 @@
 /* Chat input shell */
 /* ---------- Chat input ---------- */
-.runUsageBar {
-  max-width: var(--chat-column-max, 960px);
-  width: calc(100% - 2 * var(--chat-column-pad-x, 32px));
-  margin: 0 auto 6px;
-  padding: 0 2px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: var(--fn-text-quaternary);
-  user-select: none;
-  flex-shrink: 0;
-
-  @media (max-width: 767px) {
-    width: calc(100% - 24px);
-  }
-}
-
 .askQuestionDock {
   flex-shrink: 0;
   /* Match .chatInput horizontal gutters so the card lines up with the composer. */

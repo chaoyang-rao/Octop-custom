@@ -2123,7 +2123,6 @@
   },
   "chatUsage": {
     "latestRun": "Latest run",
-    "sessionTotal": "Session total",
     "elapsed": "{{seconds}}s",
     "input": "input",
     "output": "output",
