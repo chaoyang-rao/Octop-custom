@@ -179,7 +179,11 @@ def is_generated_avatar_icon_url(value: Any) -> bool:
     if prefix is None or not path.endswith(".svg"):
         return False
     parts = path[len(prefix) : -4].rsplit("-", 1)
-    return len(parts) == 2 and parts[0] in AVATAR_SHAPES and valid_avatar_color(parts[1])
+    if len(parts) != 2 or parts[0] not in AVATAR_SHAPES:
+        return False
+    if prefix == "/expert-avatars/v3/":
+        return parts[1] in AVATAR_COLORS
+    return parts[1] in LEGACY_AVATAR_COLORS or parts[1] in ("red", "blue", "violet")
 
 
 def valid_avatar_or_none(value: Any) -> dict[str, Any] | None:
