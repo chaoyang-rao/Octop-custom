@@ -7,6 +7,7 @@ import type { Session } from "./useSessions";
 
 const navigateMock = vi.fn();
 const rebindMock = vi.fn().mockResolvedValue({});
+const markThreadReadMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual<typeof import("react-router-dom")>(
@@ -21,6 +22,7 @@ vi.mock("react-router-dom", async () => {
 vi.mock("../../../api/modules/octopThreads", () => ({
   octopThreadsApi: {
     rebind: (...args: unknown[]) => rebindMock(...args),
+    markRead: (...args: unknown[]) => markThreadReadMock(...args),
   },
 }));
 
@@ -71,6 +73,36 @@ describe("useChatNavigation stale thread", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("acknowledges only the completed reply in the open conversation", async () => {
+    const sessions = [
+      { ...session("open"), unreadReplyId: "open-reply" },
+      { ...session("background"), unreadReplyId: "background-reply" },
+    ];
+    const fetchSessions = vi.fn().mockResolvedValue(sessions);
+    renderHook(
+      () =>
+        useChatNavigation({
+          routeAgentId: "agent",
+          threadId: "open",
+          resolvedAgentId: "agent",
+          activeThreadId: "open",
+          sessions,
+          sessionsLoading: false,
+          prefillInputRef: { current: "" },
+          loadHistory: vi.fn().mockResolvedValue(undefined),
+          clearMessages: vi.fn(),
+          ensureThreadInList: vi.fn().mockResolvedValue("found"),
+          fetchSessions,
+          refreshAgents: vi.fn().mockResolvedValue(undefined),
+        }),
+      { wrapper },
+    );
+    await waitFor(() => expect(fetchSessions).toHaveBeenCalledOnce());
+    expect(markThreadReadMock.mock.calls).toEqual([
+      ["agent", "open", "open-reply"],
+    ]);
   });
 
   it("rewrites URL only after ensureThreadInList confirms missing", async () => {

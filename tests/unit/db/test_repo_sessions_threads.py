@@ -73,6 +73,32 @@ def test_session_channel_id_persisted(repos):
     assert subject.metadata["channel_id"] == "ch-feishu-1"
 
 
+def test_reply_indicator_acknowledges_only_the_version_seen(repos):
+    _, threads = repos
+    for thread_id in ("t", "other"):
+        threads.insert(
+            thread_id=thread_id,
+            agent_id="a1",
+            user_id=1,
+            channel_type="dashboard",
+            session_key="dashboard",
+        )
+    assert threads.get("t").unread_reply_id is None
+    threads.mark_reply_completed("t")
+    first = threads.get("t").unread_reply_id
+    assert first
+    threads.mark_reply_read("other", first)
+    assert threads.get("t").unread_reply_id == first
+
+    threads.mark_reply_completed("t")
+    second = threads.get("t").unread_reply_id
+    assert second and second != first
+    threads.mark_reply_read("t", first)
+    assert threads.get("t").unread_reply_id == second
+    threads.mark_reply_read("t", second)
+    assert threads.get("t").unread_reply_id is None
+
+
 def test_session_list_by_thread(repos):
     sessions, threads = repos
     dash = ThreadRegistry.dashboard_key(agent_id="a1", user_id=1)

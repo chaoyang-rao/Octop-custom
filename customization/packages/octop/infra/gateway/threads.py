@@ -478,6 +478,12 @@ class ThreadRegistry:
     def touch_last_active(self, thread_id: str) -> None:
         self._threads.touch_last_active(thread_id)
 
+    def mark_reply_completed(self, thread_id: str) -> None:
+        self._threads.mark_reply_completed(thread_id)
+
+    def mark_reply_read(self, thread_id: str, reply_id: str) -> None:
+        self._threads.mark_reply_read(thread_id, reply_id)
+
     def append_artifacts(
         self,
         thread_id: str,

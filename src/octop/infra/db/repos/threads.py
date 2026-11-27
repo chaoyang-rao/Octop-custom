@@ -17,6 +17,7 @@ from octop.infra.utils.thread_artifact import (
     parse_thread_artifacts,
     serialize_thread_artifacts,
 )
+from octop.infra.utils.ulid import new_ulid
 
 __all__ = [
     "MAX_THREAD_ARTIFACTS",
@@ -52,6 +53,7 @@ class ThreadRow:
     project_path: str | None = None
     project_name: str | None = None
     archived: bool = False
+    unread_reply_id: str | None = None
 
     @classmethod
     def from_row(cls, r: DbRow) -> ThreadRow:
@@ -81,6 +83,10 @@ class ThreadRow:
             archived = bool(r["archived"])
         except (KeyError, IndexError):
             archived = False
+        try:
+            unread_reply_id = r["unread_reply_id"]
+        except (KeyError, IndexError):
+            unread_reply_id = None
         return cls(
             id=r["id"],
             thread_id=r["thread_id"],
@@ -102,6 +108,7 @@ class ThreadRow:
             project_path=str(project["project_path"]) if project["project_path"] else None,
             project_name=str(project["project_name"]) if project["project_name"] else None,
             archived=archived,
+            unread_reply_id=unread_reply_id,
         )
 
 
@@ -452,6 +459,20 @@ class ThreadRepo:
             conn.execute(
                 "UPDATE threads SET last_active = ? WHERE thread_id = ?",
                 (now_ts(), thread_id),
+            )
+
+    def mark_reply_completed(self, thread_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE threads SET unread_reply_id=? WHERE thread_id=? AND archived=0",
+                (new_ulid(), thread_id),
+            )
+
+    def mark_reply_read(self, thread_id: str, reply_id: str) -> None:
+        with self._db.transaction() as conn:
+            conn.execute(
+                "UPDATE threads SET unread_reply_id=NULL WHERE thread_id=? AND unread_reply_id=?",
+                (thread_id, reply_id),
             )
 
     def append_artifacts(

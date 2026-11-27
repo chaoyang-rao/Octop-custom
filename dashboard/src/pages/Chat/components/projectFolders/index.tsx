@@ -58,7 +58,11 @@ export function projectSessionListFor(Row: ComponentType<ProjectRowProps>) {
               key={session.id}
               session={session}
               isActive={session.id === activeId}
-              workStatus={resolveSessionWorkStatus(session, liveWorkingIds)}
+              workStatus={resolveSessionWorkStatus(
+                session,
+                liveWorkingIds,
+                activeId,
+              )}
               onSelect={(id) => props.onSelect(id, agent.agent_id)}
               onDelete={props.onDelete}
               onRename={props.onRename}

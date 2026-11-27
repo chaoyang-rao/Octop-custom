@@ -91,6 +91,22 @@
 .fixedNavRail {
   position: relative;
 
+  @supports selector(::-webkit-scrollbar) {
+    > [data-octop-sidebar-scroll="dock"] {
+      // Use the custom thumb dimensions in Chromium and WebKit.
+      scrollbar-width: auto;
+      scrollbar-color: auto;
+
+      &::-webkit-scrollbar {
+        width: 3px;
+      }
+
+      &:is(:hover, :focus-visible, :has(:focus-visible)) {
+        scrollbar-color: auto;
+      }
+    }
+  }
+
   .collapsedNavButton {
     width: var(--fn-desktop-nav-target-size);
     height: var(--fn-desktop-nav-target-size);

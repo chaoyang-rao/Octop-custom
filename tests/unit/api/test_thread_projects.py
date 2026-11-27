@@ -106,6 +106,23 @@ class ProjectApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 201, response.text)
         return response.json()["thread_id"]
 
+    def test_completion_indicator_clears_after_matching_read_request(self):
+        tid = self.create()
+
+        def listed_reply():
+            rows = self.client.get(f"{self.base}/threads").json()
+            return next(row["unread_reply_id"] for row in rows if row["thread_id"] == tid)
+
+        self.assertIsNone(listed_reply())
+        self.registry.mark_reply_completed(tid)
+        reply = listed_reply()
+        self.assertTrue(reply)
+        path = f"{self.base}/threads/{tid}/read"
+        self.assertEqual(self.client.post(path, params={"reply_id": "older"}).status_code, 204)
+        self.assertEqual(listed_reply(), reply)
+        self.assertEqual(self.client.post(path, params={"reply_id": reply}).status_code, 204)
+        self.assertIsNone(listed_reply())
+
     def test_fresh_and_existing_database_upgrade_preserve_history_and_are_idempotent(self):
         tid = self.create()
         self.messages.append_if_ready(tid, [ThreadMessageInput("m1", "user", "{}", 1)])
@@ -118,7 +135,7 @@ class ProjectApiTests(unittest.TestCase):
         run_migrations(self.db)
         run_migrations(self.db)
         with self.db.connect() as c:
-            self.assertEqual(c.execute("SELECT version FROM _schema_version").fetchone()[0], 30)
+            self.assertEqual(c.execute("SELECT version FROM _schema_version").fetchone()[0], 31)
             self.assertEqual(c.execute("SELECT count(*) FROM threads").fetchone()[0], 1)
             self.assertEqual(c.execute("SELECT count(*) FROM thread_messages").fetchone()[0], 1)
         self.assertIsNone(self.threads.get(tid).project_path)

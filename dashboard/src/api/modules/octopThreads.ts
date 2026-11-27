@@ -68,8 +68,8 @@ export interface OctopThread extends ThreadProjectContext {
   turn_active?: boolean;
   /** True when this thread is paused on a HITL approval or question. */
   awaiting_user?: boolean;
-  /** The most recent turn has a completed reply. */
-  turn_completed?: boolean;
+  /** Token of the latest completed reply that has not yet been viewed. */
+  unread_reply_id?: string | null;
 }
 
 export interface OctopThreadHistory extends ThreadProjectContext {
@@ -287,11 +287,11 @@ export const octopThreadsApi = {
       { method: "POST", body: JSON.stringify(body) },
     ),
 
-  markRead: (agentId: string, threadId: string) =>
+  markRead: (agentId: string, threadId: string, replyId?: string) =>
     request<void>(
       `/agents/${encodeURIComponent(agentId)}/threads/${encodeURIComponent(
         threadId,
-      )}/read`,
+      )}/read${replyId ? `?reply_id=${encodeURIComponent(replyId)}` : ""}`,
       { method: "POST" },
     ),
 

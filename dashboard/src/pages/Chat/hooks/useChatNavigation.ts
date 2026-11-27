@@ -76,6 +76,27 @@ export function useChatNavigation({
       .catch(() => {});
   }, [resolvedAgentId, refreshAgents]);
 
+  const unreadReplyId = sessions.find((row) => row.id === activeThreadId)
+    ?.unreadReplyId;
+  useEffect(() => {
+    if (!resolvedAgentId || !activeThreadId || !unreadReplyId) return;
+    let acknowledging = false;
+    const acknowledgeVisibleReply = () => {
+      if (document.hidden || acknowledging) return;
+      acknowledging = true;
+      void octopThreadsApi
+        .markRead(resolvedAgentId, activeThreadId, unreadReplyId)
+        .then(() => fetchSessions())
+        .catch(() => {
+          acknowledging = false;
+        });
+    };
+    acknowledgeVisibleReply();
+    document.addEventListener("visibilitychange", acknowledgeVisibleReply);
+    return () =>
+      document.removeEventListener("visibilitychange", acknowledgeVisibleReply);
+  }, [activeThreadId, resolvedAgentId, unreadReplyId, fetchSessions]);
+
   useEffect(() => {
     return chatStore.onStreamEvent((event) => {
       if (

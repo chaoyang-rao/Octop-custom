@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -102,6 +103,35 @@ async def test_iter_turn_chunks_observes_tool_chunk() -> None:
     assert agent_id == "agent-1"
     assert thread_id == "thread-1"
     assert chunk["name"] == "read_file"
+    processor._thread_registry.mark_reply_completed.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "result", ["reply", "cancelled", "error", "hitl_required", "reasoning", "tools_only"]
+)
+async def test_completed_dashboard_reply_without_versioned_history(result: str) -> None:
+    processor = _processor(trajectory_service=None)
+
+    async def stream(*_args: object, **_kwargs: object):
+        if result == "reasoning":
+            yield {"type": "reasoning", "content": "Thinking"}
+            return
+        yield {"type": "token", "content": "A visible answer"}
+        if result == "tools_only":
+            yield dict(_TOOL_CHUNK)
+        if result in {"error", "hitl_required"}:
+            yield {"type": result, "message": "The turn is incomplete"}
+
+    processor._agent_manager.stream = stream
+    if result == "cancelled":
+        processor._gateway = MagicMock()
+        processor._gateway.steer.get_state.return_value = SimpleNamespace(phase="cancelling")
+    _ = [chunk async for chunk in processor.iter_turn_chunks(_dashboard_msg())]
+    if result == "reply":
+        processor._thread_registry.mark_reply_completed.assert_called_once_with("thread-1")
+    else:
+        processor._thread_registry.mark_reply_completed.assert_not_called()
 
 
 @pytest.mark.asyncio

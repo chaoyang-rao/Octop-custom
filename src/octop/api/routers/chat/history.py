@@ -271,6 +271,7 @@ async def list_threads(
 
     ``turn_active`` is true while a turn is still streaming; ``awaiting_user``
     is true when the thread is paused on a HITL approval or question.
+    ``unread_reply_id`` identifies a newly completed reply until it is marked read.
     """
     require_agent_row(agent_id, user=user, as_user=as_user, server=server)
     thread_registry = server.app_runtime.gateway.thread_registry
@@ -313,6 +314,7 @@ async def list_threads(
             "turn_active": hub.is_turn_active(r.thread_id),
             "awaiting_user": r.thread_id in awaiting_ids,
             "turn_completed": r.thread_id in completed,
+            "unread_reply_id": getattr(r, "unread_reply_id", None),
             **thread_artifacts_payload(
                 r.artifacts,
                 workspace_dir,
@@ -613,12 +615,17 @@ async def mark_thread_read(
     agent_id: str,
     thread_id: str,
     as_user: int | None = None,
+    reply_id: str | None = None,
     user: Any = Depends(current_user),
     server: Any = Depends(get_server),
 ) -> None:
-    """Clear unread message count for a thread (e.g. when the user opens it in the dashboard)."""
+    """Acknowledge a specific reply, or clear the legacy unread message count."""
     _require_thread(server, agent_id, thread_id, user, as_user)
-    server.app_runtime.gateway.thread_registry.mark_thread_read(thread_id)
+    registry = server.app_runtime.gateway.thread_registry
+    if reply_id is not None:
+        await asyncio.to_thread(registry.mark_reply_read, thread_id, reply_id)
+    else:
+        registry.mark_thread_read(thread_id)
 
 
 @router.post(
