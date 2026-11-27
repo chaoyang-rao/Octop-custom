@@ -48,7 +48,6 @@ const baseProps = {
   onSlashShortcutSelect: vi.fn(),
   onFileSelect: vi.fn(),
   onFolderSelect: vi.fn(),
-  onNewChat: vi.fn(),
   onPolish: vi.fn(),
   onToggleVoice: vi.fn(),
   onCancel: vi.fn(),
@@ -237,7 +236,6 @@ function renderRow(overrides: Record<string, unknown> = {}) {
         slashMenuItems={[]}
         onSlashShortcutSelect={vi.fn()}
         onFileSelect={vi.fn()}
-        onNewChat={vi.fn()}
         onPolish={vi.fn()}
         onCancel={vi.fn()}
         onSubmit={vi.fn()}

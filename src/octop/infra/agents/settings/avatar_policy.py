@@ -5,7 +5,11 @@ from __future__ import annotations
 import secrets
 from typing import Any
 
-from octop.infra.agents.settings.geometric_avatar import AVATAR_COLORS, AVATAR_SHAPES
+from octop.infra.agents.settings.geometric_avatar import (
+    AVATAR_COLORS,
+    AVATAR_SHAPES,
+    valid_avatar_color,
+)
 
 SHAPES = AVATAR_SHAPES
 COLORS = tuple(AVATAR_COLORS)
@@ -18,7 +22,7 @@ def created_avatar(config: dict[str, Any], occupied: list[dict[str, Any]]) -> di
         return {
             "shape": selected["shape"],
             "color": selected["color"]
-            if selected.get("color") in COLORS
+            if valid_avatar_color(selected.get("color"))
             else secrets.choice(COLORS),
         }
     used = {(item.get("shape"), item.get("color")) for item in occupied if isinstance(item, dict)}

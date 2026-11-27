@@ -10,6 +10,17 @@ export default function SessionWorkStatusIcon({
 }) {
   const { t } = useTranslation();
   if (status === "idle") return null;
+  if (status === "complete") {
+    const label = t("chat.sessionCompleted");
+    return (
+      <span
+        className={styles.sessionRowCompleteDot}
+        title={label}
+        role="img"
+        aria-label={label}
+      />
+    );
+  }
   if (status === "waiting") {
     const label = t("chat.sessionWaiting");
     return (

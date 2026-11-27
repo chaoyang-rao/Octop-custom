@@ -158,3 +158,22 @@
   min-width: 48px;
   min-height: 48px;
 }
+
+.octop-primary-face {
+  --octop-primary-body: #000;
+  --octop-primary-eye: #fff;
+}
+
+html[data-theme="dark"] .octop-primary-face {
+  --octop-primary-body: #fff;
+  --octop-primary-eye: #000;
+}
+
+.octop-primary-face [data-avatar-body] {
+  fill: var(--octop-primary-body);
+  stroke: var(--octop-primary-body);
+}
+
+.octop-primary-face [data-avatar-eye] {
+  fill: var(--octop-primary-eye);
+}

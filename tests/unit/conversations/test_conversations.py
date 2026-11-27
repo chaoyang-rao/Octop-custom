@@ -20,6 +20,8 @@ from octop.infra.conversations.service import ConversationService
 from octop.infra.conversations.transfer import ConversationTransfer
 from octop.infra.db.repos.thread_messages import ThreadMessageInput
 from octop.infra.errors import OctopError
+from octop.infra.history.conversations import completed_thread_replies
+from octop.infra.history.store import HistoryStore
 
 
 def make_zip(files):
@@ -72,6 +74,45 @@ async def seed(e):
         graph=graph,
         calls=calls,
     )
+
+
+@pytest.mark.asyncio
+async def test_completed_reply_respects_real_turn_end_and_new_questions(setup, tmp_path):
+    e = setup
+    thread = await seed(e)
+    repo = e.repos.thread_message_repo
+    ids = [thread.thread_id]
+    assert completed_thread_replies(ids, repo, None) == {thread.thread_id}
+
+    archive = HistoryStore(tmp_path / "archive.sqlite", identity="test")
+    try:
+        with archive.transaction() as conn:
+            segment = conn.execute(
+                "INSERT INTO segments(thread_id,agent_id,format,legacy_start,trajectory_start) "
+                "VALUES (?,?,'legacy',0,0)",
+                (thread.thread_id, "a"),
+            )
+            conn.execute(
+                "INSERT INTO turns(id,segment_id,status,started_at) VALUES (?,?,?,?)",
+                ("turn", segment.lastrowid, "interrupted", 1),
+            )
+        assert completed_thread_replies(ids, repo, archive) == set()
+        with archive.transaction() as conn:
+            conn.execute("UPDATE turns SET status='complete' WHERE id=?", ("turn",))
+        assert completed_thread_replies(ids, repo, archive) == {thread.thread_id}
+    finally:
+        archive.close()
+
+    next_question = HumanMessage(content="next question", id="human-2")
+    repo.append_legacy_interval(
+        thread.thread_id,
+        [
+            ThreadMessageInput(
+                next_question.id, next_question.type, json.dumps(message_to_dict(next_question)), 11
+            )
+        ],
+    )
+    assert completed_thread_replies(ids, repo, None) == set()
 
 
 @pytest.mark.asyncio

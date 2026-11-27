@@ -38,6 +38,7 @@ from octop.infra.agents.workspace.dir import agent_facing_workspace_dir_from_con
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.gateway.hitl.coordinator import pending_hitl_payload
 from octop.infra.gateway.threads import ThreadRegistry, thread_row_has_messages
+from octop.infra.history.conversations import completed_thread_replies
 from octop.infra.history.service import HistoryArchive
 from octop.infra.history.trajectory.service import TrajectoryService
 from octop.infra.users.resource_policy import (
@@ -283,6 +284,13 @@ async def list_threads(
     awaiting_ids = server.app_runtime.gateway.processor.hitl_coordinator.store.pending_thread_ids(
         agent_id=agent_id, user_id=effective_uid
     )
+    archive = getattr(server.app_runtime, "history_archive", None)
+    completed = await asyncio.to_thread(
+        completed_thread_replies,
+        [row.thread_id for row in rows],
+        server.services.thread_message_repo,
+        archive.store if archive else None,
+    )
     return [
         {
             "thread_id": r.thread_id,
@@ -304,6 +312,7 @@ async def list_threads(
             "hitl_policy": _hitl_policy_payload(r),
             "turn_active": hub.is_turn_active(r.thread_id),
             "awaiting_user": r.thread_id in awaiting_ids,
+            "turn_completed": r.thread_id in completed,
             **thread_artifacts_payload(
                 r.artifacts,
                 workspace_dir,

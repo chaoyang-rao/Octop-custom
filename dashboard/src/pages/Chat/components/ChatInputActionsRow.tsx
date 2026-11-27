@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import {
   ArrowUp,
   Square,
-  MessageSquarePlus,
   Paperclip,
   FileUp,
   FolderUp,
@@ -183,7 +182,6 @@ interface ChatInputActionsRowProps {
   onSlashShortcutSelect: (command: string) => void;
   onFileSelect: () => void;
   onFolderSelect: () => void;
-  onNewChat: () => void;
   onPolish: () => void;
   onToggleVoice: () => void;
   onCancel: () => void;
@@ -244,7 +242,6 @@ export default function ChatInputActionsRow({
   onSlashShortcutSelect,
   onFileSelect,
   onFolderSelect,
-  onNewChat,
   onPolish,
   onToggleVoice,
   onCancel,
@@ -1207,48 +1204,22 @@ export default function ChatInputActionsRow({
           decisionSaved={decisionSaved}
           sessionUsageLabel={sessionUsageLabel}
         />
-        {/* Desktop: dedicated newChatBtn; mobile: replace polish with new-chat */}
-        {useCompactControls ? (
-          <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
+        {!useCompactControls && (
+          <Tooltip title={t("chat.polish.tooltip")} mouseEnterDelay={0.4}>
             <button
-              className={styles.newChatBtn}
-              onClick={onNewChat}
+              className={styles.secondaryBtn}
+              onClick={onPolish}
               type="button"
+              disabled={
+                !text.trim() || polishing || isStreaming || disabled || !agentId
+              }
             >
-              <MessageSquarePlus size={16} strokeWidth={1.75} />
+              <Wand2
+                size={16}
+                className={polishing ? styles.spinIcon : undefined}
+              />
             </button>
           </Tooltip>
-        ) : (
-          <>
-            <Tooltip title={t("chatWelcome.newChat")} mouseEnterDelay={0.4}>
-              <button
-                className={styles.newChatBtn}
-                onClick={onNewChat}
-                type="button"
-              >
-                <MessageSquarePlus size={16} strokeWidth={1.75} />
-              </button>
-            </Tooltip>
-            <Tooltip title={t("chat.polish.tooltip")} mouseEnterDelay={0.4}>
-              <button
-                className={styles.secondaryBtn}
-                onClick={onPolish}
-                type="button"
-                disabled={
-                  !text.trim() ||
-                  polishing ||
-                  isStreaming ||
-                  disabled ||
-                  !agentId
-                }
-              >
-                <Wand2
-                  size={16}
-                  className={polishing ? styles.spinIcon : undefined}
-                />
-              </button>
-            </Tooltip>
-          </>
         )}
         <Tooltip
           title={

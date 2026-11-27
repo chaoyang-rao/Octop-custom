@@ -121,6 +121,7 @@ interface SidebarProps {
   onToggle: () => void;
   isMobile?: boolean;
   fixedRail?: boolean;
+  brandInHistoryRail?: boolean;
 }
 
 function NavItemButton({
@@ -395,6 +396,7 @@ export default function Sidebar({
   onToggle,
   isMobile,
   fixedRail = false,
+  brandInHistoryRail = false,
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -800,6 +802,10 @@ export default function Sidebar({
   // Desktop: custom sidebar with icon-only collapsed mode.
   return (
     <div
+      className={cx(
+        fixedRail && styles.fixedNavRail,
+        fixedRail && brandInHistoryRail && styles.sharedTopRail,
+      )}
       style={{
         width: fixedRail
           ? "var(--fn-desktop-rail-width)"
@@ -811,7 +817,9 @@ export default function Sidebar({
           : isRailCollapsed
           ? COLLAPSED_WIDTH
           : EXPANDED_WIDTH,
-        background: "var(--fn-sidebar-bg)",
+        background: fixedRail
+          ? "var(--fn-desktop-chat-rail-bg, var(--fn-sidebar-bg))"
+          : "var(--fn-sidebar-bg)",
         borderRight: "none",
         transition: fixedRail
           ? undefined
@@ -827,24 +835,26 @@ export default function Sidebar({
       {fixedRail && (
         <div className={styles.windowControlRow} aria-hidden="true" />
       )}
-      <div
-        className={cx(styles.sidebarBrand, DESKTOP_DRAG_REGION_CLASS)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          minWidth: 0,
-          padding: fixedRail
-            ? "5px 0"
-            : isRailCollapsed
-            ? "12px 0"
-            : "14px 14px 10px",
-          justifyContent: isRailCollapsed ? "center" : "flex-start",
-          flexShrink: 0,
-        }}
-      >
-        {brandInner}
-      </div>
+      {(!fixedRail || !brandInHistoryRail) && (
+        <div
+          className={cx(styles.sidebarBrand, DESKTOP_DRAG_REGION_CLASS)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            minWidth: 0,
+            padding: fixedRail
+              ? "5px 0"
+              : isRailCollapsed
+              ? "12px 0"
+              : "14px 14px 10px",
+            justifyContent: isRailCollapsed ? "center" : "flex-start",
+            flexShrink: 0,
+          }}
+        >
+          {brandInner}
+        </div>
+      )}
 
       <div
         data-octop-sidebar-scroll="dock"

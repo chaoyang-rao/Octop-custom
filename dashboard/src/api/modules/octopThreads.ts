@@ -68,6 +68,8 @@ export interface OctopThread extends ThreadProjectContext {
   turn_active?: boolean;
   /** True when this thread is paused on a HITL approval or question. */
   awaiting_user?: boolean;
+  /** The most recent turn has a completed reply. */
+  turn_completed?: boolean;
 }
 
 export interface OctopThreadHistory extends ThreadProjectContext {

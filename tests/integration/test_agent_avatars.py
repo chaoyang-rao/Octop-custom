@@ -22,7 +22,7 @@ async def test_upload_get_delete_avatar(env):
     assert r.status_code == 201, r.text
     icon_url = r.json()["uploaded_icon_url"]
     public_icon = r.json()["icon_url"]
-    assert public_icon.startswith("/expert-avatars/v2/")
+    assert public_icon.startswith("/expert-avatars/v3/")
     assert icon_url.startswith(f"/api/agents/{agent_id}/avatar?")
     assert "v=" in icon_url
 
@@ -59,7 +59,7 @@ async def test_upload_get_delete_avatar(env):
     cleared = next(
         a for a in (await c.get("/api/agents", headers=auth)).json() if a["agent_id"] == agent_id
     )
-    assert cleared["icon_url"].startswith("/expert-avatars/v2/")
+    assert cleared["icon_url"].startswith("/expert-avatars/v3/")
     assert cleared["uploaded_icon_url"] in (None, "")
 
 

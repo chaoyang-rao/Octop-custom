@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import { Tooltip } from "antd";
 import cx from "classnames";
 import { prefetchRoute } from "../routes/prefetch";
-import { COLLAPSED_WIDTH, type NavItem } from "./sidebarNav";
+import type { NavItem } from "./sidebarNav";
 import styles from "./Sidebar.module.less";
 
 export default function SidebarCollapsedIconNav({
@@ -45,39 +45,7 @@ export default function SidebarCollapsedIconNav({
               aria-label={t(item.labelKey)}
               aria-current={active ? "page" : undefined}
               onClick={() => onNavigate(item.path)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: COLLAPSED_WIDTH,
-                marginInline: "auto",
-                height: 40,
-                border: "none",
-                background: active
-                  ? "var(--fn-sidebar-item-active-bg)"
-                  : "transparent",
-                color: active
-                  ? "var(--fn-sidebar-item-active-text)"
-                  : "var(--fn-text-tertiary)",
-                cursor: "pointer",
-                transition: "all var(--fn-transition-fast)",
-                marginBottom: 2,
-                position: "relative",
-              }}
-              onMouseEnter={(e) => {
-                prefetchRoute(item.path);
-                if (!active) {
-                  e.currentTarget.style.background =
-                    "var(--fn-sidebar-item-hover)";
-                  e.currentTarget.style.color = "var(--fn-text-primary)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "var(--fn-text-tertiary)";
-                }
-              }}
+              onMouseEnter={() => prefetchRoute(item.path)}
             >
               {item.icon}
               {showUpdateBadge ? (

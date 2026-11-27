@@ -565,7 +565,7 @@
     },
     {
       "path": "octop/api/routers/chat/history.py",
-      "sha256": "15a8f93c37eea3414efa39ee744d85ba346f61f120a92de29d3756a5597adf0c",
+      "sha256": "52134cbd569d0315ff3d9b072f23b59d669568eb7f477cb1326da0475fdd0d0a",
       "upstream_program_sha256": "546949c2a7f3b1fb4130c23cc22a8286395c8fa0104870a41c9b0b9a9040f29b",
       "changed_from_saved_original": true
     },
@@ -745,7 +745,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "bf897a9f316d88979ec61dabcaba9f939fc740e0e192030ff7f39929d3c2a2da",
+      "sha256": "229ecbcb1d460ee2dd8e39c76f94a956055231cdea6150c54e1d022d4ce51e58",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
@@ -6121,7 +6121,7 @@
     },
     {
       "path": "octop/infra/agents/settings/avatar_policy.py",
-      "sha256": "1c572d0f4a1175b8b50f5f60d214226a11cdb26623c4a6bb420782d97ff58975",
+      "sha256": "9f603029cfed681c83f5eb35a18f7c5a3302b6e391c1fdce3b896a055c174c09",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -6139,7 +6139,7 @@
     },
     {
       "path": "octop/infra/agents/settings/geometric_avatar.py",
-      "sha256": "ae755a13a556e6311fc576ff3a6b9f069fd6a8751a563a702935457818f50d7c",
+      "sha256": "091fed71e55118fd793731344bc8f6d7ccf13978cedc178a68af0c67381c2d6d",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -10945,7 +10945,7 @@
     },
     {
       "path": "octop/infra/db/repos/thread_messages.py",
-      "sha256": "253182cea91ee7b38919c73f705207c2e7e46d52aea572012c6d0463abe2e19e",
+      "sha256": "8211ba1af9d469f3b63b8ee8c54837e94ab3d64cd4ff7e32788f8c6432e12d93",
       "upstream_program_sha256": "b94e783c5bc8a7d4be71b32a23f1320f47ca24f4666941bd40e10b3db57c3ec0",
       "changed_from_saved_original": true
     },
@@ -11083,7 +11083,7 @@
     },
     {
       "path": "octop/infra/enterprise_resources/models.py",
-      "sha256": "856e69760733fd7de48f7b6a3b7fccf0156c669d55b4772ef375955535c9f845",
+      "sha256": "6a4e9d2dcaa3036953c6222cccc7c75fde27557fa68be4c84f7efce8432f71e5",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -11503,7 +11503,7 @@
     },
     {
       "path": "octop/infra/history/conversations.py",
-      "sha256": "691092fd208753cdddba8f054db07c4d0dc36d6f76bcb4c4c759b6dc13bc61db",
+      "sha256": "70137abcf94efa1f9eb36fe2b6bbb1bde3d81ab0513806eea017e45294b00377",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -11545,7 +11545,7 @@
     },
     {
       "path": "octop/infra/history/store.py",
-      "sha256": "325158cdfdb2a9538f589c55c6d8977c7dc98371396eb51911cf41a4c5c7a9ce",
+      "sha256": "113d24a31043ba13739d1e3d0020e23ca832ba4741b9a360f189dc8feef560fe",
       "upstream_program_sha256": "bd2f602f9e94e48ca3d280c547bfdc394ab1d616d0d99d70e5b54d81ac9b1358",
       "changed_from_saved_original": true
     },

@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
+
+import pytest
+from octop_harness.plugins import PluginRegistry
 
 from octop.infra.agents.plugins.manager import PLUGINS_ENABLED, PLUGINS_REVISION, PluginManager
 from octop.infra.db.migrate import run_migrations
@@ -11,6 +15,13 @@ from octop.infra.db.pool import SqlitePool
 from octop.infra.db.repos.control_files import ControlFileRepo
 from octop.infra.db.services import build_shared_services
 from octop.infra.utils.paths import PathLayout
+
+
+@pytest.fixture(autouse=True)
+def _reset_registry() -> Iterator[None]:
+    PluginRegistry.reset()
+    yield
+    PluginRegistry.reset()
 
 
 def _services(tmp_path: Path):

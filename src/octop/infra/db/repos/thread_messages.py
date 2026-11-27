@@ -71,6 +71,21 @@ class ThreadMessageRepo:
             ).fetchall()
         return [ThreadMessageRow.from_row(row) for row in rows]
 
+    def latest_replies(self, thread_ids: Sequence[str]) -> dict[str, ThreadMessageRow]:
+        if not thread_ids:
+            return {}
+        placeholders = ",".join("?" for _ in thread_ids)
+        with self._db.connect() as conn:
+            rows = conn.execute(
+                "SELECT m.* FROM threads t JOIN thread_messages m "
+                "ON m.thread_id=t.thread_id AND m.seq=("
+                "SELECT MAX(last.seq) FROM thread_messages last WHERE last.thread_id=t.thread_id"
+                ") WHERE m.role IN ('ai','assistant') "
+                f"AND t.thread_id IN ({placeholders})",
+                tuple(thread_ids),
+            ).fetchall()
+        return {str(row["thread_id"]): ThreadMessageRow.from_row(row) for row in rows}
+
     def head(self, thread_id: str) -> int:
         with self._db.connect() as conn:
             row = conn.execute(

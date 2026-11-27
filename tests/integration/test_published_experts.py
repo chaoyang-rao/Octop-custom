@@ -334,7 +334,7 @@ async def test_published_list_exposes_snapshot_avatar(
     expert_id = published.json()["id"]
     icon_url = published.json().get("uploaded_icon_url")
     public_icon = published.json()["icon_url"]
-    assert public_icon.startswith("/expert-avatars/v2/")
+    assert public_icon.startswith("/expert-avatars/v3/")
     assert isinstance(icon_url, str)
     assert icon_url.startswith(f"/api/experts/published/{expert_id}/avatar")
     assert "v=" in icon_url
@@ -364,13 +364,13 @@ async def test_published_list_keeps_public_portrait_without_upload(
         json={"name": "Portrait published"},
     )
     assert published.status_code == 201, published.text
-    assert published.json()["icon_url"].startswith("/expert-avatars/v2/")
+    assert published.json()["icon_url"].startswith("/expert-avatars/v3/")
     assert published.json()["uploaded_icon_url"] == portrait
 
     listed = await client.get("/api/experts/published", headers=peer_auth)
     assert listed.status_code == 200, listed.text
     row = next(item for item in listed.json() if item["id"] == published.json()["id"])
-    assert row["icon_url"].startswith("/expert-avatars/v2/")
+    assert row["icon_url"].startswith("/expert-avatars/v3/")
     assert row["uploaded_icon_url"] == portrait
 
 

@@ -27,10 +27,23 @@ function inside([x, y]: number[], polygon: number[][]) {
   return result;
 }
 
-describe("nine geometric portraits", () => {
-  it("offers 81 saved combinations and their standalone assets", () => {
+describe("geometric portraits", () => {
+  it("offers the twelve exact colors and all 108 animated standalone assets", () => {
     expect(SHAPES).toHaveLength(9);
-    expect(COLORS).toHaveLength(9);
+    expect(Object.fromEntries(COLORS.map(({ id, hex }) => [id, hex]))).toEqual({
+      black: "#000000",
+      brown: "#936439",
+      red: "#FF263C",
+      orange: "#FF6700",
+      yellow: "#FF9800",
+      lemon: "#FFD400",
+      green: "#00C972",
+      cyan: "#00BCA6",
+      blue: "#1084FE",
+      violet: "#9159FE",
+      magenta: "#FF309B",
+      gray: "#777777",
+    });
     for (const shape of SHAPES) {
       for (const color of COLORS) {
         const url = avatars.avatarUrl(shape.id, color.id);
@@ -80,7 +93,7 @@ describe("nine geometric portraits", () => {
     }
   });
 
-  it("keeps nine bubble colors readable without changing their base color", () => {
+  it("keeps all twelve bubble colors readable without changing their base color", () => {
     for (const color of COLORS) {
       const style = bubbleStyle(color.id);
       expect(style.backgroundColor).toBe(color.hex);
@@ -90,10 +103,34 @@ describe("nine geometric portraits", () => {
     }
   });
 
+  it("renders existing colors using their replacement palette values", () => {
+    const legacy = {
+      ink: "#000000",
+      cocoa: "#936439",
+      coral: "#FF6700",
+      amber: "#FF9800",
+      jade: "#00BCA6",
+      rose: "#FF309B",
+      blue: "#1084FE",
+      violet: "#9159FE",
+      red: "#FF263C",
+    };
+    for (const [color, hex] of Object.entries(legacy)) {
+      const url = avatars.avatarUrl("pebble", color);
+      expect(avatarFrame("pebble", color, 0)).toMatchObject({
+        shape: "pebble",
+        base: hex,
+      });
+      expect(readFileSync(`public${url}`, "utf8")).toContain(`fill="${hex}"`);
+    }
+  });
+
   it("includes the new options in creation and preserves saved old IDs", () => {
     const picks = Array.from({ length: 4 }, () => randomAvatar(() => 0.9999));
     expect(
-      picks.some((value) => value.shape === "capsule" && value.color === "red"),
+      picks.some(
+        (value) => value.shape === "capsule" && value.color === "gray",
+      ),
     ).toBe(true);
     for (const id of [
       "blob",
@@ -127,7 +164,7 @@ describe("team portrait occupancy", () => {
       agent_id: "main",
       name: "我的助手",
       is_team_primary: true,
-      icon_url: "/expert-avatars/v2/blob-jade.svg",
+      icon_url: "/expert-avatars/v2/pebble-jade.svg",
     };
     const { ExpertPortrait } = createExpertPresentation({
       React,
@@ -140,6 +177,13 @@ describe("team portrait occupancy", () => {
     expect(container.querySelector(".octop-primary-badge")?.textContent).toBe(
       "主",
     );
+    expect(container.querySelector(".octop-primary-face")).toHaveAttribute(
+      "viewBox",
+      VIEWBOXES.blob,
+    );
+    expect(
+      container.querySelector(".octop-primary-face [data-avatar-body]"),
+    ).toHaveAttribute("fill", "#000000");
     rerender(<ExpertPortrait iconUrl={primary.icon_url} size={48} />);
     expect(container.querySelector(".octop-primary-badge")).toBeNull();
     rerender(<ExpertPortrait agentId="main" size={36} />);

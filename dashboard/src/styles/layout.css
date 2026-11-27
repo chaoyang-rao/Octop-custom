@@ -28,9 +28,23 @@ html {
 }
 
 html[data-octop-desktop-chrome]:root {
-  --fn-desktop-rail-width: 60px;
+  --fn-desktop-rail-width: 52px;
+  --fn-desktop-nav-icon-size: 22px;
+  --fn-desktop-nav-target-size: 38px;
+  --fn-desktop-sidebar-top: var(--fn-bg-elevated, #fff);
   --fn-desktop-bottom-gap: 10px;
   --fn-chat-chrome-height: 40px;
+}
+
+html[data-octop-desktop-chrome].octop-chat-open {
+  --fn-desktop-chat-rail-bg: #f2f2f2;
+  --fn-desktop-chat-bg: #fff;
+  --fn-desktop-sidebar-top: var(--fn-desktop-chat-rail-bg);
+}
+
+html[data-octop-desktop-chrome][data-theme="dark"].octop-chat-open {
+  --fn-desktop-chat-rail-bg: #202020;
+  --fn-desktop-chat-bg: #000;
 }
 
 /* Wails v3 frameless drag: the element under the cursor must set this. */

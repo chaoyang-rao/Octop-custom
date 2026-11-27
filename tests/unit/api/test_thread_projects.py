@@ -78,7 +78,10 @@ class ProjectApiTests(unittest.TestCase):
         self.server = NS(
             user_manager=NS(get_by_id=lambda uid: NS(id=uid) if uid in (1, 2) else None),
             app_runtime=NS(agent_registry=agents, gateway=gateway),
-            services=NS(user_policy_repo=NS(get=lambda uid, key: self.policy.get(uid))),
+            services=NS(
+                user_policy_repo=NS(get=lambda uid, key: self.policy.get(uid)),
+                thread_message_repo=self.messages,
+            ),
         )
         app = FastAPI()
         app.include_router(router, prefix="/api")
@@ -134,6 +137,7 @@ class ProjectApiTests(unittest.TestCase):
         self.threads = ThreadRepo(self.db)
         self.messages = ThreadMessageRepo(self.db)
         self.registry.replace_repos(session_repo=SessionRepo(self.db), thread_repo=self.threads)
+        self.server.services.thread_message_repo = self.messages
         tid = self.create(path=self.project_path)
         row = self.threads.get(tid)
         self.assertEqual((row.project_path, row.project_name), (self.project_path, "售后项目"))

@@ -67,7 +67,7 @@ export function createAccountAvatar({ React, ProfileAvatar }) {
           color: "var(--fn-text-primary)",
           border: "1px solid var(--fn-border-primary, rgba(128,128,128,.26))",
           boxShadow: "none",
-          fontSize: 13,
+          fontSize: "var(--account-avatar-font-size, 13px)",
           fontWeight: 650,
           lineHeight: 1,
           letterSpacing: ".015em",
