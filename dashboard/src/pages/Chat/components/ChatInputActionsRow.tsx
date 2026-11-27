@@ -3,8 +3,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import { ArrowUp } from "lucide-react";
 import {
-  Send,
   Square,
   MessageSquarePlus,
   Paperclip,
@@ -1372,7 +1372,7 @@ export default function ChatInputActionsRow({
                 type="button"
                 aria-label={t("chat.queue.action")}
               >
-                <Send size={16} />
+                <ArrowUp size={18} strokeWidth={2.2} aria-hidden />
               </button>
             </Tooltip>
           ) : (
@@ -1411,9 +1411,10 @@ export default function ChatInputActionsRow({
             onClick={onSubmit}
             disabled={!canSend}
             title={t("chat.send", "Send")}
+            aria-label={t("chat.send", "Send")}
             type="button"
           >
-            <Send size={16} />
+            <ArrowUp size={18} strokeWidth={2.2} aria-hidden />
           </button>
         )}
       </div>

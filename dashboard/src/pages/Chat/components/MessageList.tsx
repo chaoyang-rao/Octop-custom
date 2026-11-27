@@ -19,7 +19,6 @@ import type { ComposerTagLookups } from "./UserMessageComposerTags";
 import MessageBubble from "./MessageBubble";
 import AssistantTurnView from "./AssistantTurnView";
 import ScrollToBottomButton from "./ScrollToBottomButton";
-import { useDesktopChromeStyle } from "../../../hooks/useDesktopChrome";
 import GeneratingIndicator from "./GeneratingIndicator";
 import TurnTimelineRail from "./TurnTimelineRail";
 import { isLiveAssistantTurn } from "./liveAssistantTurn";
@@ -50,6 +49,13 @@ const VIRTUALIZE_THRESHOLD = 30;
 
 /** Virtuoso prepend anchor — count down when older pages are prepended. */
 const VIRTUOSO_START_INDEX = 1_000_000;
+
+const historyStartSpacer = (
+  <div aria-hidden="true" className={styles.messageHistoryStart} />
+);
+const historyEndSpacer = (
+  <div aria-hidden="true" className={styles.messageHistoryEnd} />
+);
 
 interface VirtuosoListContext {
   historyHeader: ReactNode;
@@ -92,6 +98,7 @@ interface MessageListProps {
   agentId?: string | null;
   composerLookups?: ComposerTagLookups;
   loading?: boolean;
+  floating?: boolean;
   historyHasMore?: boolean;
   historyLoadingMore?: boolean;
   historyRefreshing?: boolean;
@@ -261,6 +268,7 @@ export default function MessageList(props: MessageListProps) {
     agentId,
     composerLookups,
     loading,
+    floating = false,
     historyHasMore,
     historyLoadingMore,
     historyRefreshing,
@@ -872,12 +880,28 @@ export default function MessageList(props: MessageListProps) {
 
   const hasFooter = showGenerating || Boolean(refreshFooter) || !!replyAnchorId;
 
+  const historyStart = floating ? historyStartSpacer : null;
+  const historyEnd = floating ? historyEndSpacer : null;
   const virtuosoContext = useMemo<VirtuosoListContext>(
     () => ({
-      historyHeader,
-      footer: hasFooter ? footer : null,
+      historyHeader: floating ? (
+        <>
+          {historyStart}
+          {historyHeader}
+        </>
+      ) : (
+        historyHeader
+      ),
+      footer: floating ? (
+        <>
+          {hasFooter && footer}
+          {historyEnd}
+        </>
+      ) : hasFooter ? (
+        footer
+      ) : null,
     }),
-    [historyHeader, hasFooter, footer],
+    [historyHeader, hasFooter, footer, floating, historyStart, historyEnd],
   );
 
   // History first paint uses a loading spinner with no scroll node. When messages
@@ -889,22 +913,6 @@ export default function MessageList(props: MessageListProps) {
       setScrollerMountKey((k) => k + 1);
     }
   }, []);
-
-  const desktop = Boolean(useDesktopChromeStyle());
-
-  useEffect(() => {
-    if (!desktop) return;
-    const scroller = useVirtual ? scrollerRef.current : containerRef.current;
-    if (!scroller) return;
-    const updateFade = () =>
-      scroller.toggleAttribute("data-chat-scroll-fade", scroller.scrollTop > 1);
-    updateFade();
-    scroller.addEventListener("scroll", updateFade, { passive: true });
-    return () => {
-      scroller.removeEventListener("scroll", updateFade);
-      scroller.removeAttribute("data-chat-scroll-fade");
-    };
-  }, [desktop, useVirtual, scrollerMountKey, stableSessionKey]);
 
   const bindVirtualScroller = useCallback((el: HTMLElement | Window | null) => {
     const next = el instanceof HTMLElement ? el : null;
@@ -939,49 +947,53 @@ export default function MessageList(props: MessageListProps) {
         armProgrammaticGuard={armProgrammaticGuard}
         onVisibilityChange={onTurnRailVisibilityChange}
       />
-      {useVirtual ? (
-        <Virtuoso
-          key={stableSessionKey}
-          ref={virtuosoRef}
-          className={styles.messageList}
-          style={{ height: "100%", paddingBlock: 0 }}
-          data={messageGroups}
-          context={virtuosoContext}
-          firstItemIndex={firstItemIndex}
-          initialTopMostItemIndex={
-            messageGroups.length === 0
-              ? firstItemIndex
-              : firstItemIndex + messageGroups.length - 1
-          }
-          increaseViewportBy={{ top: 600, bottom: 800 }}
-          followOutput={false}
-          atBottomStateChange={handleAtBottomChange}
-          totalListHeightChanged={handleContentResize}
-          atTopStateChange={handleAtTopStateChange}
-          atTopThreshold={200}
-          startReached={requestOlderMessages}
-          scrollerRef={bindVirtualScroller}
-          components={virtuosoComponents}
-          itemContent={(index, group) =>
-            renderMessageGroup(group, index - firstItemIndex, groupContext)
-          }
-        />
-      ) : (
-        <div className={styles.messageList} ref={bindNonVirtualScroller}>
-          <div className={styles.messageListInner}>
-            {historyHeader}
-            {messageGroups.map((group, groupIndex) => (
-              // Stable key: first message id only. Joining all ids remounts the
-              // whole assistant turn whenever a tool/thinking bubble is appended.
-              <div key={group.messages[0]?.id ?? `g-${groupIndex}`}>
-                {renderMessageGroup(group, groupIndex, groupContext)}
-              </div>
-            ))}
-            {footer}
-            <div ref={endRef} style={{ height: 1 }} aria-hidden="true" />
+      <div className={styles.messageListViewport}>
+        {useVirtual ? (
+          <Virtuoso
+            key={stableSessionKey}
+            ref={virtuosoRef}
+            className={styles.messageList}
+            style={{ height: "100%", paddingBlock: 0 }}
+            data={messageGroups}
+            context={virtuosoContext}
+            firstItemIndex={firstItemIndex}
+            initialTopMostItemIndex={
+              messageGroups.length === 0
+                ? firstItemIndex
+                : firstItemIndex + messageGroups.length - 1
+            }
+            increaseViewportBy={{ top: 600, bottom: 800 }}
+            followOutput={false}
+            atBottomStateChange={handleAtBottomChange}
+            totalListHeightChanged={handleContentResize}
+            atTopStateChange={handleAtTopStateChange}
+            atTopThreshold={200}
+            startReached={requestOlderMessages}
+            scrollerRef={bindVirtualScroller}
+            components={virtuosoComponents}
+            itemContent={(index, group) =>
+              renderMessageGroup(group, index - firstItemIndex, groupContext)
+            }
+          />
+        ) : (
+          <div className={styles.messageList} ref={bindNonVirtualScroller}>
+            <div className={styles.messageListInner}>
+              {historyStart}
+              {historyHeader}
+              {messageGroups.map((group, groupIndex) => (
+                // Stable key: first message id only. Joining all ids remounts the
+                // whole assistant turn whenever a tool/thinking bubble is appended.
+                <div key={group.messages[0]?.id ?? `g-${groupIndex}`}>
+                  {renderMessageGroup(group, groupIndex, groupContext)}
+                </div>
+              ))}
+              {footer}
+              <div ref={endRef} style={{ height: 1 }} aria-hidden="true" />
+              {historyEnd}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <ScrollToBottomButton
         visible={showScrollBtn}

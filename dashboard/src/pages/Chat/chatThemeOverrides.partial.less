@@ -748,6 +748,12 @@
   padding-bottom: 18px;
   background: var(--fn-bg-elevated, #fff);
 
+  @media (min-width: 768px) {
+    :global(html[data-octop-desktop-chrome]) & {
+      padding-bottom: var(--fn-desktop-bottom-gap);
+    }
+  }
+
   @media (max-width: 767px) {
     padding-top: 6px;
     padding-inline: 12px;
@@ -831,7 +837,6 @@
 .sendBtn {
   width: 38px;
   height: 38px;
-  border-radius: 6px;
   box-shadow: none;
 }
 
@@ -841,12 +846,6 @@
   background: var(--fn-bg-primary);
   border: 1px solid var(--fn-assistant-bubble-border);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
-}
-
-.aiDisclaimer {
-  max-width: 960px;
-  margin: 8px auto 0;
-  width: calc(100% - 2 * var(--chat-column-pad-x, 32px));
 }
 
 .messageImages,
@@ -865,10 +864,6 @@
   }
 
   .runUsageBar {
-    width: calc(100% - 24px);
-  }
-
-  .aiDisclaimer {
     width: calc(100% - 24px);
   }
 
@@ -893,7 +888,6 @@
   .msgTime,
   .msgUsage,
   .runUsageBar,
-  .aiDisclaimer,
   .shortcutCmd,
   .slashMenuCmd,
   .slashMenuHint,

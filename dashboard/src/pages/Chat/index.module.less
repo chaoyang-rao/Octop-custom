@@ -57,6 +57,71 @@
   }
 }
 
+/* Leave the chrome in flow and extend only the message scrollport underneath. */
+.chatMainFloating {
+  --chat-history-top-inset: var(--fn-chat-chrome-height, 40px);
+  --chat-history-fade-lead: 12px;
+  --chat-history-bottom-inset: calc(
+    var(--chat-history-bottom-overlap, 0px) + var(--chat-history-fade-lead)
+  );
+
+  .chatTitleBar,
+  .chatInput {
+    background: transparent;
+  }
+
+  .chatTitleBar::after {
+    display: none;
+  }
+
+  .runUsageBar {
+    pointer-events: none;
+    color: var(--fn-text-tertiary);
+  }
+
+  .inputWrapper {
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.12);
+  }
+
+  .inputWrapper:focus-within {
+    box-shadow:
+      0 0 0 3px var(--fn-color-brand-glow),
+      0 12px 34px var(--fn-color-brand-shadow);
+  }
+
+  .messageListViewport {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc(-1 * var(--chat-history-top-inset));
+    inset-block-end: calc(-1 * var(--chat-history-bottom-overlap, 0px));
+    display: flex;
+    flex-direction: column;
+  }
+
+  .messageList {
+    scroll-padding-block: var(--chat-history-top-inset)
+      var(--chat-history-bottom-inset);
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(0 0 0 / 22%) calc(var(--chat-history-top-inset) / 2),
+      #000 var(--chat-history-top-inset),
+      #000
+        max(
+          var(--chat-history-top-inset),
+          calc(100% - var(--chat-history-bottom-inset))
+        ),
+      rgb(0 0 0 / 26%)
+        min(
+          calc(100% - 8px),
+          calc(100% - var(--chat-history-bottom-overlap, 0px) + 14px)
+        ),
+      rgb(0 0 0 / 10%) calc(100% - 6px),
+      transparent
+    );
+  }
+}
+
 /* Turn timeline rail visible: align title, message column, and composer gutters. */
 .chatMainWithTurnRail {
   --chat-turn-rail-gutter: 48px;

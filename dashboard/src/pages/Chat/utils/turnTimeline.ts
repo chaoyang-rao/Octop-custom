@@ -197,7 +197,8 @@ export function alignElementToScrollerTop(
   const top =
     scroller.scrollTop +
     target.getBoundingClientRect().top -
-    scroller.getBoundingClientRect().top;
+    scroller.getBoundingClientRect().top -
+    (parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0);
   if (behavior === "auto") {
     scroller.scrollTop = top;
     return;

@@ -166,6 +166,8 @@ export function useAutoScroll({
       scroller.clientHeight -
       parseFloat(padding.paddingTop || "0") -
       parseFloat(padding.paddingBottom || "0") -
+      (parseFloat(padding.scrollPaddingTop) || 0) -
+      (parseFloat(padding.scrollPaddingBottom) || 0) -
       1;
     const turnHeight =
       spacer.getBoundingClientRect().top - anchor.getBoundingClientRect().top;
