@@ -8,6 +8,7 @@ export interface ProjectRowProps {
   session: Session;
   isActive: boolean;
   workStatus?: SessionWorkStatus;
+  canArchive?: boolean;
   onSelect: (id: string) => void;
   onDelete: (
     id: string,

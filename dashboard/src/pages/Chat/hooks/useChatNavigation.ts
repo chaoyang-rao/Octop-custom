@@ -80,12 +80,13 @@ export function useChatNavigation({
     return chatStore.onStreamEvent((event) => {
       if (
         event.kind === "streamEnd" &&
-        event.sessionId === (activeThreadId ?? "")
+        (event.sessionId === activeThreadId ||
+          sessions.some((row) => row.id === event.sessionId))
       ) {
         void fetchSessions(activeThreadId ?? undefined);
       }
     });
-  }, [activeThreadId, fetchSessions]);
+  }, [activeThreadId, fetchSessions, sessions]);
 
   // A proactive run (cron) created or wrote to a thread outside the chat socket:
   // refresh the list — and the open thread's history — without a page reload.

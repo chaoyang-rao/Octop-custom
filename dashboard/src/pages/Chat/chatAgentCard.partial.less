@@ -556,17 +556,19 @@
 }
 
 .desktopSessionList {
+  /* Each title follows a 12px channel icon and an 8px gap. */
+  --session-leading-slot: 20px;
+
   .agentCardSessions {
     padding-inline-start: 4px;
 
     :global(.octop-project-toolbar) {
-      margin-inline-start: 0;
+      margin-inline-start: var(--session-leading-slot);
     }
 
     :global(.octop-project-toggle),
-    :global(.octop-project-ungrouped-label),
-    :global(.octop-project-rows) {
-      padding-inline-start: 0;
+    :global(.octop-project-ungrouped-label) {
+      padding-inline-start: var(--session-leading-slot);
     }
 
     :global(.octop-project-chevron) {
@@ -574,6 +576,7 @@
     }
 
     :global(.octop-project-rows) {
+      padding-inline-start: 0;
       margin-inline-start: 0;
       border-inline-start: 0;
     }
@@ -581,15 +584,6 @@
 
   .sessionRow {
     padding-inline-start: 0;
-  }
-
-  .sessionRowLead,
-  .sessionRowPinIndicator,
-  .sessionRowWorkingSpinner,
-  .sessionRowWaitingIcon,
-  .sessionRowCompleteDot,
-  .sessionRowMore {
-    order: 1;
   }
 
   .sessionRowMore {

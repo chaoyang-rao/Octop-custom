@@ -25,7 +25,7 @@ import {
   Trash2,
 } from "../../../components/arcIcons";
 import cx from "classnames";
-import type { Session } from "../hooks/useSessions";
+import { isPendingThread, type Session } from "../hooks/useSessions";
 import type { OctopAgent } from "../../../context/AgentContext";
 import { isAgentChatReady } from "../../../utils/agentError";
 import {
@@ -33,6 +33,7 @@ import {
   deleteConversation,
 } from "../utils/deleteConversation";
 import { isImeComposing } from "../../../utils/ime";
+import { archiveConversationMenuItem } from "../utils/archiveConversation";
 import { useHiddenSharedExperts } from "../hooks/useHiddenSharedExperts";
 import HiddenExpertsToggle from "./HiddenExpertsToggle";
 import SessionChannelIcon from "./SessionChannelIcon";
@@ -64,6 +65,7 @@ import type { ProjectRowProps } from "./projectFolders/project-folders.mjs";
 import styles from "../index.module.less";
 
 interface SessionItemProps {
+  canArchive?: boolean;
   projectMenuItems?: ProjectRowProps["projectMenuItems"];
   session: Session;
   isActive: boolean;
@@ -92,6 +94,7 @@ const SessionItem = memo(function SessionItem({
   forkDisabled,
   forkDisabledHint,
   projectMenuItems,
+  canArchive = false,
 }: SessionItemProps) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -157,6 +160,9 @@ const SessionItem = memo(function SessionItem({
         setIsEditing(true);
       },
     },
+    ...(canArchive && !isPendingThread(session.id)
+      ? [archiveConversationMenuItem(session.id, t)]
+      : []),
     {
       key: "delete",
       label: t("common.delete", "Delete"),
