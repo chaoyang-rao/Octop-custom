@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Popover, Spin, Drawer } from "antd";
+import { Popover, Spin, Drawer, Tooltip } from "antd";
 import {
   octopThreadsApi,
   type ContextUsageBreakdown,
@@ -39,8 +39,9 @@ interface ContextWindowRingProps {
   threadId?: string | null;
   selectedConnectors?: string[];
   isMobile?: boolean;
-  /** Session total omitted by the decision filter. Same figure as 本会话累计. */
+  /** Tokens omitted by the decision filter over the session. */
   decisionSaved?: number;
+  sessionUsageLabel?: string | null;
   isStreaming?: boolean;
 }
 
@@ -53,6 +54,7 @@ export default function ContextWindowRing({
   selectedConnectors = [],
   isMobile = false,
   decisionSaved = 0,
+  sessionUsageLabel,
   isStreaming = false,
 }: ContextWindowRingProps) {
   const { t } = useTranslation();
@@ -223,6 +225,13 @@ export default function ContextWindowRing({
   const savedTokens =
     decisionSaved > 0 ? decisionSaved : breakdown?.decision_saved ?? 0;
 
+  const sessionTotal = sessionUsageLabel ? (
+    <div className={styles.contextSessionUsage}>
+      <strong>{t("chatUsage.sessionTotal")}</strong>
+      <div>{sessionUsageLabel}</div>
+    </div>
+  ) : null;
+
   const popoverContent = (
     <div className={styles.contextUsagePanel}>
       <div className={styles.contextUsageTitle}>
@@ -238,6 +247,7 @@ export default function ContextWindowRing({
           ? t("chat.contextWindow.estimateHint")
           : t("chat.contextWindow.breakdownHint")}
       </div>
+      {isMobile && sessionTotal}
       {loading ? (
         <div className={styles.contextUsageLoading}>
           <Spin size="small" />
@@ -359,13 +369,35 @@ export default function ContextWindowRing({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={tooltip}
+      tabIndex={isMobile ? undefined : 0}
     >
       {ringInner}
     </div>
   );
 
+  const ringWithTooltip = (
+    <Tooltip
+      title={
+        sessionTotal ? (
+          <>
+            <div>{tooltip}</div>
+            {sessionTotal}
+          </>
+        ) : (
+          tooltip
+        )
+      }
+      trigger={["hover", "focus"]}
+      placement="topRight"
+      mouseEnterDelay={0.25}
+      open={open ? false : undefined}
+    >
+      {ring}
+    </Tooltip>
+  );
+
   if (!agentId || !threadId) {
-    return ring;
+    return isMobile ? ring : ringWithTooltip;
   }
 
   if (isMobile) {
@@ -408,7 +440,7 @@ export default function ContextWindowRing({
       placement="topRight"
       overlayClassName={styles.contextUsagePopover}
     >
-      {ring}
+      {ringWithTooltip}
     </Popover>
   );
 }

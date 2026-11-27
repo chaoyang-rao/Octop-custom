@@ -32,7 +32,7 @@ import { navAllowed, userCan } from "../../utils/permissions";
 import { useChat } from "./hooks/useChat";
 import { useSessions, fetchAndSyncSessionArtifacts } from "./hooks/useSessions";
 import * as chatStore from "./hooks/chatStore";
-import { assistantTurnsFromEnd } from "./utils/chatMessages";
+import { formatRunUsage, assistantTurnsFromEnd } from "./utils/chatMessages";
 import { useChatSidebarState } from "./hooks/useChatSidebarState";
 import { useChatHistoryRail } from "./hooks/useChatHistoryRail";
 import { useChatDockPanel } from "./hooks/useChatDockPanel";
@@ -66,6 +66,7 @@ import {
 import { isFileToolName } from "./constants";
 import { browserApi } from "../../api/modules/browser";
 import { octopThreadsApi } from "../../api/modules/octopThreads";
+import type { TokenUsage } from "../../api/types";
 import type { ChatAttachment } from "./hooks/useChat";
 import MessageList from "./components/MessageList";
 import ChatInput, { type ChatInputHandle } from "./components/ChatInput";
@@ -626,16 +627,48 @@ function ChatPageInner() {
     activeAgent,
   );
 
-  const savedHistoryTokens = useMemo(
-    () =>
-      messages.reduce(
-        (total, message) => total + (message.usage?.decision_saved ?? 0),
-        0,
-      ),
-    [messages],
-  );
+  const sessionUsage = useMemo(() => {
+    const acc: TokenUsage = {};
+    for (const msg of messages) {
+      const u = msg.usage;
+      if (!u) continue;
+      if (typeof u.input_tokens === "number") {
+        acc.input_tokens = (acc.input_tokens || 0) + u.input_tokens;
+      }
+      if (typeof u.cache_read_tokens === "number") {
+        acc.cache_read_tokens =
+          (acc.cache_read_tokens || 0) + u.cache_read_tokens;
+      }
+      if (typeof u.output_tokens === "number") {
+        acc.output_tokens = (acc.output_tokens || 0) + u.output_tokens;
+      }
+      if (typeof u.total_tokens === "number") {
+        acc.total_tokens = (acc.total_tokens || 0) + u.total_tokens;
+      }
+      if (typeof u.decision_saved === "number") {
+        acc.decision_saved = (acc.decision_saved || 0) + u.decision_saved;
+      }
+    }
+    if (
+      !acc.input_tokens &&
+      !acc.output_tokens &&
+      !acc.total_tokens &&
+      !acc.decision_saved
+    ) {
+      return null;
+    }
+    return acc;
+  }, [messages]);
   const decisionSaved =
-    savedHistoryTokens + (isStreaming ? runUsage?.decision_saved ?? 0 : 0);
+    (sessionUsage?.decision_saved ?? 0) +
+    (isStreaming ? runUsage?.decision_saved ?? 0 : 0);
+  const sessionUsageLabel = formatRunUsage(sessionUsage, {
+    input: t("chatUsage.input"),
+    output: t("chatUsage.output"),
+    total: t("chatUsage.total"),
+    cacheHit: t("chatUsage.cacheHit"),
+    decisionSaved: t("chatUsage.decisionSaved"),
+  });
 
   const { resetNavForAgentSwitch, markInitialNavDone } = useChatNavigation({
     routeAgentId,
@@ -1990,6 +2023,7 @@ function ChatPageInner() {
               contextUsedTokens={contextUsedTokens}
               contextMaxTokens={contextMaxTokens}
               decisionSaved={decisionSaved}
+              sessionUsageLabel={sessionUsageLabel}
             />
           </div>
 

@@ -147,6 +147,7 @@ interface ChatInputActionsRowProps {
   contextUsedTokens?: number | null;
   contextMaxTokens?: number;
   decisionSaved?: number;
+  sessionUsageLabel?: string | null;
   availableModels?: ResolvedModel[];
   selectedModel?: string | null;
   defaultModel?: string | null;
@@ -213,6 +214,7 @@ export default function ChatInputActionsRow({
   threadId,
   contextUsedTokens = null,
   decisionSaved = 0,
+  sessionUsageLabel,
   contextMaxTokens = 128_000,
   availableModels,
   selectedModel,
@@ -1203,6 +1205,7 @@ export default function ChatInputActionsRow({
           selectedConnectors={selectedConnectors}
           isMobile={isMobile}
           decisionSaved={decisionSaved}
+          sessionUsageLabel={sessionUsageLabel}
         />
         {/* Desktop: dedicated newChatBtn; mobile: replace polish with new-chat */}
         {useCompactControls ? (
