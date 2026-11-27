@@ -2207,27 +2207,37 @@ class GlobalProcessor:
     ) -> None:
         from octop.infra.history.recorder import RecordingTracker  # noqa: PLC0415
 
+        inputs = tracker.inputs
         if isinstance(tracker, RecordingTracker):
             if tracker.turn["format"] == "legacy":
                 await asyncio.to_thread(
-                    tracker.archive.messages.append_legacy_interval, thread_id, tracker.inputs
+                    tracker.archive.messages.append_legacy_interval, thread_id, inputs
                 )
                 await tracker.finish(completed=completed)
             elif not completed:
                 await tracker.finish(completed=False)
+        elif self._thread_message_repo is not None:
+            try:
+                self._thread_message_repo.append_if_ready(thread_id, inputs)
+            except Exception:
+                # History projection is a read optimization and must never turn a
+                # successful model response into a failed chat turn.
+                logger.warning(
+                    "failed to append thread history projection for thread=%s",
+                    thread_id,
+                    exc_info=True,
+                )
+
+        if not completed or not tracker.has_completed_reply(inputs):
             return
-        if self._thread_message_repo is None:
+        steer = getattr(self._gateway, "steer", None)
+        steer_state = steer.get_state(thread_id) if steer is not None else None
+        if steer_state is not None and steer_state.phase == "cancelling":
             return
         try:
-            self._thread_message_repo.append_if_ready(thread_id, tracker.inputs)
+            await asyncio.to_thread(self._thread_registry.mark_reply_completed, thread_id)
         except Exception:
-            # History projection is a read optimization and must never turn a
-            # successful model response into a failed chat turn.
-            logger.warning(
-                "failed to append thread history projection for thread=%s",
-                thread_id,
-                exc_info=True,
-            )
+            logger.warning("failed to mark reply complete thread=%s", thread_id, exc_info=True)
 
     async def _append_slash_checkpoint(
         self,

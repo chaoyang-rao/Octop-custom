@@ -199,6 +199,8 @@ class TurnHistoryTracker:
     _reasoning_text: str = field(default="", init=False)
     _error_message: str = field(default="", init=False)
     _error_code: str | None = field(default=None, init=False)
+    _ended_without_reply: bool = field(default=False, init=False)
+    _last_output: str = field(default="", init=False)
     _turn_duration_ms: int | None = field(default=None, init=False)
 
     def note_turn_duration(self, duration_ms: int) -> None:
@@ -213,10 +215,15 @@ class TurnHistoryTracker:
 
     def observe(self, chunk: dict[str, Any]) -> None:
         kind = chunk.get("type")
+        if kind in ("error", "hitl_required"):
+            self._ended_without_reply = True
+        if kind in ("tool_call_chunk", "tool_result"):
+            self._last_output = "tool"
         if kind in ("state_snapshot", "state_update"):
             messages = _chunk_messages(chunk)
             if not messages:
                 return
+            self._last_output = "state"
             last_user = max(
                 (index for index, msg in enumerate(messages) if _role(msg) in _USER_ROLES),
                 default=-1,
@@ -227,7 +234,10 @@ class TurnHistoryTracker:
                 self._state_messages.extend(messages)
             return
         if kind == "token":
-            self._stream_text += str(chunk.get("content") or "")
+            text = str(chunk.get("content") or "")
+            if text.strip():
+                self._last_output = "token"
+            self._stream_text += text
             return
         if kind == "reasoning":
             self._reasoning_text += str(chunk.get("content") or "")
@@ -284,3 +294,27 @@ class TurnHistoryTracker:
         if isinstance(self._turn_duration_ms, int):
             items = _stamp_duration(items, self._turn_duration_ms)
         return items
+
+    def has_completed_reply(self, inputs: list[ThreadMessageInput]) -> bool:
+        if self._ended_without_reply or self._last_output not in {"state", "token"}:
+            return False
+        reply = (
+            message_input(self._state_messages[-1])
+            if self._last_output == "state"
+            else next((item for item in reversed(inputs) if item.role in _ASSISTANT_ROLES), None)
+        )
+        if reply is None or reply.role not in _ASSISTANT_ROLES:
+            return False
+        data = json.loads(reply.message_json)["data"]
+        if data.get("tool_calls") or data.get("additional_kwargs", {}).get(STREAM_ERROR_FLAG):
+            return False
+        content = data.get("content")
+        return bool(_wire_text(reply).strip()) or (
+            isinstance(content, list)
+            and any(
+                isinstance(block, dict)
+                and block.get("type")
+                in {"image", "image_url", "input_image", "file", "audio", "video"}
+                for block in content
+            )
+        )

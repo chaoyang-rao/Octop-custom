@@ -337,7 +337,7 @@ export function createProjectFolders({
         key: session.id,
         session,
         isActive: session.id === activeId,
-        workStatus: resolveStatus(session, liveWorkingIds),
+        workStatus: resolveStatus(session, liveWorkingIds, activeId),
         canArchive: !agent.bridge,
         onSelect: (id) => onSelect(id, agentId),
         onDelete: afterRowAction(onDelete),

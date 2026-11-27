@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.3b3",
   "upstream_commit": "4811eb45996169e86006db1b6451264ff4758223",
-  "program_files": 2512,
-  "changed_program_files": 585,
+  "program_files": 2514,
+  "changed_program_files": 588,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -565,7 +565,7 @@
     },
     {
       "path": "octop/api/routers/chat/history.py",
-      "sha256": "52134cbd569d0315ff3d9b072f23b59d669568eb7f477cb1326da0475fdd0d0a",
+      "sha256": "3e722ced45432e1f579fed819845ab1692af622edc6bacec890eeb18f8c3aeb2",
       "upstream_program_sha256": "546949c2a7f3b1fb4130c23cc22a8286395c8fa0104870a41c9b0b9a9040f29b",
       "changed_from_saved_original": true
     },
@@ -745,7 +745,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "229ecbcb1d460ee2dd8e39c76f94a956055231cdea6150c54e1d022d4ce51e58",
+      "sha256": "c46adadac731f19040322057c6876b4d13ddc01f7d24abe49921b90faeb12a29",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
@@ -10381,7 +10381,7 @@
     },
     {
       "path": "octop/infra/db/migrate.py",
-      "sha256": "ff0ed1c41d56c1092967532f5f45bb759c2743ab3d9103822ecc48f67f2d085d",
+      "sha256": "eb2bb1be5c39e54099367670ddb2283662baec835e9268320394edf77e5471f0",
       "upstream_program_sha256": "3a6dacad9a2c5e598d363a68af527676365d9ec14a27a6947e1310c54b13e033",
       "changed_from_saved_original": true
     },
@@ -10951,7 +10951,7 @@
     },
     {
       "path": "octop/infra/db/repos/threads.py",
-      "sha256": "48671457bb00049d8521bda61067145d856b2bd8512583839cd49003920fd4ff",
+      "sha256": "fa12518f2ac9a7a88ec737a9356196befdd89948e09cbf0e165822d5de8f7afe",
       "upstream_program_sha256": "4b4e81da8eaf7e7f7a1ed2f134ca9cf8b811321dc478e05cab39b464b05b5d5a",
       "changed_from_saved_original": true
     },
@@ -11329,7 +11329,7 @@
     },
     {
       "path": "octop/infra/gateway/process/processor.py",
-      "sha256": "26e12da1cbd1af5230d2967ef0a8f2cf8ba5aa8bf8b3d79be7de0efa68041eb7",
+      "sha256": "5d7c281b326a26e30e1292aa48df3fe0739fa3a458581ac4639d103050aee4dd",
       "upstream_program_sha256": "8994b54e19a3e36021045d91f6b571d967152ecb683c1203c1756a4090d3a54f",
       "changed_from_saved_original": true
     },
@@ -11473,7 +11473,7 @@
     },
     {
       "path": "octop/infra/gateway/threads.py",
-      "sha256": "e967b08c616f644818d12a87ac628fd515019ff68a835a4b2de3bc36c99656eb",
+      "sha256": "b6ec08d65850561e22b31a3a58a65acbd7f162cf0994bcbe6ce1b5550ec03746",
       "upstream_program_sha256": "71df7cff097f3a0954fa9efcf61809f29a7e6f7916bcff840b9416bd2e123c3e",
       "changed_from_saved_original": true
     },
@@ -11521,9 +11521,9 @@
     },
     {
       "path": "octop/infra/history/projection.py",
-      "sha256": "4452a21de3618f555f549e1ed30bc4f57731d3760e6fb4fef7108f5a6cf5ac5c",
+      "sha256": "01eda780c1d4a92c54458739723799d085af30eef3cd34fdafbfd72dbd117222",
       "upstream_program_sha256": "4452a21de3618f555f549e1ed30bc4f57731d3760e6fb4fef7108f5a6cf5ac5c",
-      "changed_from_saved_original": false
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/history/reader.py",
@@ -15076,6 +15076,18 @@
       "sha256": "8aae2dd4ad5ff4a97e7168484e890cd5a38c011e2f21ec80aafb69b06329a863",
       "upstream_program_sha256": "8aae2dd4ad5ff4a97e7168484e890cd5a38c011e2f21ec80aafb69b06329a863",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/infra/db/migrations/031_thread_unread_reply.pg.sql",
+      "sha256": "49f181769a1528783cdbb9a26e289f364230c04ee323fd72a68db31fd676ddae",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
+    },
+    {
+      "path": "octop/infra/db/migrations/031_thread_unread_reply.sql",
+      "sha256": "3ed00e12594ecee59387f5fde12de1b30801733549c2dbd1f1768e93371c27f2",
+      "upstream_program_sha256": null,
+      "changed_from_saved_original": true
     }
   ]
 }

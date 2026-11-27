@@ -34,14 +34,27 @@ describe("resolveSessionWorkStatus", () => {
 
   it("uses a completed reply only after active processing has ended", () => {
     expect(
-      resolveSessionWorkStatus({ id: "thr_1", turnCompleted: true }, new Set()),
+      resolveSessionWorkStatus(
+        { id: "thr_1", unreadReplyId: "reply" },
+        new Set(),
+      ),
     ).toBe("complete");
     expect(
       resolveSessionWorkStatus(
-        { id: "thr_1", turnCompleted: true },
+        { id: "thr_1", unreadReplyId: "reply" },
         new Set(["thr_1"]),
       ),
     ).toBe("working");
+  });
+
+  it("hides the completion indicator in the conversation being viewed", () => {
+    expect(
+      resolveSessionWorkStatus(
+        { id: "thr_1", unreadReplyId: "reply" },
+        new Set(),
+        "thr_1",
+      ),
+    ).toBe("idle");
   });
 
   it("leaves an idle session without a completion indicator", () => {

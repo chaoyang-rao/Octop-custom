@@ -6,11 +6,12 @@ export function resolveSessionWorkStatus(
     id: string;
     turnActive?: boolean;
     awaitingUser?: boolean;
-    turnCompleted?: boolean;
+    unreadReplyId?: string | null;
   },
   liveWorkingIds: ReadonlySet<string>,
+  activeId?: string | null,
 ): SessionWorkStatus {
   if (session.awaitingUser) return "waiting";
   if (liveWorkingIds.has(session.id) || session.turnActive) return "working";
-  return session.turnCompleted ? "complete" : "idle";
+  return session.unreadReplyId && session.id !== activeId ? "complete" : "idle";
 }

@@ -2321,6 +2321,12 @@ def _apply_sqlite_migration(db: DatabasePool, version: int, path: Path) -> None:
         with db.connect() as conn:
             conn.execute("UPDATE _schema_version SET version = ?", (version,))
         return
+    if version == 31:
+        if _table_exists(db, "threads"):
+            _ensure_column(db, "threads", "unread_reply_id", "TEXT")
+        with db.connect() as conn:
+            conn.execute("UPDATE _schema_version SET version = ?", (version,))
+        return
     sql = path.read_text(encoding="utf-8")
     with db.connect() as conn:
         conn.executescript(sql)
@@ -2600,6 +2606,8 @@ def run_migrations(db: DatabasePool) -> None:
     _ensure_thread_conversation_mode_schema(db)
     _ensure_agent_profile_columns(db)
     _ensure_thread_projects_schema(db)
+    if _table_exists(db, "threads"):
+        _ensure_column(db, "threads", "unread_reply_id", "TEXT")
     _ensure_tasks_schema(db)
     _ensure_task_dispatch_schema(db)
     _ensure_task_rooms_schema(db)
