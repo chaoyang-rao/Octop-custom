@@ -3,6 +3,7 @@ import { forwardRef } from "react";
 import type { LucideIcon, LucideProps } from "lucide-react";
 import paths from "./data.json";
 export type { LucideIcon } from "lucide-react";
+export { ArrowUp } from "lucide-react";
 
 function icon(name: keyof typeof paths): LucideIcon {
   const Component = forwardRef<SVGSVGElement, LucideProps>(
