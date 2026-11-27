@@ -1566,7 +1566,7 @@ async def test_replacing_the_room_turn_cancels_a_member_approval(processor_env: 
 
 
 @pytest.mark.asyncio
-async def test_fan_in_persists_member_turn_without_dispatch_prompt(
+async def test_fan_in_persists_only_the_member_answer_and_execution_link(
     processor_env: dict,
 ) -> None:
     from langchain_core.messages import AIMessage, HumanMessage
@@ -1593,6 +1593,7 @@ async def test_fan_in_persists_member_turn_without_dispatch_prompt(
             AIMessage(content="please rest"),
         ],
         live_streamed=True,
+        execution_thread_id="execution-thread",
     )
     repo.append_if_ready.assert_called_once()
     thread_id, inputs = repo.append_if_ready.call_args.args
@@ -1602,7 +1603,8 @@ async def test_fan_in_persists_member_turn_without_dispatch_prompt(
     assert any(
         item.role in {"ai", "assistant"} and "please rest" in item.message_json for item in inputs
     )
-    assert any("read_file" in item.message_json for item in inputs)
+    assert not any("read_file" in item.message_json for item in inputs)
+    assert "/chat/child/execution-thread" in inputs[0].message_json
     assert all("internal dispatch" not in item.message_json for item in inputs)
 
 
@@ -1660,8 +1662,7 @@ async def test_fan_in_stamps_edited_files_on_room_history(
     repo.append_if_ready.assert_called_once()
     _thread_id, inputs = repo.append_if_ready.call_args.args
     roles = [item.role for item in inputs]
-    assert "tool" in roles
-    assert roles.count("tool") == 3
+    assert roles == ["ai"]
     final = next(
         item
         for item in inputs
@@ -1672,9 +1673,6 @@ async def test_fan_in_stamps_edited_files_on_room_history(
     kwargs = (data or {}).get("additional_kwargs") or {}
     assert kwargs.get("speaker_agent_id") == "child"
     assert kwargs.get("edited_files") == ["notes/plan.md"]
-    tool_wire = json.loads(next(item for item in inputs if item.role == "tool").message_json)
-    tool_data = tool_wire.get("data") if isinstance(tool_wire, dict) else tool_wire
-    assert (tool_data or {}).get("additional_kwargs", {}).get("speaker_agent_id") == "child"
 
 
 @pytest.mark.asyncio
@@ -1744,24 +1742,24 @@ async def test_record_peer_turn_keeps_tool_trail_on_member_page(
     ]
     assert room_calls
     room_roles = [item.role for item in room_calls[0].args[1]]
-    assert "tool" in room_roles
+    assert "tool" not in room_roles
 
 
 @pytest.mark.asyncio
-async def test_fan_in_truncates_large_tool_results(
+async def test_fan_in_discards_large_tool_results_and_bounds_the_final_answer(
     processor_env: dict,
 ) -> None:
     from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
     from octop_harness.teams.util import PeerCall
 
-    from octop.infra.agents.teams.team_manager import _HISTORY_TOOL_RESULT_MAX_CHARS
+    from octop.infra.agents.teams.team_manager import _FOLLOWUP_RESULT_MAX_CHARS
 
     processor = processor_env["processor"]
     processor._agent_repo.create(agent_id="host", user_id=1, name="Host", kind="team")
     repo = MagicMock()
     repo.append_if_ready = MagicMock(return_value=1)
     processor.replace_thread_message_repo(repo)
-    huge = "x" * (_HISTORY_TOOL_RESULT_MAX_CHARS + 500)
+    huge = "x" * (_FOLLOWUP_RESULT_MAX_CHARS + 500)
 
     await processor.teams.fan_in_peer_turn(
         PeerCall(
@@ -1779,18 +1777,16 @@ async def test_fan_in_truncates_large_tool_results(
                 tool_calls=[{"name": "read_file", "id": "c1", "args": {"path": "big.md"}}],
             ),
             ToolMessage(content=huge, tool_call_id="c1", name="read_file"),
-            AIMessage(content="done"),
+            AIMessage(content="done " + "y" * (_FOLLOWUP_RESULT_MAX_CHARS + 500)),
         ],
         live_streamed=True,
     )
     _thread_id, inputs = repo.append_if_ready.call_args.args
-    tool = next(item for item in inputs if item.role == "tool")
-    wire = json.loads(tool.message_json)
-    data = wire.get("data") if isinstance(wire, dict) else wire
-    content = (data or {}).get("content") or ""
-    assert len(content) <= _HISTORY_TOOL_RESULT_MAX_CHARS
-    assert content.endswith("…")
-    assert huge not in content
+    assert len(inputs) == 1 and inputs[0].role == "ai"
+    wire = json.loads(inputs[0].message_json)
+    content = wire["data"]["content"]
+    assert len(content) == _FOLLOWUP_RESULT_MAX_CHARS and content.endswith("…")
+    assert huge not in inputs[0].message_json
 
 
 @pytest.mark.asyncio

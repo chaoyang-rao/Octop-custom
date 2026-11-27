@@ -193,7 +193,7 @@ async def test_single_expert_stays_private_and_second_expert_creates_one_room(ro
     assert e.repos.agent_repo.get("c").config_json == '{"model":"own"}'
 
 
-async def test_completed_first_reply_is_backfilled_with_real_tool_pairs_and_review(room_env):
+async def test_completed_first_reply_is_backfilled_without_tools_and_with_review(room_env):
     e = room_env
     first = await enqueue(e)
     await finish(e, first)
@@ -203,10 +203,12 @@ async def test_completed_first_reply_is_backfilled_with_real_tool_pairs_and_revi
     messages = room_messages(e, room)
     reply = next(item for item in messages if item.content == "Actual expert finding")
     assert reply.additional_kwargs["speaker_agent_id"] == "b"
-    ai = next(item for item in messages if isinstance(item, AIMessage) and item.tool_calls)
-    tool = next(item for item in messages if isinstance(item, ToolMessage))
-    assert ai.tool_calls[0]["id"] == tool.tool_call_id
-    assert tool.tool_call_id != "call-1"
+    assert all(isinstance(item, AIMessage) and not item.tool_calls for item in messages)
+    assert all(item.content != "Actual tool evidence" for item in messages)
+    execution = e.repos.task_repo.get(first.task_id)
+    assert execution is not None
+    source = e.repos.thread_message_repo.range_rows(execution.thread_id, 0, 100)
+    assert any("Actual tool evidence" in item.message_json for item in source)
     assert all(item.content != "old reply" for item in messages)
     await save_turn(
         e,

@@ -14,7 +14,6 @@ from langchain_core.messages import (
     AIMessage,
     BaseMessage,
     HumanMessage,
-    ToolMessage,
     convert_to_messages,
     messages_from_dict,
 )
@@ -44,59 +43,41 @@ def room_path(room: dict[str, Any]) -> str:
 def discussion_messages(
     messages: list[BaseMessage], *, prefix: str, speaker_id: str, allowed_speakers: set[str]
 ) -> list[BaseMessage]:
-    """Namespace tool ids and retain complete pairs so the room remains model-readable."""
-    replies = {item.tool_call_id for item in messages if isinstance(item, ToolMessage)}
-    calls = {
-        str(call["id"])
-        for item in messages
-        if isinstance(item, AIMessage)
-        and str(item.additional_kwargs.get("speaker_agent_id") or speaker_id) in allowed_speakers
-        for call in item.tool_calls
-        if call.get("id") in replies
-    }
-
-    def call_id(identifier: str) -> str:
-        return "task_" + hashlib.sha256(f"{prefix}:{identifier}".encode()).hexdigest()[:40]
-
+    """Copy bounded public answers; execution details stay in the source thread."""
     result: list[BaseMessage] = []
     for index, message in enumerate(messages):
-        if not isinstance(message, (AIMessage, ToolMessage)):
+        if not isinstance(message, AIMessage) or message.tool_calls or message.invalid_tool_calls:
             continue
-        extra = dict(message.additional_kwargs)
-        actual = str(extra.get("speaker_agent_id") or speaker_id)
-        if actual not in allowed_speakers:
+        extra = message.additional_kwargs
+        speaker = str(extra.get("speaker_agent_id") or speaker_id)
+        if speaker not in allowed_speakers:
             continue
-        extra.update(speaker_agent_id=actual, octop_task_room=True)
-        updates: dict[str, Any] = {
-            "id": f"{prefix}:{message.id or index}",
-            "additional_kwargs": extra,
-        }
-        if isinstance(message, AIMessage):
-            updates["tool_calls"] = [
-                {**call, "id": call_id(str(call["id"]))}
-                for call in message.tool_calls
-                if call.get("id") in calls
-            ]
-            updates["invalid_tool_calls"] = []
-            # Providers may retain a second raw copy with the old call ids.
-            extra.pop("tool_calls", None)
-            extra.pop("function_call", None)
-            if isinstance(message.content, list):
-                blocks = []
-                for block in message.content:
-                    if isinstance(block, dict) and block.get("type") == "tool_use":
-                        if block.get("id") not in calls:
-                            continue
-                        block = {**block, "id": call_id(str(block["id"]))}
-                    blocks.append(block)
-                updates["content"] = blocks
-            if not message.content and not updates["tool_calls"]:
-                continue
-        else:
-            if message.tool_call_id not in calls:
-                continue
-            updates["tool_call_id"] = call_id(message.tool_call_id)
-        result.append(message.model_copy(update=updates))
+        content = message.content
+        if isinstance(content, list):
+            content = "\n".join(
+                block["text"]
+                for block in content
+                if isinstance(block, dict)
+                and block.get("type") == "text"
+                and isinstance(block.get("text"), str)
+            )
+        if not content.strip():
+            continue
+        result.append(
+            AIMessage(
+                id=f"{prefix}:{message.id or index}",
+                content=content if len(content) <= 2400 else content[:2399] + "…",
+                additional_kwargs={
+                    "speaker_agent_id": speaker,
+                    "octop_task_room": True,
+                    **{
+                        key: extra[key]
+                        for key in (CHECKPOINT_TS_KEY, "octop_task_room_event")
+                        if key in extra
+                    },
+                },
+            )
+        )
     return result
 
 
@@ -625,7 +606,7 @@ class TaskRooms:
                     locale,
                     name=worker.name,
                     title=item["title"],
-                    prompt=str(actual_task.prompt)[:6000],
+                    prompt=str(actual_task.prompt)[:1800],
                 ),
                 additional_kwargs={
                     "speaker_agent_id": primary.agent_id,
@@ -818,7 +799,7 @@ class TaskRooms:
                             locale,
                             caller=caller.name,
                             name=callee.name,
-                            question=question[:6000],
+                            question=question[:1800],
                             url=f"/chat/{quote(callee.agent_id, safe='')}/{quote(source, safe='')}",
                         ),
                         additional_kwargs={
@@ -829,44 +810,11 @@ class TaskRooms:
                     )
             decoded = [replacements.get(str(item.id), item) for item in decoded]
         if primary_only:
-            selected: list[BaseMessage] = []
-            active_calls: set[str] = set()
-            for item in decoded:
-                tagged = item.additional_kwargs.get("octop_task_scope_id") == scope["scope_id"]
-                if isinstance(item, AIMessage):
-                    active_calls = (
-                        {str(call["id"]) for call in item.tool_calls} if tagged else set()
-                    )
-                    if tagged:
-                        selected.append(item)
-                elif isinstance(item, ToolMessage) and (
-                    tagged or item.tool_call_id in active_calls
-                ):
-                    selected.append(item)
-                    active_calls.discard(item.tool_call_id)
-                else:
-                    active_calls.clear()
-            decoded = selected
-        # Keep an unfinished tool group for a later completed checkpoint.
-        replies = {item.tool_call_id for item in decoded if isinstance(item, ToolMessage)}
-        unfinished = next(
-            (
+            decoded = [
                 item
                 for item in decoded
-                if isinstance(item, AIMessage)
-                and any(call.get("id") not in replies for call in item.tool_calls)
-            ),
-            None,
-        )
-        if unfinished is not None and (more or not allow_incomplete):
-            boundary = next(
-                index for index, (_seq, item) in enumerate(rows) if item.id == unfinished.id
-            )
-            rows = rows[:boundary]
-            if not rows:
-                return True
-            cutoff = {item.id for _seq, item in rows}
-            decoded = [item for item in decoded if item.id in cutoff]
+                if item.additional_kwargs.get("octop_task_scope_id") == scope["scope_id"]
+            ]
         messages = discussion_messages(
             decoded,
             prefix=f"task-room:{scope['scope_id']}:{source}",

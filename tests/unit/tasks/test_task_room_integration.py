@@ -210,7 +210,7 @@ async def test_group_input_cannot_grant_publication_or_bypass_plan_mode(
     assert e.repos.task_coordination_repo.get(e.scope_id)["resume_seq"] == 0
 
 
-def test_tool_pairs_are_namespaced_for_provider_content_blocks():
+def test_room_projection_keeps_bounded_attributed_answer_without_reasoning_or_tools():
     source = [
         AIMessage(
             content=[{"type": "tool_use", "id": "call-1", "name": "inspect", "input": {}}],
@@ -218,12 +218,19 @@ def test_tool_pairs_are_namespaced_for_provider_content_blocks():
             tool_calls=[{"id": "call-1", "name": "inspect", "args": {}}],
         ),
         ToolMessage("evidence", id="result", tool_call_id="call-1"),
+        AIMessage(
+            content=[{"type": "text", "text": "Verified finding " + "x" * 7000}],
+            id="answer",
+            additional_kwargs={"reasoning_content": "private reasoning"},
+        ),
     ]
-    first = discussion_messages(source, prefix="a" * 150, speaker_id="b", allowed_speakers={"b"})
-    second = discussion_messages(source, prefix="c" * 150, speaker_id="c", allowed_speakers={"c"})
-    identifier = first[0].tool_calls[0]["id"]
-    assert len(identifier) < 64 and identifier != second[0].tool_calls[0]["id"]
-    assert first[0].content[0]["id"] == identifier == first[1].tool_call_id
+    result = discussion_messages(source, prefix="room", speaker_id="b", allowed_speakers={"b"})
+    assert len(result) == 1
+    assert result[0].id == "room:answer"
+    assert result[0].content.startswith("Verified finding ")
+    assert len(result[0].content) == 2400
+    assert result[0].additional_kwargs == {"speaker_agent_id": "b", "octop_task_room": True}
+    assert source[-1].additional_kwargs["reasoning_content"] == "private reasoning"
 
 
 async def test_room_input_is_not_replayed_as_a_second_user_message(room_env):

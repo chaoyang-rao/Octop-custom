@@ -192,6 +192,97 @@ async def test_model_context_is_ephemeral_and_includes_all_recent_member_authors
     assert env.repos.thread_message_repo.head("group") == 4
 
 
+def test_existing_room_history_shrinks_completed_tool_rounds_without_rewriting_them(primary_env):
+    from langchain.agents.middleware import ModelRequest
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+    from langchain_core.messages import ToolMessage
+
+    huge = "raw tool execution " * 12000
+    historical = AIMessage(
+        "Inspection",
+        id="old-call",
+        tool_calls=[{"id": "old", "name": "inspect", "args": {"query": huge}}],
+        additional_kwargs={"reasoning_content": huge},
+    )
+    old_tool = ToolMessage(huge, id="old-tool", tool_call_id="old")
+    current_call = AIMessage(
+        "",
+        id="new-call",
+        tool_calls=[{"id": "current", "name": "inspect", "args": {"query": "now"}}],
+        additional_kwargs={"reasoning_content": "current reasoning"},
+    )
+    current_tool = ToolMessage("current evidence", id="new-tool", tool_call_id="current")
+    original = [
+        HumanMessage("Previously requested a report", id="old-user"),
+        historical,
+        old_tool,
+        AIMessage("Last time the test passed", id="old-finding"),
+        HumanMessage("Check again now", id="new-user"),
+        current_call,
+        current_tool,
+        ToolMessage(
+            huge,
+            id="legacy-import",
+            tool_call_id="old",
+            additional_kwargs={"octop_task_room": True},
+        ),
+    ]
+    env = primary_env
+    middleware = TeamConversationContextMiddleware(repos=env.repos, teams=env.teams)
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"]), messages=original, state={}
+    )
+    projected = middleware._prepare(
+        request, [], {"locale": "en", "user": str(env.one)}, team_room=True
+    ).messages
+    assert [m.id for m in projected] == [m.id for m in original]
+    assert projected[1].tool_calls[0]["id"] == projected[2].tool_call_id == "old"
+    assert projected[1].tool_calls[0]["args"] == {}
+    assert projected[1].additional_kwargs["reasoning_content"] == ""
+    assert projected[5] is current_call and projected[6] is current_tool
+    assert "Last time the test passed" in projected[3].content
+    assert huge not in repr(projected)
+    assert len(repr(projected)) < len(huge) // 20
+    assert old_tool.content == huge and historical.tool_calls[0]["args"]["query"] == huge
+
+
+@pytest.mark.asyncio
+async def test_member_assignment_uses_its_own_session_and_explicit_history_tool(
+    primary_env, monkeypatch
+):
+    from langchain.agents.middleware import ModelRequest
+    from langchain_core.language_models.fake_chat_models import FakeListChatModel
+
+    import octop.infra.agents.middleware.team_context as module
+
+    env = primary_env
+    middleware = TeamConversationContextMiddleware(repos=env.repos, teams=env.teams)
+    cfg = {
+        "agent_id": "member",
+        "user": str(env.one),
+        "thread_id": "expert-execution",
+        "octop_team_id": "room",
+        "octop_team_thread_id": "group",
+        "octop_team_assignment": True,
+    }
+    monkeypatch.setattr(module, "runtime_config", lambda _: {"configurable": cfg})
+    task = HumanMessage("核实本轮指标")
+    request = ModelRequest(
+        model=FakeListChatModel(responses=["unused"]),
+        messages=[task],
+        tools=[NS(name="conversation_history")],
+        state={},
+    )
+
+    async def handler(projected):
+        assert projected.messages == [task]
+        assert "独立判断" in projected.system_message.content
+        assert "成员的薪酬分析" not in projected.system_message.content
+        return "ok"
+
+    assert await middleware.awrap_model_call(request, handler) == "ok"
+
+
 def test_group_member_gets_independent_judgment_instructions(primary_env):
     env = primary_env
     middleware = TeamConversationContextMiddleware(repos=env.repos, teams=env.teams)
