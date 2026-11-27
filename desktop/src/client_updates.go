@@ -300,7 +300,7 @@ func desktopBootstrapURL(base, version string) string {
 	if err != nil || parsed.Scheme != "http" || (parsed.Hostname() != "127.0.0.1" && parsed.Hostname() != "localhost") {
 		return base
 	}
-	return base + "/api/client-updates/bootstrap?version=" + url.QueryEscape(version)
+	return strings.TrimRight(base, "/") + "/api/client-updates/bootstrap?version=" + url.QueryEscape(version)
 }
 
 func recordCandidateBackend(pid int) error {

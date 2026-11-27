@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestDesktopBootstrapURLUsesTheLocalAPIRoute(t *testing.T) {
+	base := dashboardURL("127.0.0.1", 8088)
+	want := "http://127.0.0.1:8088/api/client-updates/bootstrap?version=1.0.0%2Bcustom"
+	if got := desktopBootstrapURL(base, "1.0.0+custom"); got != want {
+		t.Fatalf("desktop bootstrap URL = %q, want %q", got, want)
+	}
+}
+
 func TestDesktopDragRegionClassMatchesDashboard(t *testing.T) {
 	if desktopDragRegionClass != "octop-desktop-drag" {
 		t.Fatalf("drag region class is %q, dashboard CSS will not apply", desktopDragRegionClass)
