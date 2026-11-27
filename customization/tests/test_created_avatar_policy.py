@@ -7,10 +7,10 @@ from octop.infra.agents.settings.geometric_avatar import avatar_response
 
 
 class CreatedAvatarPolicyTests(unittest.TestCase):
-    def test_all_81_combinations_are_used_before_repeating(self):
+    def test_all_108_combinations_are_used_before_repeating(self):
         occupied = []
         with patch("octop.infra.agents.settings.avatar_policy.secrets.choice", side_effect=lambda pool: pool[0]):
-            for _ in range(81):
+            for _ in range(108):
                 selected = created_avatar({}, occupied)
                 self.assertNotIn(selected, occupied)
                 occupied.append(selected)
@@ -33,7 +33,7 @@ class CreatedAvatarPolicyTests(unittest.TestCase):
         config = {"avatar": {"shape": None}, "plugins": {"enabled": ["keep"]}}
         first = avatar_response(config, "/private-old-picture.png")
         self.assertEqual(first, avatar_response(config, "/private-old-picture.png"))
-        self.assertTrue(first["icon_url"].startswith("/expert-avatars/v2/"))
+        self.assertTrue(first["icon_url"].startswith("/expert-avatars/v3/"))
         self.assertEqual(first["uploaded_icon_url"], "/private-old-picture.png")
         self.assertIsNone(config["avatar"]["shape"])
         self.assertEqual(config["plugins"], {"enabled": ["keep"]})

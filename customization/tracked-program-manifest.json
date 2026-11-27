@@ -6139,7 +6139,7 @@
     },
     {
       "path": "octop/infra/agents/settings/geometric_avatar.py",
-      "sha256": "091fed71e55118fd793731344bc8f6d7ccf13978cedc178a68af0c67381c2d6d",
+      "sha256": "cb1927f2e88cce100094389045b2b71c2f8f2a43282c37ea99c62c5c95e54dc1",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },

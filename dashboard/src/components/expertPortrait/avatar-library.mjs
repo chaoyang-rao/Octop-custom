@@ -386,11 +386,16 @@ export function avatarUrl(shape, color = "ink") {
 export function parseAvatarUrl(url) {
   if (typeof url !== "string") return null;
   const match = url.match(
-    /^\/expert-avatars\/v[123]\/([a-z]+)-([a-z]+)\.svg(?:[?#].*)?$/,
+    /^\/expert-avatars\/v([123])\/([a-z]+)-([a-z]+)\.svg(?:[?#].*)?$/,
   );
-  return match && validShape(match[1]) && validColor(match[2])
-    ? { shape: match[1], color: match[2] }
-    : null;
+  if (!match) return null;
+  const [, version, shape, color] = match;
+  const projectedColor =
+    version === "3"
+      ? colorIds.has(color)
+      : Object.hasOwn(COLOR_ALIASES, color) ||
+        ["red", "blue", "violet"].includes(color);
+  return validShape(shape) && projectedColor ? { shape, color } : null;
 }
 function luminance(hex) {
   const a = [1, 3, 5]
