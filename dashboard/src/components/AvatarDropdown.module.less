@@ -172,6 +172,13 @@
 .triggerCompact {
   cursor: pointer;
   display: inline-flex;
+
+  :global(html[data-octop-desktop-chrome]) & .accountAvatar {
+    --account-avatar-size: var(--fn-desktop-nav-icon-size);
+    --account-avatar-font-size: 11px;
+    width: var(--account-avatar-size);
+    height: var(--account-avatar-size);
+  }
 }
 
 .settingsDrawer {

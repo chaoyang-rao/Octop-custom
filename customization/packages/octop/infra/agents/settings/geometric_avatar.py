@@ -11,7 +11,26 @@ from typing import Any, Literal
 AvatarShape = Literal[
     "blob", "pebble", "squircle", "droplet", "cloud", "star", "triangle", "diamond", "capsule"
 ]
-AvatarColor = Literal["ink", "jade", "blue", "violet", "rose", "amber", "coral", "cocoa", "red"]
+AvatarColor = Literal[
+    "black",
+    "brown",
+    "red",
+    "orange",
+    "yellow",
+    "lemon",
+    "green",
+    "cyan",
+    "blue",
+    "violet",
+    "magenta",
+    "gray",
+    "ink",
+    "cocoa",
+    "coral",
+    "amber",
+    "jade",
+    "rose",
+]
 AVATAR_SHAPES = (
     "blob",
     "pebble",
@@ -24,17 +43,44 @@ AVATAR_SHAPES = (
     "capsule",
 )
 AVATAR_COLORS = {
-    "ink": "#000000",
-    "jade": "#54B9A6",
-    "blue": "#3B82F6",
-    "violet": "#835BD6",
-    "rose": "#EB4698",
-    "amber": "#F19D38",
-    "coral": "#ED702D",
-    "cocoa": "#8C6640",
-    "red": "#E75B66",
+    "black": "#000000",
+    "brown": "#936439",
+    "red": "#FF263C",
+    "orange": "#FF6700",
+    "yellow": "#FF9800",
+    "lemon": "#FFD400",
+    "green": "#00C972",
+    "cyan": "#00BCA6",
+    "blue": "#1084FE",
+    "violet": "#9159FE",
+    "magenta": "#FF309B",
+    "gray": "#777777",
 }
+LEGACY_AVATAR_COLORS = {
+    "ink": "black",
+    "cocoa": "brown",
+    "coral": "orange",
+    "amber": "yellow",
+    "jade": "cyan",
+    "rose": "magenta",
+}
+# Existing experts without a saved color keep the same hue across the palette upgrade.
+_LEGACY_FALLBACK_HUES = (
+    "black",
+    "cyan",
+    "blue",
+    "violet",
+    "magenta",
+    "yellow",
+    "orange",
+    "brown",
+    "red",
+)
 _UNSET = object()
+
+
+def valid_avatar_color(value: Any) -> bool:
+    return isinstance(value, str) and (value in AVATAR_COLORS or value in LEGACY_AVATAR_COLORS)
 
 
 def validate_avatar(value: Any) -> dict[str, Any]:
@@ -45,7 +91,7 @@ def validate_avatar(value: Any) -> dict[str, Any]:
     shape, color = value.get("shape"), value.get("color")
     if shape is not None and shape not in AVATAR_SHAPES:
         raise ValueError("invalid avatar shape")
-    if color is not None and (not isinstance(color, str) or color not in AVATAR_COLORS):
+    if color is not None and (not valid_avatar_color(color)):
         raise ValueError("invalid avatar color")
     return {**value, "shape": shape, "color": color}
 
@@ -101,7 +147,8 @@ def avatar_response(
 ) -> dict[str, Any]:
     """Project the geometric URL for all old icon consumers without changing storage."""
     fields = public_avatar_fields(config)
-    shape, color = fields["avatar_shape"], fields["avatar_color"] or "ink"
+    shape, stored_color = fields["avatar_shape"], fields["avatar_color"]
+    color = stored_color or "black"
     if not shape:
         digest = hashlib.sha256(
             str(
@@ -109,13 +156,10 @@ def avatar_response(
             ).encode()
         ).digest()
         shape = AVATAR_SHAPES[digest[0] % len(AVATAR_SHAPES)]
-        color = (
-            fields["avatar_color"]
-            if fields["avatar_color"] in AVATAR_COLORS
-            else tuple(AVATAR_COLORS)[digest[1] % len(AVATAR_COLORS)]
-        )
+        color = stored_color or _LEGACY_FALLBACK_HUES[digest[1] % len(_LEGACY_FALLBACK_HUES)]
         fields = {"avatar_shape": shape, "avatar_color": color}
-    icon_url = f"/expert-avatars/v2/{shape}-{color}.svg"
+    palette_color = LEGACY_AVATAR_COLORS.get(color, color)
+    icon_url = f"/expert-avatars/v3/{shape}-{palette_color}.svg"
     return {**fields, "icon_url": icon_url, "uploaded_icon_url": uploaded_icon_url}
 
 
@@ -127,7 +171,7 @@ def is_generated_avatar_icon_url(value: Any) -> bool:
     prefix = next(
         (
             candidate
-            for candidate in ("/expert-avatars/v1/", "/expert-avatars/v2/")
+            for candidate in ("/expert-avatars/v1/", "/expert-avatars/v2/", "/expert-avatars/v3/")
             if path.startswith(candidate)
         ),
         None,
@@ -135,7 +179,7 @@ def is_generated_avatar_icon_url(value: Any) -> bool:
     if prefix is None or not path.endswith(".svg"):
         return False
     parts = path[len(prefix) : -4].rsplit("-", 1)
-    return len(parts) == 2 and parts[0] in AVATAR_SHAPES and parts[1] in AVATAR_COLORS
+    return len(parts) == 2 and parts[0] in AVATAR_SHAPES and valid_avatar_color(parts[1])
 
 
 def valid_avatar_or_none(value: Any) -> dict[str, Any] | None:

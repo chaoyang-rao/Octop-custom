@@ -32,7 +32,19 @@ describe("resolveSessionWorkStatus", () => {
     ).toBe("waiting");
   });
 
-  it("treats an idle finished thread as idle (no completed badge)", () => {
+  it("uses a completed reply only after active processing has ended", () => {
+    expect(
+      resolveSessionWorkStatus({ id: "thr_1", turnCompleted: true }, new Set()),
+    ).toBe("complete");
+    expect(
+      resolveSessionWorkStatus(
+        { id: "thr_1", turnCompleted: true },
+        new Set(["thr_1"]),
+      ),
+    ).toBe("working");
+  });
+
+  it("leaves an idle session without a completion indicator", () => {
     expect(resolveSessionWorkStatus({ id: "thr_1" }, new Set())).toBe("idle");
   });
 });

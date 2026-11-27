@@ -115,6 +115,23 @@ class HistoryStore:
             ).fetchone()
         return dict(row) if row is not None else None
 
+    def latest_turn_statuses(self, thread_ids: list[str]) -> dict[str, str]:
+        if not thread_ids:
+            return {}
+        if not self.path.exists():
+            raise FileNotFoundError(self.path)
+        with self.db.connect() as conn:
+            statuses = {}
+            for thread_id in thread_ids:
+                row = conn.execute(
+                    "SELECT t.status FROM turns t JOIN segments s ON s.id=t.segment_id "
+                    "WHERE s.thread_id=? ORDER BY t.started_at DESC, t.id DESC LIMIT 1",
+                    (thread_id,),
+                ).fetchone()
+                if row is not None:
+                    statuses[thread_id] = str(row["status"])
+            return statuses
+
     def put_document(
         self,
         conn: sqlite3.Connection,

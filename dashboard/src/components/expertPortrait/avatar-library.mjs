@@ -12,21 +12,37 @@ export const SHAPES = Object.freeze([
   { id: "capsule", name: "胶囊", mood: "灵动", motion: "左右摇摆 · 轻快回望" },
 ]);
 export const COLORS = Object.freeze([
-  { id: "ink", name: "曜黑", hex: "#000000" },
-  { id: "jade", name: "青绿", hex: "#54B9A6" },
-  { id: "blue", name: "晴蓝", hex: "#3B82F6" },
-  { id: "violet", name: "鸢紫", hex: "#835BD6" },
-  { id: "rose", name: "莓粉", hex: "#EB4698" },
-  { id: "amber", name: "金橙", hex: "#F19D38" },
-  { id: "coral", name: "暖橙", hex: "#ED702D" },
-  { id: "cocoa", name: "可可", hex: "#8C6640" },
-  { id: "red", name: "朱红", hex: "#E75B66" },
+  { id: "black", name: "黑", hex: "#000000" },
+  { id: "brown", name: "棕", hex: "#936439" },
+  { id: "red", name: "红", hex: "#FF263C" },
+  { id: "orange", name: "橙", hex: "#FF6700" },
+  { id: "yellow", name: "黄", hex: "#FF9800" },
+  { id: "lemon", name: "柠檬黄", hex: "#FFD400" },
+  { id: "green", name: "绿", hex: "#00C972" },
+  { id: "cyan", name: "青", hex: "#00BCA6" },
+  { id: "blue", name: "蓝", hex: "#1084FE" },
+  { id: "violet", name: "紫", hex: "#9159FE" },
+  { id: "magenta", name: "洋红", hex: "#FF309B" },
+  { id: "gray", name: "灰", hex: "#777777" },
 ]);
+const COLOR_ALIASES = Object.freeze({
+  ink: "black",
+  cocoa: "brown",
+  coral: "orange",
+  amber: "yellow",
+  jade: "cyan",
+  rose: "magenta",
+});
 const shapeIds = new Set(SHAPES.map((x) => x.id));
 const colorIds = new Set(COLORS.map((x) => x.id));
 export const validShape = (id) => shapeIds.has(id);
-export const validColor = (id) => colorIds.has(id);
-export const getColor = (id) => COLORS.find((x) => x.id === id) || COLORS[0];
+export const validColor = (id) =>
+  colorIds.has(id) || Object.hasOwn(COLOR_ALIASES, id);
+export const getColor = (id) =>
+  COLORS.find(
+    (color) =>
+      color.id === (Object.hasOwn(COLOR_ALIASES, id) ? COLOR_ALIASES[id] : id),
+  ) || COLORS[0];
 // Tight but motion-safe framing: the whole six-second motion remains visible.
 export const VIEWBOXES = Object.freeze({
   blob: "40 40 432 432",
@@ -351,6 +367,7 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
     color: getColor(color).id,
     base,
     outline: base,
+    eyeColor: EYE_COLORS[base],
     body,
     eyes,
     facets: [],
@@ -363,13 +380,13 @@ export const pathData = (points) =>
 
 export function avatarUrl(shape, color = "ink") {
   return validShape(shape)
-    ? `/expert-avatars/v2/${shape}-${getColor(color).id}.svg`
+    ? `/expert-avatars/v3/${shape}-${getColor(color).id}.svg`
     : null;
 }
 export function parseAvatarUrl(url) {
   if (typeof url !== "string") return null;
   const match = url.match(
-    /^\/expert-avatars\/v[12]\/([a-z]+)-([a-z]+)\.svg(?:[?#].*)?$/,
+    /^\/expert-avatars\/v[123]\/([a-z]+)-([a-z]+)\.svg(?:[?#].*)?$/,
   );
   return match && validShape(match[1]) && validColor(match[2])
     ? { shape: match[1], color: match[2] }
@@ -386,9 +403,16 @@ export function contrast(a, b) {
     y = luminance(b);
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
+const EYE_COLORS = Object.fromEntries(
+  COLORS.map(({ hex }) => [
+    hex,
+    contrast(hex, "#FFFDF7") >= 3 ? "#FFFDF7" : "#0B101B",
+  ]),
+);
+
 export function bubbleStyle(color = "ink") {
   const hex = getColor(color).hex,
-    dark = "#0B101B";
+    dark = contrast(hex, "#0B101B") >= 4.5 ? "#0B101B" : "#000000";
   const foreground =
     contrast(hex, "#FFFFFF") >= contrast(hex, dark) ? "#FFFFFF" : dark;
   return {
@@ -521,7 +545,12 @@ export function createExpertAvatars({ React }) {
         }),
       ),
       ...f.eyes.map((points, i) =>
-        h("path", { key: `eye${i}`, d: pathData(points), fill: "#FFFDF7" }),
+        h("path", {
+          key: `eye${i}`,
+          "data-avatar-eye": "",
+          d: pathData(points),
+          fill: f.eyeColor,
+        }),
       ),
     );
   }
@@ -659,7 +688,9 @@ export function animatedSvg(shape, color) {
           }" clip-path="url(#still-clip)"/>`,
       )
       .join("") +
-    a.eyes.map((eye) => `<path d="${pathData(eye)}" fill="#FFFDF7"/>`).join("");
+    a.eyes
+      .map((eye) => `<path d="${pathData(eye)}" fill="${a.eyeColor}"/>`)
+      .join("");
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="${
       VIEWBOXES[shape] || VIEWBOXES.blob
@@ -667,13 +698,15 @@ export function animatedSvg(shape, color) {
       getColor(color).name
     }">` +
     `<style>.still{display:none}@media(prefers-reduced-motion:reduce){.motion{display:none}.still{display:inline}}</style>` +
-    `<defs><clipPath id="clip">${animated(
-      "clip-body",
-      (f) => f.body,
-      "#fff",
-    )}</clipPath><clipPath id="still-clip"><path d="${pathData(
-      a.body,
-    )}"/></clipPath></defs>` +
+    (a.facets.length
+      ? `<defs><clipPath id="clip">${animated(
+          "clip-body",
+          (f) => f.body,
+          "#fff",
+        )}</clipPath><clipPath id="still-clip"><path d="${pathData(
+          a.body,
+        )}"/></clipPath></defs>`
+      : "") +
     `<g class="motion">${animated(
       "body",
       (f) => f.body,
@@ -689,7 +722,7 @@ export function animatedSvg(shape, color) {
         ),
       )
       .join("")}${[0, 1]
-      .map((i) => animated(`eye${i}`, (f) => f.eyes[i], "#FFFDF7"))
+      .map((i) => animated(`eye${i}`, (f) => f.eyes[i], a.eyeColor))
       .join("")}</g>` +
     `<g class="still">${staticParts()}</g></svg>`
   );

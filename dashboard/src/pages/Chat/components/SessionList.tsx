@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useDesktopChromeStyle } from "../../../hooks/useDesktopChrome";
+import { useTheme } from "../../../context/ThemeContext";
 import { DESKTOP_DRAG_REGION_CLASS } from "../../../utils/desktopChrome";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "antd";
@@ -56,25 +57,11 @@ import {
 } from "../utils/chatNavScope";
 import ChatNavScopeTabs, { ChatNavScopeEmpty } from "./ChatNavScopeTabs";
 import ExpertNameLabel from "./ExpertNameLabel";
-import ExpertWorkStatus from "./ExpertWorkStatus";
 import ExpertNavActions, { ExpertPinMark } from "./ExpertNavActions";
 import { type SessionWorkStatus } from "../utils/sessionWorkStatus";
 import { projectSessionListFor } from "./projectFolders";
 import type { ProjectRowProps } from "./projectFolders/project-folders.mjs";
 import styles from "../index.module.less";
-
-function AgentUnreadBadge({ count }: { count: number }) {
-  const { t } = useTranslation();
-  if (!count || count <= 0) return null;
-  return (
-    <span
-      className={styles.agentUnreadBadge}
-      aria-label={t("chat.unreadMessages", "未读消息")}
-    >
-      {count > 99 ? "99+" : count}
-    </span>
-  );
-}
 
 interface SessionItemProps {
   projectMenuItems?: ProjectRowProps["projectMenuItems"];
@@ -201,15 +188,11 @@ const SessionItem = memo(function SessionItem({
       }}
     >
       <span className={styles.sessionRowLead}>
-        {workStatus !== "idle" ? (
-          <SessionWorkStatusIcon status={workStatus} />
-        ) : (
-          <SessionChannelIcon
-            channelType={session.channelType}
-            size={12}
-            className={styles.sessionRowIcon}
-          />
-        )}
+        <SessionChannelIcon
+          channelType={session.channelType}
+          size={12}
+          className={styles.sessionRowIcon}
+        />
       </span>
       {isEditing ? (
         <input
@@ -239,6 +222,7 @@ const SessionItem = memo(function SessionItem({
               <Pin size={12} strokeWidth={2} />
             </span>
           ) : null}
+          <SessionWorkStatusIcon status={workStatus} />
           <Dropdown
             menu={{ items: menuItems }}
             trigger={["click"]}
@@ -368,12 +352,10 @@ function ActiveAgentCard({
                 name={agent.name}
                 className={styles.agentCardName}
               />
-              <ExpertWorkStatus agent={agent} />
               <ExpertPinMark pinned={pinned} />
               <TeamChatBadge agent={agent} compact />
               <RemoteExpertHint agent={agent} compact />
             </div>
-            <AgentUnreadBadge count={agent.unread_count ?? 0} />
             {onTogglePin ? (
               <ExpertNavActions
                 variant="classic"
@@ -479,12 +461,10 @@ function InactiveAgentRow({
               name={agent.name}
               className={styles.agentRowName}
             />
-            <ExpertWorkStatus agent={agent} />
             <ExpertPinMark pinned={pinned} />
             <TeamChatBadge agent={agent} compact />
             <RemoteExpertHint agent={agent} compact />
           </div>
-          <AgentUnreadBadge count={agent.unread_count ?? 0} />
           {onNewChat && onTogglePin ? (
             <ExpertNavActions
               variant="classic"
@@ -548,6 +528,7 @@ export default function SessionList({
   const navigate = useNavigate();
   const liveWorkingIds = useSessionWorkIds();
   const desktop = Boolean(useDesktopChromeStyle());
+  const { isDark } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputId = useId();
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -759,16 +740,18 @@ export default function SessionList({
   );
 
   return (
-    <div className={styles.sessionList}>
+    <div
+      className={cx(styles.sessionList, desktop && styles.desktopSessionList)}
+    >
       {desktop && (
         <div
           className={cx(styles.sessionRailHeader, DESKTOP_DRAG_REGION_CLASS)}
         >
-          {agents.length > 0 ? (
-            scopeTabs
-          ) : (
-            <span>{t("chat.navScopeExperts", "专家")}</span>
-          )}
+          <img
+            className={styles.sessionRailLogo}
+            src={isDark ? "/logo_mark_white.png" : "/logo_mark_dark.png"}
+            alt="Octop"
+          />
           {agents.length > 0 && (
             <button
               ref={searchButtonRef}
@@ -816,7 +799,7 @@ export default function SessionList({
         </div>
       ) : null}
 
-      {!desktop && agents.length > 0 ? scopeTabs : null}
+      {agents.length > 0 ? scopeTabs : null}
 
       {agents.length === 0 ? (
         <div className={styles.sessionEmptyAgents}>

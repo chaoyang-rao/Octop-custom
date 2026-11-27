@@ -203,7 +203,7 @@ export default function MainLayout() {
             display: "flex",
             flexDirection: "row",
             background: isChatRoute
-              ? "var(--fn-bg-elevated, #fff)"
+              ? "var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff))"
               : "var(--fn-bg-primary)",
             transition: "background var(--fn-transition)",
             overflow: "hidden",
@@ -227,9 +227,6 @@ export default function MainLayout() {
               position: "relative",
               flexShrink: 0,
               alignSelf: "stretch",
-              borderInlineEnd: fixedNavRail
-                ? "1px solid var(--fn-sidebar-border)"
-                : undefined,
               display: "flex",
               minHeight: 0,
             }}
@@ -240,6 +237,7 @@ export default function MainLayout() {
               onToggle={toggleCollapsed}
               isMobile={isMobile}
               fixedRail={fixedNavRail}
+              brandInHistoryRail={isChatRoute && chatSidebarOpen}
             />
             {!isMobile && !fixedNavRail && (
               <RailEdgeControl
@@ -310,7 +308,7 @@ export default function MainLayout() {
                 className="page-container"
                 style={{
                   background: isChatRoute
-                    ? "var(--fn-bg-elevated, #fff)"
+                    ? "var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff))"
                     : "var(--fn-bg-layout)",
                   transition: "background var(--fn-transition)",
                   flex: 1,

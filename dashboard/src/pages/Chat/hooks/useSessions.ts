@@ -32,6 +32,7 @@ export interface Session {
   artifacts?: ThreadArtifact[];
   turnActive?: boolean;
   awaitingUser?: boolean;
+  turnCompleted?: boolean;
 }
 
 /** Result of probing whether a thread exists for the current agent. */
@@ -59,6 +60,7 @@ export function toSession(row: {
   agent_id?: string | null;
   turn_active?: boolean;
   awaiting_user?: boolean;
+  turn_completed?: boolean;
 }): Session {
   const hasActivity =
     Boolean(row.has_messages) || Boolean(row.title) || row.last_active > 0;
@@ -95,6 +97,7 @@ export function toSession(row: {
     ),
     turnActive: Boolean(row.turn_active),
     awaitingUser: Boolean(row.awaiting_user),
+    turnCompleted: row.turn_completed,
   };
 }
 
@@ -521,6 +524,19 @@ export function useSessions(agentId: string | null) {
       }
     })();
   }, [agentId]);
+
+  useEffect(
+    () =>
+      chatStore.onStreamEvent((event) => {
+        if (
+          event.kind !== "streamEnd" ||
+          !_sessions.some((row) => row.id === event.sessionId)
+        )
+          return;
+        void fetchSessions(event.sessionId);
+      }),
+    [fetchSessions],
+  );
 
   useEffect(() => {
     return onSessionEvent((event) => {

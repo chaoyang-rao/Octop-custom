@@ -10,7 +10,7 @@
 
 .agentCardProfile {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   margin-bottom: 4px;
   padding: 4px 4px 2px;
@@ -107,7 +107,7 @@
 
 .agentCardName {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--fn-text-primary);
   line-height: 1.35;
   min-width: 0;
@@ -488,7 +488,7 @@
 
 .agentRowName {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 700;
   color: var(--fn-text-secondary);
   line-height: 1.35;
   min-width: 0;
@@ -553,4 +553,54 @@
 
 .sessionActions {
   display: none;
+}
+
+.desktopSessionList {
+  .agentCardSessions {
+    padding-inline-start: 4px;
+
+    :global(.octop-project-toolbar) {
+      margin-inline-start: 0;
+    }
+
+    :global(.octop-project-toggle),
+    :global(.octop-project-ungrouped-label),
+    :global(.octop-project-rows) {
+      padding-inline-start: 0;
+    }
+
+    :global(.octop-project-chevron) {
+      order: 1;
+    }
+
+    :global(.octop-project-rows) {
+      margin-inline-start: 0;
+      border-inline-start: 0;
+    }
+  }
+
+  .sessionRow {
+    padding-inline-start: 0;
+  }
+
+  .sessionRowLead,
+  .sessionRowPinIndicator,
+  .sessionRowWorkingSpinner,
+  .sessionRowWaitingIcon,
+  .sessionRowCompleteDot,
+  .sessionRowMore {
+    order: 1;
+  }
+
+  .sessionRowMore {
+    margin-inline-start: 0;
+  }
+}
+
+.sessionRowCompleteDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1084fe;
+  flex: 0 0 6px;
 }

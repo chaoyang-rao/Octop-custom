@@ -2,6 +2,20 @@
 import { SHAPES as shapes, COLORS as colors } from "./avatar-library.mjs";
 const SHAPES = shapes.map(({ id }) => id);
 const COLORS = colors.map(({ id }) => id);
+const FALLBACK_HUES = [
+  "black",
+  "cyan",
+  "blue",
+  "violet",
+  "magenta",
+  "yellow",
+  "orange",
+  "brown",
+  "red",
+];
+const primaryFace = { shape: "blob", color: "black" };
+const isPrimary = (agent) =>
+  agent?.is_team_primary === true && agent?.kind !== "team";
 let previous;
 export function randomAvatar(random = Math.random) {
   const shapes = SHAPES.filter((value) => value !== previous?.shape);
@@ -20,7 +34,7 @@ export function portraitFor(seed, avatars) {
     n = Math.imul(n ^ char.codePointAt(0), 16777619) >>> 0;
   return {
     shape: SHAPES[n % SHAPES.length],
-    color: COLORS[Math.floor(n / SHAPES.length) % COLORS.length],
+    color: FALLBACK_HUES[Math.floor(n / SHAPES.length) % FALLBACK_HUES.length],
   };
 }
 export function createExpertPresentation({
@@ -37,7 +51,7 @@ export function createExpertPresentation({
     if (SHAPES.includes(choice?.shape))
       return {
         shape: choice.shape,
-        color: COLORS.includes(choice.color) ? choice.color : "ink",
+        color: avatars.validColor(choice.color) ? choice.color : "black",
       };
     return portraitFor(member?.icon_url || member?.agent_id, avatars);
   }
@@ -83,6 +97,7 @@ export function createExpertPresentation({
           typeof member === "string"
             ? portraitFor(member, avatars)
             : memberFace(member);
+        const primary = isPrimary(member);
         return h(
           "span",
           {
@@ -97,7 +112,11 @@ export function createExpertPresentation({
               zIndex: index + 1,
             },
           },
-          avatars.renderAvatar({ ...face, size: faceSize }),
+          avatars.renderAvatar({
+            ...(primary ? primaryFace : face),
+            size: faceSize,
+            className: primary ? "octop-primary-face" : undefined,
+          }),
         );
       }),
     );
@@ -115,7 +134,7 @@ export function createExpertPresentation({
     agent ||=
       agentId && context?.agents?.find((item) => item.agent_id === agentId);
     // Shared geometric artwork is not an identity: only an explicit expert gets a role badge.
-    const primary = agent?.is_team_primary === true && agent?.kind !== "team";
+    const primary = isPrimary(agent);
     agent =
       agent ||
       (iconUrl && context?.activeAgent?.icon_url === iconUrl
@@ -142,9 +161,9 @@ export function createExpertPresentation({
       ? memberFace(agent)
       : portraitFor(iconUrl || iconName, avatars);
     const portrait = avatars.renderAvatar({
-      ...face,
+      ...(primary ? primaryFace : face),
       size,
-      className,
+      className: primary ? `octop-primary-face ${className || ""}` : className,
       style: { maxWidth: "100%", maxHeight: "100%", flexShrink: 0 },
     });
     if (!primary) return portrait;

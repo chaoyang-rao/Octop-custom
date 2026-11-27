@@ -1050,7 +1050,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             onSlashShortcutSelect={handleSlashSelect}
             onFileSelect={handleFileSelect}
             onFolderSelect={handleFolderSelect}
-            onNewChat={onNewChat}
             onPolish={() => void handlePolish()}
             onToggleVoice={() => toggleVoice()}
             onCancel={onCancel}

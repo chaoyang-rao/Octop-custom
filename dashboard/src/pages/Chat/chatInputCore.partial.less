@@ -4,7 +4,7 @@
   flex-shrink: 0;
   /* Match .chatInput horizontal gutters so the card lines up with the composer. */
   padding: 0 var(--chat-column-pad-x, 24px) 8px;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
   box-sizing: border-box;
 
   @media (max-width: 767px) {
@@ -23,7 +23,7 @@
 .modelConfigDock {
   flex-shrink: 0;
   padding: 0 var(--chat-column-pad-x, 24px) 8px;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
   box-sizing: border-box;
 
   @media (max-width: 767px) {
@@ -34,7 +34,7 @@
 .chatInput {
   flex-shrink: 0;
   padding: 16px var(--chat-column-pad-x, 32px) 20px;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 
   @media (max-width: 767px) {
     padding: 6px 12px 6px;
@@ -580,6 +580,19 @@
     background: var(--fn-bg-hover);
     color: var(--fn-text-tertiary);
     cursor: not-allowed;
+  }
+
+  :global(html[data-theme="dark"]) & {
+    color: #fff;
+    background: var(--fn-bg-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--fn-bg-hover);
+    }
+
+    &:disabled {
+      background: transparent;
+    }
   }
 
   &:focus-visible {

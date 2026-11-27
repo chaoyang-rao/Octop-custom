@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from octop.infra.agents.settings.geometric_avatar import AVATAR_COLORS, AVATAR_SHAPES
+from octop.infra.agents.settings.geometric_avatar import AVATAR_SHAPES, valid_avatar_color
 from octop.infra.errors import ErrorCode, OctopError
 
 MAX_BYTES = 8 * 1024 * 1024
@@ -127,7 +127,7 @@ class ResourceAvatar(StrictModel):
 
     @model_validator(mode="after")
     def valid_avatar(self) -> ResourceAvatar:
-        if self.shape not in AVATAR_SHAPES or self.color not in AVATAR_COLORS:
+        if self.shape not in AVATAR_SHAPES or not valid_avatar_color(self.color):
             raise ValueError("invalid avatar")
         return self
 

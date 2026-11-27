@@ -30,7 +30,7 @@
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 
   @media (max-width: 767px) {
     /* Edge inset equals avatar↔bubble gutter so the row is not over-padded. */
@@ -49,7 +49,7 @@
   min-width: 320px;
   height: 100%;
   overflow: hidden;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 
   @media (max-width: 767px) {
     /* On mobile, chatMain takes full width (no AvatarSidebar) */
@@ -163,7 +163,7 @@
   padding: 0 max(var(--chat-title-pad-x), var(--window-controls-inset-end, 0px))
     0 var(--chat-title-pad-x);
   border-bottom: none;
-  background: var(--fn-bg-primary);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-primary));
   color: var(--fn-text-primary);
   /* Visible so the hover edit control can sit just past the title. */
   overflow: visible;
@@ -385,7 +385,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 }
 
 .agentNotReady {

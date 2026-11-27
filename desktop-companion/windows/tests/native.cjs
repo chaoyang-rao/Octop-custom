@@ -38,7 +38,7 @@ const service = http.createServer((req, res) => {
       JSON.stringify({
         supported: true,
         available: true,
-        current_version: "0.10.3",
+        current_version: "0.10.4",
         version: "0.11.0",
         notes: "隔离更新界面验收，不是实际发布。",
         busy: false,

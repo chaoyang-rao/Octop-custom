@@ -2,7 +2,7 @@
 /* ---------- Chat Refresh Overrides ---------- */
 .chatPage {
   position: relative;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 }
 
 .sidebarWrapper.sidebarWrapperLayoutRail {
@@ -10,7 +10,10 @@
   height: 100%;
   align-self: stretch;
   position: relative;
-  background: var(--fn-bg-sidebar, var(--fn-bg-elevated, #fff));
+  background: var(
+    --fn-desktop-chat-rail-bg,
+    var(--fn-bg-sidebar, var(--fn-bg-elevated, #fff))
+  );
 
   &.sidebarWrapperCollapsed {
     /* No reserved strip — share the nav rail divider (avoids a double-line gap). */
@@ -62,7 +65,7 @@
   min-width: 248px;
   height: 100%;
   border-radius: 0;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-rail-bg, var(--fn-bg-elevated, #fff));
   box-shadow: none;
   border: none;
   border-right: none;
@@ -395,6 +398,10 @@
   gap: 2px;
   margin: 0 12px 10px 0;
   padding: 2px;
+
+  .sessionRailHeader + & {
+    margin-top: 5px;
+  }
   border-radius: 10px;
   background: var(--fn-bg-secondary, rgba(0, 0, 0, 0.04));
 }
@@ -670,7 +677,7 @@
   flex-direction: column;
   min-width: 320px;
   overflow: hidden;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 
   @media (max-width: 767px) {
     padding: 0;
@@ -714,7 +721,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 }
 
 .messageList {
@@ -746,7 +753,7 @@
   padding-top: 10px;
   padding-inline: var(--chat-column-pad-x, 32px);
   padding-bottom: 18px;
-  background: var(--fn-bg-elevated, #fff);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-elevated, #fff));
 
   @media (min-width: 768px) {
     :global(html[data-octop-desktop-chrome]) & {
@@ -771,7 +778,7 @@
   box-sizing: border-box;
   border-radius: 24px;
   padding: 10px 12px 10px 16px;
-  background: var(--fn-bg-primary);
+  background: var(--fn-desktop-chat-bg, var(--fn-bg-primary));
   border: 1px solid var(--fn-assistant-bubble-border);
   box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
 

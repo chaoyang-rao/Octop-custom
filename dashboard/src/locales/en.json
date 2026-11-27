@@ -1690,6 +1690,7 @@
     "modelPickerSearch": "Search models",
     "modelPickerEmpty": "No matching models",
     "sessionWorking": "In progress",
+    "sessionCompleted": "Completed",
     "sessionWaiting": "Waiting for you",
     "composerContextLabel": "Message context",
     "contextWindow": {

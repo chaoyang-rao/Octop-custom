@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261127.3"
+        default: "custom-1.0.3b3-20261128.1"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.3' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -145,6 +145,7 @@ jobs:
           src/components/feedback/FeedbackLauncher.test.tsx
           src/layouts/Sidebar.chatRailToggle.test.tsx
           src/pages/Chat/components/SessionList.navScope.test.tsx
+          src/pages/Chat/utils/sessionWorkStatus.test.ts
           src/utils/desktopChrome.test.ts
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
@@ -487,7 +488,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112703 / 哆啦 0.10.3。桌面聊天标题和输入区悬浮，滚动消息在上下边缘逐渐淡出。发送按钮换成圆形上箭头。移除输入框下方提示，输入框与左下角账号头像底边对齐。本会话累计移到上下文环形图标的悬停提示中。
+          Octop Custom 112801 / 哆啦 0.10.4。收窄桌面图标栏，Logo 与搜索移入专家栏。左右导航栏在浅色模式统一浅灰、深色模式统一深灰，聊天区随主题使用白色或黑色。头像下方的项目和会话标题对齐。新增十二色专家头像色板，旧头像更新到对应的新色值，主专家头像随主题使用白色或黑色圆形。会话末尾显示工作进度和完成状态。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

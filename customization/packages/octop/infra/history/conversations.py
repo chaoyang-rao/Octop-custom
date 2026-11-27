@@ -13,6 +13,9 @@ from langgraph.config import get_config
 
 from octop.i18n import tr
 from octop.infra.agents.teams.primary import current_primary_room, request_user_id
+from octop.infra.db.repos.thread_messages import ThreadMessageRepo
+from octop.infra.gateway.process.message_keys import STREAM_ERROR_FLAG
+from octop.infra.history.store import HistoryStore
 from octop.infra.utils.locale import DEFAULT_LOCALE
 
 
@@ -54,6 +57,28 @@ def visible_message(row: Any) -> dict[str, Any]:
         "has_tool_calls": bool(data.get("tool_calls")),
         "quote": (kwargs.get("octop_composer_context") or {}).get("quote"),
     }
+
+
+def completed_thread_replies(
+    thread_ids: list[str], messages: ThreadMessageRepo, archive: HistoryStore | None
+) -> set[str]:
+    statuses = archive.latest_turn_statuses(thread_ids) if archive else {}
+    completed = {thread_id for thread_id, status in statuses.items() if status == "complete"}
+    # Legacy or imported conversations may only have a projected transcript.
+    for thread_id, row in messages.latest_replies(
+        [thread_id for thread_id in thread_ids if thread_id not in statuses]
+    ).items():
+        try:
+            wire = json.loads(row.message_json)
+            data = wire.get("data") if isinstance(wire.get("data"), dict) else wire
+            if (data.get("additional_kwargs") or {}).get(STREAM_ERROR_FLAG):
+                continue
+            item = visible_message(row)
+        except (ValueError, AttributeError):
+            continue
+        if not item["has_tool_calls"] and (item["content"].strip() or item["attachments"]):
+            completed.add(thread_id)
+    return completed
 
 
 class ConversationHistory:
