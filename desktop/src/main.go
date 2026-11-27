@@ -397,6 +397,7 @@ func main() {
 		Title:                "Octop Custom",
 		Width:                1200,
 		Height:               800,
+		MinWidth:             800,
 		URL:                  "/",
 		Frameless:            true,
 		AllowSimpleEventEmit: true,

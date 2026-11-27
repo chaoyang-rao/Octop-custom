@@ -11,6 +11,29 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => vi.fn(),
+  useLocation: () => ({ pathname: "/chat" }),
+}));
+
+vi.mock("../hooks/useCurrentUser", () => ({
+  useCurrentUser: () => user,
+  useSetCurrentUser: () => vi.fn(),
+}));
+
+vi.mock("../hooks/useServerTimezone", () => ({
+  useServerTimezone: () => "Asia/Shanghai",
+}));
+
+vi.mock("../api/modules/feedback", () => ({
+  feedbackApi: {
+    options: () =>
+      Promise.resolve({
+        destination: "local",
+        local_admin: false,
+        sections: [{ key: "chat", label_key: "nav.chat", path: "/chat" }],
+      }),
+    mine: () => Promise.resolve({ items: [] }),
+  },
+  sectionForPath: () => "chat",
 }));
 
 vi.mock("../hooks/useUserRole", () => ({
@@ -105,6 +128,20 @@ describe("AvatarDropdown personal settings", () => {
     );
     expect(identity.querySelector("[data-testid='profile-avatar']")).toBeNull();
     expect(screen.getByTestId("avatar-picker")).toBeInTheDocument();
+  });
+
+  it("opens feedback from the signed-in account menu", async () => {
+    const view = userEvent.setup();
+    render(<AvatarDropdown user={user} placement="sidebar" />);
+
+    expect(
+      screen.queryByRole("button", { name: "feedback.title" }),
+    ).not.toBeInTheDocument();
+    await view.click(screen.getByRole("button", { name: /Ada/ }));
+    await view.click(screen.getByRole("button", { name: "feedback.title" }));
+    expect(
+      await screen.findByRole("dialog", { name: "feedback.title" }),
+    ).toBeInTheDocument();
   });
 
   it("opens account security with the password form in one drawer", async () => {

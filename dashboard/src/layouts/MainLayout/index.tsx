@@ -27,6 +27,7 @@ import { EXPAND_CHAT_RAIL_EVENT } from "../../pages/Chat/components/ChatSidebarP
 import RequirePermission from "../../components/RequirePermission";
 import { routeNeedsPermission } from "../../utils/permissions";
 import { useLayoutMode } from "../../context/LayoutModeContext";
+import { useDesktopChromeStyle } from "../../hooks/useDesktopChrome";
 import { useDashboardPushToast } from "../../hooks/useDashboardPushToast";
 import { useNotificationPresence } from "../../pages/MobileAccess/useNotificationPresence";
 
@@ -61,6 +62,7 @@ export default function MainLayout() {
   const currentPath = location.pathname;
   const selectedKey = resolveSelectedKey(currentPath);
   const isMobile = useIsMobile();
+  const fixedNavRail = Boolean(useDesktopChromeStyle()) && !isMobile;
   const { layoutMode } = useLayoutMode();
   useDashboardPushToast();
   useNotificationPresence();
@@ -72,7 +74,8 @@ export default function MainLayout() {
     (isMobile && MOBILE_FULLSCREEN_PATHS.has(currentPath));
   const onWorkbench = isWorkbenchPath(currentPath);
 
-  const [collapsed, setCollapsed] = useState(() => getSavedCollapsed());
+  const [savedCollapsed, setCollapsed] = useState(() => getSavedCollapsed());
+  const collapsed = fixedNavRail || savedCollapsed;
   const [chatSidebarOpen, setChatSidebarOpen] = useChatSidebarOpen();
   const [workbenchMounted, setWorkbenchMounted] = useState(() => onWorkbench);
 
@@ -82,14 +85,18 @@ export default function MainLayout() {
     }
   }, [onWorkbench]);
 
-  const persistNavCollapsed = useCallback((next: boolean) => {
-    setCollapsed(next);
-    try {
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const persistNavCollapsed = useCallback(
+    (next: boolean) => {
+      if (fixedNavRail) return;
+      setCollapsed(next);
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+    },
+    [fixedNavRail],
+  );
 
   /** Mobile header / overlay: simple nav toggle. */
   const toggleCollapsed = useCallback(() => {
@@ -138,10 +145,12 @@ export default function MainLayout() {
   // Listen for custom event from ChatPage mobile header to toggle the global
   // navigation sidebar (since the global Header is hidden on mobile fullscreen).
   useEffect(() => {
-    const handler = () => setCollapsed((prev) => !prev);
+    const handler = () => {
+      if (!fixedNavRail) setCollapsed((prev) => !prev);
+    };
     window.addEventListener("octop:toggle-nav", handler);
     return () => window.removeEventListener("octop:toggle-nav", handler);
-  }, []);
+  }, [fixedNavRail]);
 
   // Chat history rail expand: if nav is also collapsed, open both rails.
   // Minimal layout has no second rail — Sidebar handles records pane itself.
@@ -218,6 +227,9 @@ export default function MainLayout() {
               position: "relative",
               flexShrink: 0,
               alignSelf: "stretch",
+              borderInlineEnd: fixedNavRail
+                ? "1px solid var(--fn-sidebar-border)"
+                : undefined,
               display: "flex",
               minHeight: 0,
             }}
@@ -227,8 +239,9 @@ export default function MainLayout() {
               collapsed={collapsed}
               onToggle={toggleCollapsed}
               isMobile={isMobile}
+              fixedRail={fixedNavRail}
             />
-            {!isMobile && (
+            {!isMobile && !fixedNavRail && (
               <RailEdgeControl
                 expanded={!collapsed}
                 onToggle={handleNavRailToggle}

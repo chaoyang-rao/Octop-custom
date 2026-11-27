@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import AvatarDropdown from "../components/AvatarDropdown";
-import FeedbackLauncher from "../components/feedback/FeedbackLauncher";
 import AppVersionBadge from "../components/AppVersionBadge";
 import CurrentVersionBadge from "../components/CurrentVersionBadge";
 import { ArrowRightLeft, ChevronDown, X } from "../components/arcIcons";
@@ -121,6 +120,7 @@ interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   isMobile?: boolean;
+  fixedRail?: boolean;
 }
 
 function NavItemButton({
@@ -394,6 +394,7 @@ export default function Sidebar({
   collapsed,
   onToggle,
   isMobile,
+  fixedRail = false,
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -541,30 +542,25 @@ export default function Sidebar({
   );
 
   const userFooter = (
-    <>
-      <FeedbackLauncher
+    <div
+      className={styles.sidebarUser}
+      style={{
+        flexShrink: 0,
+        padding: isRailCollapsed ? "10px 0" : "10px 12px",
+        display: "flex",
+        justifyContent: isRailCollapsed ? "center" : "stretch",
+      }}
+    >
+      <AvatarDropdown
+        user={user}
+        onUserChange={setUser}
+        placement="sidebar"
         compact={isRailCollapsed}
-        currentSection={selectedKey}
+        feedbackSection={selectedKey}
+        onBeforeOpenSettings={isMobile && !collapsed ? onToggle : undefined}
+        onCustomizeNav={() => setCustomizerOpen(true)}
       />
-      <div
-        className={styles.sidebarUser}
-        style={{
-          flexShrink: 0,
-          padding: isRailCollapsed ? "10px 0" : "10px 12px",
-          display: "flex",
-          justifyContent: isRailCollapsed ? "center" : "stretch",
-        }}
-      >
-        <AvatarDropdown
-          user={user}
-          onUserChange={setUser}
-          placement="sidebar"
-          compact={isRailCollapsed}
-          onBeforeOpenSettings={isMobile && !collapsed ? onToggle : undefined}
-          onCustomizeNav={() => setCustomizerOpen(true)}
-        />
-      </div>
-    </>
+    </div>
   );
 
   const customizer = (
@@ -604,7 +600,7 @@ export default function Sidebar({
     <div style={{ padding: "8px 0" }}>
       <SidebarCollapsedIconNav
         items={navSections.flatMap((section) => {
-          if (section.id && isGroupCollapsed(section.id)) {
+          if (!fixedRail && section.id && isGroupCollapsed(section.id)) {
             return [];
           }
           return section.items;
@@ -801,16 +797,24 @@ export default function Sidebar({
   }
 
   // Desktop: custom sidebar with icon-only collapsed mode.
-  // Right border is drawn by MainLayout's RailEdgeControl.
   return (
     <div
       style={{
-        width: isRailCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
-        minWidth: isRailCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
+        width: fixedRail
+          ? "var(--fn-desktop-rail-width)"
+          : isRailCollapsed
+          ? COLLAPSED_WIDTH
+          : EXPANDED_WIDTH,
+        minWidth: fixedRail
+          ? "var(--fn-desktop-rail-width)"
+          : isRailCollapsed
+          ? COLLAPSED_WIDTH
+          : EXPANDED_WIDTH,
         background: "var(--fn-sidebar-bg)",
         borderRight: "none",
-        transition:
-          "width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: fixedRail
+          ? undefined
+          : "width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -819,6 +823,9 @@ export default function Sidebar({
         minHeight: 0,
       }}
     >
+      {fixedRail && (
+        <div className={styles.windowControlRow} aria-hidden="true" />
+      )}
       <div
         className={cx(styles.sidebarBrand, DESKTOP_DRAG_REGION_CLASS)}
         style={{
@@ -826,7 +833,11 @@ export default function Sidebar({
           alignItems: "center",
           gap: 6,
           minWidth: 0,
-          padding: isRailCollapsed ? "12px 0" : "14px 14px 10px",
+          padding: fixedRail
+            ? "5px 0"
+            : isRailCollapsed
+            ? "12px 0"
+            : "14px 14px 10px",
           justifyContent: isRailCollapsed ? "center" : "flex-start",
           flexShrink: 0,
         }}

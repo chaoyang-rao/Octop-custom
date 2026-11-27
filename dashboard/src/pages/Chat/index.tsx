@@ -100,6 +100,8 @@ import {
 } from "./ChatToolDockContext";
 import ChatSidebarPanel from "./components/ChatSidebarPanel";
 import ChatTitleBar from "./components/ChatTitleBar";
+import { useDesktopChromeStyle } from "../../hooks/useDesktopChrome";
+import { DESKTOP_DRAG_REGION_CLASS } from "../../utils/desktopChrome";
 import TeamChatBadge from "./components/TeamChatBadge";
 import RemoteExpertHint from "./components/RemoteExpertHint";
 import ChatComposerChrome from "./components/ChatComposerChrome";
@@ -143,6 +145,7 @@ function ChatPageInner() {
     threadId: threadId ?? null,
   });
   const isMobile = useIsMobile();
+  const desktopChrome = useDesktopChromeStyle();
   const user = useCurrentUser();
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
   const { layoutMode } = useLayoutMode();
@@ -1518,6 +1521,15 @@ function ChatPageInner() {
                 }
               />
             )}
+            {desktopChrome &&
+              !isMobile &&
+              !(activeSession && activeSessionTitle) && (
+                <div
+                  className={cx(styles.chatTitleBar, DESKTOP_DRAG_REGION_CLASS)}
+                >
+                  <span className={styles.chatTitleText}>{t("nav.chat")}</span>
+                </div>
+              )}
             {memoryPanelOpen && resolvedAgentId && activeThreadId && (
               <ScopedMemoryPanel
                 key={`${resolvedAgentId}/${activeThreadId}`}

@@ -26,12 +26,12 @@ export default function DesktopWindowControls({
       >
         <button
           type="button"
-          className={cx(styles.light, styles.zoom)}
-          aria-label={maximise}
-          onClick={() => emitDesktopWindowAction("toggle-maximise")}
+          className={cx(styles.light, styles.close)}
+          aria-label={close}
+          onClick={() => emitDesktopWindowAction("close")}
         >
           <span className={styles.glyph} aria-hidden>
-            +
+            ×
           </span>
         </button>
         <button
@@ -46,12 +46,12 @@ export default function DesktopWindowControls({
         </button>
         <button
           type="button"
-          className={cx(styles.light, styles.close)}
-          aria-label={close}
-          onClick={() => emitDesktopWindowAction("close")}
+          className={cx(styles.light, styles.zoom)}
+          aria-label={maximise}
+          onClick={() => emitDesktopWindowAction("toggle-maximise")}
         >
           <span className={styles.glyph} aria-hidden>
-            ×
+            +
           </span>
         </button>
       </div>

@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useDesktopChromeStyle } from "../hooks/useDesktopChrome";
 import {
   loadLayoutMode,
   loadMinimalNavPane,
@@ -31,6 +32,7 @@ const LayoutModeContext = createContext<LayoutModeContextValue>({
 });
 
 export function LayoutModeProvider({ children }: { children: ReactNode }) {
+  const desktopChrome = useDesktopChromeStyle();
   const [layoutMode, setLayoutModeState] = useState<LayoutMode>(() =>
     loadLayoutMode(),
   );
@@ -49,8 +51,13 @@ export function LayoutModeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ layoutMode, setLayoutMode, minimalPane, setMinimalPane }),
-    [layoutMode, setLayoutMode, minimalPane, setMinimalPane],
+    () => ({
+      layoutMode: desktopChrome ? ("classic" as const) : layoutMode,
+      setLayoutMode,
+      minimalPane,
+      setMinimalPane,
+    }),
+    [desktopChrome, layoutMode, setLayoutMode, minimalPane, setMinimalPane],
   );
 
   return (

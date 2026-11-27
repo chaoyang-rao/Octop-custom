@@ -1,6 +1,16 @@
 import { ExpertPortrait } from "../../../components/expertPortrait";
-import { memo, useCallback, useMemo, useState, useRef, useEffect } from "react";
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useId,
+} from "react";
 import { useTranslation } from "react-i18next";
+import { useDesktopChromeStyle } from "../../../hooks/useDesktopChrome";
+import { DESKTOP_DRAG_REGION_CLASS } from "../../../utils/desktopChrome";
 import { useNavigate } from "react-router-dom";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
@@ -537,7 +547,22 @@ export default function SessionList({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const liveWorkingIds = useSessionWorkIds();
+  const desktop = Boolean(useDesktopChromeStyle());
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputId = useId();
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    if (desktop && searchOpen) searchInputRef.current?.focus();
+  }, [desktop, searchOpen]);
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    searchButtonRef.current?.focus();
+  };
   const [showingHidden, setShowingHidden] = useState(false);
   const [navScope, setNavScope] = useState<ChatNavScope>(() =>
     initialChatNavScope(
@@ -728,29 +753,70 @@ export default function SessionList({
     );
   };
 
+  const searchLabel = t("chat.searchSessions", "搜索会话");
+  const scopeTabs = (
+    <ChatNavScopeTabs value={navScope} onChange={setNavScope} />
+  );
+
   return (
     <div className={styles.sessionList}>
-      {agents.length > 0 ? (
+      {desktop && (
+        <div
+          className={cx(styles.sessionRailHeader, DESKTOP_DRAG_REGION_CLASS)}
+        >
+          {agents.length > 0 ? (
+            scopeTabs
+          ) : (
+            <span>{t("chat.navScopeExperts", "专家")}</span>
+          )}
+          {agents.length > 0 && (
+            <button
+              ref={searchButtonRef}
+              type="button"
+              className={styles.sessionSearchToggle}
+              title={searchLabel}
+              aria-label={searchLabel}
+              aria-expanded={searchOpen}
+              aria-controls={searchOpen ? searchInputId : undefined}
+              onClick={() => {
+                if (searchOpen) closeSearch();
+                else setSearchOpen(true);
+              }}
+            >
+              <Search size={16} strokeWidth={1.8} aria-hidden />
+            </button>
+          )}
+        </div>
+      )}
+
+      {agents.length > 0 && (!desktop || searchOpen) ? (
         <div className={styles.sessionSearchWrap}>
           <Search
             size={14}
             className={styles.sessionSearchIcon}
             strokeWidth={2}
+            aria-hidden
           />
           <input
+            ref={searchInputRef}
+            id={searchInputId}
             type="search"
             className={styles.sessionSearchInput}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("chat.searchSessions", "搜索会话")}
-            aria-label={t("chat.searchSessions", "搜索会话")}
+            onKeyDown={(e) => {
+              if (desktop && e.key === "Escape" && !isImeComposing(e)) {
+                e.preventDefault();
+                closeSearch();
+              }
+            }}
+            placeholder={searchLabel}
+            aria-label={searchLabel}
           />
         </div>
       ) : null}
 
-      {agents.length > 0 ? (
-        <ChatNavScopeTabs value={navScope} onChange={setNavScope} />
-      ) : null}
+      {!desktop && agents.length > 0 ? scopeTabs : null}
 
       {agents.length === 0 ? (
         <div className={styles.sessionEmptyAgents}>

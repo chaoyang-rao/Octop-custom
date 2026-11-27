@@ -56,6 +56,9 @@ func TestSplashHTMLHasFramelessWindowControls(t *testing.T) {
 			t.Fatalf("splash HTML missing %q", needle)
 		}
 	}
+	if !strings.Contains(cssRule(body, ".window-controls"), "left: 0") {
+		t.Fatal("splash window controls must sit at the top left")
+	}
 	if !strings.Contains(body, `data-chrome="mac"`) || !strings.Contains(body, `data-chrome="windows"`) {
 		t.Fatal("splash HTML must ship both mac and windows caption groups")
 	}
@@ -123,7 +126,6 @@ func TestSettingsHTMLFitsWithoutScrollbar(t *testing.T) {
 		`html[data-mode="settings"]`,
 		`overflow: hidden`,
 		`html[data-mode="settings"] .wrap`,
-		`html[data-mode="settings"] #title`,
 	} {
 		if !strings.Contains(body, needle) {
 			t.Fatalf("settings HTML missing %q", needle)

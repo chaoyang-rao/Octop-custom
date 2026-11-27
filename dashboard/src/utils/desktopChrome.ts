@@ -5,11 +5,10 @@ type DesktopWindow = Window & {
 export type DesktopChromeStyle = "mac" | "windows";
 export type DesktopWindowAction = "minimise" | "toggle-maximise" | "close";
 
+// Native caption buttons occupy the leading rail, so the right edge is free.
 export const WINDOW_CONTROLS_INSET: Record<DesktopChromeStyle, number> = {
-  // 3×12px lights + 2×8px gaps + 8px/12px padding, plus a little slack.
-  mac: 80,
-  // 3 × 46px caption buttons.
-  windows: 138,
+  mac: 0,
+  windows: 0,
 };
 
 /** Right-edge overlay chrome (dock toolbar, etc.) to keep clear of caption buttons. */

@@ -307,3 +307,51 @@
     background: color-mix(in srgb, var(--fn-color-brand) 20%, transparent);
   }
 }
+
+.sessionRailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: var(--fn-chat-chrome-height);
+  flex-shrink: 0;
+  padding-inline: 8px;
+  color: var(--fn-text-primary);
+
+  .sessionScopeTabs {
+    min-width: 0;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sessionScopeTab {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.sessionSearchToggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fn-text-secondary);
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background: var(--fn-bg-hover);
+    color: var(--fn-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fn-color-brand);
+    outline-offset: 1px;
+  }
+}

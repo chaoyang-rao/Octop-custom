@@ -10,16 +10,8 @@
       )
         ? "mac"
         : "windows";
-      document.documentElement.style.setProperty(
-        "--window-controls-inset-end",
-        document.documentElement.dataset.chrome === "mac" ? "80px" : "138px",
-      );
       if (new URLSearchParams(location.search).get("settings") === "1") {
         document.documentElement.dataset.mode = "settings";
-        document.documentElement.style.setProperty(
-          "--window-controls-inset-end",
-          "36px",
-        );
       }
     </script>
     <script type="module" src="/wails/runtime.js"></script>
@@ -39,7 +31,6 @@
         --on-brand: #ffffff;
         --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03);
         --radius: 12px;
-        --window-controls-inset-end: 80px;
       }
       * {
         box-sizing: border-box;
@@ -66,7 +57,7 @@
       .window-controls {
         position: fixed;
         top: 0;
-        right: 0;
+        left: 0;
         z-index: 30;
         display: none;
         align-items: center;
@@ -83,7 +74,6 @@
         overflow: hidden;
         height: 100%;
         background: var(--bg-primary);
-        --window-controls-inset-end: 36px;
       }
       html[data-mode="settings"] .window-controls [data-action="minimise"],
       html[data-mode="settings"] .window-controls [data-action="toggle-maximise"] {
@@ -95,9 +85,6 @@
         display: flex;
         flex-direction: column;
         padding: 44px 20px 28px;
-      }
-      html[data-mode="settings"] #title {
-        padding-right: var(--window-controls-inset-end);
       }
       html[data-mode="settings"] .subtitle {
         margin-bottom: 16px;
@@ -183,7 +170,7 @@
       .wrap {
         max-width: 420px;
         margin: 0 auto;
-        padding: 56px max(24px, var(--window-controls-inset-end)) 24px 24px;
+        padding: 56px 24px 24px;
       }
       h1 {
         font-size: 18px;
@@ -426,11 +413,11 @@
     >
       <button
         type="button"
-        class="light zoom"
-        data-action="toggle-maximise"
-        aria-label="最大化"
+        class="light close"
+        data-action="close"
+        aria-label="关闭"
       >
-        <span class="glyph" aria-hidden>+</span>
+        <span class="glyph" aria-hidden>×</span>
       </button>
       <button
         type="button"
@@ -442,11 +429,11 @@
       </button>
       <button
         type="button"
-        class="light close"
-        data-action="close"
-        aria-label="关闭"
+        class="light zoom"
+        data-action="toggle-maximise"
+        aria-label="最大化"
       >
-        <span class="glyph" aria-hidden>×</span>
+        <span class="glyph" aria-hidden>+</span>
       </button>
     </div>
     <div

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Alert,
@@ -38,9 +38,13 @@ function newSubmissionKey() {
 export default function FeedbackLauncher({
   compact = false,
   currentSection,
+  open: controlledOpen,
+  onClose,
 }: {
   compact?: boolean;
   currentSection?: string;
+  open?: boolean;
+  onClose?: () => void;
 }) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -50,7 +54,8 @@ export default function FeedbackLauncher({
     Form.useForm<
       Pick<FeedbackDraft, "section" | "kind" | "title" | "content">
     >();
-  const [open, setOpen] = useState(false);
+  const [localOpen, setOpen] = useState(false);
+  const open = controlledOpen ?? localOpen;
   const [options, setOptions] = useState<FeedbackOptions | null>(null);
   const [history, setHistory] = useState<FeedbackRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,45 +81,54 @@ export default function FeedbackLauncher({
     submissionKey.current = null;
   }, [user?.id, form]);
 
-  async function refresh(selectCurrentSection = false) {
-    const owner = user?.id;
-    const generation = ++loadGeneration.current;
-    setLoading(true);
-    setError("");
-    setHistoryError("");
-    const results = await Promise.allSettled([
-      feedbackApi.options(),
-      feedbackApi.mine(),
-    ]);
-    if (identity.current !== owner || generation !== loadGeneration.current)
-      return;
-    if (results[0].status === "fulfilled") {
-      const next = results[0].value;
-      setOptions(next);
-      const emptyDraft =
-        !form.getFieldValue("title")?.trim() &&
-        !form.getFieldValue("content")?.trim();
-      if (
-        !form.getFieldValue("section") ||
-        (selectCurrentSection && emptyDraft)
-      )
-        form.setFieldsValue({
-          section: next.sections.some(
-            (section) => section.key === currentSection,
-          )
-            ? currentSection
-            : sectionForPath(next.sections, location.pathname),
-          kind: form.getFieldValue("kind") ?? "problem",
-        });
-    } else
-      setError(apiErrorMessage(results[0].reason, t("feedback.loadFailed"), t));
-    if (results[1].status === "fulfilled") setHistory(results[1].value.items);
-    else
-      setHistoryError(
-        apiErrorMessage(results[1].reason, t("feedback.loadFailed"), t),
-      );
-    setLoading(false);
-  }
+  const refresh = useCallback(
+    async (selectCurrentSection = false) => {
+      const owner = user?.id;
+      const generation = ++loadGeneration.current;
+      setLoading(true);
+      setError("");
+      setHistoryError("");
+      const results = await Promise.allSettled([
+        feedbackApi.options(),
+        feedbackApi.mine(),
+      ]);
+      if (identity.current !== owner || generation !== loadGeneration.current)
+        return;
+      if (results[0].status === "fulfilled") {
+        const next = results[0].value;
+        setOptions(next);
+        const emptyDraft =
+          !form.getFieldValue("title")?.trim() &&
+          !form.getFieldValue("content")?.trim();
+        if (
+          !form.getFieldValue("section") ||
+          (selectCurrentSection && emptyDraft)
+        )
+          form.setFieldsValue({
+            section: next.sections.some(
+              (section) => section.key === currentSection,
+            )
+              ? currentSection
+              : sectionForPath(next.sections, location.pathname),
+            kind: form.getFieldValue("kind") ?? "problem",
+          });
+      } else
+        setError(
+          apiErrorMessage(results[0].reason, t("feedback.loadFailed"), t),
+        );
+      if (results[1].status === "fulfilled") setHistory(results[1].value.items);
+      else
+        setHistoryError(
+          apiErrorMessage(results[1].reason, t("feedback.loadFailed"), t),
+        );
+      setLoading(false);
+    },
+    [user?.id, currentSection, form, location.pathname, t],
+  );
+
+  useEffect(() => {
+    if (controlledOpen && user?.id !== undefined) void refresh(true);
+  }, [controlledOpen, user?.id, refresh]);
 
   async function submit(
     values: Pick<FeedbackDraft, "section" | "kind" | "title" | "content">,
@@ -156,25 +170,31 @@ export default function FeedbackLauncher({
   const label = t("feedback.title");
   return (
     <>
-      <div className={`${styles.launcher} ${compact ? styles.compact : ""}`}>
-        <Tooltip title={compact ? label : undefined} placement="right">
-          <Button
-            type="text"
-            aria-label={label}
-            icon={<MessageSquareText size={17} aria-hidden />}
-            onClick={() => {
-              setOpen(true);
-              void refresh(true);
-            }}
-          >
-            {!compact && label}
-          </Button>
-        </Tooltip>
-      </div>
+      {controlledOpen === undefined && (
+        <div className={`${styles.launcher} ${compact ? styles.compact : ""}`}>
+          <Tooltip title={compact ? label : undefined} placement="right">
+            <Button
+              type="text"
+              aria-label={label}
+              icon={<MessageSquareText size={17} aria-hidden />}
+              onClick={() => {
+                setOpen(true);
+                void refresh(true);
+              }}
+            >
+              {!compact && label}
+            </Button>
+          </Tooltip>
+        </div>
+      )}
       <Drawer
         title={label}
         open={open}
-        onClose={() => !sending && setOpen(false)}
+        onClose={() => {
+          if (sending) return;
+          if (onClose) onClose();
+          else setOpen(false);
+        }}
         width="min(520px, 100vw)"
         maskClosable={!sending}
         closable={!sending}

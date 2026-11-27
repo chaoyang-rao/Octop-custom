@@ -24,6 +24,7 @@ import {
   KeyRound,
   ShieldCheck,
   SlidersHorizontal,
+  MessageSquareText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -49,6 +50,8 @@ import { ProfileAvatarPicker } from "../pages/Admin/Users/ProfileAvatar";
 import { AccountAvatar } from "./accountAvatar";
 import AccountSecurityDrawer from "./AccountSecurityDrawer";
 import DesktopCompanionSettings from "./DesktopCompanionSettings";
+import FeedbackLauncher from "./feedback/FeedbackLauncher";
+import { useDesktopChromeStyle } from "../hooks/useDesktopChrome";
 import styles from "./AvatarDropdown.module.less";
 
 const GITHUB_URL = "https://github.com/TencentCloud/Octop";
@@ -80,6 +83,7 @@ interface AvatarDropdownProps {
   compact?: boolean;
   /** Called before opening settings or account security (e.g. close mobile nav drawer). */
   onBeforeOpenSettings?: () => void;
+  feedbackSection?: string;
   /** Opens the sidebar layout editor. Omitted when that editor is unavailable. */
   onCustomizeNav?: () => void;
 }
@@ -90,6 +94,7 @@ export default function AvatarDropdown({
   placement = "default",
   compact = false,
   onBeforeOpenSettings,
+  feedbackSection,
   onCustomizeNav,
 }: AvatarDropdownProps) {
   const { t, i18n } = useTranslation();
@@ -97,7 +102,9 @@ export default function AvatarDropdown({
   const role = useUserRole();
   const isMobile = useIsMobile();
   const { layoutMode, setLayoutMode } = useLayoutMode();
+  const desktopChrome = useDesktopChromeStyle();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -372,6 +379,21 @@ export default function AvatarDropdown({
         </button>
       )}
 
+      {user && (
+        <button
+          type="button"
+          className={styles.menuItem}
+          onClick={() => {
+            setMenuOpen(false);
+            onBeforeOpenSettings?.();
+            setFeedbackOpen(true);
+          }}
+        >
+          <MessageSquareText size={16} strokeWidth={1.8} />
+          <span>{t("feedback.title")}</span>
+        </button>
+      )}
+
       <Divider className={styles.menuDivider} />
 
       <button
@@ -541,27 +563,31 @@ export default function AvatarDropdown({
 
       <Divider className={styles.settingsDivider} />
 
-      <section className={styles.settingsSection}>
-        <div className={styles.settingsSectionHead}>
-          <h3 className={styles.settingsSectionTitle}>
-            {t("account.layoutMode")}
-          </h3>
-          <p className={styles.settingsSectionDesc}>
-            {t("account.layoutModeHint")}
-          </p>
-        </div>
-        <Segmented
-          block
-          value={layoutMode}
-          options={[
-            { label: t("account.layoutClassic"), value: "classic" },
-            { label: t("account.layoutMinimal"), value: "minimal" },
-          ]}
-          onChange={(val) => setLayoutMode(val as LayoutMode)}
-        />
-      </section>
+      {!desktopChrome && (
+        <>
+          <section className={styles.settingsSection}>
+            <div className={styles.settingsSectionHead}>
+              <h3 className={styles.settingsSectionTitle}>
+                {t("account.layoutMode")}
+              </h3>
+              <p className={styles.settingsSectionDesc}>
+                {t("account.layoutModeHint")}
+              </p>
+            </div>
+            <Segmented
+              block
+              value={layoutMode}
+              options={[
+                { label: t("account.layoutClassic"), value: "classic" },
+                { label: t("account.layoutMinimal"), value: "minimal" },
+              ]}
+              onChange={(val) => setLayoutMode(val as LayoutMode)}
+            />
+          </section>
 
-      <Divider className={styles.settingsDivider} />
+          <Divider className={styles.settingsDivider} />
+        </>
+      )}
 
       <section className={styles.settingsSection}>
         <div className={styles.settingsSectionHead}>
@@ -706,6 +732,11 @@ export default function AvatarDropdown({
       <AccountSecurityDrawer
         open={securityOpen}
         onClose={() => setSecurityOpen(false)}
+      />
+      <FeedbackLauncher
+        currentSection={feedbackSection}
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
       />
     </>
   );
