@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261126.1"
+        default: "custom-1.0.3b3-20261127.1"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261126.1' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.1' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -476,9 +476,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112601：客户端与哆啦桌宠统一发布。完整发行版同时包含三个平台的客户端更新包，以及哆啦 0.10.0 的三个平台更新包和 Windows/Mac 引导安装器。企业授权中心一次发布、同一成员范围、一起撤回；客户端和桌宠各自提示升级，用户确认且任务空闲后独立安装。保留现有客户端协议和各自数据目录，更新前校验签名与 SHA-256、备份数据，启动失败回滚。
+          Octop Custom 112701 / 哆啦 0.10.1。团队专家在独立会话中执行，团队只接收署名结论和执行会话入口。已有团队会话在调用模型前裁剪旧工具明细，保留当前回合的工具链与完整执行历史。
 
-          旧桌宠首次需手动安装本次 0.10.0 引导版，之后接收企业统一更新。小黑猫保留键鼠动作，默认不吸附边缘；首次安装未使用本地真实员工凭据或物理输入进行 CI 验收。
+          本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 
           保留企业统一客户端更新。超级管理员在企业管理的客户端更新页面发布，成员电脑自动检查并提示；成员确认且专家空闲后安装。更新前验证企业签名和 SHA-256，备份本机账号、聊天、记忆、配置与 MCP，核心启动失败自动恢复。
 

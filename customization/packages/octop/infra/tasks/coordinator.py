@@ -181,15 +181,18 @@ class TaskCoordinator:
 
     def _prompt(self, scope: dict[str, Any], members: list[dict[str, Any]], locale: str) -> str:
         evidence = []
+        is_team_review = bool(scope.get("task_room"))
+        excerpt_limit = min(1800, 12_000 // max(1, len(members)))
         for member in members:
             run = member.get("coding_run") or {}
+            result = str(member.get("result") or "")
             evidence.append(
                 {
                     "task_id": member["task_id"],
                     "agent_id": member["agent_id"],
                     "title": member["title"],
                     "state": member["state"],
-                    "result": str(member.get("result") or "")[-6000:],
+                    "result": result[:excerpt_limit] if is_team_review else result[-6000:],
                     "code_phase": run.get("phase"),
                     "pr_url": run.get("pr_url"),
                     "verification": [

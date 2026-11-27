@@ -745,7 +745,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "930622f2cb4908822f6df0600a9d5b80643da2709c022f248e4fe1b92b659820",
+      "sha256": "a738cb52ac02cab432e96608c82291079da10899f47f608d5560281b536c50ff",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
@@ -5611,7 +5611,7 @@
     },
     {
       "path": "octop/i18n/en.json",
-      "sha256": "40812fcc4c9512302e5f42c567fac84ccd7d80d9447fee9da437a3039b47e1c2",
+      "sha256": "3a6a2b50ccf704d7af977388ce0555ccda0d2675cd3ce366d46aa32c93d332e2",
       "upstream_program_sha256": "e2d96a5cdb9d22efa59f3b73824e8510fc87490d1c5a32926c5041796895d9b1",
       "changed_from_saved_original": true
     },
@@ -5623,7 +5623,7 @@
     },
     {
       "path": "octop/i18n/zh.json",
-      "sha256": "332b2a5554ee515ba5e44dd945503e27db496fe4c6ba9de82f0ed5939cd8b455",
+      "sha256": "7ba9e0c7901f43770d3e0113a10b1faf94db991ad7ed18993f57f156a7ce5fdd",
       "upstream_program_sha256": "c358a60eb6adbd6163e7dfb50f28a31cf53041f6c14d78b349e229c9d7f3566d",
       "changed_from_saved_original": true
     },
@@ -5905,7 +5905,7 @@
     },
     {
       "path": "octop/infra/agents/middleware/team_context.py",
-      "sha256": "61e0869999e7ba635b8a850a62db74439033b4753980dd61af6206502a6636ae",
+      "sha256": "6a40cc3e7293ab3c7f054021bf32277d0240024e830ed1309b7ea47bf9406531",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -9169,7 +9169,7 @@
     },
     {
       "path": "octop/infra/agents/teams/team_manager.py",
-      "sha256": "32829081633fd37ba34a3eece054d2ad72df5b194ca1611148c70f1cff65329d",
+      "sha256": "20a3698211c6e2fc532c9bf406e3fe4bca75632af063dda3bbb451e0ab1a80d6",
       "upstream_program_sha256": "c25dbe1dffe6fc921354c2e01fb1a6123ffac80c69c89ee68d0c383ec7561854",
       "changed_from_saved_original": true
     },
@@ -12121,7 +12121,7 @@
     },
     {
       "path": "octop/infra/tasks/coordinator.py",
-      "sha256": "1e684e7e512d309d7cc37396a54b41d74a858e86c3b46ab630fbb6916f7113c8",
+      "sha256": "fa0a2086c0f5f7ae970724dd26a577f3ed6c0d0f2bd7521247ca604bb0d51a6a",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -12169,7 +12169,7 @@
     },
     {
       "path": "octop/infra/tasks/rooms.py",
-      "sha256": "e74da7ddbc94ad480cd2f3618fb995f1cf71c77b7cd6a44ca65e71ffeec835fd",
+      "sha256": "514a030e61a5f20392e5c41e553239fd218d6fa0fb7ca93075640fec176b1f47",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },

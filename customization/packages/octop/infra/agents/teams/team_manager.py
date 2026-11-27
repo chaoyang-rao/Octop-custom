@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import fields
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from langchain_core.messages import AIMessage, HumanMessage
 from octop_harness.messages import extract_call_response
@@ -34,6 +35,7 @@ from octop_harness.teams.util import (
 
 from octop.i18n import tr
 from octop.i18n.domains.stream import format_stream_error
+from octop.infra.agents.teams.primary import request_user_id
 from octop.infra.agents.teams.service import _user_may_use_member, is_team_agent
 from octop.infra.agents.threads.artifact import artifact_path_allowed, extract_artifact_paths
 from octop.infra.db.repos.agents import AgentRow
@@ -57,11 +59,11 @@ _EDIT_CARD_TOOL_BASES = frozenset(
     }
 )
 
-# Cap tool-result bodies on room/member projections so fan-in history stays lean.
+# Bound tool-result bodies on execution-page projections.
 _HISTORY_TOOL_RESULT_MAX_CHARS = 4000
 _HISTORY_TOOL_RESULT_SUFFIX = "…"
 # Member answer excerpt injected into the host wrap-up wake-up prompt.
-_FOLLOWUP_RESULT_MAX_CHARS = 6000
+_FOLLOWUP_RESULT_MAX_CHARS = 2400
 
 if TYPE_CHECKING:
     from octop.infra.agents.manager import AgentManager
@@ -352,6 +354,7 @@ class TeamManager:
                 call,
                 messages if isinstance(messages, list) else [],
                 live_streamed=bool(result.get("team_live_streamed")),
+                execution_thread_id=thread_id,
             )
         finally:
             self._track_job(call, begin=False)
@@ -752,8 +755,9 @@ class TeamManager:
         visible: list[Any],
         *,
         live_streamed: bool = False,
+        execution_thread_id: str = "",
     ) -> None:
-        """Persist the member's tool trail + final bubble on the caller's room thread."""
+        """Publish a member answer to the room; execution details belong to the member page."""
         if not self._is_group_dispatch(call):
             return
         speaker = call.to_agent_id
@@ -762,6 +766,29 @@ class TeamManager:
             return
         edited = _edited_files_from_messages(stamped)
         stamped, final = _apply_edited_files_stamp(stamped, edited)
+        text = _assistant_text(final) if final is not None else ""
+        if is_team_agent(self._agent_manager.get_row(call.from_agent_id)):
+            locale = self._locale_for(request_user_id({"user": call.user_id}))
+            if len(text) > _FOLLOWUP_RESULT_MAX_CHARS:
+                text = text[: _FOLLOWUP_RESULT_MAX_CHARS - 1] + "…"
+            if execution_thread_id:
+                link = f"/chat/{quote(speaker, safe='')}/{quote(execution_thread_id, safe='')}"
+                text = (text + "\n\n" if text else "") + tr(
+                    "tasks.returns.execution_link", locale, url=link
+                )
+            if not text and not edited:
+                return
+            stamped = [
+                AIMessage(
+                    id=final.get("id") if isinstance(final, dict) else getattr(final, "id", None),
+                    content=text or tr("teams.history_detail_omitted", locale),
+                    additional_kwargs={
+                        "speaker_agent_id": speaker,
+                        "octop_task_room": True,
+                        **({"edited_files": edited} if edited else {}),
+                    },
+                )
+            ]
         if self._thread_message_repo is not None:
             try:
                 self._thread_message_repo.append_if_ready(
@@ -779,7 +806,6 @@ class TeamManager:
                     exc_info=True,
                 )
         room = str(call.source_thread_id or "").strip()
-        text = _assistant_text(final) if final is not None else ""
         if not room or not text:
             return
         await self._push_room_to_channels(room, speaker, text)
@@ -969,8 +995,7 @@ class TeamManager:
 
     async def _dispatch_message(self, call: PeerCall, user_id: int | None) -> str:
         locale = self._locale_for(user_id)
-        # The request middleware supplies the authorized, bounded room view.
-        # Persisting another transcript here duplicates the member's history.
+        # Send the assignment alone. The member can read authorized history on demand.
         return tr("teams.member_briefing", locale)
 
     async def _visible_user_prompt(self, call: PeerCall) -> str:
@@ -2054,11 +2079,7 @@ def _assistant_text(msg: Any) -> str:
 
 
 def _peer_turn_messages(messages: list[Any]) -> list[Any]:
-    """Last user turn for the member page: trigger + full assistant/tool trail.
-
-    Historically this kept only the final AI text, which dropped tool_calls
-    from both the member projection and (via fan-in) the room wall.
-    """
+    """Last user turn and execution trail for the dedicated member page."""
     last_user = -1
     for index, msg in enumerate(messages):
         if _message_role(msg) in {"human", "user"}:

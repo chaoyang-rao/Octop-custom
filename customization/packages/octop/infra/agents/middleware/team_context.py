@@ -10,7 +10,7 @@ from copy import deepcopy
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage, ToolMessage
 from octop_harness.middleware.runtime import runtime_config
 
 from octop.i18n import tr
@@ -199,16 +199,85 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
         profile = getattr(getattr(request, "model", None), "profile", None)
         capacity = profile.get("max_input_tokens", 0) if isinstance(profile, dict) else 0
         return (
-            min(32000, max(1600, int(capacity * 0.15)))
-            if isinstance(capacity, int) and capacity > 0
-            else 8000
+            min(8000, max(1600, int(capacity * 0.15)))
+            if (isinstance(capacity, int) and capacity > 0)
+            else 4000
         )
 
+    def _project_room_history(self, request: ModelRequest[Any], locale: str) -> list[AnyMessage]:
+        """Shrink closed turns without changing checkpoint or summary offsets."""
+        messages = list(request.messages)
+        cutoff = self._cutoff(request)
+        current = next(
+            (
+                index
+                for index in range(len(messages) - 1, cutoff - 1, -1)
+                if isinstance(messages[index], HumanMessage)
+            ),
+            cutoff,
+        )
+        remaining = self._context_limit(request)
+        omitted = tr("teams.history_detail_omitted", locale)
+        for index in range(len(messages) - 1, cutoff - 1, -1):
+            message = messages[index]
+            extra = message.additional_kwargs
+            if index >= current and not any(
+                extra.get(tag)
+                for tag in ("octop_task_room", "octop_task_return", "octop_task_room_event")
+            ):
+                continue
+            if isinstance(message, ToolMessage):
+                # Retain the provider's tool call/reply IDs and statuses.
+                messages[index] = message.model_copy(update={"content": omitted})
+                continue
+            if not isinstance(message, (AIMessage, HumanMessage)):
+                continue
+            content = message.content
+            if isinstance(content, list):
+                content = "\n".join(
+                    block["text"]
+                    for block in content
+                    if isinstance(block, dict)
+                    and block.get("type") == "text"
+                    and isinstance(block.get("text"), str)
+                )
+            limit = min(2400, remaining)
+            visible = (
+                content
+                if len(content) <= limit
+                else (content[: max(0, limit - len(omitted))] + omitted)
+            )
+            remaining = max(0, remaining - len(visible))
+            updates: dict[str, Any] = {"content": visible}
+            if isinstance(message, AIMessage):
+                model_extra = dict(extra)
+                model_extra.pop("tool_calls", None)
+                model_extra.pop("function_call", None)
+                model_extra.pop("reasoning_details", None)
+                if "reasoning_content" in model_extra:
+                    model_extra["reasoning_content"] = ""
+                updates.update(
+                    tool_calls=[{**call, "args": {}} for call in message.tool_calls],
+                    invalid_tool_calls=[],
+                    additional_kwargs=model_extra,
+                )
+            elif not visible:
+                updates["content"] = omitted
+            messages[index] = message.model_copy(update=updates)
+        return messages
+
     def _prepare(
-        self, request: ModelRequest[Any], prefix: list[Any], cfg: dict[str, Any]
+        self,
+        request: ModelRequest[Any],
+        prefix: list[Any],
+        cfg: dict[str, Any],
+        *,
+        team_room: bool = False,
     ) -> ModelRequest[Any]:
         locale = str(cfg.get("locale") or DEFAULT_LOCALE)
-        messages = list(request.messages)
+        messages = (
+            self._project_room_history(request, locale) if team_room else list(request.messages)
+        )
         seen_briefings: set[str] = set()
         authors: dict[str, str] = {}
         scope = current_primary_room()
@@ -286,7 +355,8 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
     ) -> ModelResponse[Any]:
         cfg = dict(runtime_config(request).get("configurable") or {})
         prefix, team_id, room_id = self._prefix(cfg, request.tools)
-        if team_id and room_id:
+        team_room = bool(team_id and room_id and str(cfg.get("thread_id") or "") == room_id)
+        if team_room and team_id and room_id:
             scope = current_primary_room()
             user_id = request_user_id({"configurable": cfg}) or (scope.user_id if scope else None)
             assert user_id is not None
@@ -301,7 +371,7 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
                     visible_ids=self._visible_ids(request),
                 )
             )
-        prepared = self._prepare(request, prefix, cfg)
+        prepared = self._prepare(request, prefix, cfg, team_room=team_room)
         if team_id and self._workspace_for is not None:
             from octop.infra.agents.middleware.workspace_image import (
                 WorkspaceImageMaterializeMiddleware,
@@ -321,7 +391,8 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
     ) -> ModelResponse[Any]:
         cfg = dict(runtime_config(request).get("configurable") or {})
         prefix, team_id, room_id = await asyncio.to_thread(self._prefix, cfg, request.tools)
-        if team_id and room_id:
+        team_room = bool(team_id and room_id and str(cfg.get("thread_id") or "") == room_id)
+        if team_room and team_id and room_id:
             scope = current_primary_room()
             user_id = request_user_id({"configurable": cfg}) or (scope.user_id if scope else None)
             assert user_id is not None
@@ -337,7 +408,7 @@ class TeamConversationContextMiddleware(AgentMiddleware[Any, Any]):
                     visible_ids=self._visible_ids(request),
                 )
             )
-        prepared = await asyncio.to_thread(self._prepare, request, prefix, cfg)
+        prepared = await asyncio.to_thread(self._prepare, request, prefix, cfg, team_room=team_room)
         if team_id and self._workspace_for is not None:
             from octop.infra.agents.middleware.workspace_image import (
                 WorkspaceImageMaterializeMiddleware,
