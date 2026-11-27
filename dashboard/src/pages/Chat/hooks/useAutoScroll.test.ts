@@ -125,6 +125,19 @@ describe("useAutoScroll", () => {
     expect(turn.container.scrollTop).toBe(361);
   });
 
+  it("reserves reply space between the floating title and composer", () => {
+    const turn = makeTurnScroller();
+    turn.container.style.scrollPaddingTop = "40px";
+    turn.container.style.scrollPaddingBottom = "48px";
+    renderHook(() =>
+      useAutoScroll({
+        containerRef: { current: turn.container },
+        replySpace: turn.replySpace,
+      }),
+    );
+    expect(turn.spacer.style.height).toBe("51px");
+  });
+
   it("updates reserved reply space without pulling a reader back down", () => {
     const turn = makeTurnScroller();
     const { rerender, result } = renderHook(

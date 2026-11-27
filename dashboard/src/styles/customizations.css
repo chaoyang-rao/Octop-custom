@@ -68,10 +68,6 @@ body {
   padding: 0;
 }
 
-[class*="__actionsRow__"] [class*="__sendBtn__"] {
-  border-radius: 6px;
-}
-
 [class*="__actionsRow__"] [class*="__contextRingSvg__"] {
   width: 16px;
   height: 16px;

@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261127.2"
+        default: "custom-1.0.3b3-20261127.3"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.2' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.3' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -96,6 +96,9 @@ jobs:
           src/pages/Chat/components/TurnProcessBlocks.teamSpeaker.test.tsx
           src/pages/Chat/hooks/chatStore.teamStream.test.ts
           src/pages/Chat/hooks/useAutoScroll.test.ts
+          src/pages/Chat/components/ChatInputActionsRow.test.tsx
+          src/pages/Chat/components/TurnTimelineRail.test.tsx
+          src/pages/Chat/utils/turnTimeline.test.ts
           src/pages/Chat/hooks/scrollFreeMode.test.ts
           src/pages/Chat/utils/messageGrouping.test.ts
           src/pages/Chat/utils/hiddenExpertsPrefs.test.ts
@@ -483,7 +486,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112702 / 哆啦 0.10.2。桌面端左侧固定为图标栏，窗口控件移到左上角。会话搜索从专家栏顶部的放大镜打开，问题反馈从账号菜单进入。桌宠入口采用简笔猫图标，三栏顶部对齐，对话滚动时顶部内容淡出。 修正更新后的启动地址，直接进入聊天界面。
+          Octop Custom 112703 / 哆啦 0.10.3。桌面聊天标题和输入区悬浮，滚动消息在上下边缘逐渐淡出。发送按钮换成圆形上箭头。删除输入框下方提示，输入框与左下角账号头像底边对齐。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

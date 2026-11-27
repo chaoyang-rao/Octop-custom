@@ -29,6 +29,7 @@ html {
 
 html[data-octop-desktop-chrome]:root {
   --fn-desktop-rail-width: 60px;
+  --fn-desktop-bottom-gap: 10px;
   --fn-chat-chrome-height: 40px;
 }
 

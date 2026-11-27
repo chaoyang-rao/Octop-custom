@@ -547,6 +547,7 @@ export default function Sidebar({
       style={{
         flexShrink: 0,
         padding: isRailCollapsed ? "10px 0" : "10px 12px",
+        paddingBottom: fixedRail ? "var(--fn-desktop-bottom-gap)" : undefined,
         display: "flex",
         justifyContent: isRailCollapsed ? "center" : "stretch",
       }}

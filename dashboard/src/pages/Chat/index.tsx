@@ -1,4 +1,11 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useMemo,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -1309,6 +1316,52 @@ function ChatPageInner() {
       (historyLoading || !historyHydrated),
   );
   const showWelcome = !hasMessages && !awaitingThreadHistory;
+  const chatMainRef = useRef<HTMLDivElement>(null);
+  const chatContentRef = useRef<HTMLDivElement>(null);
+  const floatingHistory = Boolean(
+    desktopChrome &&
+      !isMobile &&
+      !showWelcome &&
+      agentChatReady &&
+      !noAgents &&
+      !(memoryMaintVisible && memoryMaint) &&
+      !(historyMigration.visible && historyMigration.status) &&
+      !historyError &&
+      !pendingAsk &&
+      !quoteDraft &&
+      !(conversationMode === "plan" && pendingPlanPath) &&
+      !(modelsReady && availableModels.length === 0),
+  );
+
+  useLayoutEffect(() => {
+    const main = chatMainRef.current;
+    const content = chatContentRef.current;
+    const input = main?.querySelector<HTMLElement>(`.${styles.inputWrapper}`);
+    if (!floatingHistory || !main || !content || !input) return;
+
+    const updateOverlap = () => {
+      // Extend the scrollport just past the input surface's upper edge.
+      const overlap = Math.max(
+        0,
+        Math.ceil(
+          input.getBoundingClientRect().top -
+            content.getBoundingClientRect().bottom,
+        ) + 6,
+      );
+      main.style.setProperty("--chat-history-bottom-overlap", `${overlap}px`);
+    };
+    updateOverlap();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateOverlap);
+    observer?.observe(content);
+    observer?.observe(input);
+    return () => {
+      observer?.disconnect();
+      main.style.removeProperty("--chat-history-bottom-overlap");
+    };
+  }, [floatingHistory]);
 
   useEffect(() => {
     if (showWelcome || !agentChatReady || noAgents) {
@@ -1407,8 +1460,10 @@ function ChatPageInner() {
         >
           {/* Main chat area */}
           <div
+            ref={chatMainRef}
             className={cx(
               styles.chatMain,
+              floatingHistory && styles.chatMainFloating,
               turnRailVisible && styles.chatMainWithTurnRail,
             )}
           >
@@ -1574,7 +1629,7 @@ function ChatPageInner() {
                 }
               />
             )}
-            <div className={styles.chatContent}>
+            <div ref={chatContentRef} className={styles.chatContent}>
               {!agentChatReady || noAgents ? (
                 <AgentNotReadyScreen
                   agent={activeAgent}
@@ -1613,6 +1668,7 @@ function ChatPageInner() {
                       agentId={resolvedAgentId}
                       composerLookups={composerLookups}
                       loading={awaitingThreadHistory}
+                      floating={floatingHistory}
                       historyHasMore={historyHasMore}
                       historyLoadingMore={historyLoadingMore}
                       historyRefreshing={historyRefreshing}

@@ -1069,9 +1069,6 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             onChange={handleFileChange}
           />
         </div>
-        {!isMobile && (
-          <p className={styles.aiDisclaimer}>{t("chatWelcome.aiDisclaimer")}</p>
-        )}
       </div>
     );
   },

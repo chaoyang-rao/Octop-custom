@@ -211,11 +211,17 @@ export default function TurnTimelineRail({
       });
     }
     const positions = mergeTurnPositions({ turns, measured });
+    const style = getComputedStyle(scroller);
+    const topInset = parseFloat(style.scrollPaddingTop) || 0;
+    const bottomInset = parseFloat(style.scrollPaddingBottom) || 0;
     setActiveMessageId(
       resolveActiveTurnId({
         positions,
-        scrollOffsetPx: scroller.scrollTop,
-        viewportHeightPx: scroller.clientHeight,
+        scrollOffsetPx: scroller.scrollTop + topInset,
+        viewportHeightPx: Math.max(
+          0,
+          scroller.clientHeight - topInset - bottomInset,
+        ),
       }),
     );
   }, [bubbleRefsMap, following, getScroller, turns]);
