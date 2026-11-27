@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import ContextWindowRing from "./ContextWindowRing";
 
 const { contextUsage } = vi.hoisted(() => ({ contextUsage: vi.fn() }));
@@ -15,6 +16,52 @@ vi.mock("react-i18next", () => ({
 
 describe("actual model context capacity", () => {
   beforeEach(() => contextUsage.mockReset());
+
+  it("shows the session total on hover or keyboard focus and opens details on click", async () => {
+    contextUsage.mockResolvedValue({
+      max_tokens: 100_000,
+      used_tokens: 12_000,
+      segments: [],
+    });
+    const user = userEvent.setup();
+    const sessionTotal = "12000 input / 2500 output / 14500 total";
+    render(
+      <ContextWindowRing
+        usedTokens={12_000}
+        maxTokens={100_000}
+        agentId="expert"
+        threadId="session"
+        sessionUsageLabel={sessionTotal}
+      />,
+    );
+
+    const ring = screen.getByRole("progressbar");
+    expect(screen.queryByText(sessionTotal)).not.toBeInTheDocument();
+
+    await user.hover(ring);
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole("tooltip")).getByText(sessionTotal),
+      ).toBeVisible(),
+    );
+    await user.unhover(ring);
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+
+    await user.tab();
+    expect(ring).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole("tooltip")).getByText(sessionTotal),
+      ).toBeVisible(),
+    );
+
+    await user.click(ring);
+    await waitFor(() =>
+      expect(
+        screen.getByText("chat.contextWindow.breakdownTitle"),
+      ).toBeVisible(),
+    );
+  });
 
   it("uses the actual route capacity for the live token hint", async () => {
     contextUsage.mockResolvedValue({

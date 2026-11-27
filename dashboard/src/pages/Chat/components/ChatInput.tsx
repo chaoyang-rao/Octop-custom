@@ -140,6 +140,7 @@ interface ChatInputProps {
   contextUsedTokens?: number | null;
   contextMaxTokens?: number;
   decisionSaved?: number;
+  sessionUsageLabel?: string | null;
 }
 
 const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
@@ -196,6 +197,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
       contextUsedTokens = null,
       contextMaxTokens = 128_000,
       decisionSaved = 0,
+      sessionUsageLabel,
     },
     ref,
   ) {
@@ -1017,6 +1019,7 @@ const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
             contextUsedTokens={contextUsedTokens}
             contextMaxTokens={contextMaxTokens}
             decisionSaved={decisionSaved}
+            sessionUsageLabel={sessionUsageLabel}
             availableModels={availableModels}
             selectedModel={selectedModel}
             onModelChange={onModelChange}

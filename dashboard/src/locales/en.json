@@ -2122,6 +2122,7 @@
     "generate_video": "Generate video"
   },
   "chatUsage": {
+    "sessionTotal": "Session total",
     "latestRun": "Latest run",
     "elapsed": "{{seconds}}s",
     "input": "input",

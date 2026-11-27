@@ -97,6 +97,7 @@ jobs:
           src/pages/Chat/hooks/chatStore.teamStream.test.ts
           src/pages/Chat/hooks/useAutoScroll.test.ts
           src/pages/Chat/components/ChatInputActionsRow.test.tsx
+          src/pages/Chat/components/ContextWindowRing.test.tsx
           src/pages/Chat/components/TurnTimelineRail.test.tsx
           src/pages/Chat/utils/turnTimeline.test.ts
           src/pages/Chat/hooks/scrollFreeMode.test.ts
@@ -486,7 +487,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112703 / 哆啦 0.10.3。桌面聊天标题和输入区悬浮，滚动消息在上下边缘逐渐淡出。发送按钮换成圆形上箭头。移除本会话累计和输入框下方提示，输入框与左下角账号头像底边对齐。
+          Octop Custom 112703 / 哆啦 0.10.3。桌面聊天标题和输入区悬浮，滚动消息在上下边缘逐渐淡出。发送按钮换成圆形上箭头。移除输入框下方提示，输入框与左下角账号头像底边对齐。本会话累计移到上下文环形图标的悬停提示中。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 
