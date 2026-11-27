@@ -1,12 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DesktopChromeProvider } from "../../hooks/useDesktopChrome";
-import {
-  DOCK_WINDOW_CONTROLS_PAD_PX,
-  WINDOW_CONTROLS_INSET,
-  WINDOW_CONTROLS_SPACER_ATTR,
-  resolveDesktopChromeStyle,
-} from "../../utils/desktopChrome";
+import { WINDOW_CONTROLS_SPACER_ATTR } from "../../utils/desktopChrome";
 import ChatDockPanelShell from "./ChatDockPanelShell";
 
 const baseProps = {
@@ -26,28 +21,21 @@ function renderShell(
   );
 }
 
-function expectedDockSpacer(chrome: "mac" | "windows"): string {
-  return `${WINDOW_CONTROLS_INSET[chrome] - DOCK_WINDOW_CONTROLS_PAD_PX}px`;
-}
-
-function spacerWidth(container: HTMLElement): string | undefined {
-  const el = container.querySelector(
-    `[${WINDOW_CONTROLS_SPACER_ATTR}]`,
-  ) as HTMLElement | null;
-  return el?.style.width;
-}
-
 describe("ChatDockPanelShell chrome inset", () => {
-  it("inserts a pixel spacer so right-dock and popup toolbars clear window controls", () => {
+  it("leaves right-dock and popup toolbars clear with window controls on the left", () => {
     const { container, rerender } = renderShell("right", "mac");
-    expect(spacerWidth(container)).toBe(expectedDockSpacer("mac"));
+    expect(
+      container.querySelector(`[${WINDOW_CONTROLS_SPACER_ATTR}]`),
+    ).toBeNull();
 
     rerender(
       <DesktopChromeProvider value="windows">
         <ChatDockPanelShell {...baseProps} mode="popup" />
       </DesktopChromeProvider>,
     );
-    expect(spacerWidth(container)).toBe(expectedDockSpacer("windows"));
+    expect(
+      container.querySelector(`[${WINDOW_CONTROLS_SPACER_ATTR}]`),
+    ).toBeNull();
 
     rerender(
       <DesktopChromeProvider value="mac">
@@ -115,22 +103,5 @@ describe("ChatDockPanelShell chrome inset", () => {
     expect(
       screen.getByRole("menuitem", { name: "browserWorkspace.panelPopup" }),
     ).toBeInTheDocument();
-  });
-
-  it("still inserts the spacer from the Wails bridge when chrome context is missing", () => {
-    Object.defineProperty(window, "_wails", {
-      configurable: true,
-      value: { invoke: () => undefined },
-    });
-    const { container } = render(
-      <ChatDockPanelShell {...baseProps} mode="right" />,
-    );
-    expect(spacerWidth(container)).toBe(
-      `${
-        WINDOW_CONTROLS_INSET[resolveDesktopChromeStyle()] -
-        DOCK_WINDOW_CONTROLS_PAD_PX
-      }px`,
-    );
-    delete (window as Window & { _wails?: unknown })._wails;
   });
 });

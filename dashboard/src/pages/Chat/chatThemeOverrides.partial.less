@@ -93,6 +93,11 @@
 .sessionList {
   /* No right padding — .sessionItems is the scrollport and must reach the rail edge. */
   padding: 22px 0 10px 12px;
+
+  :global(html[data-octop-desktop-chrome]) & {
+    padding-top: 0;
+  }
+
   display: flex;
   flex-direction: column;
   gap: 0;

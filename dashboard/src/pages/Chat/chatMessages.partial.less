@@ -50,6 +50,11 @@
   }
 }
 
+// A fixed spatial fade lets messages recede as they pass the top of the viewport.
+.messageList[data-chat-scroll-fade] {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+
 .scrollToBottomBtn {
   /* Layout: centered, floating above the message list */
   position: absolute;

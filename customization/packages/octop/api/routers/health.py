@@ -35,5 +35,5 @@ async def health(server: Any = Depends(get_server)) -> dict[str, Any]:
             if os.environ.get("OCTOP_CLIENT_UPDATE_PENDING") and server.app_runtime
             else {}
         ),
-        **({"custom_release": '1.0.3b3.post2026112701'} if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" else {}),
+        **({"custom_release": '1.0.3b3.post2026112702'} if os.environ.get("OCTOP_CUSTOM_BUILD") == "1" else {}),
     }

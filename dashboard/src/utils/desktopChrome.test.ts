@@ -56,11 +56,8 @@ describe("desktopChrome", () => {
     ).toBe("windows");
   });
 
-  it("reserves a trailing inset for the title row and right-edge overlays", () => {
-    expect(WINDOW_CONTROLS_INSET.mac).toBeGreaterThan(0);
-    expect(WINDOW_CONTROLS_INSET.windows).toBeGreaterThan(
-      WINDOW_CONTROLS_INSET.mac,
-    );
+  it("keeps the trailing edge clear with window controls on the left", () => {
+    expect(WINDOW_CONTROLS_INSET).toEqual({ mac: 0, windows: 0 });
     expect(titleRowEndPadding(32)).toContain("--window-controls-inset-end");
     expect(titleRowEndPadding(32)).toContain("32px");
     expect(CHROME_END_PAD_ATTR).toBe("data-octop-chrome-end-pad");
@@ -69,26 +66,16 @@ describe("desktopChrome", () => {
     );
     expect(chromeEndPadValue(12)).toContain("--window-controls-inset-end");
     expect(chromeEndPadValue(12)).toContain("12px");
-    expect(windowControlsEndSpacerPx("mac", true)).toBe(
-      WINDOW_CONTROLS_INSET.mac,
-    );
-    expect(windowControlsEndSpacerPx("windows", true)).toBe(
-      WINDOW_CONTROLS_INSET.windows,
-    );
-    expect(windowControlsEndSpacerPx("mac", true, 12)).toBe(
-      WINDOW_CONTROLS_INSET.mac - 12,
-    );
+    expect(windowControlsEndSpacerPx("mac", true)).toBe(0);
+    expect(windowControlsEndSpacerPx("windows", true)).toBe(0);
     expect(
       windowControlsEndSpacerPx("mac", true, DOCK_WINDOW_CONTROLS_PAD_PX),
-    ).toBe(WINDOW_CONTROLS_INSET.mac - DOCK_WINDOW_CONTROLS_PAD_PX);
-    expect(windowControlsEndSpacerPx("windows", true, 12)).toBe(
-      WINDOW_CONTROLS_INSET.windows - 12,
-    );
+    ).toBe(0);
     expect(windowControlsEndSpacerPx("mac", false)).toBe(0);
     expect(windowControlsEndSpacerPx(null, true)).toBe(0);
   });
 
-  it("pads right-edge overlays away from frameless window controls", () => {
+  it("keeps right-edge overlays within their surface padding", () => {
     const css = readFileSync(
       resolve(__dirname, "../styles/layout.css"),
       "utf8",

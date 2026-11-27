@@ -41,12 +41,16 @@ export default function SidebarCollapsedIconNav({
           >
             <button
               type="button"
+              className={styles.collapsedNavButton}
+              aria-label={t(item.labelKey)}
+              aria-current={active ? "page" : undefined}
               onClick={() => onNavigate(item.path)}
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 width: COLLAPSED_WIDTH,
+                marginInline: "auto",
                 height: 40,
                 border: "none",
                 background: active

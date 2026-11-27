@@ -27,6 +27,11 @@ html {
   --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
+html[data-octop-desktop-chrome]:root {
+  --fn-desktop-rail-width: 60px;
+  --fn-chat-chrome-height: 40px;
+}
+
 /* Wails v3 frameless drag: the element under the cursor must set this. */
 html[data-octop-desktop-chrome] .octop-desktop-drag {
   --wails-draggable: drag;

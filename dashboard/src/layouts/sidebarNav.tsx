@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Cat } from "lucide-react";
 import {
   Monitor,
   MessageSquareText,
@@ -209,7 +210,7 @@ export function buildNavSections(
   topItems.push({
     key: "companion",
     path: "/companion?autostart=1",
-    icon: <Sparkles size={iconSize} strokeWidth={iconStroke} />,
+    icon: <Cat size={iconSize} strokeWidth={iconStroke} />,
     labelKey: "nav.companion",
   });
 

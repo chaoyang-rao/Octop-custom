@@ -58,6 +58,11 @@
   overflow: hidden;
 }
 
+.collapsedNavButton:focus-visible {
+  outline: 2px solid var(--fn-color-brand);
+  outline-offset: -3px;
+}
+
 .navItemRow {
   display: flex;
   align-items: stretch;
@@ -243,4 +248,9 @@
   &[hidden] {
     display: none !important;
   }
+}
+
+.windowControlRow {
+  height: var(--fn-chat-chrome-height);
+  flex-shrink: 0;
 }

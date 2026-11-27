@@ -19,6 +19,7 @@ import type { ComposerTagLookups } from "./UserMessageComposerTags";
 import MessageBubble from "./MessageBubble";
 import AssistantTurnView from "./AssistantTurnView";
 import ScrollToBottomButton from "./ScrollToBottomButton";
+import { useDesktopChromeStyle } from "../../../hooks/useDesktopChrome";
 import GeneratingIndicator from "./GeneratingIndicator";
 import TurnTimelineRail from "./TurnTimelineRail";
 import { isLiveAssistantTurn } from "./liveAssistantTurn";
@@ -888,6 +889,22 @@ export default function MessageList(props: MessageListProps) {
       setScrollerMountKey((k) => k + 1);
     }
   }, []);
+
+  const desktop = Boolean(useDesktopChromeStyle());
+
+  useEffect(() => {
+    if (!desktop) return;
+    const scroller = useVirtual ? scrollerRef.current : containerRef.current;
+    if (!scroller) return;
+    const updateFade = () =>
+      scroller.toggleAttribute("data-chat-scroll-fade", scroller.scrollTop > 1);
+    updateFade();
+    scroller.addEventListener("scroll", updateFade, { passive: true });
+    return () => {
+      scroller.removeEventListener("scroll", updateFade);
+      scroller.removeAttribute("data-chat-scroll-fade");
+    };
+  }, [desktop, useVirtual, scrollerMountKey, stableSessionKey]);
 
   const bindVirtualScroller = useCallback((el: HTMLElement | Window | null) => {
     const next = el instanceof HTMLElement ? el : null;

@@ -2,19 +2,20 @@
 .windows {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   z-index: 10000;
   display: flex;
   align-items: center;
-  height: 32px;
+  width: var(--fn-desktop-rail-width, 60px);
+  height: var(--fn-chat-chrome-height, 40px);
+  justify-content: center;
   flex-shrink: 0;
   user-select: none;
   -webkit-app-region: no-drag;
 }
 
 .mac {
-  gap: 8px;
-  padding: 0 12px 0 8px;
+  gap: 5px;
 }
 
 .light {
@@ -71,13 +72,10 @@
   color: #4d0000;
 }
 
-.windows {
-  height: 32px;
-}
-
 .winBtn {
-  width: 46px;
-  height: 32px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   padding: 0;
   border: none;
   background: transparent;

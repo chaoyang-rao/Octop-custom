@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $build = Join-Path $PSScriptRoot '..\..\build\windows'
-$installer = Join-Path $build 'Dora-Windows-x64-0.10.1-Setup.exe'
+$installer = Join-Path $build 'Dora-Windows-x64-0.10.2-Setup.exe'
 $process = Start-Process -FilePath (Resolve-Path $installer) -ArgumentList '/S' -Wait -PassThru
 if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
 $exe = Join-Path $env:LOCALAPPDATA 'Programs\OctopCompanion\Dora.exe'

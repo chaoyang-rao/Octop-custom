@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261127.1"
+        default: "custom-1.0.3b3-20261127.2"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.1' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261127.2' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -135,6 +135,13 @@ jobs:
           src/pages/Agent/Connectors/ConnectorInstanceCard.test.tsx
           src/pages/Login/EnterpriseAdmin.test.tsx
           src/pages/EnterpriseResources/Resources.test.tsx
+          src/components/AvatarDropdown.displayName.test.tsx
+          src/components/BrowserWorkspace/ChatDockPanelShell.test.tsx
+          src/components/DesktopWindowControls/DesktopWindowControls.test.tsx
+          src/components/feedback/FeedbackLauncher.test.tsx
+          src/layouts/Sidebar.chatRailToggle.test.tsx
+          src/pages/Chat/components/SessionList.navScope.test.tsx
+          src/utils/desktopChrome.test.ts
           --maxWorkers=1 --minWorkers=1
       - run: make all PYTEST_JOBS=2
       - run: npm run build --prefix dashboard
@@ -476,7 +483,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112701 / 哆啦 0.10.1。团队专家在独立会话中执行，团队只接收署名结论和执行会话入口。已有团队会话在调用模型前裁剪旧工具明细，保留当前回合的工具链与完整执行历史。
+          Octop Custom 112702 / 哆啦 0.10.2。桌面端左侧固定为图标栏，窗口控件移到左上角。会话搜索从专家栏顶部的放大镜打开，问题反馈从账号菜单进入。桌宠入口采用简笔猫图标，三栏顶部对齐，对话滚动时顶部内容淡出。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

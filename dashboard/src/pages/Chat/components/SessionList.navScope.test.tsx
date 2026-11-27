@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, vi } from "vitest";
+import { DesktopChromeProvider } from "../../../hooks/useDesktopChrome";
 import type { OctopAgent } from "../../../context/AgentContext";
 import { octopThreadsApi } from "../../../api/modules/octopThreads";
 import MinimalAgentSessionNav from "./MinimalAgentSessionNav";
@@ -47,26 +48,28 @@ const agents = [
   }),
 ];
 
-function renderList() {
+function renderList(desktop = false) {
   render(
     <MemoryRouter>
-      <SessionList
-        agents={agents}
-        sessions={[]}
-        activeId={null}
-        activeAgentId="local-expert"
-        hasMore={false}
-        loadingMore={false}
-        onLoadMore={() => undefined}
-        onFetchAllSessions={() => undefined}
-        onSelect={() => undefined}
-        onAgentSelect={() => undefined}
-        onNewChat={() => undefined}
-        onDelete={() => undefined}
-        onRename={() => undefined}
-        onPin={() => undefined}
-        onFork={() => undefined}
-      />
+      <DesktopChromeProvider value={desktop ? "mac" : null}>
+        <SessionList
+          agents={agents}
+          sessions={[]}
+          activeId={null}
+          activeAgentId="local-expert"
+          hasMore={false}
+          loadingMore={false}
+          onLoadMore={() => undefined}
+          onFetchAllSessions={() => undefined}
+          onSelect={() => undefined}
+          onAgentSelect={() => undefined}
+          onNewChat={() => undefined}
+          onDelete={() => undefined}
+          onRename={() => undefined}
+          onPin={() => undefined}
+          onFork={() => undefined}
+        />
+      </DesktopChromeProvider>
     </MemoryRouter>,
   );
 }
@@ -238,6 +241,27 @@ describe("SessionList nav scopes", () => {
       collapse.compareDocumentPosition(hiddenName) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("opens desktop session search from the middle rail and restores focus on Escape", async () => {
+    const user = userEvent.setup();
+    renderList(true);
+
+    const toggle = screen.getByRole("button", { name: "搜索会话" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    const input = screen.getByRole("searchbox", { name: "搜索会话" });
+    expect(input).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-controls", input.id);
+    await user.type(input, "本地");
+    await user.keyboard("{Escape}");
+    expect(toggle).toHaveFocus();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(screen.getByRole("searchbox")).toHaveValue("");
   });
 
   it("filters experts, teams, and cloud under the search box", async () => {
