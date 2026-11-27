@@ -13,7 +13,8 @@ import {
 } from "../../../components/arcIcons";
 import cx from "classnames";
 import { confirmDeleteConversation } from "../utils/deleteConversation";
-import type { Session } from "../hooks/useSessions";
+import { isPendingThread, type Session } from "../hooks/useSessions";
+import { archiveConversationMenuItem } from "../utils/archiveConversation";
 import SessionChannelIcon from "./SessionChannelIcon";
 import TeamChatBadge from "./TeamChatBadge";
 import RemoteExpertHint from "./RemoteExpertHint";
@@ -109,6 +110,9 @@ export default function ChatTitleBar({
         title: forkDisabled && forkDisabledHint ? forkDisabledHint : undefined,
         onClick: () => onFork(session.id),
       },
+      ...(!agent?.bridge && !isPendingThread(session.id)
+        ? [archiveConversationMenuItem(session.id, t)]
+        : []),
       {
         key: "delete",
         label: t("common.delete"),
@@ -124,6 +128,7 @@ export default function ChatTitleBar({
     [
       session.id,
       session.pinned,
+      agent?.bridge,
       onPin,
       onFork,
       onDelete,

@@ -525,19 +525,6 @@ export function useSessions(agentId: string | null) {
     })();
   }, [agentId]);
 
-  useEffect(
-    () =>
-      chatStore.onStreamEvent((event) => {
-        if (
-          event.kind !== "streamEnd" ||
-          !_sessions.some((row) => row.id === event.sessionId)
-        )
-          return;
-        void fetchSessions(event.sessionId);
-      }),
-    [fetchSessions],
-  );
-
   useEffect(() => {
     return onSessionEvent((event) => {
       if (event.kind === "sessionRenamed") {
@@ -566,7 +553,8 @@ export function useSessions(agentId: string | null) {
         });
         return;
       }
-      if (event.kind !== "sessionDeleted") return;
+      if (event.kind !== "sessionDeleted" && event.kind !== "sessionArchived")
+        return;
       const { sessionId } = event;
       setModuleSessions((prev) => prev.filter((s) => s.id !== sessionId));
     });

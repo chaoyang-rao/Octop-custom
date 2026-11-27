@@ -3,6 +3,7 @@ import { octopThreadsApi } from "../../../api/modules/octopThreads";
 import type { OctopAgent } from "../../../context/AgentContext";
 import { isAgentChatReady } from "../../../utils/agentError";
 import { sortSessions, toSession, type Session } from "./useSessions";
+import { onSessionEvent } from "./chatStore";
 
 /** How many threads to scan per expert while the nav search box is active. */
 const SEARCH_THREAD_LIMIT = 100;
@@ -18,6 +19,24 @@ export function useExpertSessionCatalog(
 ) {
   const [byAgent, setByAgent] = useState<Record<string, Session[]>>({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(
+    () =>
+      onSessionEvent((event) => {
+        if (event.kind !== "sessionArchived" || !event.agentId) return;
+        const agentId = event.agentId;
+        setByAgent((previous) => {
+          const sessions = previous[agentId];
+          if (!sessions?.some((row) => row.id === event.sessionId))
+            return previous;
+          return {
+            ...previous,
+            [agentId]: sessions.filter((row) => row.id !== event.sessionId),
+          };
+        });
+      }),
+    [],
+  );
   const agentKey = useMemo(
     () =>
       agents

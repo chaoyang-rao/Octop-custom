@@ -26,7 +26,13 @@ import {
 } from "../utils/deleteConversation";
 import { isAgentChatReady } from "../../../utils/agentError";
 import { isImeComposing } from "../../../utils/ime";
-import { sortSessions, toSession, type Session } from "../hooks/useSessions";
+import { archiveConversationMenuItem } from "../utils/archiveConversation";
+import {
+  isPendingThread,
+  sortSessions,
+  toSession,
+  type Session,
+} from "../hooks/useSessions";
 import { formatThreadTitle } from "../utils/threadTitle";
 import { onSessionEvent } from "../hooks/chatStore";
 import { useExpertSessionCatalog } from "../hooks/useExpertSessionCatalog";
@@ -149,6 +155,7 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
   forkDisabled,
   forkDisabledHint,
   projectMenuItems,
+  canArchive = false,
 }: {
   session: Session;
   isActive: boolean;
@@ -164,6 +171,7 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
   forkDisabled?: boolean;
   forkDisabledHint?: string;
   projectMenuItems?: ProjectRowProps["projectMenuItems"];
+  canArchive?: boolean;
 }) {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -229,6 +237,9 @@ const PreviewSessionRow = memo(function PreviewSessionRow({
         setIsEditing(true);
       },
     },
+    ...(canArchive && !isPendingThread(session.id)
+      ? [archiveConversationMenuItem(session.id, t)]
+      : []),
     {
       key: "delete",
       label: t("common.delete", "Delete"),
@@ -585,7 +596,7 @@ export default function MinimalAgentSessionNav({
 
   useEffect(() => {
     return onSessionEvent((event) => {
-      if (event.kind === "sessionDeleted") {
+      if (event.kind === "sessionDeleted" || event.kind === "sessionArchived") {
         const { sessionId } = event;
         setByAgent((prev) => {
           const next: Record<string, Session[]> = {};

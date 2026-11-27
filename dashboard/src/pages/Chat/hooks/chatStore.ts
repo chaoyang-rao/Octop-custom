@@ -398,6 +398,7 @@ function emitSlashAction(event: SlashActionEvent) {
 // Session lifecycle events (e.g. deletion) for cross-module bridging.
 export type SessionEventKind =
   | "sessionDeleted"
+  | "sessionArchived"
   | "sessionsChanged"
   | "sessionRenamed";
 export interface SessionEvent {
