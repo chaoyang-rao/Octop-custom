@@ -1,3 +1,8 @@
+export type AvatarMotion = "idle" | "think" | "work" | "wait" | "done";
+export function avatarPose(
+  motion: AvatarMotion,
+  seconds: number,
+): Readonly<Record<string, number>>;
 export function createExpertAvatars(options: any): any;
 export const SHAPES: readonly {
   id: string;
@@ -11,6 +16,7 @@ export function avatarFrame(
   shape: string,
   color: string,
   seconds: number,
+  pose?: ReturnType<typeof avatarPose>,
 ): {
   body: [number, number][];
   eyes: [number, number][][];
@@ -19,4 +25,5 @@ export function bubbleStyle(color: string): {
   backgroundColor: string;
   color: string;
 };
+export function animatedSvg(shape: string, color: string): string;
 export function contrast(a: string, b: string): number;

@@ -7,6 +7,8 @@ import {
   COLORS,
   VIEWBOXES,
   avatarFrame,
+  avatarPose,
+  animatedSvg,
   bubbleStyle,
   contrast,
   createExpertAvatars,
@@ -54,6 +56,7 @@ describe("geometric portraits", () => {
         const svg = readFileSync(`public${url}`, "utf8");
         expect(svg).toContain(`fill="${color.hex}"`);
         expect(svg).toContain('dur="6s"');
+        expect(svg).toBe(animatedSvg(shape.id, color.id));
       }
     }
   });
@@ -89,6 +92,40 @@ describe("geometric portraits", () => {
           points.reduce((sum, point) => sum + point[axis], 0) / points.length;
         expect(mean(frame.eyes.flat(), 0)).toBeGreaterThan(mean(frame.body, 0));
         expect(mean(frame.eyes.flat(), 1)).toBeLessThan(mean(frame.body, 1));
+      }
+    }
+  });
+
+  it("uses the approved oval eyes and keeps every live pose inside the avatar slot", () => {
+    const { eyes } = avatarFrame("blob", "blue", 0);
+    const extent = (points: number[][], axis: number) =>
+      Math.max(...points.map((point) => point[axis])) -
+      Math.min(...points.map((point) => point[axis]));
+    for (const eye of eyes)
+      expect(extent(eye, 1)).toBeGreaterThan(extent(eye, 0));
+    expect(avatarPose("think", 1.32).gaze).toBeGreaterThan(0);
+    expect(avatarPose("think", 3.12).gaze).toBeLessThan(0);
+    expect(avatarPose("done", 2)).toEqual(avatarPose("idle", 0));
+    for (const { id } of SHAPES) {
+      const [left, top, width, height] = VIEWBOXES[id].split(" ").map(Number);
+      for (const motion of ["think", "work", "wait", "done"] as const) {
+        for (let tick = 0; tick <= 60; tick++) {
+          const time = tick / 12;
+          const frame = avatarFrame(id, "blue", time, avatarPose(motion, time));
+          if (frame.eyes.flat().some((eye) => !inside(eye, frame.body))) {
+            throw new Error(`${id}: ${motion} eye outside body at ${time}s`);
+          }
+          if (
+            frame.body.some(
+              ([x, y]) =>
+                x < left + 13.99 ||
+                x > left + width - 13.99 ||
+                y < top + 13.99 ||
+                y > top + height - 13.99,
+            )
+          )
+            throw new Error(`${id}: ${motion} clipped at ${time}s`);
+        }
       }
     }
   });
@@ -198,6 +235,23 @@ describe("team portrait occupancy", () => {
       />,
     );
     expect(container.querySelector(".octop-primary-badge")).toBeNull();
+  });
+
+  it("keeps a history collage idle even if one member is working elsewhere", () => {
+    const members = [
+      { agent_id: "primary", work_status: "working" },
+      { agent_id: "other", work_status: "waiting" },
+    ];
+    const { container, rerender } = render(<TeamPortrait members={members} />);
+    const statuses = () =>
+      Array.from(container.querySelectorAll("[data-avatar-motion]"), (avatar) =>
+        avatar.getAttribute("data-avatar-motion"),
+      );
+    expect(statuses()).toEqual(["work", "wait"]);
+    rerender(
+      <TeamPortrait members={members} primaryId="primary" motion="idle" />,
+    );
+    expect(statuses()).toEqual(["idle", "idle"]);
   });
 
   it.each([1, 2, 3, 4])(

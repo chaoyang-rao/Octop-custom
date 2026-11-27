@@ -90,13 +90,13 @@ function roundedPolygon(vertices, rounding = 0.24, steps = 7) {
   return out;
 }
 // Keep persisted IDs while replacing the old organic silhouettes with symmetry.
-const regularPolygon = (sides, radius, offset = -Math.PI / 2) =>
+const regularPolygon = (sides, radius, offset = -Math.PI / 2, rounding = 0.1) =>
   roundedPolygon(
     Array.from({ length: sides }, (_, i) => {
       const angle = offset + (i * TAU) / sides;
       return [Math.cos(angle) * radius, Math.sin(angle) * radius];
     }),
-    0.1,
+    rounding,
     8,
   );
 const pebble = regularPolygon(6, 198, -Math.PI / 6);
@@ -121,12 +121,52 @@ const diamond = roundedPolygon(
   0.1,
   12,
 );
+function matchOutlineBounds(points, reference) {
+  const span = (values) => [Math.min(...values), Math.max(...values)];
+  const bounds = [0, 1].map((axis) => span(points.map((point) => point[axis])));
+  const target = [0, 1].map((axis) =>
+    span(reference.map((point) => point[axis])),
+  );
+  return points.map((point) =>
+    point.map((value, axis) => {
+      const [min, max] = bounds[axis];
+      const [lo, hi] = target[axis];
+      return lo + ((value - min) * (hi - lo)) / (max - min);
+    }),
+  );
+}
+const roundedShapes = {
+  pebble: matchOutlineBounds(regularPolygon(6, 198, -Math.PI / 6, 0.3), pebble),
+  star: matchOutlineBounds(regularPolygon(8, 197, Math.PI / 8, 0.3), star),
+  cloud: matchOutlineBounds(regularPolygon(5, 201, -Math.PI / 2, 0.32), cloud),
+  triangle: matchOutlineBounds(
+    roundedPolygon(
+      [
+        [0, -191],
+        [186, 145],
+        [-186, 145],
+      ],
+      0.34,
+      14,
+    ),
+    triangle,
+  ),
+  diamond: matchOutlineBounds(
+    roundedPolygon(
+      [
+        [0, -213],
+        [203, 0],
+        [0, 213],
+        [-203, 0],
+      ],
+      0.26,
+      12,
+    ),
+    diamond,
+  ),
+};
 function bodyPoints(shape) {
-  if (shape === "pebble") return pebble;
-  if (shape === "triangle") return triangle;
-  if (shape === "star") return star;
-  if (shape === "cloud") return cloud;
-  if (shape === "diamond") return diamond;
+  if (roundedShapes[shape]) return roundedShapes[shape];
   const out = [];
   for (let i = 0; i < 96; i++) {
     const a = (i * TAU) / 96;
@@ -134,8 +174,8 @@ function bodyPoints(shape) {
       const c = Math.cos(a),
         s = Math.sin(a);
       out.push([
-        174 * Math.sign(c) * Math.abs(c) ** 0.53,
-        168 * Math.sign(s) * Math.abs(s) ** 0.53,
+        174 * Math.sign(c) * Math.abs(c) ** 0.65,
+        168 * Math.sign(s) * Math.abs(s) ** 0.65,
       ]);
     } else if (shape === "droplet") {
       out.push([157 * Math.cos(a), 188 * Math.sin(a)]);
@@ -148,17 +188,131 @@ function bodyPoints(shape) {
   }
   return out;
 }
-function eyePoints(cx, cy, diameter, open = 1, smile = 0) {
-  const rx = diameter / 2,
-    ry = Math.max(2, (diameter * open) / 2);
-  // Equal radii when open: a round eye. Lids compress during a blink.
+const restPose = Object.freeze({
+  x: 0,
+  y: 0,
+  tilt: 0,
+  width: 1,
+  height: 1,
+  gaze: 0,
+  eyeY: 0,
+  lids: 1,
+  marks: 0,
+  scratch: 0,
+});
+const beat = (t, start, end) =>
+  t <= start || t >= end
+    ? 0
+    : Math.sin((Math.PI * (t - start)) / (end - start));
+const hold = (t, start, end, edge = 0.26) =>
+  smooth((t - start) / edge) * smooth((end - t) / edge);
+
+export function avatarPose(state, seconds) {
+  const t = Math.max(0, seconds);
+  if (state === "think") {
+    const dip = smooth(t / 0.54);
+    const easeIn = smooth((t - 0.22) / 0.49);
+    const phase = ((t - 0.42) * TAU) / 3.6;
+    const sway = Math.sin(phase) * easeIn;
+    const scan = Math.sin(phase + 0.2) * easeIn;
+    const blink = beat(t % 4.8, 2.42, 2.69);
+    return {
+      ...restPose,
+      x: -4 * dip + 8 * sway,
+      y: 31 * dip + 2 * Math.abs(sway),
+      tilt: -8 * dip + 10 * sway,
+      width: 1 + 0.055 * dip,
+      height: 1 - 0.12 * dip,
+      gaze: -12 * dip + 24 * scan,
+      eyeY: 70 * dip + 4 * Math.abs(scan),
+      lids: 1 - 0.24 * dip - 0.56 * blink,
+      scratch: 0.45 * easeIn * (0.6 + 0.4 * Math.abs(sway)),
+    };
+  }
+  if (state === "work") {
+    const phase = t % 3.15;
+    const left = hold(phase, 0.04, 0.78, 0.2);
+    const right = hold(phase, 0.64, 1.36, 0.2);
+    const leftReturn = hold(phase, 1.24, 1.78, 0.17);
+    const rightReturn = hold(phase, 1.66, 2.22, 0.18);
+    const weight = -left + right - 0.75 * leftReturn + 0.56 * rightReturn;
+    const press = Math.max(
+      beat(phase, 0.29, 0.58),
+      beat(phase, 0.88, 1.15),
+      0.7 * beat(phase, 1.44, 1.64),
+      0.5 * beat(phase, 1.84, 2.1),
+    );
+    const stretch = Math.abs(weight) * (1 - 0.65 * press);
+    return {
+      ...restPose,
+      x: 49 * weight,
+      y: 15 * press - 5 * stretch,
+      tilt: 17.5 * weight,
+      width: 1 - 0.11 * stretch + 0.11 * press,
+      height: 1 + 0.07 * stretch - 0.12 * press,
+      gaze: 10 * weight,
+      lids: 1 - 0.34 * press,
+      marks: Math.abs(weight) * 0.76,
+    };
+  }
+  if (state === "wait") {
+    const look = hold(t % 3.6, 0.1, 3.34, 0.38);
+    const blink = Math.max(
+      beat(t % 3.6, 1.28, 1.52),
+      beat(t % 3.6, 1.71, 1.94),
+    );
+    return {
+      ...restPose,
+      x: 23 * look,
+      y: -17 * look,
+      tilt: 10 * look,
+      height: 1 + 0.065 * look,
+      gaze: 3 * look,
+      eyeY: -10 * look,
+      lids: 1 + 0.08 * look - 0.86 * blink,
+    };
+  }
+  if (state === "done") {
+    if (t >= 1.48) return restPose;
+    const prep = beat(t, 0, 0.32),
+      rise = beat(t, 0.26, 0.98);
+    const land = beat(t, 0.94, 1.18),
+      settle = beat(t, 1.12, 1.48);
+    return {
+      ...restPose,
+      x: 15 * rise - 11 * land,
+      y: 13 * prep - 55 * rise + 17 * land - 9 * settle,
+      tilt: -11 * prep + 19 * rise - 13 * land + 6 * settle,
+      width: 1 + 0.14 * prep - 0.08 * rise + 0.16 * land,
+      height: 1 - 0.15 * prep + 0.13 * rise - 0.18 * land,
+      eyeY: -7 * rise,
+      lids: 1 - 0.52 * prep + 0.07 * rise,
+      marks: 0.72 * rise,
+    };
+  }
+  return restPose;
+}
+
+function spin(x, y, angle) {
+  const cos = Math.cos(angle),
+    sin = Math.sin(angle);
+  return [x * cos - y * sin, x * sin + y * cos];
+}
+
+function ellipsePoints(cx, cy, rx, ry, angle) {
   return Array.from({ length: 40 }, (_, i) => {
-    const a = (i * TAU) / 40,
-      x = Math.cos(a) * rx;
-    return [cx + x, cy + Math.sin(a) * ry - smile * (1 - (x / rx) ** 2)];
+    const a = (i * TAU) / 40;
+    const [x, y] = spin(Math.cos(a) * rx, Math.sin(a) * ry, angle);
+    return [cx + x, cy + y];
   });
 }
-export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
+
+export function avatarFrame(
+  shape = "blob",
+  color = "ink",
+  seconds = 0,
+  pose = restPose,
+) {
   shape = validShape(shape) ? shape : "blob";
   const base = getColor(color).hex,
     t = ((seconds % 6) + 6) % 6,
@@ -354,22 +508,90 @@ export function avatarFrame(shape = "blob", color = "ink", seconds = 0) {
           264 + dy + x * Math.sin(angle) + y * Math.cos(angle),
         ];
       });
-  const body = tx(bodyPoints(shape));
-  // 100 px between eye centers (v2 was 71–73): visibly wider spacing.
-  const eyes = [
-    tx(eyePoints(faceX - 50 + gx, faceY + gy, diameter, clamp(openL), smile)),
-    tx(
-      eyePoints(faceX + 50 + gx, faceY - 3 + gy, diameter, clamp(openR), smile),
+  const slim = shape === "blob" ? 1 : 0.92;
+  const body = tx(bodyPoints(shape)).map(([x, y]) => [
+    256 + (x - 256) * slim,
+    y,
+  ]);
+  const centers = tx([
+    [faceX - 50 + gx, faceY + gy - smile * 0.5],
+    [faceX + 50 + gx, faceY - 3 + gy - smile * 0.5],
+  ]);
+  const eyeAngle = Math.atan2(
+    centers[1][1] - centers[0][1],
+    centers[1][0] - centers[0][0],
+  );
+  const eyes = centers.map(([cx, cy], i) =>
+    ellipsePoints(
+      256 + (cx + 17 - 256) * slim + pose.gaze,
+      cy +
+        (shape === "triangle" ? 15 : 0) +
+        (shape === "diamond" ? Math.max(pose.eyeY, -3) : pose.eyeY),
+      (diameter / 2) * 1.1 * sx,
+      Math.max(2, (diameter / 2) * clamp(i === 0 ? openL : openR)) *
+        1.57 *
+        sy *
+        pose.lids,
+      eyeAngle,
     ),
+  );
+  const project = ([x, y]) => {
+    [x, y] = spin(
+      (x - 256) * pose.width,
+      (y - 264) * pose.height,
+      (pose.tilt * Math.PI) / 180,
+    );
+    return [x + 256 + pose.x, y + 264 + pose.y];
+  };
+  const moved = body.map(project);
+  const [left, top, width, height] = VIEWBOXES[shape].split(" ").map(Number);
+  const centerX = left + width / 2,
+    centerY = top + height / 2;
+  const scale = Math.min(
+    1,
+    ...moved.map(([x, y]) =>
+      Math.min(
+        (width / 2 - 14) / Math.abs(x - centerX),
+        (height / 2 - 14) / Math.abs(y - centerY),
+      ),
+    ),
+  );
+  const fit = ([x, y]) => [
+    centerX + (x - centerX) * scale,
+    centerY + (y - centerY) * scale,
   ];
+  const strokes = [];
+  if (pose.scratch > 0.12) {
+    const [templeX, templeY] = moved.reduce((best, point) =>
+      point[0] * 0.48 - point[1] > best[0] * 0.48 - best[1] ? point : best,
+    );
+    const x = Math.min(left + width - 38, templeX + 46);
+    const y = Math.max(top + 30, templeY + 12);
+    strokes.push({
+      opacity: pose.scratch * 0.7,
+      d: `M${x - 11},${y + 5} Q${x - 13},${y - 13} ${x + 2},${y - 22} M${
+        x + 7
+      },${y + 11} Q${x + 5},${y - 5} ${x + 19},${y - 14}`,
+    });
+  }
+  if (pose.marks > 0.12) {
+    const d =
+      pose.y < -25
+        ? "M112,112 L94,95 M390,110 L405,90"
+        : pose.x < 0
+        ? "M432,247 L405,241 M440,277 L416,273"
+        : "M80,247 L107,241 M72,277 L96,273";
+    strokes.push({ opacity: 0.48 * pose.marks, d });
+  }
   return {
     shape,
     color: getColor(color).id,
     base,
     outline: base,
     eyeColor: EYE_COLORS[base],
-    body,
-    eyes,
+    body: moved.map(fit),
+    eyes: eyes.map((points) => points.map((point) => fit(project(point)))),
+    strokes,
     facets: [],
   };
 }
@@ -472,20 +694,43 @@ export function createExpertAvatars({ React }) {
     style,
     static: still = false,
     title,
+    motion = "idle",
     ...rest
   }) {
-    const [time, setTime] = React.useState(0),
+    const initialFrame = React.useRef({ time: 0, pose: restPose });
+    const [animated, setAnimated] = React.useState(initialFrame.current),
+      currentPose = React.useRef(restPose),
       ref = React.useRef(null),
       id = React.useId().replace(/:/g, "");
     React.useEffect(() => {
       const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const started = performance.now() / 1000;
+      const from = currentPose.current;
+      const frameAt = (time) => {
+        const age = Math.max(0, time - started);
+        const target = avatarPose(motion, age);
+        const pose =
+          age >= 0.24 || from === target
+            ? target
+            : Object.fromEntries(
+                Object.keys(restPose).map((key) => [
+                  key,
+                  lerp(from[key], target[key], smooth(age / 0.24)),
+                ]),
+              );
+        currentPose.current = pose;
+        setAnimated({ time, pose });
+      };
       let off = () => {},
         visible = true;
       const update = () => {
         off();
         off = () => {};
-        if (!still && !media.matches && visible) off = subscribe(setTime);
-        else setTime(0);
+        if (!still && !media.matches && visible) off = subscribe(frameAt);
+        else {
+          currentPose.current = restPose;
+          setAnimated(initialFrame.current);
+        }
       };
       const observer =
         typeof IntersectionObserver === "function"
@@ -502,8 +747,8 @@ export function createExpertAvatars({ React }) {
         observer?.disconnect();
         media.removeEventListener("change", update);
       };
-    }, [shape, still]);
-    const f = avatarFrame(shape, color, time),
+    }, [shape, still, motion]);
+    const f = avatarFrame(shape, color, animated.time, animated.pose),
       clip = `oa-${id}`;
     const name = SHAPES.find((x) => x.id === f.shape)?.name || "圆形";
     return h(
@@ -526,6 +771,7 @@ export function createExpertAvatars({ React }) {
         role: "img",
         "aria-label": title || `${name} · ${getColor(color).name}`,
         focusable: "false",
+        "data-avatar-motion": motion,
         ...rest,
       },
       h(
@@ -555,6 +801,18 @@ export function createExpertAvatars({ React }) {
           "data-avatar-eye": "",
           d: pathData(points),
           fill: f.eyeColor,
+          clipPath: `url(#${clip})`,
+        }),
+      ),
+      ...f.strokes.map(({ d, opacity }, i) =>
+        h("path", {
+          key: `stroke${i}`,
+          d,
+          fill: "none",
+          stroke: f.base,
+          strokeWidth: 8,
+          strokeLinecap: "round",
+          opacity,
         }),
       ),
     );

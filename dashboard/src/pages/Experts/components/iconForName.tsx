@@ -1,4 +1,5 @@
 import { ExpertPortrait } from "../../../components/expertPortrait";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 import type { OctopAgent } from "../../../context/AgentContext";
 /**
  * iconForName — map an expert's ``icon_name`` (a free-form string from the
@@ -125,6 +126,7 @@ export function ExpertIcon({
   iconName,
   size = 22,
   className,
+  motion,
 }: {
   agentId?: string | null;
   agent?: Pick<
@@ -135,6 +137,7 @@ export function ExpertIcon({
   iconName?: string | null;
   size?: number;
   className?: string;
+  motion?: AvatarMotion;
 }): ReactNode {
   return (
     <ExpertPortrait
@@ -144,6 +147,7 @@ export function ExpertIcon({
       iconName={iconName}
       size={size}
       className={className}
+      motion={motion}
     />
   );
 }

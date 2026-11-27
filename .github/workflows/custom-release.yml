@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.1"
+        default: "custom-1.0.3b3-20261128.2"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.1' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.2' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -488,7 +488,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112801 / 哆啦 0.10.4。收窄桌面图标栏，Logo 与搜索移入专家栏。左右导航栏在浅色模式统一浅灰、深色模式统一深灰，聊天区随主题使用白色或黑色。头像下方的项目和会话标题对齐。新增十二色专家头像色板，旧头像更新到对应的新色值，主专家头像随主题使用白色或黑色圆形。会话图标位于标题前，工作进度和完成状态位于行尾，会话菜单可归档。
+          Octop Custom 112802 / 哆啦 0.10.5。专家头像改用 B 套竖椭圆眼，眼睛向右移，非圆轮廓更修长。头像根据实时会话状态显示低头慢摇、执行侧闪、待确认和完成动作。哆啦的包版本随联合发行递增。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

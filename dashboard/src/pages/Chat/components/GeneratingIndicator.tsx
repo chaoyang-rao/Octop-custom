@@ -60,6 +60,7 @@ function GeneratingAvatar({ agentId }: { agentId?: string | null }) {
         iconUrl={expert?.icon_url}
         tooltip={avatarTooltip}
         profileAgentId={avatarProfileId}
+        motion="think"
       />
     </div>
   );

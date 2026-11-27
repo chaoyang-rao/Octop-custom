@@ -45,6 +45,7 @@ import { MessageFileCard } from "./MessageFileCard";
 import AskQuestionCard from "./AskQuestionCard";
 import HitlApprovalCard from "./HitlApprovalCard";
 import MessageSender, { ExpertMessageAvatar } from "./MessageSender";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { useAgent } from "../../../context/AgentContext";
 import {
@@ -108,6 +109,7 @@ interface MessageBubbleProps {
   groupPosition?: "first" | "middle" | "last" | "only";
   /** Assistant avatar. Hide when the turn already shows one on the process row. */
   showAvatar?: boolean;
+  avatarMotion?: AvatarMotion;
   onRunShellCommand?: (code: string) => void;
   shellCommandDisabled?: boolean;
   shellCommandDisabledTitle?: string;
@@ -588,6 +590,7 @@ function MessageBubble({
   compact,
   groupPosition = "only",
   showAvatar = true,
+  avatarMotion,
   onRunShellCommand,
   shellCommandDisabled,
   shellCommandDisabledTitle,
@@ -829,6 +832,7 @@ function MessageBubble({
       iconUrl={expert?.icon_url}
       tooltip={avatarTooltip}
       profileAgentId={avatarProfileId}
+      motion={avatarMotion}
     />
   ) : null;
 

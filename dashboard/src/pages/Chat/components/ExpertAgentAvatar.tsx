@@ -1,4 +1,5 @@
 import { ExpertIcon } from "../../Experts/components/iconForName";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 
 export interface ChatAgentOption {
   agent_id: string;
@@ -30,6 +31,7 @@ interface ExpertAgentAvatarProps {
   className?: string;
   /** Neutral styling for read-only history tags. */
   muted?: boolean;
+  motion?: AvatarMotion;
 }
 
 export default function ExpertAgentAvatar({
@@ -38,6 +40,7 @@ export default function ExpertAgentAvatar({
   iconUrl,
   size = 32,
   className,
+  motion,
 }: ExpertAgentAvatarProps) {
   return (
     <ExpertIcon
@@ -46,6 +49,7 @@ export default function ExpertAgentAvatar({
       iconName={iconName}
       size={size}
       className={className}
+      motion={motion}
     />
   );
 }
