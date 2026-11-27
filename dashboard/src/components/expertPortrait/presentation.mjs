@@ -16,6 +16,13 @@ const FALLBACK_HUES = [
 const primaryFace = { shape: "blob", color: "black" };
 const isPrimary = (agent) =>
   agent?.is_team_primary === true && agent?.kind !== "team";
+function activityMotion(agent) {
+  if (!agent || agent.bridge_disconnected) return "idle";
+  if (agent.work_status === "working") return "work";
+  if (agent.work_status === "waiting") return "wait";
+  return "idle";
+}
+
 let previous;
 export function randomAvatar(random = Math.random) {
   const shapes = SHAPES.filter((value) => value !== previous?.shape);
@@ -55,7 +62,13 @@ export function createExpertPresentation({
       };
     return portraitFor(member?.icon_url || member?.agent_id, avatars);
   }
-  function TeamPortrait({ members = [], size = 48, className }) {
+  function TeamPortrait({
+    members = [],
+    size = 48,
+    className,
+    motion,
+    primaryId,
+  }) {
     const portraits = members.length
       ? members.slice(0, 4)
       : [
@@ -115,6 +128,12 @@ export function createExpertPresentation({
           avatars.renderAvatar({
             ...(primary ? primaryFace : face),
             size: faceSize,
+            motion:
+              motion === undefined
+                ? activityMotion(member)
+                : id && id === primaryId
+                ? motion
+                : "idle",
             className: primary ? "octop-primary-face" : undefined,
           }),
         );
@@ -128,6 +147,7 @@ export function createExpertPresentation({
     className,
     agent,
     agentId,
+    motion,
   }) {
     const context = useAgent?.();
     const labels = usePrimaryLabels?.() || { label: "主", title: "主专家" };
@@ -135,6 +155,7 @@ export function createExpertPresentation({
       agentId && context?.agents?.find((item) => item.agent_id === agentId);
     // Shared geometric artwork is not an identity: only an explicit expert gets a role badge.
     const primary = isPrimary(agent);
+    const activity = motion ?? activityMotion(agent);
     agent =
       agent ||
       (iconUrl && context?.activeAgent?.icon_url === iconUrl
@@ -156,6 +177,8 @@ export function createExpertPresentation({
         ),
         size,
         className,
+        motion,
+        primaryId: agent?.primary_agent_id,
       });
     const face = agent
       ? memberFace(agent)
@@ -163,6 +186,7 @@ export function createExpertPresentation({
     const portrait = avatars.renderAvatar({
       ...(primary ? primaryFace : face),
       size,
+      motion: activity,
       className: primary ? `octop-primary-face ${className || ""}` : className,
       style: { maxWidth: "100%", maxHeight: "100%", flexShrink: 0 },
     });

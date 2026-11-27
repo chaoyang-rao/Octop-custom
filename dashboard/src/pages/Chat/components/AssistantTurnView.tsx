@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 import { ChevronRight, FilePen, Globe } from "../../../components/arcIcons";
 import { useTranslation } from "react-i18next";
 import cx from "classnames";
@@ -13,6 +14,7 @@ import {
 import { isWriteToolName } from "../constants";
 import { collectChatFilePaths } from "../hooks/useChatFileDetection";
 import { layoutAssistantTurnHitl } from "../utils/layoutAssistantTurnHitl";
+import { isPausedAskTool } from "../utils/pendingHitl";
 import { useAgent } from "../../../context/AgentContext";
 import { TodoProgressPanel } from "../../../components/TodoProgressPanel";
 import {
@@ -191,6 +193,40 @@ export default function AssistantTurnView({
     [messages, splitOpts],
   );
 
+  const [justFinished, setJustFinished] = useState(false);
+  const wasLive = useRef(false);
+  const replyCompleted =
+    fullSplit.answerMessage?.status === "done" &&
+    fullSplit.answerMessage.durationMs !== undefined &&
+    !fullSplit.errorMessages?.length;
+  useEffect(() => {
+    if (turnStreaming) {
+      wasLive.current = true;
+      setJustFinished(false);
+    } else if (!hasPendingHitl && wasLive.current && replyCompleted) {
+      wasLive.current = false;
+      setJustFinished(true);
+    }
+  }, [turnStreaming, hasPendingHitl, replyCompleted]);
+  const paused =
+    hasPendingHitl || (turnStreaming && messages.some(isPausedAskTool));
+  const hasInFlightTool = messages.some(
+    (message) =>
+      message.status === "streaming" &&
+      message.toolData &&
+      !isPausedAskTool(message),
+  );
+  const thinking = fullSplit.thinkings.some((item) => item.isStreaming);
+  const avatarMotion: AvatarMotion = paused
+    ? "wait"
+    : turnStreaming
+    ? hasInFlightTool || (!thinking && fullSplit.answerMessage)
+      ? "work"
+      : "think"
+    : justFinished
+    ? "done"
+    : "idle";
+
   const toolMedia = useMemo(
     () => collectTurnToolMedia(fullSplit, speakerAgentId),
     [fullSplit, speakerAgentId],
@@ -287,6 +323,7 @@ export default function AssistantTurnView({
             hideToolMedia={hasToolMedia}
             agentId={speakerAgentId}
             showAvatar={firstSummaryIdx < 0 && trailingHasSummary}
+            avatarMotion={avatarMotion}
           />
           {todoPanel && firstProcessSegmentIdx < 0 ? (
             <div className={styles.turnInset}>{todoPanel}</div>
@@ -309,6 +346,7 @@ export default function AssistantTurnView({
             message={toAnswerOnlyMessage(trailingSplit.answerMessage)}
             agentId={agentId}
             showAvatar={firstSummaryIdx < 0 && !trailingHasSummary}
+            avatarMotion={avatarMotion}
             onRegenerate={onRegenerate}
             onDisableStreamUsage={onDisableStreamUsage}
             onEditUserMessage={onEditUserMessage}
@@ -431,6 +469,7 @@ export default function AssistantTurnView({
                   hideToolMedia={hasToolMedia}
                   agentId={speakerAgentId}
                   showAvatar={idx === firstSummaryIdx}
+                  avatarMotion={avatarMotion}
                 />
                 {todoPanel && idx === firstProcessSegmentIdx ? (
                   <div className={styles.turnInset}>{todoPanel}</div>
@@ -443,6 +482,7 @@ export default function AssistantTurnView({
                   message={toAnswerOnlyMessage(split.answerMessage)}
                   agentId={agentId}
                   showAvatar={!showProcess}
+                  avatarMotion={avatarMotion}
                   groupPosition="only"
                   onRegenerate={onRegenerate}
                   onDisableStreamUsage={onDisableStreamUsage}

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 import type { ChatMessage } from "../hooks/useChat";
 import type { AssistantTurnSplit } from "../utils/messageContent";
 import { countProcessStats } from "../utils/messageContent";
@@ -21,6 +22,7 @@ interface TurnProcessBlocksProps {
   agentId: string | null;
   /** One expert avatar per turn — only the first process row should show it. */
   showAvatar?: boolean;
+  avatarMotion?: AvatarMotion;
 }
 
 function hasFoldContent(
@@ -43,6 +45,7 @@ export function TurnProcessBlocks({
   hideToolMedia,
   agentId,
   showAvatar = false,
+  avatarMotion,
 }: TurnProcessBlocksProps) {
   const { t } = useTranslation();
   const { agents, activeAgent } = useAgent();
@@ -96,6 +99,7 @@ export function TurnProcessBlocks({
                 iconUrl={expert?.icon_url}
                 tooltip={avatarTooltip}
                 profileAgentId={avatarProfileId}
+                motion={avatarMotion}
               />
             </div>
           ) : null}

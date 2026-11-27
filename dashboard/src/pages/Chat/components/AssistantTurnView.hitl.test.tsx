@@ -37,12 +37,22 @@ vi.mock("../../../context/AgentContext", () => ({
       name: "主持团队",
       kind: "team",
       icon_name: "bot",
+      primary_agent_id: "primary",
+      member_ids: ["primary"],
     },
     agents: [
       {
         agent_id: "host",
         name: "主持团队",
         kind: "team",
+        icon_name: "bot",
+        primary_agent_id: "primary",
+        member_ids: ["primary"],
+      },
+      {
+        agent_id: "primary",
+        name: "小通",
+        is_team_primary: true,
         icon_name: "bot",
       },
     ],
@@ -62,8 +72,57 @@ function message(
 }
 
 describe("AssistantTurnView approval", () => {
+  it("animates live work and celebrates only a confirmed completion", () => {
+    const answer = { id: "answer", content: "回复" };
+    const { container, rerender } = render(
+      <AssistantTurnView
+        messages={[message({ ...answer, durationMs: 830 })]}
+      />,
+    );
+    const current = () =>
+      container
+        .querySelector("[data-avatar-motion]")
+        ?.getAttribute("data-avatar-motion");
+    expect(current()).toBe("idle");
+    rerender(
+      <AssistantTurnView
+        isTurnInProgress
+        messages={[
+          message({
+            id: answer.id,
+            type: "reasoning",
+            content: "考虑下一步",
+            status: "streaming",
+          }),
+        ]}
+      />,
+    );
+    expect(current()).toBe("think");
+    rerender(
+      <AssistantTurnView
+        isTurnInProgress
+        messages={[message({ ...answer, status: "streaming" })]}
+      />,
+    );
+    expect(current()).toBe("work");
+    rerender(
+      <AssistantTurnView
+        messages={[message({ ...answer, durationMs: 830 })]}
+      />,
+    );
+    expect(current()).toBe("done");
+    rerender(
+      <AssistantTurnView
+        isTurnInProgress
+        messages={[message({ ...answer, status: "streaming" })]}
+      />,
+    );
+    rerender(<AssistantTurnView messages={[message(answer)]} />);
+    expect(current()).toBe("idle");
+  });
+
   it("keeps the answer that arrived before the approval card", () => {
-    render(
+    const { container } = render(
       <AssistantTurnView
         messages={[
           message({ id: "text", content: "磁盘还剩 8G" }),
@@ -84,6 +143,9 @@ describe("AssistantTurnView approval", () => {
 
     expect(screen.getByText("磁盘还剩 8G")).toBeInTheDocument();
     expect(screen.getByText("Confirm this action")).toBeInTheDocument();
+    expect(
+      container.querySelector('[data-avatar-motion="wait"]'),
+    ).not.toBeNull();
   });
 
   it("keeps host wrap-up below the divider and leaves the decision collapsed", () => {

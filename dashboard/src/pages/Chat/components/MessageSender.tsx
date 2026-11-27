@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { AvatarMotion } from "../../../components/expertPortrait/avatar-library.mjs";
 import { Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 import ExpertAgentAvatar from "./ExpertAgentAvatar";
@@ -34,6 +35,7 @@ interface ExpertMessageAvatarProps {
   tooltip?: string | null;
   /** Open this agent in the profile drawer (member vs team host). */
   profileAgentId?: string | null;
+  motion?: AvatarMotion;
 }
 
 export function ExpertMessageAvatar({
@@ -43,6 +45,7 @@ export function ExpertMessageAvatar({
   iconUrl,
   tooltip,
   profileAgentId,
+  motion = "idle",
 }: ExpertMessageAvatarProps) {
   const { t } = useTranslation();
   const profile = useChatAgentProfile();
@@ -55,6 +58,7 @@ export function ExpertMessageAvatar({
       iconUrl={iconUrl}
       color={color}
       size={MESSAGE_AVATAR_SIZE}
+      motion={motion}
     />
   );
 
