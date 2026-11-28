@@ -2,8 +2,8 @@
   "schema_version": 1,
   "upstream_tag": "v1.0.3b3",
   "upstream_commit": "4811eb45996169e86006db1b6451264ff4758223",
-  "program_files": 2622,
-  "changed_program_files": 697,
+  "program_files": 2624,
+  "changed_program_files": 701,
   "files": [
     {
       "path": "octop/__init__.py",
@@ -745,7 +745,7 @@
     },
     {
       "path": "octop/api/routers/health.py",
-      "sha256": "3ad42f69331a1beddc7a1772056df9f155f4dab7b0fb0c84505f0f33fd815a0f",
+      "sha256": "e241462f646b2158203b31490ac7032f50c992f3afd594d6d542b73dd6cfc540",
       "upstream_program_sha256": "663f856556eb5222d6d5f5bf3e97ca96f1acb2d2584d47b6070877699a1f751b",
       "changed_from_saved_original": true
     },
@@ -6253,7 +6253,7 @@
     },
     {
       "path": "octop/i18n/en.json",
-      "sha256": "2b4db0fa1e3767b097134b34881717bf72160242cda39fd2abafcf64e209df81",
+      "sha256": "d8f80fc4fe422ceb35a1a4b24b459aa35d21915e9f70182665c4e303678fe4b3",
       "upstream_program_sha256": "e2d96a5cdb9d22efa59f3b73824e8510fc87490d1c5a32926c5041796895d9b1",
       "changed_from_saved_original": true
     },
@@ -6265,7 +6265,7 @@
     },
     {
       "path": "octop/i18n/zh.json",
-      "sha256": "c09438e2c6e7f4319623074eefff9ea9580005b28b5c517fd8219c6cda0af360",
+      "sha256": "a2e6a1f880ce5fe7be642e7e4d1af0b78a4c9854b5d1896d9547285b35691616",
       "upstream_program_sha256": "c358a60eb6adbd6163e7dfb50f28a31cf53041f6c14d78b349e229c9d7f3566d",
       "changed_from_saved_original": true
     },
@@ -6427,7 +6427,7 @@
     },
     {
       "path": "octop/infra/agents/manager.py",
-      "sha256": "dfa701337ad00bef9909de5306db06ddcad08ad2ee98d38cc57f183c3c7258f1",
+      "sha256": "d5261543f36321f89ac1e8ed2ad1017ae928299b7dce7621ee549087b127e58b",
       "upstream_program_sha256": "1b5b79ef99271e81687de055fecd3730974b08a529182d8e58c70a492ce73fdd",
       "changed_from_saved_original": true
     },
@@ -6538,6 +6538,12 @@
       "sha256": "d10eb983fda5f5071a7e68c8c12ad5f9ad1a7e268549945d7cf93b822e3156de",
       "upstream_program_sha256": "d10eb983fda5f5071a7e68c8c12ad5f9ad1a7e268549945d7cf93b822e3156de",
       "changed_from_saved_original": false
+    },
+    {
+      "path": "octop/infra/agents/middleware/response_policy.py",
+      "upstream_program_sha256": null,
+      "sha256": "ba57d63cf23174776f12081895ab30361d649cfcf653f48033386a1fb2289e33",
+      "changed_from_saved_original": true
     },
     {
       "path": "octop/infra/agents/middleware/task_dispatch.py",
@@ -13507,7 +13513,7 @@
     },
     {
       "path": "octop_harness/agent.py",
-      "sha256": "81f9dd69cd226cd2f41b5a44dc633e4fc0c10d81c7e86762b67d47bc474bbdb5",
+      "sha256": "d130c07dcb0845ea75fad0f2cfc12e1cd50c2a1255eccd56bf7629b3da102321",
       "upstream_program_sha256": "47d781a4b8590450913ea6e3562efb01bfb3883faedc2b5587478e69988b059e",
       "changed_from_saved_original": true
     },
@@ -14905,7 +14911,7 @@
     },
     {
       "path": "octop_harness/config/__init__.py",
-      "sha256": "db9c1269761fc644594cb5e0a8ceba953f4ec9c211c1bade9c4003f4dc48ded4",
+      "sha256": "0e35f2fa10cc6b98735de01f35e72b8578e7fc54dd8796b20115ee6aff09fb69",
       "upstream_program_sha256": "22e73c8a9e2743ad350e144dadd1be6430ca5375ccc1ccd2646b4b204d19a4ae",
       "changed_from_saved_original": true
     },
@@ -15121,9 +15127,9 @@
     },
     {
       "path": "octop_harness/middleware/__init__.py",
-      "sha256": "50d2df0dd1c5f21d2fac7ca4c61f17498057738000120e7398236034cff6b075",
+      "sha256": "2b3f09da1fabbd9ea664c98f62d419ab5a416dd8632d5e75bdbb582d5e29dd14",
       "upstream_program_sha256": "50d2df0dd1c5f21d2fac7ca4c61f17498057738000120e7398236034cff6b075",
-      "changed_from_saved_original": false
+      "changed_from_saved_original": true
     },
     {
       "path": "octop_harness/middleware/bootstrap.py",
@@ -15145,7 +15151,7 @@
     },
     {
       "path": "octop_harness/middleware/compaction_order.py",
-      "sha256": "688d1c2b2fbce04f2721ef687ba8d20270413090b3f9613f98769f1d3594cc6e",
+      "sha256": "159b4ef9efcee6b7e5f125c4ac8b08ef76698615de67a8dede0555f74bf6dbd2",
       "upstream_program_sha256": null,
       "changed_from_saved_original": true
     },
@@ -15270,6 +15276,12 @@
       "changed_from_saved_original": false
     },
     {
+      "path": "octop_harness/middleware/skill_discovery.py",
+      "upstream_program_sha256": null,
+      "sha256": "b8af05b073396f1d1f058eec84f8274a8d1fc19d653a59d05865a3d91559839a",
+      "changed_from_saved_original": true
+    },
+    {
       "path": "octop_harness/middleware/skill_filter.py",
       "sha256": "21da9350b6fb0968d7ae812ae431083f203721f4055e2e07fa821d22ee070204",
       "upstream_program_sha256": "21da9350b6fb0968d7ae812ae431083f203721f4055e2e07fa821d22ee070204",
@@ -15301,9 +15313,9 @@
     },
     {
       "path": "octop_harness/middleware/tool_search.py",
-      "sha256": "ffd9950a3ed02e4550a0fef4a24b2702bcc4402ad2eb888240c2200946ab249e",
+      "sha256": "a42af6aa261d461b2007beff58a3b1935100f1c59b432b4fb02d03ad3199fada",
       "upstream_program_sha256": "ffd9950a3ed02e4550a0fef4a24b2702bcc4402ad2eb888240c2200946ab249e",
-      "changed_from_saved_original": false
+      "changed_from_saved_original": true
     },
     {
       "path": "octop_harness/middleware/tools_filter.py",

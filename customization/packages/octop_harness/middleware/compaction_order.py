@@ -9,6 +9,7 @@ from octop_harness.middleware.context_budget import ContextBudgetGuardMiddleware
 from octop_harness.middleware.context_usage import ContextUsageMiddleware
 from octop_harness.middleware.model_router import ModelRouterMiddleware
 from octop_harness.middleware.model_settings import ModelSettingsMiddleware
+from octop_harness.middleware.skill_discovery import _order_skill_discovery
 
 
 def context_middleware_order(middleware: Sequence[Any]) -> list[Any]:
@@ -22,8 +23,9 @@ def context_middleware_order(middleware: Sequence[Any]) -> list[Any]:
     rest = [mw for mw in middleware if id(mw) not in moved]
     index = next((i for i, mw in enumerate(rest) if getattr(mw, "_lc_helper", None) is not None), None)
     if index is None:
-        return list(middleware)
+        return _order_skill_discovery(middleware)
     ordered = [*rest[:index], *front, *rest[index:]]
+    ordered = _order_skill_discovery(ordered)
     guards = [mw for mw in ordered if getattr(mw, "final_context_budget_guard", False) is True]
     if not guards:
         guards = [ContextBudgetGuardMiddleware()]

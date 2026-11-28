@@ -1,0 +1,21 @@
+{
+  "base_commit": "f3b43181d753dbee0b2b3f9067b757a0d3cfaf6b",
+  "custom_version": "1.0.3b3.post2026112808",
+  "tag": "custom-1.0.3b3-20261128.8",
+  "source_make_all": {
+    "passed": 6235,
+    "skipped": 41,
+    "exit_code": 0,
+    "mypy_files": 764
+  },
+  "focused": {
+    "passed": 241,
+    "skipped": 1
+  },
+  "native_frozen_unittest": 134,
+  "owner_library_make_all": {
+    "passed": 2277,
+    "skipped": 35
+  },
+  "scope": "This records pre-release local checks, not a claim that GitHub publishing has completed."
+}

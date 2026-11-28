@@ -4658,6 +4658,7 @@ class AgentManager:
         )
         from octop.infra.agents.middleware.octop_ui_offload import OctopUiOffloadMiddleware
         from octop.infra.agents.middleware.reasoning import ReasoningRequestMiddleware
+        from octop.infra.agents.middleware.response_policy import ResponsePolicyMiddleware
         from octop.infra.agents.middleware.thread_artifacts import ThreadArtifactsMiddleware
         from octop.infra.agents.middleware.token_quota import TokenQuotaMiddleware
         from octop.infra.agents.middleware.workspace_image import (
@@ -4679,6 +4680,11 @@ class AgentManager:
                 usage_repo=self._repos.usage_repo,
             ),
             ReasoningRequestMiddleware(),
+            ResponsePolicyMiddleware(
+                locale=resolve_user_locale(
+                    user_repo=self._repos.user_repo, user_id=row.user_id or 0
+                ),
+            ),
             KnowledgeSearchHintMiddleware(),
             BrowserProfileMiddleware(),
             BinaryReadGuardMiddleware(),
@@ -4856,6 +4862,10 @@ class AgentManager:
         )
 
         harness_fields: dict[str, Any] = {}
+        if "defer_mcp_tools" in _HARNESS_AGENT_CONFIG_FIELDS:
+            harness_fields["defer_mcp_tools"] = True
+        if "progressive_catalog_enabled" in _HARNESS_AGENT_CONFIG_FIELDS:
+            harness_fields["progressive_catalog_enabled"] = True
         if "decision" in _HARNESS_AGENT_CONFIG_FIELDS:
             harness_fields["decision"] = self._decision.harness_config()
         if "memory_scope_resolver" in _HARNESS_AGENT_CONFIG_FIELDS:

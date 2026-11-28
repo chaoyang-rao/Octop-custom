@@ -27,6 +27,26 @@ _MAX_THREAD_CATALOGS = 2048
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _DEFERRED_DESCRIPTION_SUFFIX = "\n\n[Deferred reference: call tool_search before use.]"
 _SUPPORTED_NATIVE_PROVIDERS = frozenset({"openai", "anthropic"})
+_CORE_TOOLS = frozenset(
+    {
+        "ls",
+        "read_file",
+        "glob",
+        "grep",
+        "write_file",
+        "edit_file",
+        "execute",
+        "current_time",
+        "ask_user_question",
+        "memory_search",
+        "memory_get",
+        "memory_save",
+        "search_skills",
+        "tool_search",
+        "write_todos",
+        "agent_list",
+    }
+)
 
 
 def _merge_loaded_tool_names(left: list[str] | None, right: list[str] | None) -> list[str]:
@@ -141,6 +161,7 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
         deferred_tools: frozenset[str],
         mcp_tool_names: frozenset[str] | None = None,
         defer_mcp_tools: bool = False,
+        defer_other_tools: bool = False,
         mode: Literal["client", "native"] = "client",
         fallback: Literal["eager", "error"] = "eager",
     ) -> None:
@@ -148,6 +169,7 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
         self._deferred_tools = deferred_tools
         self._mcp_tool_names = mcp_tool_names or frozenset()
         self._defer_mcp_tools = defer_mcp_tools
+        self._defer_other_tools = defer_other_tools
         self._mode = mode
         self._fallback = fallback
         self._catalogs: OrderedDict[str, dict[str, _ToolDescriptor]] = OrderedDict()
@@ -215,6 +237,10 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
 
     def _prepare_client(self, request: ModelRequest) -> ModelRequest:
         tools = list(request.tools or [])
+        if self._defer_other_tools and self._request_thread_key() is None:
+            return request.override(
+                tools=[_make_eager(tool) for tool in tools if getattr(tool, "name", "") != _TOOL_SEARCH_NAME]
+            )
         selected: dict[str, BaseTool] = {}
         eager: list[Any] = []
         provider_tools: list[Any] = []
@@ -226,6 +252,8 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
             if tool.name == _TOOL_SEARCH_NAME:
                 continue
             should_defer = tool.name in self._deferred_tools or _is_self_deferred(tool)
+            if self._defer_other_tools and tool.name not in _CORE_TOOLS:
+                should_defer = True
             if self._defer_mcp_tools and tool.name in self._mcp_tool_names:
                 should_defer = True
             if should_defer:
@@ -252,6 +280,8 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
         tools = list(request.tools or [])
         visible_names = {tool.name for tool in tools if isinstance(tool, BaseTool)}
         selected = self._deferred_tools & visible_names
+        if self._defer_other_tools:
+            selected |= visible_names - _CORE_TOOLS
         if self._defer_mcp_tools:
             selected |= self._mcp_tool_names & visible_names
 
@@ -278,14 +308,16 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
         searchable.extend(sorted(selected))
         return request, ProviderToolSearchMiddleware(searchable_tools=searchable)
 
-    @staticmethod
-    def _deferred_reference(tool: BaseTool) -> BaseTool:
+    def _deferred_reference(self, tool: BaseTool) -> BaseTool:
         extras = dict(tool.extras or {})
         extras.pop("defer_loading", None)
+        description = tool.description or ""
+        if self._defer_other_tools:
+            description = description[:160]
         return tool.model_copy(
             update={
                 "args_schema": _DeferredToolInput,
-                "description": f"{tool.description or ''}{_DEFERRED_DESCRIPTION_SUFFIX}",
+                "description": f"{description}{_DEFERRED_DESCRIPTION_SUFFIX}",
                 "extras": extras,
             }
         )

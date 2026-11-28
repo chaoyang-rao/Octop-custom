@@ -1085,10 +1085,38 @@ def test_build_harness_config_language_follows_owner_locale(manager: AgentManage
         user_id=user_id,
         config_json=json.dumps({"backend": _fs_backend(ws)}),
     )
-    assert manager._build_harness_config(row).language == "en"
+    from langchain.agents.middleware import ModelRequest, ModelResponse
+    from langchain_core.messages import SystemMessage
+
+    from octop.infra.agents.middleware.response_policy import ResponsePolicyMiddleware
+
+    cfg = manager._build_harness_config(row)
+    assert cfg.language == "en"
+    guidance = next(mw for mw in cfg.middleware if isinstance(mw, ResponsePolicyMiddleware))
+    captured = []
+
+    def capture(request: ModelRequest) -> ModelResponse:
+        captured.append(request.system_message.text)
+        return ModelResponse(result=[])
+
+    guidance.wrap_model_call(
+        ModelRequest(
+            model=MagicMock(), messages=[], system_message=SystemMessage(content="Expert rules")
+        ),
+        capture,
+    )
+    assert "Answer the user's current question" in captured[0]
+    assert "Expert rules" in captured[0]
 
     missing = replace(row, user_id=None)
     assert manager._build_harness_config(missing).language == "zh"
+
+
+def test_build_harness_config_enables_supported_catalog_discovery(manager: AgentManager) -> None:
+    cfg = manager._build_harness_config(_row(agent_id="AGT_CATALOG"))
+    assert cfg.defer_mcp_tools is True
+    if hasattr(cfg, "progressive_catalog_enabled"):
+        assert cfg.progressive_catalog_enabled is True
 
 
 def test_build_harness_config_keeps_system_prompt_after_bootstrap(

@@ -1,0 +1,618 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 7ccda6b..7b40a37 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -9,0 +10,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
++### 新增
++
++- 可选 `progressive_catalog_enabled`：技能目录按需搜索并读取，非核心工具先展示精简引用，加载后仍通过原工具执行和权限检查。
++
+diff --git a/README.md b/README.md
+index 703bf9a..9617597 100644
+--- a/README.md
++++ b/README.md
+@@ -342,0 +343,9 @@ Tool permissions do not remove private memory already included in model context.
++For large skill and tool catalogs, opt in with
++`HarnessAgentConfig(progressive_catalog_enabled=True)`. The main agent uses
++`search_skills` to find skill metadata in English or Chinese, then reads the
++returned `SKILL.md` through the normal file tool. Explicit `/skill` requests and
++small catalogs remain directly available. Discovery uses the current filtered
++catalog; it does not restore disabled skills or change Ask/Plan restrictions.
++Non-core tools use compact references and the existing `tool_search` activation
++flow. Loaded schemas remain available for the thread. The default is `False`.
++
+@@ -379 +388,2 @@ the configured `tool_search_fallback`. Set the mode to `eager` to disable
+-progressive loading.
++progressive tool-schema loading. Set `progressive_catalog_enabled=False` as well
++to restore the full skill catalog.
+diff --git a/src/octop_harness/agent.py b/src/octop_harness/agent.py
+index 800d79e..79332db 100644
+--- a/src/octop_harness/agent.py
++++ b/src/octop_harness/agent.py
+@@ -1872 +1872,4 @@ class HarnessAgent:
+-        if not (deferred_tools or cfg.defer_mcp_tools) or cfg.tool_search_mode == "eager":
++        if (
++            not (deferred_tools or cfg.defer_mcp_tools or cfg.progressive_catalog_enabled)
++            or cfg.tool_search_mode == "eager"
++        ):
+@@ -1875,0 +1879 @@ class HarnessAgent:
++            defer_other_tools=cfg.progressive_catalog_enabled,
+@@ -2064,0 +2069,7 @@ class HarnessAgent:
++            if cfg.progressive_catalog_enabled:
++                from octop_harness.middleware.skill_discovery import SkillDiscoveryMiddleware
++
++                kwargs["middleware"] = [
++                    *middleware,
++                    SkillDiscoveryMiddleware(backend=self._backend, sources=skills, language=cfg.language),
++                ]
+diff --git a/src/octop_harness/config/__init__.py b/src/octop_harness/config/__init__.py
+index b3b43de..6f8017e 100644
+--- a/src/octop_harness/config/__init__.py
++++ b/src/octop_harness/config/__init__.py
+@@ -719,0 +720,2 @@ class HarnessAgentConfig:
++    # Opt in to skill discovery and compact schemas for non-core tools.
++    progressive_catalog_enabled: bool = False
+@@ -1133,0 +1136 @@ class HarnessAgentConfig:
++            "progressive_catalog_enabled": self.progressive_catalog_enabled,
+diff --git a/src/octop_harness/middleware/__init__.py b/src/octop_harness/middleware/__init__.py
+index 4a74e64..ea3fa98 100644
+--- a/src/octop_harness/middleware/__init__.py
++++ b/src/octop_harness/middleware/__init__.py
+@@ -19,0 +20 @@ from octop_harness.middleware.pii import detect_pii
++from octop_harness.middleware.skill_discovery import SkillDiscoveryMiddleware
+@@ -34,0 +36 @@ __all__ = [
++    "SkillDiscoveryMiddleware",
+diff --git a/src/octop_harness/middleware/skill_discovery.py b/src/octop_harness/middleware/skill_discovery.py
+new file mode 100644
+index 0000000..4406983
+--- /dev/null
++++ b/src/octop_harness/middleware/skill_discovery.py
+@@ -0,0 +1,218 @@
++"""Load skill metadata on demand after the host's skill and permission filters."""
++
++from __future__ import annotations
++
++import json
++import re
++from collections import OrderedDict
++from collections.abc import Mapping, Sequence
++from threading import RLock
++from typing import Annotated, Any, NotRequired, cast
++
++from deepagents.backends.protocol import BackendProtocol
++from deepagents.middleware._utils import append_to_system_message
++from deepagents.middleware.skills import SkillMetadata, SkillsMiddleware, SkillsState
++from langchain.agents.middleware import ModelRequest
++from langchain.agents.middleware.types import OmitFromInput, OmitFromOutput
++from langchain.tools import ToolRuntime
++from langchain_core.messages import HumanMessage, ToolMessage
++from langchain_core.tools import StructuredTool
++from langgraph.config import get_config
++from langgraph.types import Command
++from pydantic import BaseModel, Field
++
++from octop_harness.middleware.runtime import runtime_config
++from octop_harness.middleware.skill_filter import slash_skill_slug
++from octop_harness.skills.catalog import skill_identity_keys
++
++_EAGER_CATALOG_LIMIT = 8
++_MAX_CATALOGS = 128
++_SEARCH_TOOL = "search_skills"
++_WORD_RE = re.compile(r"[a-z0-9]+|[\u3400-\u9fff]+")
++
++
++def _merge_names(left: list[str] | None, right: list[str] | None) -> list[str]:
++    return sorted(set(left or ()) | set(right or ()))
++
++
++class SkillDiscoveryState(SkillsState):
++    discovered_skill_names: NotRequired[Annotated[list[str], OmitFromInput, OmitFromOutput, _merge_names]]
++
++
++class SkillSearchInput(BaseModel):
++    query: str = Field(description="Skill name or capability keywords in English or Chinese; '*' lists a page.")
++    max_results: int = Field(default=5, ge=1, le=5)
++    offset: int = Field(default=0, ge=0)
++
++
++def _key(configurable: Mapping[str, Any]) -> tuple[str, str] | None:
++    thread = configurable.get("thread_id")
++    actor = configurable.get("octop_execution_user_id", configurable.get("user", configurable.get("user_id", "")))
++    return (str(thread), str(actor)) if thread else None
++
++
++def _words(text: str) -> set[str]:
++    result: set[str] = set()
++    for word in _WORD_RE.findall(text.casefold().replace("_", " ")):
++        if "\u3400" <= word[0] <= "\u9fff":
++            result.update(word)
++            result.update(word[i : i + 2] for i in range(len(word) - 1))
++        else:
++            result.add(word)
++    return result
++
++
++class SkillDiscoveryMiddleware(SkillsMiddleware[Any, Any]):
++    """Replace the standard skills renderer with scoped, searchable metadata.
++
++    Full metadata stays in checkpoint state. Only current, filtered metadata is
++    searchable. Search results are remembered by skill name; subsequent model
++    steps resolve those names against the current catalog again. Small catalogs,
++    explicit /skill invocations and runtimes without discovery retain direct use.
++    """
++
++    state_schema = SkillDiscoveryState
++    skills_discovery_renderer = True
++
++    @property
++    def name(self) -> str:
++        return "SkillsMiddleware"
++
++    def __init__(self, *, backend: BackendProtocol, sources: Sequence[str], language: str = "en") -> None:
++        super().__init__(backend=backend, sources=sources)
++        self._language = language
++        self._catalogs: OrderedDict[tuple[str, str], list[SkillMetadata]] = OrderedDict()
++        self._lock = RLock()
++        self.tools = [
++            StructuredTool.from_function(
++                self._search,
++                name=_SEARCH_TOOL,
++                description=(
++                    "Find available skills by name or capability keywords (English or Chinese). "
++                    "Returns descriptions and SKILL.md paths; read the selected file before following it. "
++                    "Use query='*' and offset to list pages. Search does not execute skills or grant tools."
++                ),
++                args_schema=SkillSearchInput,
++                infer_schema=False,
++            )
++        ]
++
++    def modify_request(self, request: ModelRequest[Any]) -> ModelRequest[Any]:
++        configurable = runtime_config(request).get("configurable") or {}
++        key = _key(configurable)
++        raw_metadata = request.state.get("skills_metadata")
++        metadata = cast(list[SkillMetadata], list(raw_metadata)) if isinstance(raw_metadata, list) else []
++        if configurable.get("conversation_mode") in {"ask", "plan"}:
++            metadata = []
++        if key is not None:
++            with self._lock:
++                self._catalogs[key] = metadata
++                self._catalogs.move_to_end(key)
++                while len(self._catalogs) > _MAX_CATALOGS:
++                    self._catalogs.popitem(last=False)
++        if not metadata:
++            tools = [tool for tool in request.tools if getattr(tool, "name", "") != _SEARCH_TOOL]
++            return request.override(tools=tools)
++        can_search = key is not None and any(getattr(tool, "name", "") == _SEARCH_TOOL for tool in request.tools)
++        if len(metadata) <= _EAGER_CATALOG_LIMIT or not can_search:
++            return super().modify_request(request)
++        raw_names = request.state.get("discovered_skill_names")
++        names = set(cast(list[str], raw_names)) if isinstance(raw_names, list) else set()
++        user = next((message for message in reversed(request.messages) if isinstance(message, HumanMessage)), None)
++        explicit = slash_skill_slug(user.text) if user is not None else None
++        if explicit:
++            names.add(explicit)
++        selected = [skill for skill in metadata if skill_identity_keys(skill) & names]
++        if self._language == "zh":
++            guide = (
++                f"当前有 {len(metadata)} 个可用技能, 完整目录按需加载。普通问答无需先搜索技能。"
++                "编码、界面、文档、表格、数据处理等专项任务, 或用户点名技能时, "
++                "动手前先用 search_skills 按名称或中英文关键词查找, 未命中时换用同义词或英文关键词, "
++                "再 read_file 读取返回的 SKILL.md 并按其执行。搜索不会执行技能或授予额外权限。"
++                "查询 '*' 可分页浏览目录。不要编造未返回的技能或路径。"
++            )
++        else:
++            guide = (
++                f"{len(metadata)} skills are available through on-demand discovery. "
++                "Ordinary questions need no skill search. "
++                "Before coding, UI, document, spreadsheet, data-processing or other specialized work, "
++                "or for a named skill, use search_skills with its name or capability "
++                "keywords, then read the returned SKILL.md before following it. Search grants no permissions and "
++                "executes nothing. Query '*' lists pages. Do not invent unreturned skills or paths."
++            )
++        section = "## Skills System\n\n" + guide
++        section += "\n\n" + self._format_skills_locations()
++        if selected:
++            section += "\n\n" + self._format_skills_list(selected)
++        raw_errors = request.state.get("skills_load_errors")
++        errors = cast(list[str], raw_errors) if isinstance(raw_errors, list) else []
++        section += self._format_skills_load_warnings(errors)
++        return request.override(system_message=append_to_system_message(request.system_message, section))
++
++    def _search(
++        self, query: str, max_results: int, offset: int, runtime: ToolRuntime[Any, SkillDiscoveryState]
++    ) -> Command[Any]:
++        configurable = runtime.config.get("configurable") or {}
++        try:
++            current = get_config().get("configurable") or {}
++        except RuntimeError:
++            current = {}
++        key = _key(configurable)
++        with self._lock:
++            catalog = list(self._catalogs.get(key, [])) if key is not None else []
++        if configurable.get("conversation_mode") in {"ask", "plan"} or current.get("conversation_mode") in {
++            "ask",
++            "plan",
++        }:
++            catalog = []
++        terms = _words(query)
++
++        def score(skill: SkillMetadata) -> int:
++            return 20 * len(terms & _words(skill["name"])) + len(terms & _words(skill["description"]))
++
++        ranked = sorted(catalog, key=lambda skill: (-score(skill), skill["name"]))
++        if query.strip() != "*":
++            ranked = [skill for skill in ranked if score(skill) > 0]
++        found = ranked[offset : offset + max_results]
++        payload = {
++            "matches": [
++                {"name": skill["name"], "description": skill["description"], "path": skill["path"]} for skill in found
++            ],
++            "total": len(ranked),
++            "next_offset": offset + len(found) if offset + len(found) < len(ranked) else None,
++            "instruction": (
++                "Read the selected SKILL.md before using it. No match: try another keyword or list pages with '*'."
++            ),
++        }
++        return Command(
++            update={
++                "discovered_skill_names": [skill["name"] for skill in found],
++                "messages": [
++                    ToolMessage(
++                        content=json.dumps(payload, ensure_ascii=False), tool_call_id=runtime.tool_call_id or ""
++                    )
++                ],
++            }
++        )
++
++
++def _order_skill_discovery(middleware: Sequence[Any]) -> list[Any]:
++    """Legacy deepagents adapters render only after skill/mode/tool filters."""
++    renderers = [mw for mw in middleware if getattr(mw, "skills_discovery_renderer", False) is True]
++    if not renderers:
++        return list(middleware)
++    rest = [mw for mw in middleware if mw not in renderers]
++    tail = next(
++        (
++            i
++            for i, mw in enumerate(rest)
++            if getattr(mw, "final_context_budget_guard", False) is True
++            or mw.__class__.__name__ == "ContextUsageMiddleware"
++            or getattr(mw, "name", "") == "ModelRefusalMiddleware"
++        ),
++        len(rest),
++    )
++    return [*rest[:tail], *renderers, *rest[tail:]]
++
++
++__all__ = ["SkillDiscoveryMiddleware", "SkillDiscoveryState"]
+diff --git a/src/octop_harness/middleware/tool_search.py b/src/octop_harness/middleware/tool_search.py
+index b69e783..99f4016 100644
+--- a/src/octop_harness/middleware/tool_search.py
++++ b/src/octop_harness/middleware/tool_search.py
+@@ -29,0 +30,20 @@ _SUPPORTED_NATIVE_PROVIDERS = frozenset({"openai", "anthropic"})
++_CORE_TOOLS = frozenset(
++    {
++        "ls",
++        "read_file",
++        "glob",
++        "grep",
++        "write_file",
++        "edit_file",
++        "execute",
++        "current_time",
++        "ask_user_question",
++        "memory_search",
++        "memory_get",
++        "memory_save",
++        "search_skills",
++        "tool_search",
++        "write_todos",
++        "agent_list",
++    }
++)
+@@ -143,0 +164 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++        defer_other_tools: bool = False,
+@@ -150,0 +172 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++        self._defer_other_tools = defer_other_tools
+@@ -217,0 +240,4 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++        if self._defer_other_tools and self._request_thread_key() is None:
++            return request.override(
++                tools=[_make_eager(tool) for tool in tools if getattr(tool, "name", "") != _TOOL_SEARCH_NAME]
++            )
+@@ -228,0 +255,2 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++            if self._defer_other_tools and tool.name not in _CORE_TOOLS:
++                should_defer = True
+@@ -254,0 +283,2 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++        if self._defer_other_tools:
++            selected |= visible_names - _CORE_TOOLS
+@@ -281,2 +311 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
+-    @staticmethod
+-    def _deferred_reference(tool: BaseTool) -> BaseTool:
++    def _deferred_reference(self, tool: BaseTool) -> BaseTool:
+@@ -284,0 +314,3 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
++        description = tool.description or ""
++        if self._defer_other_tools:
++            description = description[:160]
+@@ -288 +320 @@ class ToolSearchMiddleware(AgentMiddleware[ClientToolSearchState, Any]):
+-                "description": f"{tool.description or ''}{_DEFERRED_DESCRIPTION_SUFFIX}",
++                "description": f"{description}{_DEFERRED_DESCRIPTION_SUFFIX}",
+diff --git a/tests/test_client_tool_search_middleware.py b/tests/test_client_tool_search_middleware.py
+index c6d4f9b..3b285a2 100644
+--- a/tests/test_client_tool_search_middleware.py
++++ b/tests/test_client_tool_search_middleware.py
+@@ -26,0 +27 @@ from octop_harness.middleware.client_tool_search import (
++from octop_harness.middleware.tool_search import ToolSearchMiddleware
+@@ -113,0 +115,22 @@ def test_hides_deferred_schema_then_exposes_loaded_tool() -> None:
++def test_progressive_catalog_keeps_core_tools_and_compacts_optional_schemas() -> None:
++    current = _tool("current_time")
++    optional = _prompt_tool("external_report").model_copy(update={"description": "long catalog guidance " * 200})
++    middleware = ToolSearchMiddleware(deferred_tools=frozenset(), defer_other_tools=True)
++    with patch("octop_harness.middleware.tool_search._current_thread_key", return_value="thread-1"):
++        prepared = middleware._prepare_client(_request([current, optional]))
++        assert prepared.tools[0] is current
++        reference = next(t for t in prepared.tools if t.name == "external_report")
++        assert reference.args == {}
++        assert len(reference.description) < 250
++        loaded = middleware._prepare_client(_request([current, optional], loaded=["external_report"]))
++    assert next(t for t in loaded.tools if t.name == "external_report") is optional
++
++
++def test_progressive_catalog_without_thread_keeps_tools_usable() -> None:
++    optional = _prompt_tool("external_report")
++    middleware = ToolSearchMiddleware(deferred_tools=frozenset(), defer_other_tools=True)
++    with patch("octop_harness.middleware.tool_search._current_thread_key", return_value=None):
++        prepared = middleware._prepare_client(_request([optional]))
++    assert prepared.tools == [optional]
++
++
+diff --git a/tests/test_skill_discovery.py b/tests/test_skill_discovery.py
+new file mode 100644
+index 0000000..3ab3bd3
+--- /dev/null
++++ b/tests/test_skill_discovery.py
+@@ -0,0 +1,244 @@
++"""Progressive skill discovery must use the current authorized catalog only."""
++
++from __future__ import annotations
++
++from contextlib import contextmanager
++from pathlib import Path
++from types import SimpleNamespace
++from typing import Any
++
++import pytest
++from deepagents import create_deep_agent
++from deepagents.backends import FilesystemBackend
++from langchain.agents.middleware import ModelRequest
++from langchain.tools import ToolRuntime
++from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
++from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
++from langgraph.config import var_child_runnable_config
++
++from octop_harness.config import HarnessAgentConfig
++from octop_harness.middleware.conversation_mode import ConversationModeMiddleware, apply_conversation_mode_to_request
++from octop_harness.middleware.skill_discovery import SkillDiscoveryMiddleware, _order_skill_discovery
++from octop_harness.middleware.skill_filter import SkillFilterMiddleware
++
++
++@contextmanager
++def _config(thread: str = "thread", user: str = "alice", **extra: Any):
++    token = var_child_runnable_config.set({"configurable": {"thread_id": thread, "user": user, **extra}})
++    try:
++        yield
++    finally:
++        var_child_runnable_config.reset(token)
++
++
++def _skill(name: str, description: str = "unrelated workflow") -> dict[str, Any]:
++    return {"name": name, "description": description, "path": f"/skills/{name}/SKILL.md", "allowed_tools": []}
++
++
++def _catalog() -> list[dict[str, Any]]:
++    return [_skill(f"extra-{index}", "long description " * 70) for index in range(12)] + [
++        _skill("monthly-payroll", "薪酬月报与工资明细导出 Excel payroll report"),
++    ]
++
++
++def _middleware(tmp_path: Path) -> SkillDiscoveryMiddleware:
++    return SkillDiscoveryMiddleware(backend=FilesystemBackend(root_dir=tmp_path), sources=["/skills/"], language="zh")
++
++
++def _request(
++    mw: SkillDiscoveryMiddleware, *, text: str = "Explain this paragraph", loaded: list[str] | None = None
++) -> ModelRequest:
++    return ModelRequest(
++        model=SimpleNamespace(),
++        messages=[HumanMessage(content=text)],
++        system_message=SystemMessage(content="Keep the expert's business rules."),
++        tools=list(mw.tools),
++        state={"skills_metadata": _catalog(), "discovered_skill_names": loaded or []},
++    )
++
++
++def _runtime(*, thread: str = "thread", user: str = "alice") -> ToolRuntime:
++    return ToolRuntime(
++        state={},
++        context=None,
++        config={"configurable": {"thread_id": thread, "user": user}},
++        stream_writer=lambda _: None,
++        tool_call_id="search",
++        store=None,
++        tools=[],
++    )
++
++
++def test_large_catalog_is_not_sent_until_needed(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    request = _request(mw)
++    with _config():
++        prepared = mw.modify_request(request)
++    assert "search_skills" in prepared.system_message.text
++    assert "monthly-payroll" not in prepared.system_message.text
++    assert "long description" not in prepared.system_message.text
++    assert len(prepared.system_message.text) < 2500
++    assert prepared.state is request.state
++    assert len(request.state["skills_metadata"]) == 13
++    assert request.system_message.text == "Keep the expert's business rules."
++
++
++def test_chinese_search_exposes_full_metadata_on_next_step(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    with _config():
++        mw.modify_request(_request(mw))
++        found = mw._search("薪酬月报", 5, 0, _runtime())
++        assert found.update["discovered_skill_names"] == ["monthly-payroll"]
++        assert "/skills/monthly-payroll/SKILL.md" in found.update["messages"][0].text
++        prepared = mw.modify_request(_request(mw, loaded=found.update["discovered_skill_names"]))
++    assert "monthly-payroll" in prepared.system_message.text
++    assert "extra-0" not in prepared.system_message.text
++
++
++def test_search_cannot_resurrect_disabled_or_unselected_skills(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    filter_mw = SkillFilterMiddleware(config=HarnessAgentConfig(skills_disabled=frozenset({"monthly-payroll"})))
++    with _config():
++        request = filter_mw._apply_filter(_request(mw))
++        mw.modify_request(request)
++        result = mw._search("薪酬月报", 5, 0, _runtime())
++    assert result.update["discovered_skill_names"] == []
++    assert "monthly-payroll" not in result.update["messages"][0].text
++    with _config(skills=["extra-0"]):
++        request = filter_mw._apply_filter(_request(mw))
++        prepared = mw.modify_request(request)
++        result = mw._search("*", 5, 0, _runtime())
++    assert "extra-0" in prepared.system_message.text
++    assert "monthly-payroll" not in result.update["messages"][0].text
++
++
++def test_catalog_is_scoped_to_current_actor_and_refreshed(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    with _config():
++        mw.modify_request(_request(mw))
++    assert mw._search("薪酬月报", 5, 0, _runtime(user="bob")).update["discovered_skill_names"] == []
++    with _config():
++        request = _request(mw)
++        request.state["skills_metadata"] = []
++        mw.modify_request(request)
++    assert mw._search("薪酬月报", 5, 0, _runtime()).update["discovered_skill_names"] == []
++
++
++def test_explicit_slash_skill_is_available_without_search(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    with _config():
++        prepared = mw.modify_request(_request(mw, text="/monthly-payroll 生成本月工资表"))
++    assert "/skills/monthly-payroll/SKILL.md" in prepared.system_message.text
++    assert "extra-0" not in prepared.system_message.text
++
++
++@pytest.mark.parametrize("mode", ["ask", "plan"])
++def test_discovery_does_not_restore_skills_in_read_only_modes(tmp_path: Path, mode: str) -> None:
++    mw = _middleware(tmp_path)
++    with _config(conversation_mode=mode):
++        request = apply_conversation_mode_to_request(_request(mw))
++        prepared = mw.modify_request(request)
++        result = mw._search("*", 5, 0, _runtime())
++    assert "search_skills" not in [getattr(t, "name", "") for t in prepared.tools]
++    assert "monthly-payroll" not in prepared.system_message.text
++    assert result.update["discovered_skill_names"] == []
++
++
++def test_missing_search_tool_falls_back_to_visible_catalog(tmp_path: Path) -> None:
++    mw = _middleware(tmp_path)
++    with _config():
++        prepared = mw.modify_request(_request(mw).override(tools=[]))
++    assert "monthly-payroll" in prepared.system_message.text
++
++
++def test_config_roundtrip_keeps_opt_in() -> None:
++    assert HarnessAgentConfig().progressive_catalog_enabled is False
++    config = HarnessAgentConfig(progressive_catalog_enabled=True)
++    assert HarnessAgentConfig.from_dict(config.to_dict()).progressive_catalog_enabled is True
++
++
++def test_legacy_order_renders_after_filters_but_before_budget_snapshot(tmp_path: Path) -> None:
++    renderer = _middleware(tmp_path)
++    skill_filter = SimpleNamespace(name="SkillFilterMiddleware")
++    mode_filter = SimpleNamespace(name="ConversationModeMiddleware")
++    guard = SimpleNamespace(name="ContextBudgetGuardMiddleware", final_context_budget_guard=True)
++    assert _order_skill_discovery([renderer, skill_filter, mode_filter, guard]) == [
++        skill_filter,
++        mode_filter,
++        renderer,
++        guard,
++    ]
++
++
++class _Model(FakeMessagesListChatModel):
++    seen: list[list[BaseMessage]] = []
++    bound_names: list[list[str]] = []
++
++    def bind_tools(self, tools: Any, **kwargs: Any) -> Any:
++        self.bound_names.append([getattr(tool, "name", "") for tool in tools])
++        return self
++
++    def _generate(self, messages: Any, stop: Any = None, run_manager: Any = None, **kwargs: Any) -> Any:
++        self.seen.append(list(messages))
++        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
++
++
++def _graph(tmp_path: Path, model: _Model):
++    for skill in _catalog():
++        p = tmp_path / "skills" / skill["name"] / "SKILL.md"
++        p.parent.mkdir(parents=True, exist_ok=True)
++        p.write_text(
++            f"---\nname: {skill['name']}\ndescription: {skill['description']}\n---\nPAYROLL INSTRUCTIONS\n",
++            encoding="utf-8",
++        )
++    backend = FilesystemBackend(root_dir=tmp_path)
++    return create_deep_agent(
++        model=model,
++        backend=backend,
++        skills=["/skills/"],
++        middleware=[
++            SkillFilterMiddleware(config=HarnessAgentConfig(skills_disabled=frozenset({"extra-0"}))),
++            ConversationModeMiddleware(),
++            SkillDiscoveryMiddleware(backend=backend, sources=["/skills/"], language="zh"),
++        ],
++    )
++
++
++@pytest.mark.parametrize("mode", ["craft", "ask", "plan"])
++def test_real_graph_filters_before_rendering(tmp_path: Path, mode: str) -> None:
++    model = _Model(responses=[AIMessage(content="ok")], seen=[], bound_names=[])
++    graph = _graph(tmp_path, model)
++    graph.invoke(
++        {"messages": [HumanMessage(content="Explain this paragraph")]},
++        {"configurable": {"thread_id": "graph", "user": "alice", "conversation_mode": mode}},
++    )
++    prompt = "\n".join(m.text for m in model.seen[0] if isinstance(m, SystemMessage))
++    assert "extra-0" not in prompt
++    assert "long description" not in prompt
++    assert ("search_skills" in model.bound_names[0]) is (mode == "craft")
++
++
++@pytest.mark.parametrize("asynchronous", [False, True])
++@pytest.mark.asyncio
++async def test_real_graph_search_and_read_use_normal_tool_execution(tmp_path: Path, asynchronous: bool) -> None:
++    model = _Model(
++        responses=[
++            AIMessage(content="", tool_calls=[{"id": "find", "name": "search_skills", "args": {"query": "薪酬月报"}}]),
++            AIMessage(
++                content="",
++                tool_calls=[
++                    {"id": "read", "name": "read_file", "args": {"file_path": "/skills/monthly-payroll/SKILL.md"}}
++                ],
++            ),
++            AIMessage(content="complete"),
++        ],
++        seen=[],
++        bound_names=[],
++    )
++    graph = _graph(tmp_path, model)
++    inputs = {"messages": [HumanMessage(content="Generate the payroll report")]}
++    config = {"configurable": {"thread_id": "graph", "user": "alice", "conversation_mode": "craft"}}
++    result = await graph.ainvoke(inputs, config) if asynchronous else graph.invoke(inputs, config)
++    assert result["messages"][-1].text == "complete"
++    assert any(isinstance(m, ToolMessage) and "PAYROLL INSTRUCTIONS" in m.text for m in result["messages"])
++    assert "monthly-payroll" in "\n".join(m.text for m in model.seen[-1] if isinstance(m, SystemMessage))
