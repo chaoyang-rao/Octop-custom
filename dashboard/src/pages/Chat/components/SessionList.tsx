@@ -59,7 +59,10 @@ import {
 import ChatNavScopeTabs, { ChatNavScopeEmpty } from "./ChatNavScopeTabs";
 import ExpertNameLabel from "./ExpertNameLabel";
 import ExpertNavActions, { ExpertPinMark } from "./ExpertNavActions";
-import { type SessionWorkStatus } from "../utils/sessionWorkStatus";
+import {
+  sessionAvatarMotion,
+  type SessionWorkStatus,
+} from "../utils/sessionWorkStatus";
 import { projectSessionListFor } from "./projectFolders";
 import type { ProjectRowProps } from "./projectFolders/project-folders.mjs";
 import styles from "../index.module.less";
@@ -253,6 +256,7 @@ const ProjectSessionList = projectSessionListFor(SessionItem);
 
 interface AgentCardProps {
   agent: OctopAgent;
+  portraitMotion?: ReturnType<typeof sessionAvatarMotion>;
   sessions: Session[];
   activeId: string | null;
   searchQuery: string;
@@ -280,6 +284,7 @@ interface AgentCardProps {
 
 function ActiveAgentCard({
   agent,
+  portraitMotion,
   sessions,
   activeId,
   searchQuery,
@@ -348,6 +353,7 @@ function ActiveAgentCard({
               iconUrl={agent.icon_url}
               iconName={agent.icon_name}
               size={48}
+              motion={portraitMotion}
             />
           </div>
         </SharedExpertHint>
@@ -415,6 +421,7 @@ function ActiveAgentCard({
 
 interface AgentRowProps {
   agent: OctopAgent;
+  portraitMotion?: ReturnType<typeof sessionAvatarMotion>;
   onSelect: () => void;
   onNewChat?: () => void;
   onHide?: () => void;
@@ -425,6 +432,7 @@ interface AgentRowProps {
 
 function InactiveAgentRow({
   agent,
+  portraitMotion,
   onSelect,
   onNewChat,
   onHide,
@@ -457,6 +465,7 @@ function InactiveAgentRow({
             iconUrl={agent.icon_url}
             iconName={agent.icon_name}
             size={48}
+            motion={portraitMotion}
           />
         </div>
       </SharedExpertHint>
@@ -670,8 +679,10 @@ export default function SessionList({
 
   const renderAgentRow = (agent: OctopAgent, hiddenRow: boolean) => {
     const isActive = agent.agent_id === activeAgentId;
+    const ownSessions = sessionsFor(agent.agent_id);
+    const portraitMotion = sessionAvatarMotion(ownSessions, liveWorkingIds);
     const hits = searching
-      ? sessionsFor(agent.agent_id).filter((session) =>
+      ? ownSessions.filter((session) =>
           matchesNavQuery(session.name, searchQuery),
         )
       : [];
@@ -685,6 +696,7 @@ export default function SessionList({
         <ActiveAgentCard
           key={agent.agent_id}
           agent={agent}
+          portraitMotion={portraitMotion}
           sessions={isActive ? sessions : hits}
           activeId={activeId}
           searchQuery={isActive ? searchQuery : ""}
@@ -728,6 +740,7 @@ export default function SessionList({
       <InactiveAgentRow
         key={agent.agent_id}
         agent={agent}
+        portraitMotion={portraitMotion}
         onSelect={() => onAgentSelect(agent.agent_id)}
         onNewChat={() => onNewChat(agent.agent_id)}
         onHide={

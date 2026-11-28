@@ -66,7 +66,7 @@ export function createExpertPresentation({
     members = [],
     size = 48,
     className,
-    motion,
+    motion = "idle",
     primaryId,
   }) {
     const portraits = members.length
@@ -76,6 +76,13 @@ export function createExpertPresentation({
           "/expert-avatars/v2/star-amber.svg",
           "/expert-avatars/v2/cloud-rose.svg",
         ];
+    const primaryIndex = primaryId
+      ? portraits.findIndex((member) => member.agent_id === primaryId)
+      : -1;
+    const animatedIndex =
+      primaryIndex < 0
+        ? Math.max(0, portraits.findIndex(isPrimary))
+        : primaryIndex;
     const positions = {
       1: [[0, 0]],
       2: [
@@ -128,12 +135,7 @@ export function createExpertPresentation({
           avatars.renderAvatar({
             ...(primary ? primaryFace : face),
             size: faceSize,
-            motion:
-              motion === undefined
-                ? activityMotion(member)
-                : id && id === primaryId
-                ? motion
-                : "idle",
+            motion: index === animatedIndex ? motion : "idle",
             className: primary ? "octop-primary-face" : undefined,
           }),
         );
@@ -155,7 +157,8 @@ export function createExpertPresentation({
       agentId && context?.agents?.find((item) => item.agent_id === agentId);
     // Shared geometric artwork is not an identity: only an explicit expert gets a role badge.
     const primary = isPrimary(agent);
-    const activity = motion ?? activityMotion(agent);
+    // The primary expert's summary can include every room it hosts.
+    const activity = motion ?? (primary ? "idle" : activityMotion(agent));
     agent =
       agent ||
       (iconUrl && context?.activeAgent?.icon_url === iconUrl
@@ -177,7 +180,7 @@ export function createExpertPresentation({
         ),
         size,
         className,
-        motion,
+        motion: activity,
         primaryId: agent?.primary_agent_id,
       });
     const face = agent

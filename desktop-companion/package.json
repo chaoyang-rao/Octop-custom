@@ -1,6 +1,6 @@
 {
   "name": "octop-desktop-companion",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "private": true,
   "type": "module",
   "scripts": {

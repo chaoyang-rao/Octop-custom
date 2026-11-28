@@ -1,6 +1,6 @@
 import * as React from "react";
 import { readFileSync } from "node:fs";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   SHAPES,
@@ -187,6 +187,68 @@ describe("geometric portraits", () => {
   });
 });
 
+describe("avatar clock", () => {
+  it("renders adjacent display frames and settles an idle portrait without a ticker", () => {
+    const poseClock = createExpertAvatars({ React });
+    const queue = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    const raf = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((cb) => {
+        queue.set(++next, cb);
+        return next;
+      });
+    const cancel = vi
+      .spyOn(window, "cancelAnimationFrame")
+      .mockImplementation((id) => {
+        queue.delete(id);
+      });
+    const media = vi.spyOn(window, "matchMedia").mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList);
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
+    const { container, rerender, unmount } = render(
+      <poseClock.Avatar motion="idle" />,
+    );
+    const shape = () =>
+      container.querySelector("[data-avatar-body]")?.getAttribute("d");
+    const draw = (ms: number) => {
+      clock.mockReturnValue(ms);
+      for (const [id, callback] of Array.from(queue)) {
+        queue.delete(id);
+        act(() => callback(ms));
+      }
+    };
+    try {
+      const neutral = shape();
+      expect(queue.size).toBe(0);
+      rerender(<poseClock.Avatar motion="work" />);
+      draw(1300);
+      const first = shape();
+      draw(1316);
+      const second = shape();
+      draw(1332);
+      expect(first).not.toBe(neutral);
+      expect(second).not.toBe(first);
+      expect(shape()).not.toBe(second);
+      rerender(<poseClock.Avatar motion="idle" />);
+      draw(1370);
+      expect(shape()).not.toBe(neutral);
+      draw(1590);
+      expect(shape()).toBe(neutral);
+      expect(queue.size).toBe(0);
+    } finally {
+      unmount();
+      raf.mockRestore();
+      cancel.mockRestore();
+      media.mockRestore();
+      clock.mockRestore();
+    }
+  });
+});
+
 describe("team portrait occupancy", () => {
   beforeEach(() => {
     vi.spyOn(window, "matchMedia").mockReturnValue({
@@ -237,21 +299,56 @@ describe("team portrait occupancy", () => {
     expect(container.querySelector(".octop-primary-badge")).toBeNull();
   });
 
-  it("keeps a history collage idle even if one member is working elsewhere", () => {
-    const members = [
-      { agent_id: "primary", work_status: "working" },
-      { agent_id: "other", work_status: "waiting" },
-    ];
-    const { container, rerender } = render(<TeamPortrait members={members} />);
+  it("keeps collages and the primary portrait scoped to their own conversations", () => {
+    const primary = {
+      agent_id: "primary",
+      is_team_primary: true,
+      work_status: "working",
+    };
+    const member = { agent_id: "member", work_status: "waiting" };
+    const team = {
+      kind: "team",
+      primary_agent_id: "primary",
+      member_ids: ["primary", "member"],
+    };
+    const { ExpertPortrait } = createExpertPresentation({
+      React,
+      avatars,
+      useAgent: () => ({ agents: [primary, member] }),
+    });
+    const { container, rerender } = render(
+      <>
+        <ExpertPortrait
+          agent={{ ...team, agent_id: "asked", work_status: "working" }}
+        />
+        <ExpertPortrait
+          agent={{ ...team, agent_id: "idle", work_status: "idle" }}
+        />
+        <ExpertPortrait agent={primary} />
+        <TeamPortrait members={[primary, member]} />
+      </>,
+    );
     const statuses = () =>
       Array.from(container.querySelectorAll("[data-avatar-motion]"), (avatar) =>
         avatar.getAttribute("data-avatar-motion"),
       );
-    expect(statuses()).toEqual(["work", "wait"]);
+    expect(statuses()).toEqual([
+      "work",
+      "idle",
+      "idle",
+      "idle",
+      "idle",
+      "idle",
+      "idle",
+    ]);
     rerender(
-      <TeamPortrait members={members} primaryId="primary" motion="idle" />,
+      <TeamPortrait
+        members={[primary, member]}
+        primaryId="primary"
+        motion="wait"
+      />,
     );
-    expect(statuses()).toEqual(["idle", "idle"]);
+    expect(statuses()).toEqual(["wait", "idle"]);
   });
 
   it.each([1, 2, 3, 4])(

@@ -1,6 +1,6 @@
 {
   "name": "dora-windows",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "private": true,
   "main": "main.cjs",
   "description": "Independent enterprise-authorized Dora companion for Windows",

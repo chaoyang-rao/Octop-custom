@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveSessionWorkStatus } from "./sessionWorkStatus";
+import {
+  resolveSessionWorkStatus,
+  sessionAvatarMotion,
+} from "./sessionWorkStatus";
 
 describe("resolveSessionWorkStatus", () => {
   it("marks a live or server-active turn as working", () => {
@@ -60,4 +63,15 @@ describe("resolveSessionWorkStatus", () => {
   it("leaves an idle session without a completion indicator", () => {
     expect(resolveSessionWorkStatus({ id: "thr_1" }, new Set())).toBe("idle");
   });
+});
+
+it("animates only activity owned by the row, even when other rooms are live", () => {
+  const live = new Set(["thread-a"]);
+  expect(
+    sessionAvatarMotion([{ id: "thread-b", unreadReplyId: "old" }], live),
+  ).toBeUndefined();
+  expect(sessionAvatarMotion([{ id: "thread-a" }], live)).toBe("work");
+  expect(
+    sessionAvatarMotion([{ id: "thread-a", awaitingUser: true }], live),
+  ).toBe("wait");
 });
