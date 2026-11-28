@@ -198,7 +198,9 @@ func (a *App) completeManagedCandidate(base string) error {
 	}
 	a.mu.Unlock()
 	job.CandidatePID = os.Getpid()
-	job.CandidateBase = base
+	// Older helpers only accept an origin without a path. dashboardURL ends
+	// in "/", so keep the journal compatible with those deployed helpers.
+	job.CandidateBase = strings.TrimSuffix(base, "/")
 	job.Phase = "candidate_ready"
 	if err = clientupdate.SaveJob(job); err != nil {
 		return err

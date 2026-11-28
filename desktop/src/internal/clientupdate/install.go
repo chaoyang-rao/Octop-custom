@@ -190,7 +190,8 @@ func candidateHealthy(job *Job) bool {
 	return candidateHealthyForProduct(job, Product)
 }
 func candidateHealthyForProduct(job *Job, product string) bool {
-	base, err := url.Parse(job.CandidateBase)
+	root := strings.TrimSuffix(job.CandidateBase, "/")
+	base, err := url.Parse(root)
 	if err != nil || base.Scheme != "http" || base.Hostname() != "127.0.0.1" || base.Port() == "" || base.User != nil || base.Path != "" || base.RawQuery != "" {
 		return false
 	}
@@ -199,7 +200,7 @@ func candidateHealthyForProduct(job *Job, product string) bool {
 	if product == CompanionProduct {
 		endpoint += "/companion"
 	}
-	response, err := client.Get(job.CandidateBase + endpoint)
+	response, err := client.Get(root + endpoint)
 	if err != nil {
 		return false
 	}
