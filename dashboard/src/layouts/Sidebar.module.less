@@ -88,12 +88,35 @@
   }
 }
 
+@property --octop-fixed-dock-thumb {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: transparent;
+}
+
 .fixedNavRail {
   position: relative;
 
-  @supports selector(::-webkit-scrollbar) {
-    > [data-octop-sidebar-scroll="dock"] {
-      // Use the custom thumb dimensions in Chromium and WebKit.
+  > [data-octop-sidebar-scroll="fixed-dock"] {
+    --octop-fixed-dock-thumb: transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--octop-fixed-dock-thumb) transparent;
+    transition: --octop-fixed-dock-thumb 160ms ease-out;
+
+    &[data-scrolling] {
+      --octop-fixed-dock-thumb: var(
+        --fn-text-tertiary,
+        rgba(110, 116, 130, 0.55)
+      );
+      transition: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    @supports selector(::-webkit-scrollbar) {
+      // Use the 3px native thumb in Chromium and WebKit.
       scrollbar-width: auto;
       scrollbar-color: auto;
 
@@ -101,8 +124,9 @@
         width: 3px;
       }
 
-      &:is(:hover, :focus-visible, :has(:focus-visible)) {
-        scrollbar-color: auto;
+      &::-webkit-scrollbar-thumb,
+      &::-webkit-scrollbar-thumb:hover {
+        background: var(--octop-fixed-dock-thumb);
       }
     }
   }
