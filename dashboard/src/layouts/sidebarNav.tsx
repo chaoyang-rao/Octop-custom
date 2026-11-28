@@ -74,6 +74,7 @@ export const SIDEBAR_NAV_KEYS = [
   "tasks",
   "task-queue",
   "token-usage",
+  "companion",
   "personalization",
   "channels",
   "connectors",

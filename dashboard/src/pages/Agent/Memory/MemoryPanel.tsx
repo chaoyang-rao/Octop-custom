@@ -290,7 +290,7 @@ export default function MemoryPanel({
           children = <CandidatesReview agentId={agentId} />;
           break;
         case "journal":
-          children = <JournalList agentId={agentId} />;
+          children = <JournalList key={agentId} agentId={agentId} />;
           break;
         case "conversations":
           children = <ConversationRecords agentId={agentId} />;

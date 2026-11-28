@@ -1,0 +1,1 @@
+import{j as jsxRuntimeExports}from"./vendor-react.B7-SCBrN.js";import{E as ExpertIcon}from"./index.e--5RxlA.js";function ExpertAgentAvatar({agentId,iconName,iconUrl,size=32,className,motion}){return jsxRuntimeExports.jsx(ExpertIcon,{agentId,iconUrl,iconName,size,className,motion})}export{ExpertAgentAvatar as E};

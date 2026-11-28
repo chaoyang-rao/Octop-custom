@@ -13,22 +13,6 @@ import {
   type EntityItem,
 } from "../../../../api/modules/memoryDashboard";
 
-const KIND_OPTIONS: { value: AtomKind; label: string }[] = [
-  { value: "Fact", label: "事实" },
-  { value: "Preference", label: "偏好" },
-  { value: "Decision", label: "决定" },
-  { value: "Task", label: "任务" },
-];
-
-const ENTITY_TYPE_OPTIONS = [
-  { value: "Fact", label: "事实" },
-  { value: "Person", label: "人物" },
-  { value: "User", label: "用户" },
-  { value: "Project", label: "项目" },
-  { value: "Decision", label: "决定" },
-  { value: "Task", label: "任务" },
-];
-
 interface Props {
   open: boolean;
   agentId: string;
@@ -52,6 +36,22 @@ export default function CreateAtomModal({
   onSuccess,
 }: Props) {
   const { t } = useTranslation();
+  const KIND_OPTIONS: { value: AtomKind; label: string }[] = [
+    { value: "Fact", label: t("memory.kind.fact", "事实") },
+    { value: "Preference", label: t("memory.kind.preference", "偏好") },
+    { value: "Decision", label: t("memory.kind.decision", "决定") },
+    { value: "Task", label: t("memory.kind.task", "任务") },
+  ];
+
+  const ENTITY_TYPE_OPTIONS = [
+    { value: "Fact", label: t("memory.kind.fact", "事实") },
+    { value: "Person", label: t("memory.entityType.person", "人物") },
+    { value: "User", label: t("memory.entityType.user", "用户") },
+    { value: "Project", label: t("memory.entityType.project", "项目") },
+    { value: "Decision", label: t("memory.kind.decision", "决定") },
+    { value: "Task", label: t("memory.kind.task", "任务") },
+  ];
+
   const [form] = Form.useForm();
   const topicMode = Form.useWatch("topicMode", form) as
     | "existing"

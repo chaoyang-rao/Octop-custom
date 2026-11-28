@@ -350,7 +350,10 @@ export default function MigrateMemory({ agentId }: Props) {
                   options={[
                     { value: "openclaw", label: "openclaw" },
                     { value: "hermes", label: "hermes" },
-                    { value: "agent", label: "octop（本机）" },
+                    {
+                      value: "agent",
+                      label: t("memory.migrate.localOctop", "octop（本机）"),
+                    },
                   ]}
                 />
               </Form.Item>

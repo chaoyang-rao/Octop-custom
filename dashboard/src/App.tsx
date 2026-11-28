@@ -10,7 +10,13 @@ import {
   DesktopChromeProvider,
   useDesktopChrome,
 } from "./hooks/useDesktopChrome";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { routerBasename } from "./utils/publicUrl";
 import { useTranslation } from "react-i18next";
 import MainLayout from "./layouts/MainLayout";
@@ -29,6 +35,7 @@ import OctopSpinner from "./components/OctopSpinner";
 import { AntdAppProvider } from "./components/AntdAppProvider";
 import GlobalErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { UnsavedChangesProvider } from "./context/UnsavedChangesContext";
 import { AgentProvider } from "./context/AgentContext";
 import { LayoutModeProvider } from "./context/LayoutModeContext";
 import { VoiceOutputProvider } from "./context/VoiceOutputContext";
@@ -149,86 +156,92 @@ function ThemedApp() {
       spin={{ indicator: <OctopSpinner /> }}
     >
       <AntdAppProvider>
-        <DesktopChromeProvider value={desktopChrome}>
-          {desktopChrome ? (
-            <DesktopWindowControls chrome={desktopChrome} />
-          ) : null}
-          <Routes>
-            <Route
-              path="/companion/manage"
-              element={
-                <AuthGuard>
-                  <AgentProvider>
-                    <DesktopCompanionManage />
-                  </AgentProvider>
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/desktop-companion/launch"
-              element={<DesktopCompanionLaunch />}
-            />
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/enterprise/approve"
-              element={<EnterpriseApprovalEntry />}
-            />
-            <Route
-              path="/welcome"
-              element={
-                <AuthGuard>
-                  <EnterpriseWelcome />
-                </AuthGuard>
-              }
-            />
-            <Route path="/login/oidc/complete" element={<OidcComplete />} />
-            <Route
-              path="/enterprise/admin"
-              element={
-                <AuthGuard loginPath="/login?enterprise=1">
-                  <AgentProvider disabled>
-                    <EnterpriseAdmin />
-                  </AgentProvider>
-                </AuthGuard>
-              }
-            />
-            <Route path="/setup" element={<SetupPage />} />
-            <Route path="/invite" element={<InvitePage />} />
-            <Route
-              path="/*"
-              element={
-                <AuthGuard>
-                  <AgentProvider>
-                    <LayoutModeProvider>
-                      <VoiceOutputProvider>
-                        <MainLayout />
-                      </VoiceOutputProvider>
-                    </LayoutModeProvider>
-                  </AgentProvider>
-                </AuthGuard>
-              }
-            />
-          </Routes>
-        </DesktopChromeProvider>
+        <UnsavedChangesProvider>
+          <DesktopChromeProvider value={desktopChrome}>
+            {desktopChrome ? (
+              <DesktopWindowControls chrome={desktopChrome} />
+            ) : null}
+            <Routes>
+              <Route
+                path="/companion/manage"
+                element={
+                  <AuthGuard>
+                    <AgentProvider>
+                      <DesktopCompanionManage />
+                    </AgentProvider>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path="/desktop-companion/launch"
+                element={<DesktopCompanionLaunch />}
+              />
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/enterprise/approve"
+                element={<EnterpriseApprovalEntry />}
+              />
+              <Route
+                path="/welcome"
+                element={
+                  <AuthGuard>
+                    <EnterpriseWelcome />
+                  </AuthGuard>
+                }
+              />
+              <Route path="/login/oidc/complete" element={<OidcComplete />} />
+              <Route
+                path="/enterprise/admin"
+                element={
+                  <AuthGuard loginPath="/login?enterprise=1">
+                    <AgentProvider disabled>
+                      <EnterpriseAdmin />
+                    </AgentProvider>
+                  </AuthGuard>
+                }
+              />
+              <Route path="/setup" element={<SetupPage />} />
+              <Route path="/invite" element={<InvitePage />} />
+              <Route
+                path="/*"
+                element={
+                  <AuthGuard>
+                    <AgentProvider>
+                      <LayoutModeProvider>
+                        <VoiceOutputProvider>
+                          <MainLayout />
+                        </VoiceOutputProvider>
+                      </LayoutModeProvider>
+                    </AgentProvider>
+                  </AuthGuard>
+                }
+              />
+            </Routes>
+          </DesktopChromeProvider>
+        </UnsavedChangesProvider>
       </AntdAppProvider>
     </ConfigProvider>
   );
 }
 
-function App() {
+function Root() {
   return (
-    // `useTransitions` off: with router transitions on, React keeps the old
-    // page mounted while a lazy route chunk downloads and never renders the
-    // Suspense fallback, so a nav click looks like it did nothing.
-    <BrowserRouter basename={routerBasename()} useTransitions={false}>
-      <GlobalErrorBoundary>
-        <GlobalStyle />
-        <ThemeProvider>
-          <ThemedApp />
-        </ThemeProvider>
-      </GlobalErrorBoundary>
-    </BrowserRouter>
+    <GlobalErrorBoundary>
+      <GlobalStyle />
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    </GlobalErrorBoundary>
   );
+}
+
+const router = createBrowserRouter([{ path: "*", element: <Root /> }], {
+  basename: routerBasename(),
+});
+
+function App() {
+  // Keep the loading fallback visible while lazy route chunks download.
+  return <RouterProvider router={router} useTransitions={false} />;
 }
 
 export default App;

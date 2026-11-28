@@ -1,8 +1,16 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { createMemoryRouter, Link, RouterProvider } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { request } from "../../../api/request";
 import { useAgent } from "../../../context/AgentContext";
+import { UnsavedChangesProvider } from "../../../context/UnsavedChangesContext";
 import AgentConfigPage from "./index";
 
 vi.mock("../../../api/request", () => ({
@@ -32,6 +40,7 @@ describe("AgentConfigPage", () => {
       refresh,
     } as never);
   });
+  afterEach(() => vi.unstubAllGlobals());
 
   it("refreshes the active agent after saving runtime settings", async () => {
     render(<AgentConfigPage />);
@@ -73,5 +82,74 @@ describe("AgentConfigPage", () => {
       );
     });
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("retains unsaved settings on cancel and allows navigation after saving", async () => {
+    // Node's Request rejects the AbortSignal from jsdom. These routes have no loaders.
+    vi.stubGlobal(
+      "Request",
+      class extends Request {
+        constructor(
+          input: RequestInfo | URL,
+          { signal: _signal, ...init }: RequestInit = {},
+        ) {
+          super(input, init);
+        }
+      },
+    );
+    const router = createMemoryRouter(
+      [
+        {
+          path: "*",
+          element: (
+            <UnsavedChangesProvider>
+              <AgentConfigPage />
+              <Link to="/experts">Experts</Link>
+            </UnsavedChangesProvider>
+          ),
+        },
+      ],
+      { initialEntries: ["/agent-config"] },
+    );
+    render(<RouterProvider router={router} />);
+
+    const field = await screen.findByPlaceholderText(
+      "agentConfig.maxItersPlaceholder",
+    );
+    fireEvent.change(field, { target: { value: "24" } });
+    expect(
+      window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
+    ).toBe(false);
+
+    fireEvent.click(screen.getByRole("link", { name: "Experts" }));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "common.keepEditing" }));
+    expect(router.state.location.pathname).toBe("/agent-config");
+    expect(field).toHaveValue("24");
+
+    fireEvent.click(screen.getByRole("link", { name: "Experts" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "common.discardChanges" }),
+    );
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/experts"),
+    );
+    await act(() => router.navigate(-1));
+    expect(field).toHaveValue("20");
+
+    fireEvent.change(field, { target: { value: "24" } });
+    fireEvent.click(screen.getByRole("button", { name: "common.save" }));
+    await waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+      expect(
+        window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
+      ).toBe(true);
+    });
+    expect(field).toHaveValue("24");
+
+    fireEvent.click(screen.getByRole("link", { name: "Experts" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/experts"),
+    );
   });
 });

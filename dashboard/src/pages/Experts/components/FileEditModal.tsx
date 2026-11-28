@@ -6,6 +6,7 @@ import { message } from "@/utils/antdMessage";
 
 import { request } from "../../../api/request";
 import { useTheme } from "../../../context/ThemeContext";
+import { useUnsavedChanges } from "../../../context/UnsavedChangesContext";
 import { withFromWorkspace } from "../../../utils/fromWorkspace";
 
 const MonacoEditor = lazy(() => import("@/components/monaco"));
@@ -39,13 +40,22 @@ export default function FileEditModal({
   const { t } = useTranslation();
   const { isDark } = useTheme();
   const [value, setValue] = useState<string>("");
+  const [originalValue, setOriginalValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const confirmDiscard = useUnsavedChanges(
+    open && value !== originalValue,
+    onClose,
+  );
+  const handleClose = () => {
+    if (!saving) confirmDiscard(onClose);
+  };
 
   useEffect(() => {
     if (!open || !filePath) return;
     if (onLocalSave) {
       setValue(localValue ?? "");
+      setOriginalValue(localValue ?? "");
       setLoading(false);
       return;
     }
@@ -53,6 +63,7 @@ export default function FileEditModal({
     let cancelled = false;
     setLoading(true);
     setValue("");
+    setOriginalValue("");
 
     request<{ content: string }>(
       withFromWorkspace(
@@ -62,7 +73,10 @@ export default function FileEditModal({
       ),
     )
       .then((data) => {
-        if (!cancelled) setValue(data.content ?? "");
+        if (!cancelled) {
+          setValue(data.content ?? "");
+          setOriginalValue(data.content ?? "");
+        }
       })
       .catch(() => {
         if (!cancelled) setValue("");
@@ -118,7 +132,7 @@ export default function FileEditModal({
       placement="right"
       title={title}
       width={fileEditDrawerWidth()}
-      onClose={onClose}
+      onClose={handleClose}
       destroyOnHidden
       styles={{
         body: {
@@ -137,7 +151,7 @@ export default function FileEditModal({
             gap: 8,
           }}
         >
-          <Button onClick={onClose} disabled={saving}>
+          <Button onClick={handleClose} disabled={saving}>
             {t("common.cancel")}
           </Button>
           <Button
