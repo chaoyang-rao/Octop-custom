@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.8"
+        default: "custom-1.0.3b3-20261128.9"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.8' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.9' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -491,7 +491,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112808 / 哆啦 0.10.9。新增统一回答规范；技能与工具目录按需展开，减少普通问答的上下文占用；文字整理默认交付一版，保留未完成状态和抽样范围，明确要求多个版本时照做。保留112807已有的编辑草稿保护、记忆页重试与语言适配。
+          Octop Custom 112809 / 哆啦 0.10.10。新增统一回答规范；技能与工具目录按需展开，减少普通问答的上下文占用；文字整理默认交付一版，保留未完成状态和抽样范围，明确要求多个版本时照做。保留112807已有的编辑草稿保护、记忆页重试与语言适配。
+
+          本次联合发行修正112808沿用桌宠版本的问题：桌宠与主程序一同递增，避免同版本对应不同更新载荷；112808附件保持不变，不用于本次企业联合下发。
 
           小规模验收中，通知与状态整理已改善；汇报仍可能补充额外建议，不代表全部业务准确率已通过。旧专家的个人提示文件和用户记忆不会被本发行版批量改写。
 
