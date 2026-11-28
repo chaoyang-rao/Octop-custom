@@ -6,8 +6,8 @@
 
 ## 安装包
 
-- [Mac 0.10.10 通用安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261128.9/Dora-macos-universal-0.10.10.dmg)：Intel 和 Apple 芯片通用，接入企业统一更新。
-- [Windows 0.10.10 安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261128.9/Dora-Windows-x64-0.10.10-Setup.exe)：内置独立引擎，接入企业统一更新。两版均保留小黑猫键鼠动作，默认不吸附屏幕边缘。
+- [Mac 0.10.11 通用安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261128.10/Dora-macos-universal-0.10.11.dmg)：Intel 和 Apple 芯片通用，接入企业统一更新。
+- [Windows 0.10.11 安装包](https://github.com/chaoyang-rao/Octop-custom/releases/download/custom-1.0.3b3-20261128.10/Dora-Windows-x64-0.10.11-Setup.exe)：内置独立引擎，接入企业统一更新。两版均保留小黑猫键鼠动作，默认不吸附屏幕边缘。
 
 ![Mac 小黑猫原生绘制预览](../docs/images/dora-kurocat.png)
 

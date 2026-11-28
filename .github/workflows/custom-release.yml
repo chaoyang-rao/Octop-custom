@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.9"
+        default: "custom-1.0.3b3-20261128.10"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.9' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.10' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -491,11 +491,11 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112809 / 哆啦 0.10.10。新增统一回答规范；技能与工具目录按需展开，减少普通问答的上下文占用；文字整理默认交付一版，保留未完成状态和抽样范围，明确要求多个版本时照做。保留112807已有的编辑草稿保护、记忆页重试与语言适配。
+          Octop Custom 112810 / 哆啦 0.10.11。修复桌面自动更新启动验收的根地址格式不兼容：新桌面壳向旧更新助手写入规范地址，助手也兼容带一个末尾斜杠的根地址，继续拒绝其他路径与查询参数。保留112809的回答规范、技能和工具目录按需加载、文字整理及既有界面功能。
 
-          本次联合发行修正112808沿用桌宠版本的问题：桌宠与主程序一同递增，避免同版本对应不同更新载荷；112808附件保持不变，不用于本次企业联合下发。
+          112809更新通知已撤回；其安装包保持不可变。此次修复先在既有本机账号验证旧客户端实际升级，再恢复原授权更新范围。不代表所有成员已安装。
 
-          小规模验收中，通知与状态整理已改善；汇报仍可能补充额外建议，不代表全部业务准确率已通过。旧专家的个人提示文件和用户记忆不会被本发行版批量改写。
+          回答质量仍有小样本验证边界，汇报可能附加额外建议，不宣称所有业务准确率已通过。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 
