@@ -1,0 +1,13 @@
+{
+  "owner_repository": "https://github.com/TencentCloud/octop-harness",
+  "base_commit": "d18276ee45716726d4393434c689a5ce45a2b6c9",
+  "local_implementation_commit": "702892ec6bee815ada8c74e60e5215a518510129",
+  "pushed_to_upstream": false,
+  "patch_sha256": "06ee97ab21df727db495c1e3f92419ffad0802cb030686b5ffe0db1e2a1a943a",
+  "delivery": "The custom runtime contains a compatibility backport; no upstream wheel upgrade is required.",
+  "validation": {
+    "make_all_passed": 2277,
+    "skipped": 35
+  },
+  "apply_command": "git apply --unidiff-zero octop-harness-progressive-catalog.patch (at base_commit)"
+}

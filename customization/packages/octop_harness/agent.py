@@ -1706,10 +1706,11 @@ class HarnessAgent:
             if cfg.media_generation.has_video_provider():
                 media_tools.add("generate_video")
             deferred_tools = deferred_tools | media_tools
-        if not (deferred_tools or cfg.defer_mcp_tools) or cfg.tool_search_mode == "eager":
+        if not (deferred_tools or cfg.defer_mcp_tools or cfg.progressive_catalog_enabled) or cfg.tool_search_mode == "eager":
             return None
         return ToolSearchMiddleware(
             deferred_tools=deferred_tools,
+            defer_other_tools=cfg.progressive_catalog_enabled,
             mcp_tool_names=self._mcp_tool_name_set,
             defer_mcp_tools=cfg.defer_mcp_tools,
             mode=cfg.tool_search_mode,
@@ -1866,6 +1867,13 @@ class HarnessAgent:
             kwargs["subagents"] = resolved_subagents
         if skills:
             kwargs["skills"] = skills
+            if cfg.progressive_catalog_enabled:
+                from octop_harness.middleware.skill_discovery import SkillDiscoveryMiddleware
+
+                kwargs["middleware"] = [
+                    *middleware,
+                    SkillDiscoveryMiddleware(backend=self._backend, sources=skills, language=cfg.language),
+                ]
         if memory:
             kwargs["memory"] = memory
         if cfg.permissions and not spec_supports_execution(cfg.backend):

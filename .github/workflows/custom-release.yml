@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.7"
+        default: "custom-1.0.3b3-20261128.8"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.7' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.8' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -491,7 +491,9 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112807 / 哆啦 0.10.9。专家编辑、专家文件和 Agent 配置新增未保存确认。记忆日志加载失败时可用同一筛选和页码重试。记忆界面补齐英文提示，保留记忆原文。桌宠入口可在侧栏布局中保存。
+          Octop Custom 112808 / 哆啦 0.10.9。新增统一回答规范；技能与工具目录按需展开，减少普通问答的上下文占用；文字整理默认交付一版，保留未完成状态和抽样范围，明确要求多个版本时照做。保留112807已有的编辑草稿保护、记忆页重试与语言适配。
+
+          小规模验收中，通知与状态整理已改善；汇报仍可能补充额外建议，不代表全部业务准确率已通过。旧专家的个人提示文件和用户记忆不会被本发行版批量改写。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

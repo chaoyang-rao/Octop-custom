@@ -717,6 +717,7 @@ class HarnessAgentConfig:
     decision: DecisionConfig | None = None
 
     # —— Progressive tool loading ——
+    progressive_catalog_enabled: bool = False
     # Names in this set remain registered with DeepAgents for real execution.
     # Client mode keeps name/description references visible but defers parameter
     # schemas; native mode delegates discovery to the provider.
@@ -1104,6 +1105,7 @@ class HarnessAgentConfig:
             "team_peers": list(self.team_peers) if self.team_peers is not None else None,
             "peer_invoke_mode": self.peer_invoke_mode,
             "deferred_tools": sorted(self.deferred_tools),
+            "progressive_catalog_enabled": self.progressive_catalog_enabled,
             "defer_mcp_tools": self.defer_mcp_tools,
             "tool_search_mode": self.tool_search_mode,
             "tool_search_fallback": self.tool_search_fallback,
