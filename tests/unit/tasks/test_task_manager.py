@@ -164,7 +164,12 @@ async def test_fifo_pause_and_real_ws_pipeline(setup):
         await e.manager.pause_queue(e.uid, "a", False)
         await e.manager.process_once()
         await settled(e.manager)
-        assert [message.text for message in e.processor.received] == ["first", "second"]
+        import json
+
+        assert [json.loads(message.text)["brief"]["goal"] for message in e.processor.received] == [
+            "first",
+            "second",
+        ]
         saved = e.repos.task_repo.get(second.id)
         assert saved.result == "verified output" and saved.thread_id
         assert e.gateway.thread_registry.get_thread(saved.thread_id).user_id == e.uid

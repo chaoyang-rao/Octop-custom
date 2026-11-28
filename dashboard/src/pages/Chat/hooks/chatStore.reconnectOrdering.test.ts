@@ -42,6 +42,91 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("finishes each coordinator turn on a retained team send socket", async () => {
+  store.setSessionTeamRoom(session, true);
+  const onEnd = vi.fn();
+  const sent = store.sendTurn(
+    session,
+    "question",
+    "room",
+    "",
+    undefined,
+    onEnd,
+    null,
+    session,
+  );
+  await Promise.resolve();
+  const ws = Socket.instances[0];
+  for (const turnId of ["user-turn", "coordinator-review"]) {
+    ws.frame({ type: "turn.started", turn_id: turnId });
+    ws.frame({
+      type: "token",
+      content: turnId,
+      agent_id: "room",
+      speaker_agent_id: "lead",
+      turn_owner_agent_id: "room",
+      team_wrapup: turnId === "coordinator-review",
+    });
+    ws.frame({
+      type: "done",
+      agent_id: "room",
+      speaker_agent_id: "lead",
+      turn_owner_agent_id: "room",
+      team_wrapup: turnId === "coordinator-review",
+    });
+    ws.frame({ type: "turn.ended", turn_id: turnId });
+    expect(store.getSnapshot(session).isStreaming).toBe(false);
+    expect(store.getSnapshot(session).activeTurnId).toBeNull();
+    expect(store.getSnapshot(session).liveSpeakers).toEqual([]);
+    expect(
+      store.getSnapshot(session).messages.some((m) => m.status === "streaming"),
+    ).toBe(false);
+    expect(ws.readyState).toBe(Socket.OPEN);
+  }
+  await sent;
+  expect(onEnd).toHaveBeenCalledTimes(2);
+  ws.frame({ type: "turn.ended", turn_id: "coordinator-review" });
+  expect(onEnd).toHaveBeenCalledTimes(2);
+});
+
+it("finishes repeated turns on a retained subscription socket", async () => {
+  store.setSessionTeamRoom(session, true);
+  const onEnd = vi.fn();
+  await store.attachThread(session, "room", session, onEnd);
+  const ws = Socket.instances[0];
+  for (const turnId of ["review-one", "review-two"]) {
+    ws.frame({ type: "turn.started", turn_id: turnId });
+    ws.frame({ type: "token", content: turnId, agent_id: "room" });
+    ws.frame({ type: "done", agent_id: "room" });
+    ws.frame({ type: "turn.ended", turn_id: turnId });
+    expect(store.getSnapshot(session).isStreaming).toBe(false);
+  }
+  expect(onEnd).toHaveBeenCalledTimes(2);
+  expect(ws.sent.map((row) => JSON.parse(row).type)).toEqual(["subscribe"]);
+});
+
+it("unlocks the host on authoritative idle while keeping a member live", async () => {
+  store.setSessionTeamRoom(session, true);
+  const onEnd = vi.fn();
+  await store.attachThread(session, "room", session, onEnd);
+  const ws = Socket.instances[0];
+  ws.frame({ type: "turn_status", active: true });
+  ws.frame({ type: "token", content: "host conclusion", agent_id: "room" });
+  ws.frame({ type: "token", content: "member output", agent_id: "member" });
+  ws.frame({ type: "turn_status", active: false });
+  const snap = store.getSnapshot(session);
+  expect(snap.isStreaming).toBe(false);
+  expect(snap.messages.find((m) => m.speakerAgentId === "room")?.status).toBe(
+    "done",
+  );
+  expect(snap.messages.find((m) => m.speakerAgentId === "member")?.status).toBe(
+    "streaming",
+  );
+  expect(snap.liveSpeakers).toEqual(["member"]);
+  expect(ws.readyState).toBe(Socket.OPEN);
+  expect(ws.sent.some((row) => JSON.parse(row).type === "cancel")).toBe(false);
+});
+
 it("ignores late frames and close events from a replaced socket", async () => {
   const first = store.sendTurn(
     session,

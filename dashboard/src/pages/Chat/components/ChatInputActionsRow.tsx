@@ -2,7 +2,6 @@ import "./ComposerToolGlyphs.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { createPortal } from "react-dom";
 import {
   ArrowUp,
   Square,
@@ -267,14 +266,6 @@ export default function ChatInputActionsRow({
     null,
   );
   const [modelShortcutOpen, setModelShortcutOpen] = useState(false);
-  const [modelSlotEl, setModelSlotEl] = useState<HTMLElement | null>(null);
-
-  // The model selector lives in its own row under the composer box; the row is
-  // rendered by ChatInput, so the pill is portalled into it when available.
-  useEffect(() => {
-    setModelSlotEl(document.getElementById("octop-model-slot"));
-  }, []);
-
   // Press-and-hold dictation: start on pointerdown, finish on release or when
   // the pointer slides off the button (also covers touch cancel).
   const handleVoicePressStart = () => {
@@ -1123,7 +1114,7 @@ export default function ChatInputActionsRow({
   const modelShortcutButton = showModelPicker ? (
     <Popover
       trigger="click"
-      placement="topLeft"
+      placement="topRight"
       arrow={false}
       destroyOnHidden
       open={modelShortcutOpen}
@@ -1175,23 +1166,17 @@ export default function ChatInputActionsRow({
         isMobile ? ` ${styles.actionsRowCompact}` : ""
       }`}
     >
-      <div
-        id="octop-model-slot"
-        data-testid="composer-model-slot"
-        className="octop-model-slot"
-      />
       <div className={styles.secondaryActions}>{renderSecondaryActions()}</div>
-      {modelShortcutButton &&
-        (modelSlotEl
-          ? createPortal(modelShortcutButton, modelSlotEl)
-          : modelShortcutButton)}
       {conversationMode !== "craft" ? (
         <p className={styles.modeHint} data-testid="conversation-mode-hint">
           <ModeIcon size={14} aria-hidden />
           <span>{t(`chat.conversationMode.${conversationMode}Reminder`)}</span>
         </p>
       ) : null}
-      <div className={styles.inputActions}>
+      <div
+        className={styles.inputActions}
+        data-testid="composer-primary-actions"
+      >
         <ContextWindowRing
           isStreaming={isStreaming}
           usedTokens={contextUsedTokens}
@@ -1335,6 +1320,11 @@ export default function ChatInputActionsRow({
             </button>
           </Tooltip>
         )}
+        {modelShortcutButton ? (
+          <div className="octop-model-slot" data-testid="composer-model-slot">
+            {modelShortcutButton}
+          </div>
+        ) : null}
         {isStreaming ? (
           canSend ? (
             // Queue into the chip bar; ↵ Steer lives on the chip row.

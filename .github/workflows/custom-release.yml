@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.5"
+        default: "custom-1.0.3b3-20261128.6"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.5' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.6' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -95,6 +95,7 @@ jobs:
           src/pages/Chat/components/MessageBubble.teamSpeaker.test.tsx
           src/pages/Chat/components/TurnProcessBlocks.teamSpeaker.test.tsx
           src/pages/Chat/hooks/chatStore.teamStream.test.ts
+          src/pages/Chat/hooks/chatStore.reconnectOrdering.test.ts
           src/pages/Chat/hooks/useAutoScroll.test.ts
           src/pages/Chat/components/ChatInputActionsRow.test.tsx
           src/pages/Chat/components/ContextWindowRing.test.tsx
@@ -488,7 +489,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112805 / 哆啦 0.10.8。修复专家头像动效卡顿，活动头像按显示刷新节奏直接更新 SVG，闲置头像停止播放。修复团队共用主持人时的头像串动，拼图按各队自己的会话状态播放动效。哆啦的包版本随联合发行递增。
+          Octop Custom 112806 / 哆啦 0.10.9。浅色聊天使用黑色发送按钮，聊天主面板左侧采用柔和圆角，模型选择移至右侧发送按钮前。修复团队多轮复核结束后仍显示正在回答的问题，并加入项目/任务线隔离及短交接，保留原文和检查点。保留此前已发布的导航滚动和头像动效改进。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

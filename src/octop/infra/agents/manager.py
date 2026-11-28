@@ -697,6 +697,9 @@ class AgentManager:
         if self._task_manager is not None:
             await self._task_manager._rooms.register_peer(call, thread_id)
 
+    def task_peer_line(self, call: Any) -> str:
+        return self._task_manager._rooms.peer_line(call) if self._task_manager is not None else ""
+
     async def finish_task_peer(self, call: Any) -> None:
         if self._task_manager is not None:
             await self._task_manager._rooms.finish_peer(call)

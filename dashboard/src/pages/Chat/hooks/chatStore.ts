@@ -2470,6 +2470,7 @@ function finalizeHostTurn(state: SessionStreamState, sessionId?: string): void {
   const hostId = sessionHostAgentId(state, sessionId);
   finalizeStreamingMessages(state, hostId, hostId);
   if (hostId) finalizeStreamingMessages(state, undefined, hostId);
+  clearSpeakerLive(state, hostId);
 }
 
 function stampTurnDuration(
@@ -2807,7 +2808,8 @@ export async function attachThread(
 
   let finished = false;
   const finish = (mode: "all" | "host" = "all") => {
-    if (finished) return;
+    // A retained room socket can deliver another coordinator turn.
+    if (finished && !state.isStreaming) return;
     finished = true;
     clearStreamingFlags(state);
     clearStreamActivity(sessionId);
@@ -2902,11 +2904,7 @@ export async function attachThread(
           } else if (state.isStreaming) {
             // Host thread went idle — seal the host turn, but keep this
             // socket so late team / inbox replies still land in the room.
-            finalizeHostTurn(state, sessionId);
-            notify(state);
-            if (!hasStreamingMessages(state)) {
-              finish();
-            }
+            finish("host");
           } else if (state.abortController === controller) {
             state.abortController = previousController;
           }
@@ -3414,7 +3412,8 @@ export async function sendTurn(
 
   let finished = false;
   const finish = (mode: "all" | "host" = "all") => {
-    if (finished) return;
+    // The original send may be settled while a later room turn is active.
+    if (finished && !state.isStreaming) return;
     finished = true;
     clearStreamingFlags(state);
     clearStreamActivity(sessionId);

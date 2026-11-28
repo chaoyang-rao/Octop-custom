@@ -44,6 +44,11 @@ def build_expert_task_tools(
         experts lists real expert IDs, names and descriptions; select the user-named expert
         first, otherwise match its responsibilities. create is for the account's primary
         expert: rewrite the assignment with goal, context, constraints and deliverables.
+        Prefer a short JSON prompt with goal, constraints, acceptance and materials
+        (the last three are string lists). Send only this task's relevant evidence and
+        references; do not copy conversation transcripts or other experts' process logs.
+        Continue the same task/expert where possible. Reports use summary, evidence,
+        artifacts and remaining (the last three are string lists).
         It returns immediately; do not wait in a polling loop or submit the same work again.
         Execution uses that expert's own model, skills and tools; Codex/ACP is optional.
         During an automatic coordinator review, finish by calling decide: ready only when

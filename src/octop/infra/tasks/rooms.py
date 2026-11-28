@@ -131,6 +131,27 @@ class TaskRooms:
             for entry in entries
         )
 
+    def peer_line(self, call: Any) -> str:
+        """Resolve lineage from owned host state, never a model-provided scope ID."""
+        user_id = request_user_id({"configurable": {"user": call.user_id}})
+        if user_id is None or not call.source_thread_id:
+            return ""
+        parent = self.manager.bound_task(call.from_agent_id, user_id, call.source_thread_id)
+        if parent is not None:
+            return "task:" + str(parent.task_id)
+        context = current_coordinator_scope()
+        if (
+            context is not None
+            and context.user_id == user_id
+            and context.origin_agent_id == call.from_agent_id
+            and context.origin_thread_id == call.source_thread_id
+        ):
+            return "scope:" + context.scope_id
+        scope = self.repo.scope_for_peer_thread(user_id, call.source_thread_id)
+        if scope is None:
+            scope = self.repo.scope_for_room(user_id, call.source_thread_id)
+        return "scope:" + str(scope["scope_id"]) if scope else ""
+
     async def register_peer(self, call: Any, thread_id: str) -> None:
         user_id = request_user_id({"configurable": {"user": call.user_id}})
         if user_id is None or not call.source_thread_id:

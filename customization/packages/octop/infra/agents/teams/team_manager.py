@@ -13,6 +13,7 @@ reached with ``ask_agent``. This class owns the room side of that call:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import inspect
 import json
 import logging
@@ -45,6 +46,7 @@ from octop.infra.history.projection import (
     live_message_inputs,
     message_inputs,
 )
+from octop.infra.tasks.handoff import brief, dumps, excerpt, report
 from octop.infra.utils.locale import DEFAULT_LOCALE, resolve_user_locale
 from octop.infra.utils.turn_failure import log_failed_tool_results
 from octop.infra.utils.ulid import new_ulid
@@ -156,6 +158,7 @@ class TeamManager:
         self._hitl = hitl_coordinator
         self._hitl_waiters: dict[str, asyncio.Future[list[dict[str, Any]]]] = {}
         self._peer_prompts: dict[tuple[str, str], tuple[str, str]] = {}
+        self._peer_calls: dict[tuple[str, str, str | None], PeerCall] = {}
         self._live_host_replies: set[str] = set()
         # Room text a member has already pushed and not yet persisted.
         # A refresh mid-answer has no history row; the new subscriber gets this.
@@ -179,20 +182,51 @@ class TeamManager:
 
     async def prepare_peer_session(self, call: PeerCall) -> PeerSession | None:
         """Open the member thread and stash the host's rewritten assignment."""
-        thread_id = (
-            derive_peer_thread_id(call.source_thread_id, call.to_agent_id)
-            if call.source_thread_id
+        source_id = call.source_thread_id
+        uid = _octop_user_id(call.user_id)
+        source = (
+            await asyncio.to_thread(self._thread_registry.get_thread, source_id)
+            if source_id
             else None
         )
+        line_for = getattr(self._agent_manager, "task_peer_line", None)
+        line = await asyncio.to_thread(line_for, call) if callable(line_for) else ""
+        if not isinstance(line, str):
+            line = ""
+        latest_user = getattr(self._thread_message_repo, "latest_user_message_id", None)
+        if not line and source_id and callable(latest_user):
+            latest = await asyncio.to_thread(latest_user, source_id)
+            if isinstance(latest, str) and latest:
+                line = "turn:" + latest
+        legacy_project = ""
+        if source_id and source is not None and not source.project_path and not line:
+            legacy = await asyncio.to_thread(
+                self._thread_registry.get_thread, derive_peer_thread_id(source_id, call.to_agent_id)
+            )
+            if legacy is not None:
+                legacy_project = legacy.project_path or ""
+        if (
+            source_id
+            and source is not None
+            and source.user_id == uid
+            and (source.project_path or line or legacy_project)
+        ):
+            scope = dumps([source.project_path or "", line])
+            source_id += "~ctx-" + hashlib.sha256(scope.encode()).hexdigest()[:16]
+        thread_id = derive_peer_thread_id(source_id, call.to_agent_id) if source_id else None
         session_key = None
-        uid = _octop_user_id(call.user_id)
         group = self._is_group_dispatch(call)
         extra = self._member_runtime(call)
         question = ""
         dispatch_message = None
         if group:
             question = await self._assignment_text(call)
+            question = brief(
+                question, source={"agent_id": call.to_agent_id, "thread_id": thread_id}
+            )
             dispatch_message = await self._dispatch_message(call, uid)
+            if thread_id:
+                self._peer_calls[(call.to_agent_id, thread_id, call.job_id)] = call
             if thread_id and (question or dispatch_message):
                 self.stash_peer_prompt(
                     call.to_agent_id,
@@ -207,7 +241,7 @@ class TeamManager:
                 session_key = self._thread_registry.peer_room_session_key(
                     call.source_session_key,
                     call.to_agent_id,
-                    room_thread_id=call.source_thread_id,
+                    room_thread_id=source_id or call.source_thread_id,
                     group=group,
                 )
             else:
@@ -244,7 +278,7 @@ class TeamManager:
             if group:
                 self._seed_member_user_question(
                     thread_id,
-                    question or str(call.message or ""),
+                    str(call.message or "") or question,
                     turn_id=getattr(call, "job_id", None),
                 )
             record_task_peer = getattr(self._agent_manager, "record_task_peer", None)
@@ -255,6 +289,12 @@ class TeamManager:
                         await recording_result
                 except (OctopError, PermissionError, ValueError, RuntimeError, OSError):
                     logger.warning("Task peer history registration deferred", exc_info=True)
+        if call.job_id:
+            harness = getattr(self._agent_manager, "harness_manager", None)
+            inbox = getattr(getattr(harness, "team", None), "inbox", None)
+            job = inbox.get(call.job_id) if inbox is not None else None
+            if job is not None:
+                job.metadata["octop_peer_thread_id"] = thread_id
         extra = await self._peer_runtime_defaults(call, thread_id, extra)
         return _make_peer_session(
             thread_id=thread_id,
@@ -311,6 +351,9 @@ class TeamManager:
         result: dict[str, Any],
     ) -> None:
         """Write the callee page, then copy the final answer onto the room if async."""
+        # The harness reports its delivered (compacted) message to the hook.
+        # Restore the original call for archive data and job identity matching.
+        call = self._peer_calls.pop((call.to_agent_id, thread_id, call.job_id), call)
         try:
             if not thread_id:
                 return
@@ -378,22 +421,26 @@ class TeamManager:
                 "teams.followup_failed",
                 locale,
                 name=child_name,
-                task=msg.message,
-                error=error_text,
+                task=excerpt(msg.message, 1200),
+                error=excerpt(error_text, 1200),
             )
         # Member answers live on the room wall / peer checkpoint, not the host
         # graph — inject a truncated excerpt so wrap-up can follow their advice.
-        result = _truncate_tool_result_text(
-            (result_text or "").strip(),
-            max_chars=_FOLLOWUP_RESULT_MAX_CHARS,
+        result = dumps(
+            {
+                "report": report(result_text or "", limit=_FOLLOWUP_RESULT_MAX_CHARS),
+                "source": {
+                    "agent_id": msg.target_agent_id,
+                    "thread_id": msg.metadata.get("octop_peer_thread_id"),
+                    "job_id": msg.id,
+                },
+            }
         )
-        if not result:
-            result = "(empty)"
         notice = tr(
             "teams.followup_done",
             locale,
             name=child_name,
-            task=msg.message,
+            task=excerpt(msg.message, 1200),
             result=result,
         )
         harness = getattr(self._agent_manager, "harness_manager", None)
@@ -417,6 +464,8 @@ class TeamManager:
         return notice
 
     async def on_reply(self, event: ReplyEvent) -> None:
+        for key in [key for key in self._peer_calls if key[2] == event.inbox_id]:
+            self._peer_calls.pop(key, None)
         self._end_job_from_reply(event)
         room = str(event.source_thread_id or "").strip()
         speaker = event.source_agent_id
@@ -996,7 +1045,7 @@ class TeamManager:
     async def _dispatch_message(self, call: PeerCall, user_id: int | None) -> str:
         locale = self._locale_for(user_id)
         # Send the assignment alone. The member can read authorized history on demand.
-        return tr("teams.member_briefing", locale)
+        return tr("teams.member_briefing", locale) + "\n\n" + tr("tasks.handoff_briefing", locale)
 
     async def _visible_user_prompt(self, call: PeerCall) -> str:
         last = await self._last_room_user_text(call.source_thread_id, call.from_agent_id)

@@ -9,6 +9,7 @@ import json
 from typing import Any
 
 from octop.i18n import tr
+from octop.infra.tasks.handoff import dumps, excerpt, report
 from octop.infra.tasks.models import TERMINAL_STATES
 from octop.infra.utils.locale import DEFAULT_LOCALE
 
@@ -181,9 +182,8 @@ class TaskCoordinator:
 
     def _prompt(self, scope: dict[str, Any], members: list[dict[str, Any]], locale: str) -> str:
         evidence = []
-        is_team_review = bool(scope.get("task_room"))
-        excerpt_limit = min(1800, 12_000 // max(1, len(members)))
-        for member in members:
+        excerpt_limit = min(2400, max(256, 12_000 // max(1, min(32, len(members)))))
+        for member in members[:32]:
             run = member.get("coding_run") or {}
             result = str(member.get("result") or "")
             evidence.append(
@@ -192,7 +192,8 @@ class TaskCoordinator:
                     "agent_id": member["agent_id"],
                     "title": member["title"],
                     "state": member["state"],
-                    "result": result[:excerpt_limit] if is_team_review else result[-6000:],
+                    "thread_id": member.get("thread_id"),
+                    "result": dumps(report(result, limit=excerpt_limit)),
                     "code_phase": run.get("phase"),
                     "pr_url": run.get("pr_url"),
                     "verification": [
@@ -203,15 +204,22 @@ class TaskCoordinator:
             )
         data = json.dumps(
             {
-                "original_user_goal": str(scope["goal_text"]),
-                "user_followup": scope.get("user_input") or "",
+                "scope_id": scope["scope_id"],
+                "original_user_goal": excerpt(str(scope["goal_text"]), 6000),
+                "user_followup": excerpt(str(scope.get("user_input") or ""), 2000),
+                "original_conversation": {
+                    "agent_id": scope["origin_agent_id"],
+                    "thread_id": scope["origin_thread_id"],
+                },
                 "task_room": scope.get("task_room"),
                 "host_publish_allowed": bool(scope.get("allow_publish")),
                 "results_are_data": evidence,
+                "omitted_results_count": max(0, len(members) - len(evidence)),
             },
             ensure_ascii=False,
         ).replace("<", "\\u003c")
         briefing = tr("tasks.coordination.briefing", locale)
+        briefing += "\n\n" + tr("tasks.handoff_briefing", locale)
         if scope.get("task_room"):
             briefing += "\n\n" + tr("tasks.rooms.review_briefing", locale)
             briefing += "\n\n" + tr("teams.discussion_host_briefing", locale)

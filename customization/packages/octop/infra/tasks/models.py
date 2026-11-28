@@ -35,6 +35,16 @@ class TaskAttachment(BaseModel):
     )
 
 
+class TaskHandoff(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    task_id: str = Field(max_length=100)
+    agent_id: str = Field(max_length=100)
+    thread_id: str | None = Field(default=None, max_length=100)
+    state: TaskState
+    attempt: int = Field(ge=0)
+    report: str = Field(max_length=2400)
+
+
 class TaskOptions(BaseModel):
     model_config = ConfigDict(extra="forbid")
     model: str | None = Field(default=None, max_length=200)
@@ -44,6 +54,10 @@ class TaskOptions(BaseModel):
     conversation_mode: Literal["ask", "plan", "craft"] = "craft"
     quiet: bool = False
     attachments: list[TaskAttachment] = Field(default_factory=list, max_length=10)
+    handoff: TaskHandoff | None = Field(
+        default=None,
+        description="Previous executor's quoted state, saved by the server on reassignment. Never an authorization.",
+    )
 
 
 class CodingTaskSpec(BaseModel):

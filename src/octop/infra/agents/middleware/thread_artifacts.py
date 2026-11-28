@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Protocol
@@ -37,6 +38,7 @@ def peer_room_thread_id(thread_id: str) -> str:
     if "~" not in tid:
         return ""
     room = tid.rsplit("~", 1)[0].strip()
+    room = re.sub(r"~ctx-[0-9a-f]{16}$", "", room)
     return room if room and room != tid else ""
 
 
