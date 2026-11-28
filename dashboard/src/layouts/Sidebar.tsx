@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -416,6 +416,18 @@ export default function Sidebar({
   );
   const [savedLayout, setSavedLayout] = useState<SidebarNavLayout | null>(null);
   const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [dockScrolling, setDockScrolling] = useState(false);
+  const dockIdleTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(dockIdleTimer.current), []);
+
+  const showDockThumb = () => {
+    setDockScrolling(true);
+    window.clearTimeout(dockIdleTimer.current);
+    dockIdleTimer.current = window.setTimeout(
+      () => setDockScrolling(false),
+      500,
+    );
+  };
   const navSections = useMemo(
     () => sectionsFromLayout(catalog, savedLayout),
     [catalog, savedLayout],
@@ -857,7 +869,9 @@ export default function Sidebar({
       )}
 
       <div
-        data-octop-sidebar-scroll="dock"
+        data-octop-sidebar-scroll={fixedRail ? "fixed-dock" : "dock"}
+        data-scrolling={fixedRail && dockScrolling ? "" : undefined}
+        onScroll={fixedRail ? showDockThumb : undefined}
         style={{
           flex: 1,
           minHeight: 0,
