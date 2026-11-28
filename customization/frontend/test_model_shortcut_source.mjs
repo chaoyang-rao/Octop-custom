@@ -88,10 +88,12 @@ async function test(name, task) {
   finally { if (active) { await active.destroy(); active = null; } }
 }
 try {
-  await test('source TSX keeps the selector in its own row under the composer', async () => {
+  await test('source TSX keeps the selector in the right composer actions, not a global slot', async () => {
     const v = await mount();
-    assert.equal(v.button().closest('#octop-model-slot'), v.slot);
-    assert.equal(v.container.querySelector('[data-testid="composer-model-shortcut"]'), null);
+    const actions = v.container.querySelector('[data-testid="composer-primary-actions"]');
+    assert.equal(v.button().closest('[data-testid="composer-primary-actions"]'), actions);
+    assert.equal(v.container.querySelector('[data-testid="composer-model-shortcut"]'), v.button());
+    assert.equal(v.slot.childElementCount, 0);
   });
   await test('source TSX displays actual default without changing the Auto override', async () => {
     const v = await mount();

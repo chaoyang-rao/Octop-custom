@@ -55,6 +55,26 @@ const baseProps = {
 };
 
 describe("ChatInputActionsRow plus menu", () => {
+  it.each([false, true])(
+    "places the model selector beside send on mobile=%s",
+    (isMobile) => {
+      render(
+        <MemoryRouter>
+          <ChatInputActionsRow {...baseProps} isMobile={isMobile} />
+        </MemoryRouter>,
+      );
+      const actions = screen.getByTestId("composer-primary-actions");
+      const slot = screen.getByTestId("composer-model-slot");
+      expect(actions).toContainElement(
+        screen.getByTestId("composer-model-shortcut"),
+      );
+      expect(slot.parentElement).toBe(actions);
+      expect(slot.nextElementSibling).toBe(
+        screen.getByRole("button", { name: "Send", exact: true }),
+      );
+    },
+  );
+
   it("keeps approval, shortcuts, and attachments on the toolbar", () => {
     render(
       <MemoryRouter>

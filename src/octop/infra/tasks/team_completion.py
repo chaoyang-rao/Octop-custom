@@ -46,7 +46,9 @@ def cancel_scoped_jobs(agents: Any, row: TaskRow) -> None:
             inbox.cancel(job.id)
             if row.thread_id:
                 agents.cancel_stream(
-                    job.target_agent_id, derive_peer_thread_id(row.thread_id, job.target_agent_id)
+                    job.target_agent_id,
+                    job.metadata.get("octop_peer_thread_id")
+                    or derive_peer_thread_id(row.thread_id, job.target_agent_id),
                 )
             # The member path catches cancellation and records a terminal reply;
             # the host reply path must unwind via cancel_stream to retain cleanup.

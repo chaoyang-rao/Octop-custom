@@ -65,6 +65,7 @@ def test_is_artifact_tool_name() -> None:
 
 def test_peer_room_thread_id() -> None:
     assert peer_room_thread_id("room~member") == "room"
+    assert peer_room_thread_id("room~ctx-0123456789abcdef~member") == "room"
     assert peer_room_thread_id("room") == ""
     assert peer_room_thread_id("") == ""
 

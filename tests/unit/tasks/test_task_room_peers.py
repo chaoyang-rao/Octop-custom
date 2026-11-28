@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 from langchain_core.messages import AIMessage, HumanMessage
 from octop_harness.teams.util import PeerCall
@@ -37,6 +38,7 @@ async def running_parent(e):
 def peer_bridge(e):
     e.agents.record_task_peer = e.manager._rooms.register_peer
     e.agents.finish_task_peer = e.manager._rooms.finish_peer
+    e.agents.task_peer_line = e.manager._rooms.peer_line
     return TeamManager(
         agent_manager=e.agents,
         thread_registry=e.gateway.thread_registry,
@@ -120,6 +122,106 @@ async def test_consultation_and_its_new_room_keep_the_origin_project(room_env, t
     room = e.repos.task_coordination_repo.room(e.scope_id)
     assert peer.project_path == str(project)
     assert e.repos.thread_repo.get(room["thread_id"]).project_path == str(project)
+
+
+async def test_member_context_follows_project_and_task_line_without_deleting_history(
+    room_env, tmp_path
+):
+    e = room_env
+    _parent, tid = await running_parent(e)
+    bridge = peer_bridge(e)
+    call = PeerCall(
+        from_agent_id="b",
+        to_agent_id="c",
+        user_id=e.uid,
+        message="Continue evidence check",
+        source_thread_id=tid,
+        source_session_key=e.repos.thread_repo.get(tid).session_key,
+    )
+    first = await bridge.prepare_peer_session(call)
+    assert (await bridge.prepare_peer_session(call)).thread_id == first.thread_id
+    project = tmp_path / "next-project"
+    project.mkdir()
+    e.repos.thread_repo.set_project(
+        tid, agent_id="b", user_id=e.uid, project_path=str(project), project_name="Next"
+    )
+    second = await bridge.prepare_peer_session(call)
+    assert second.thread_id != first.thread_id
+    assert second.session_key != first.session_key
+    assert e.repos.thread_repo.get(first.thread_id) is not None
+    assert e.repos.thread_repo.get(second.thread_id).project_path == str(project)
+    e.agents.task_peer_line = lambda _call: "different-task-line"
+    third = await bridge.prepare_peer_session(call)
+    assert third.thread_id != second.thread_id
+
+
+async def test_compacted_delivery_keeps_original_archive_and_peer_completion_identity(room_env):
+    e = room_env
+    _parent, tid = await running_parent(e)
+    bridge = peer_bridge(e)
+    original = (
+        "Start\n"
+        + "details\n" * 2000
+        + "Keep this middle constraint\n"
+        + "details\n" * 2000
+        + "End"
+    )
+    call = PeerCall(
+        from_agent_id="b",
+        to_agent_id="c",
+        user_id=e.uid,
+        message=original,
+        source_thread_id=tid,
+        source_session_key=e.repos.thread_repo.get(tid).session_key,
+        job_id="async-job",
+    )
+    session = await bridge.prepare_peer_session(call)
+    assert len(session.message) < len(original)
+    assert e.manager._rooms.has_pending_peers(e.scope_id)
+    await bridge.record_peer_turn(
+        replace(call, message=session.message),
+        session.thread_id,
+        {"messages": [AIMessage("Verified answer", id="actual-answer")]},
+    )
+    assert not e.manager._rooms.has_pending_peers(e.scope_id)
+    rows, _ = e.repos.thread_message_repo.page(session.thread_id, limit=10, offset=0)
+    assert any(
+        json.loads(row.message_json)["data"]["content"] == original
+        for row in rows
+        if row.role in {"human", "user"}
+    )
+
+
+async def test_unbound_source_cannot_reuse_legacy_member_project(room_env, tmp_path):
+    e = room_env
+    _parent, tid = await running_parent(e)
+    bridge = peer_bridge(e)
+    e.agents.task_peer_line = lambda _call: ""
+    legacy_id = tid + "~c"
+    e.gateway.thread_registry.ensure_thread(
+        thread_id=legacy_id,
+        agent_id="c",
+        user_id=e.uid,
+        channel_type="dashboard",
+        session_key="c:dashboard:owner:legacy",
+    )
+    project = tmp_path / "legacy-project"
+    project.mkdir()
+    e.repos.thread_repo.set_project(
+        legacy_id, agent_id="c", user_id=e.uid, project_path=str(project), project_name="Legacy"
+    )
+    call = PeerCall(
+        from_agent_id="b",
+        to_agent_id="c",
+        user_id=e.uid,
+        message="Check only current scope",
+        source_thread_id=tid,
+        source_session_key=e.repos.thread_repo.get(tid).session_key,
+    )
+    session = await bridge.prepare_peer_session(call)
+    assert session.thread_id != legacy_id
+    assert not e.repos.thread_repo.get(session.thread_id).project_path
+    assert e.repos.thread_repo.get(legacy_id).project_path == str(project)
 
 
 async def test_consulting_primary_keeps_single_executor_in_original_conversation(room_env):

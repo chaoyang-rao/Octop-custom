@@ -57,6 +57,16 @@
   }
 }
 
+@media (min-width: 768px) {
+  .chatPage {
+    background: var(--fn-desktop-chat-rail-bg, var(--fn-bg-sidebar));
+  }
+
+  .chatMain {
+    border-radius: 20px 0 0 20px;
+  }
+}
+
 /* Leave the chrome in flow and extend only the message scrollport underneath. */
 .chatMainFloating {
   --chat-history-top-inset: var(--fn-chat-chrome-height, 40px);

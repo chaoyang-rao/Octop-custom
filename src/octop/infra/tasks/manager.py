@@ -31,10 +31,12 @@ from octop.infra.tasks.attachments import (
     content_parts,
     validate_references,
 )
+from octop.infra.tasks.handoff import brief, dependency_packet, dumps, report
 from octop.infra.tasks.models import (
     TERMINAL_STATES,
     TaskAttachment,
     TaskCreate,
+    TaskHandoff,
     TaskOptions,
     WorkflowDefinition,
 )
@@ -812,7 +814,35 @@ class TaskManager:
                 }:
                     raise self._error("invalid_transition", user_id=user_id, status=409)
                 await asyncio.to_thread(self._assert_dispatch_target, user_id, parent, agent_id)
-            fields = {"agent_id": agent_id, "thread_id": None}
+            options = TaskOptions.model_validate_json(row.options_json)
+            if agent_id != row.agent_id:
+                options.handoff = (
+                    TaskHandoff.model_validate(
+                        {
+                            "task_id": row.task_id,
+                            "agent_id": row.agent_id,
+                            "thread_id": row.thread_id,
+                            "state": row.state,
+                            "attempt": row.attempt,
+                            "report": dumps(
+                                report(row.result)
+                                if row.result
+                                else {
+                                    "kind": "excerpt",
+                                    "summary": "(empty)",
+                                    "source_required": True,
+                                }
+                            ),
+                        }
+                    )
+                    if row.thread_id is not None or (row.result and options.handoff is None)
+                    else options.handoff
+                )
+            fields = {
+                "agent_id": agent_id,
+                "thread_id": None if agent_id != row.agent_id else row.thread_id,
+                "options_json": options.model_dump_json(exclude_none=True),
+            }
         else:
             raise self._error("invalid_transition", user_id=user_id, status=409)
         changed = await asyncio.to_thread(
@@ -1042,26 +1072,14 @@ class TaskManager:
                 raise RuntimeError("task conversation was deleted")
             self._bindings[(row.agent_id, row.user_id, thread_id)] = (row.task_id, row.attempt)
             await self._publish(row, notify=False)
-            prompt = row.prompt
+            prompt = brief(row.prompt, source={"task_id": row.task_id})
             dependencies = await asyncio.to_thread(self._repo.dependencies, row)
             if dependencies:
                 # Results are quoted data, never new tool privileges or secret configuration.
-                prompt += "\n\n" + json.dumps(
-                    {
-                        "dependency_results": [
-                            {
-                                "step": dep.step_key,
-                                "task_id": dep.task_id,
-                                "agent_id": dep.agent_id,
-                                "thread_id": dep.thread_id,
-                                "result": dep.result,
-                            }
-                            for dep in dependencies
-                        ]
-                    },
-                    ensure_ascii=False,
-                )
+                prompt += "\n\n" + dependency_packet(dependencies)
             options = TaskOptions.model_validate_json(row.options_json)
+            if options.handoff:
+                prompt += "\n\n" + dumps({"handoff": options.handoff.model_dump()})
             await asyncio.to_thread(
                 self._validate_task_policy, row.user_id, row.agent_id, row.thread_id, options
             )

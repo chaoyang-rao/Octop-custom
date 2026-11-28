@@ -995,11 +995,11 @@ async def test_prepare_team_dispatch_defers_history_to_ephemeral_model_context(
         )
     )
     assert prepared is not None
-    assert getattr(prepared, "message", None) == "survey market"
+    assert json.loads(prepared.message)["brief"]["goal"] == "survey market"
     pair = processor.teams.peek_peer_prompt("child", "thr_parent~child")
     assert pair is not None
     question, dispatch = pair
-    assert question == "survey market"
+    assert json.loads(question)["brief"]["goal"] == "survey market"
     assert "what is the market?" not in dispatch
     assert "I will ask Researcher" not in dispatch
     assert "Team assignment" in dispatch or "团队派工" in dispatch
@@ -1065,7 +1065,7 @@ async def test_prepare_team_dispatch_does_not_duplicate_projected_member_speech(
     pair = processor.teams.peek_peer_prompt("other", "thr_parent~other")
     assert pair is not None
     question, dispatch = pair
-    assert question == "size the TAM"
+    assert json.loads(question)["brief"]["goal"] == "size the TAM"
     assert "TAM is 12B" not in dispatch
     assert "Researcher" not in dispatch
     assert "what is the market?" not in dispatch

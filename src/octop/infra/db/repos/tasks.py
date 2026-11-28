@@ -367,6 +367,7 @@ class TaskRepo:
             "started_at",
             "finished_at",
             "archived",
+            "options_json",
         }:
             raise ValueError("unknown task column")
         if not expected:

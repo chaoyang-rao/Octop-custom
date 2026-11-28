@@ -14,6 +14,7 @@ from octop_harness.middleware.runtime import runtime_config
 
 from octop.i18n import tr
 from octop.infra.agents.teams.primary import current_primary_room, request_user_id
+from octop.infra.tasks.handoff import excerpt
 from octop.infra.tasks.scope import current_coordinator_scope
 from octop.infra.utils.locale import DEFAULT_LOCALE
 
@@ -53,6 +54,7 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
         )
         if task is not None:
             text = tr("tasks.execution_briefing", str(cfg.get("locale") or DEFAULT_LOCALE))
+            text += "\n\n" + tr("tasks.handoff_briefing", str(cfg.get("locale") or DEFAULT_LOCALE))
             dispatch = manager._repos.task_dispatch_repo.get(task.task_id)
             binding = (
                 manager._repos.task_coordination_repo.room(dispatch["scope_id"])
@@ -98,6 +100,7 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
         if primary is None or primary.agent_id != cfg.get("agent_id"):
             return request
         text = tr("tasks.dispatch_briefing", str(cfg.get("locale") or DEFAULT_LOCALE))
+        text += "\n\n" + tr("tasks.handoff_briefing", str(cfg.get("locale") or DEFAULT_LOCALE))
         if room is None and not cfg.get("octop_team_id"):
             text += "\n\n" + tr(
                 "teams.discussion_host_briefing", str(cfg.get("locale") or DEFAULT_LOCALE)
@@ -116,8 +119,8 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
                         {
                             "scope_id": goal["scope_id"],
                             "state": goal["state"],
-                            "original_user_goal": str(goal["goal_text"])[:12000],
-                            "user_followup": str(goal.get("user_input") or "")[:6000],
+                            "original_user_goal": excerpt(str(goal["goal_text"]), 6000),
+                            "user_followup": excerpt(str(goal.get("user_input") or ""), 2000),
                             "original_conversation": {
                                 "agent_id": goal["origin_agent_id"],
                                 "thread_id": goal["origin_thread_id"],
@@ -127,8 +130,9 @@ class TaskDispatchMiddleware(AgentMiddleware[Any, Any]):
                                     key: item[key]
                                     for key in ("task_id", "agent_id", "title", "state", "attempt")
                                 }
-                                for item in members
+                                for item in members[:32]
                             ],
+                            "omitted_tasks_count": max(0, len(members) - 32),
                         },
                         ensure_ascii=False,
                     ).replace("<", "\\u003c")

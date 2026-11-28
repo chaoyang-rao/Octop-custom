@@ -61,6 +61,16 @@ class ThreadMessageRepo:
     def __init__(self, db: DatabasePool) -> None:
         self._db = db
 
+    def latest_user_message_id(self, thread_id: str) -> str:
+        """Stable fallback lineage for a room without a durable task scope."""
+        with self._db.connect() as conn:
+            row = conn.execute(
+                "SELECT message_id FROM thread_messages WHERE thread_id=? "
+                "AND role IN ('human','user') ORDER BY seq DESC LIMIT 1",
+                (thread_id,),
+            ).fetchone()
+        return str(row[0]) if row else ""
+
     def recent_context_candidates(self, thread_id: str) -> list[ThreadMessageRow]:
         """Bounded small AI rows; never load a legacy conversation checkpoint."""
         with self._db.connect() as conn:
