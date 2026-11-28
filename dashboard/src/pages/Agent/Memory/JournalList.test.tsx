@@ -9,9 +9,15 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { createInstance } from "i18next";
+import { I18nextProvider } from "react-i18next";
 
+import en from "../../../locales/en.json";
+import zh from "../../../locales/zh.json";
 import { makeJournal, listJournalResp } from "../../../test/memoryFixtures";
+
+vi.unmock("react-i18next");
 
 vi.mock("../../../api/modules/memoryDashboard", () => ({
   memoryDashboardApi: {
@@ -23,9 +29,25 @@ import { memoryDashboardApi } from "../../../api/modules/memoryDashboard";
 import JournalList from "./JournalList";
 
 const api = vi.mocked(memoryDashboardApi, true);
+const i18n = createInstance();
+void i18n.init({
+  lng: "zh",
+  fallbackLng: "en",
+  resources: { zh: { translation: zh }, en: { translation: en } },
+  interpolation: { escapeValue: false },
+});
 
-beforeEach(() => {
+function renderJournal() {
+  return render(
+    <I18nextProvider i18n={i18n}>
+      <JournalList agentId="ZYWZTD" />
+    </I18nextProvider>,
+  );
+}
+
+beforeEach(async () => {
   vi.clearAllMocks();
+  await i18n.changeLanguage("zh");
 });
 
 describe("<JournalList />", () => {
@@ -52,7 +74,7 @@ describe("<JournalList />", () => {
       ]),
     );
 
-    render(<JournalList agentId="ZYWZTD" />);
+    renderJournal();
 
     await waitFor(() => {
       expect(screen.getByText("采纳")).toBeInTheDocument();
@@ -104,7 +126,7 @@ describe("<JournalList />", () => {
       ]),
     );
 
-    render(<JournalList agentId="ZYWZTD" />);
+    renderJournal();
 
     await waitFor(() =>
       expect(screen.getAllByText("提取运行")).toHaveLength(2),
@@ -117,8 +139,44 @@ describe("<JournalList />", () => {
 
   it("renders empty state on no entries", async () => {
     api.listJournal.mockResolvedValue(listJournalResp([]));
-    render(<JournalList agentId="ZYWZTD" />);
+    renderJournal();
     await waitFor(() => expect(api.listJournal).toHaveBeenCalled());
     expect(document.querySelector(".ant-empty-image")).not.toBeNull();
+  });
+
+  it("shows a retryable error and loads the same page on retry", async () => {
+    api.listJournal
+      .mockRejectedValueOnce(new Error("request failed"))
+      .mockResolvedValueOnce(
+        listJournalResp([makeJournal({ action: "promote" })]),
+      );
+    renderJournal();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "整理记录加载失败",
+    );
+    expect(screen.queryByText("暂无整理记录")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /重\s*试/ }));
+
+    expect(await screen.findByText("采纳")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(api.listJournal).toHaveBeenNthCalledWith(2, "ZYWZTD", {
+      offset: 0,
+      limit: 30,
+    });
+  });
+
+  it("localizes the activity labels and preserves the saved memory text", async () => {
+    await i18n.changeLanguage("en");
+    api.listJournal.mockResolvedValue(
+      listJournalResp([
+        makeJournal({ action: "promote", target_summary: "原始记忆" }),
+      ]),
+    );
+    renderJournal();
+
+    expect(await screen.findByText("Adopt")).toBeInTheDocument();
+    expect(screen.getByText("Filter by type:")).toBeInTheDocument();
+    expect(screen.getByText(/原始记忆/)).toBeInTheDocument();
   });
 });

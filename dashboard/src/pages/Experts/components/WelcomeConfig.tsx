@@ -29,6 +29,7 @@ interface WelcomeConfigProps {
   /** Create-drawer seed; ignored when agentId is set. */
   initialPrompts?: QuickPrompt[];
   disabled?: boolean;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 const defaultQuickPrompt: QuickPrompt = {
@@ -75,12 +76,13 @@ export interface WelcomeConfigRef {
 }
 
 const WelcomeConfig = forwardRef<WelcomeConfigRef, WelcomeConfigProps>(
-  ({ agentId, initialPrompts, disabled = false }, ref) => {
+  ({ agentId, initialPrompts, disabled = false, onDirtyChange }, ref) => {
     const { t, i18n } = useTranslation();
     const [status, setStatus] = useState<WelcomeManifestStatus>(() =>
       agentId ? "loading" : "ready",
     );
     const [dirty, setDirty] = useState(false);
+    useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>(() =>
       agentId ? [] : normalizeQuickPrompts(initialPrompts),
     );

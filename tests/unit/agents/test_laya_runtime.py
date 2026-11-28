@@ -110,8 +110,10 @@ async def test_install_reports_ready_and_keeps_log(tmp_path: Path) -> None:
     runtime = LayaRuntime(
         tmp_path,
         runner=runner,
+        base_python=tmp_path / "python3.12",
         health_check=lambda: started,
         port_busy=lambda: False,
+        free_bytes=lambda: 100 * 1024**3,
         starter=starter,
         health_timeout=1,
         poll_interval=0.01,
@@ -142,6 +144,7 @@ async def test_install_keeps_failure_log_when_port_is_busy(tmp_path: Path) -> No
     runtime = LayaRuntime(
         tmp_path,
         runner=runner,
+        base_python=tmp_path / "python3.12",
         health_check=lambda: False,
         port_busy=lambda: True,
     )
@@ -175,6 +178,7 @@ async def test_install_explains_missing_python(
 async def test_install_reports_disk_shortage_without_downloading(tmp_path: Path) -> None:
     runtime = LayaRuntime(
         tmp_path,
+        base_python=tmp_path / "python3.12",
         health_check=lambda: False,
         port_busy=lambda: False,
         free_bytes=lambda: 1024,

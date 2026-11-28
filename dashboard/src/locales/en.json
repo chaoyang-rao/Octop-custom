@@ -101,7 +101,11 @@
     "tokenCountPreview": "About {{label}} tokens ({{exact}})",
     "back": "Back",
     "comingSoon": "Coming soon",
-    "notImplemented": "This page is under construction."
+    "notImplemented": "This page is under construction.",
+    "unsavedChanges": "You have unsaved changes",
+    "discardChanges": "Discard changes",
+    "keepEditing": "Keep editing",
+    "discardChangesDescription": "If you leave, your unsaved changes will be lost."
   },
   "apiErrors": {
     "AUTH_FAILED": "Authentication failed.",
@@ -4819,7 +4823,17 @@
       "viewSummaryTip": "View this topic's summary",
       "deprecateTooltip": "Deprecate this memory",
       "deprecate": "Deprecate this memory",
-      "actions": "Actions"
+      "actions": "Actions",
+      "aliases": "(Also known as {{aliases}})",
+      "refreshPending": "Pending refresh",
+      "emptyTopic": "There are no memories in this topic",
+      "summaryAliases": "Also known as {{aliases}}",
+      "summaryLoadFailed": "Could not load the topic summary. Please try again.",
+      "summaryEmpty": "This topic does not have a summary yet.",
+      "summaryEmptyHint": "Octop generates a summary in the background after a topic is created or its memories change.",
+      "summaryVersion": "Version {{version}} · Updated {{time}}",
+      "summaryPending": " · Octop will refresh this summary to reflect recent memory changes",
+      "aliasSeparator": ", "
     },
     "create": {
       "title": "New memory",
@@ -4883,7 +4897,37 @@
       "rejectOk": "Discarded",
       "rejectReasonPlaceholder": "Optional reason, e.g. expired / inaccurate / not important",
       "rejectTitle": "Discard this draft",
-      "statusLabel": "Status"
+      "statusLabel": "Status",
+      "status": {
+        "pending": "Pending",
+        "needs_review": "Needs review",
+        "conflict": "Possible conflict"
+      },
+      "allStatuses": "All statuses",
+      "mergedCount": "Merged {{count}} with existing memories",
+      "reviewCount": "{{count}} need review",
+      "promotedCount": "Adopted {{count}} new memories",
+      "actionFailed": "Could not process the memory draft",
+      "guidance": {
+        "draftContent": "Draft content",
+        "suggestion": "Octop’s suggestion",
+        "topic": "Who or what it’s about",
+        "pending": "About pending drafts",
+        "pendingIntro": "Octop extracted these drafts from conversations. They are waiting for automatic review.",
+        "pendingAutomatic": "Octop automatically adopts, merges, flags for review, or discards each draft. No manual action is needed.",
+        "pendingReview": "Switch to Needs review or Possible conflict to see drafts that need a decision.",
+        "review": "About drafts that need review",
+        "reviewAdopt": "→ Add to long-term memory for use in future chats.",
+        "reviewDiscard": "→ The draft stays out of long-term memory. You can leave a reason in the activity log.",
+        "reviewTimeout": "⏰ After 7 days without a decision",
+        "reviewTimeoutDetails": ", Octop adds the draft to long-term memory with lower confidence and priority.",
+        "conflict": "About drafts with possible conflicts",
+        "conflictIntro": "These drafts conflict with existing long-term memories. Review which version is accurate.",
+        "conflictAdopt": "→ Use the draft in long-term memory.",
+        "conflictDiscard": "→ Keep the existing memory.",
+        "conflictTimeout": "⚠️ Conflicting drafts do not expire",
+        "conflictTimeoutDetails": ". They stay in the queue until you review them."
+      }
     },
     "journal": {
       "action": {
@@ -4892,8 +4936,40 @@
         "promote": "Adopt",
         "deprecate": "Deprecate",
         "reject": "Discard",
-        "merge": "Merge"
-      }
+        "merge": "Merge",
+        "extract_run": "Extraction run",
+        "page_regen": "Refresh topic",
+        "capture": "Record conversation",
+        "extract": "Generate draft"
+      },
+      "loadFailed": "Could not load memory activity",
+      "all": "All activity",
+      "filterEdit": "Edit",
+      "filter": "Filter by type:",
+      "empty": "No memory activity yet",
+      "groupCount": "{{count}} entries",
+      "noExtractModel": "Extraction skipped because no model is configured",
+      "extractFailed": "Extraction failed",
+      "noNewEvents": "Scanned {{count}} conversation segments with no new content",
+      "noMemorableContent": "Processed {{count}} conversation segments with nothing to remember",
+      "extractionResult": "Processed {{processed}} conversation segments, generated {{candidates}} drafts, and promoted {{promoted}} memories",
+      "processedConversation": "Processed a conversation",
+      "captured": "Recorded {{count}} conversation segments",
+      "capturedWithDrafts": "Processed {{processed}} conversation segments and generated {{drafts}} memory drafts",
+      "generatedDrafts": "Generated {{count}} memory drafts",
+      "refreshedTopics": "Refreshed {{count}} topic summaries",
+      "capturedAndRefreshed": "Processed {{processed}} conversation segments and refreshed {{topics}} topic summaries",
+      "draftsAndRefreshed": "Generated {{drafts}} memory drafts and refreshed {{topics}} topic summaries",
+      "conversationCount": "📥 {{count}} conversation segments",
+      "draftCount": "📝 {{count}} drafts",
+      "refreshCount": "🔄 {{count}} refreshes",
+      "targetMemory": "a memory",
+      "targetTopic": "a topic",
+      "targetDraft": "a draft",
+      "linkedTopic": "Linked to existing topic “{{topic}}”",
+      "createdTopic": "Created topic “{{topic}}”",
+      "noReplacement": "Deprecated without a replacement",
+      "mergedDuplicate": "Merged as a semantic duplicate"
     },
     "confidence": {
       "high": "High confidence",
@@ -4908,10 +4984,24 @@
       "person": "Person",
       "place": "Place",
       "project": "Project",
-      "tool": "Tool"
+      "tool": "Tool",
+      "user": "User"
     },
     "episodes": {
-      "disclaimer": "This diary keeps the emotions and little stories from your time with Octop. It is not quoted in regular chats — it only helps Octop care for you better and feeds the weekly / monthly recaps."
+      "disclaimer": "This diary keeps the emotions and little stories from your time with Octop. It is not quoted in regular chats — it only helps Octop care for you better and feeds the weekly / monthly recaps.",
+      "intensity": "Intensity {{value}}",
+      "summary": "Summary",
+      "people": "People involved",
+      "occurredAt": "Occurred at",
+      "emotion": {
+        "happy": "Happy",
+        "sad": "Sad",
+        "angry": "Angry",
+        "surprised": "Surprised",
+        "anxious": "Anxious",
+        "calm": "Calm",
+        "other": "Unclassified"
+      }
     },
     "importance": {
       "high": "Very important",
@@ -4928,7 +5018,8 @@
     },
     "list": {
       "importanceMin": "Importance at least",
-      "kind": "Type"
+      "kind": "Type",
+      "allImportance": "All levels"
     },
     "migrate": {
       "alreadyAdopted": "Already migrated, skipped",
@@ -4968,7 +5059,8 @@
       "targetHostLabel": "Target host",
       "targetNs": "Target namespace: {{ns}}",
       "willApply": "Will write: {{n}} entries",
-      "importDone": "Import finished"
+      "importDone": "Import finished",
+      "localOctop": "Octop (local)"
     },
     "terminal": {
       "aboutMe": "About you",
@@ -4988,7 +5080,23 @@
     "time": {
       "daysAgo": "{{n}} days ago",
       "today": "Today",
-      "yesterday": "Yesterday"
+      "yesterday": "Yesterday",
+      "minutesAgo": "{{count}} minutes ago",
+      "minutesAgo_one": "{{count}} minute ago",
+      "minutesAgo_other": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hours ago",
+      "hoursAgo_one": "{{count}} hour ago",
+      "hoursAgo_other": "{{count}} hours ago",
+      "relativeDaysAgo": "{{count}} days ago",
+      "relativeDaysAgo_one": "{{count}} day ago",
+      "relativeDaysAgo_other": "{{count}} days ago",
+      "monthsAgo": "{{count}} months ago",
+      "monthsAgo_one": "{{count}} month ago",
+      "monthsAgo_other": "{{count}} months ago",
+      "yearsAgo": "{{count}} years ago",
+      "yearsAgo_one": "{{count}} year ago",
+      "yearsAgo_other": "{{count}} years ago",
+      "justNow": "Just now"
     },
     "storage": {
       "title": "Storage and maintenance",
@@ -5148,6 +5256,17 @@
       "details": "Manual documents take priority. {{count}} duplicate memories are omitted from recall when the session snapshot matches. Confirmed conflicts become review candidates; old facts are retired and source evidence is preserved. Review uses the saved USER.md and MEMORY.md.",
       "openCandidates": "Review candidates",
       "uncertain": "Some comparisons are uncertain. Original memories are unchanged. Clarify the manual documents and retry."
+    },
+    "detail": {
+      "evidence": "Supporting quote",
+      "importanceLabel": "Importance: {{value}}",
+      "forgotten": "Forgotten",
+      "active": "Active",
+      "confidence": "Confidence",
+      "keywords": "Related keywords",
+      "recordedAt": "First recorded {{time}}",
+      "occurredAt": " · Occurred {{time}}",
+      "confidenceLabel": "Confidence: {{value}}"
     }
   },
   "personalization": {

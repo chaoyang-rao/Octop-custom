@@ -1,6 +1,13 @@
 import { randomAvatar, avatarUi } from "../../../components/expertPortrait";
 // dashboard/src/pages/Experts/components/EditAgentDrawer.tsx
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -34,6 +41,7 @@ import { isAgentChatReady } from "../../../utils/agentError";
 import { useAgentFormResources } from "../../../hooks/useAgentFormResources";
 import { octopAgentsApi } from "../../../api/modules/octopAgents";
 import { useAgent, type OctopAgent } from "../../../context/AgentContext";
+import { useUnsavedChanges } from "../../../context/UnsavedChangesContext";
 import {
   CONVERSATION_MODES,
   parseConversationMode,
@@ -187,6 +195,7 @@ interface EditAgentDrawerBodyProps {
   onSaved: EditAgentDrawerProps["onSaved"];
   onSaveReady: (save: () => Promise<void>) => void;
   onSavingChange: (saving: boolean) => void;
+  onDirtyChange: (dirty: boolean) => void;
 }
 
 /**
@@ -237,6 +246,7 @@ function EditAgentDrawerBody({
   onSaved,
   onSaveReady,
   onSavingChange,
+  onDirtyChange,
 }: EditAgentDrawerBodyProps) {
   const { t } = useTranslation();
   const { modal, message } = App.useApp();
@@ -263,6 +273,14 @@ function EditAgentDrawerBody({
   const [loading, setLoading] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState<{
+    form: string;
+    color: string;
+    mappings: string;
+    visibility: ResourceVisibilityMode;
+    groupIds: string;
+  } | null>(null);
+  const [welcomeDirty, setWelcomeDirty] = useState(false);
   const [expertVisibility, setExpertVisibility] =
     useState<ResourceVisibilityMode>(agent.is_shared ? "all" : "owner");
   const [expertGroupIds, setExpertGroupIds] = useState<string[]>([]);
@@ -278,6 +296,21 @@ function EditAgentDrawerBody({
   const [subagentCatalogOpen, setSubagentCatalogOpen] = useState(false);
   const [skillCatalogOpen, setSkillCatalogOpen] = useState(false);
   const welcomeConfigRef = useRef<WelcomeConfigRef>(null);
+  const watchedValues = Form.useWatch([], { form, preserve: true });
+  const dirty =
+    welcomeDirty ||
+    (saved !== null &&
+      ((watchedValues !== undefined &&
+        JSON.stringify(watchedValues) !== saved.form) ||
+        colorPalette !== saved.color ||
+        JSON.stringify(pathMappings) !== saved.mappings ||
+        expertVisibility !== saved.visibility ||
+        JSON.stringify(expertGroupIds) !== saved.groupIds));
+  useLayoutEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
+  const dirtyRef = useRef(dirty);
+  useLayoutEffect(() => {
+    dirtyRef.current = dirty;
+  }, [dirty]);
 
   const installedSubagentSlugs = useMemo(
     () => new Set(agentSubagents.map((s) => s.slug)),
@@ -298,6 +331,7 @@ function EditAgentDrawerBody({
   });
 
   useEffect(() => {
+    if (dirtyRef.current) return;
     let cancelled = false;
     setLoading(true);
     setPathMappings([]);
@@ -355,6 +389,15 @@ function EditAgentDrawerBody({
         setExpertGroupIds(
           nextVisibility === "groups" ? ag.group_ids ?? [] : [],
         );
+        setSaved({
+          form: JSON.stringify(form.getFieldsValue(true)),
+          color: parseStoredColor(colorFromRow) ?? DEFAULT_PALETTE,
+          mappings: JSON.stringify(parsedBackend.pathMappings),
+          visibility: nextVisibility,
+          groupIds: JSON.stringify(
+            nextVisibility === "groups" ? ag.group_ids ?? [] : [],
+          ),
+        });
         setLoading(false);
 
         if (isAgentChatReady(agent.state)) {
@@ -981,6 +1024,7 @@ function EditAgentDrawerBody({
                         <WelcomeConfig
                           ref={welcomeConfigRef}
                           agentId={agent.agent_id}
+                          onDirtyChange={setWelcomeDirty}
                         />
                       </div>
                     ),
@@ -1462,6 +1506,11 @@ export default function EditAgentDrawer({
   const { t } = useTranslation();
   const saveRef = useRef<(() => Promise<void>) | null>(null);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const confirmDiscard = useUnsavedChanges(open && dirty, onClose);
+  const handleClose = () => {
+    if (!saving) confirmDiscard(onClose);
+  };
 
   const handleSaveReady = useCallback((save: () => Promise<void>) => {
     saveRef.current = save;
@@ -1472,11 +1521,11 @@ export default function EditAgentDrawer({
       open={open}
       title={<EditExpertDrawerTitle agent={agent} />}
       width={520}
-      onClose={onClose}
+      onClose={handleClose}
       destroyOnHidden
       footer={
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className={styles.drawerCancelBtn} onClick={onClose}>
+          <button className={styles.drawerCancelBtn} onClick={handleClose}>
             {t("common.cancel")}
           </button>
           <button
@@ -1491,11 +1540,13 @@ export default function EditAgentDrawer({
     >
       {open && agent ? (
         <EditAgentDrawerBody
+          key={agent.agent_id}
           agent={agent}
           onClose={onClose}
           onSaved={onSaved}
           onSaveReady={handleSaveReady}
           onSavingChange={setSaving}
+          onDirtyChange={setDirty}
         />
       ) : null}
     </Drawer>

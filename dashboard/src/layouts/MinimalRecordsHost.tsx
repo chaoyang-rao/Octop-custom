@@ -28,7 +28,7 @@ export default function MinimalRecordsHost() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { agents, activeAgentId, setActiveAgent } = useAgent();
+  const { agents, activeAgentId } = useAgent();
 
   const { agentId: pathAgentId, threadId: pathThreadId } = useMemo(
     () => parseChatPath(location.pathname),
@@ -46,28 +46,26 @@ export default function MinimalRecordsHost() {
     [agents, resolvedAgentId],
   );
 
+  // Chat sets the active expert from its route after navigation succeeds.
   const handleSelect = useCallback(
     (sessionId: string, agentId: string) => {
-      setActiveAgent(agentId);
       navigate(`/chat/${agentId}/${sessionId}`);
     },
-    [navigate, setActiveAgent],
+    [navigate],
   );
 
   const handleAgentSelect = useCallback(
     (agentId: string) => {
-      setActiveAgent(agentId);
       navigate(`/chat/${agentId}`);
     },
-    [navigate, setActiveAgent],
+    [navigate],
   );
 
   const handleNewChat = useCallback(
     (agentId: string) => {
-      setActiveAgent(agentId);
       navigate(`/chat/${agentId}`, { state: { newChat: true } });
     },
-    [navigate, setActiveAgent],
+    [navigate],
   );
 
   const handleDeleteActive = useCallback(
@@ -119,13 +117,12 @@ export default function MinimalRecordsHost() {
         const created = await octopThreadsApi.fork(agent, threadId, {
           assistant_turns_from_end: 1,
         });
-        setActiveAgent(agent);
         navigate(`/chat/${agent}/${created.thread_id}`);
       } catch (error) {
         antMessage.error(apiErrorMessage(error, t("chat.forkFailed"), t));
       }
     },
-    [navigate, resolvedAgentId, setActiveAgent, t],
+    [navigate, resolvedAgentId, t],
   );
 
   return (

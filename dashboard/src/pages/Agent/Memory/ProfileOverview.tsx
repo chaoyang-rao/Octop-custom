@@ -531,7 +531,9 @@ function ImportanceStars({ importance, t }: { importance: string; t: TFn }) {
       : t("memory.importance.low", "一般");
   return (
     <span
-      title={`${t("memory.importance.title", "重要程度")}：${label}`}
+      title={t("memory.detail.importanceLabel", "重要程度：{{value}}", {
+        value: label,
+      })}
       style={{ color: "#faad14", fontSize: 13, letterSpacing: 1 }}
     >
       {"★".repeat(n)}

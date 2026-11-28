@@ -1,5 +1,6 @@
 import type { DesktopChromeStyle } from "../../utils/desktopChrome";
 import { emitDesktopWindowAction } from "../../utils/desktopChrome";
+import { useConfirmDiscard } from "../../context/UnsavedChangesContext";
 import { Minus, Square, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import cx from "classnames";
@@ -16,6 +17,9 @@ export default function DesktopWindowControls({
   const minimise = t("desktopChrome.minimize", "Minimize");
   const maximise = t("desktopChrome.maximize", "Maximize");
   const close = t("desktopChrome.close", "Close");
+  const confirmDiscard = useConfirmDiscard();
+  const closeWindow = () =>
+    confirmDiscard(() => emitDesktopWindowAction("close"));
 
   if (chrome === "mac") {
     return (
@@ -28,7 +32,7 @@ export default function DesktopWindowControls({
           type="button"
           className={cx(styles.light, styles.close)}
           aria-label={close}
-          onClick={() => emitDesktopWindowAction("close")}
+          onClick={closeWindow}
         >
           <span className={styles.glyph} aria-hidden>
             ×
@@ -84,7 +88,7 @@ export default function DesktopWindowControls({
         type="button"
         className={cx(styles.winBtn, styles.winClose)}
         aria-label={close}
-        onClick={() => emitDesktopWindowAction("close")}
+        onClick={closeWindow}
       >
         <X size={12} strokeWidth={2} aria-hidden />
       </button>

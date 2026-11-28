@@ -101,7 +101,11 @@
     "tokenCountPreview": "约 {{label}} tokens（{{exact}}）",
     "back": "返回",
     "comingSoon": "即将上线",
-    "notImplemented": "页面建设中。"
+    "notImplemented": "页面建设中。",
+    "unsavedChanges": "有未保存的更改",
+    "discardChanges": "放弃更改",
+    "keepEditing": "继续编辑",
+    "discardChangesDescription": "离开后，这次未保存的更改将丢失。"
   },
   "apiErrors": {
     "AUTH_FAILED": "认证失败。",
@@ -4762,7 +4766,8 @@
       "concept": "概念",
       "organization": "组织",
       "event": "事件",
-      "other": "其它"
+      "other": "其它",
+      "user": "用户"
     },
     "importance": {
       "title": "重要程度",
@@ -4772,7 +4777,8 @@
     },
     "list": {
       "kind": "类型",
-      "importanceMin": "重要程度不低于"
+      "importanceMin": "重要程度不低于",
+      "allImportance": "全部"
     },
     "tree": {
       "title": "按主题浏览",
@@ -4783,7 +4789,17 @@
       "viewSummaryTip": "查看这个主题的摘要",
       "deprecateTooltip": "弃用这条记忆",
       "deprecate": "弃用这条记忆",
-      "actions": "操作"
+      "actions": "操作",
+      "aliases": "(也叫 {{aliases}})",
+      "refreshPending": "待刷新",
+      "emptyTopic": "（该主题下暂无记忆）",
+      "summaryAliases": "也叫 {{aliases}}",
+      "summaryLoadFailed": "摘要加载失败，请稍后重试。",
+      "summaryEmpty": "这个主题的摘要还没有生成。",
+      "summaryEmptyHint": "新建主题或有新记忆改动后，系统会在后台自动整理出一份长文摘要，稍后回来即可查看。",
+      "summaryVersion": "版本 v{{version}} · 更新于 {{time}}",
+      "summaryPending": " · 有新记忆改动，后台稍后会自动刷新这份摘要",
+      "aliasSeparator": "、"
     },
     "create": {
       "title": "新建记忆",
@@ -4836,7 +4852,20 @@
     "entitySummary": "主题摘要",
     "episodeDetail": "情绪日记详情",
     "episodes": {
-      "disclaimer": "这里记录你与 Octop 相处中的情绪和小故事。它不会用于常规对话引用，只会帮 Octop 更好地关心你，并用于周 / 月小结。"
+      "disclaimer": "这里记录你与 Octop 相处中的情绪和小故事。它不会用于常规对话引用，只会帮 Octop 更好地关心你，并用于周 / 月小结。",
+      "intensity": "强度 {{value}}",
+      "summary": "摘要",
+      "people": "涉及的人",
+      "occurredAt": "发生于",
+      "emotion": {
+        "happy": "开心",
+        "sad": "难过",
+        "angry": "生气",
+        "surprised": "惊讶",
+        "anxious": "焦虑",
+        "calm": "平静",
+        "other": "未分类"
+      }
     },
     "candidates": {
       "promoteOk": "已采纳",
@@ -4851,7 +4880,37 @@
       "rejectTitle": "忽略这条草稿",
       "confirmReject": "确认忽略",
       "rejectHint": "忽略后这条记忆不会进入长期记忆。可选择填写原因，便于日后回顾。",
-      "rejectReasonPlaceholder": "原因可选，例如：已过期 / 记录有误 / 不重要"
+      "rejectReasonPlaceholder": "原因可选，例如：已过期 / 记录有误 / 不重要",
+      "status": {
+        "pending": "待处理",
+        "needs_review": "待复核",
+        "conflict": "可能冲突"
+      },
+      "allStatuses": "全部",
+      "mergedCount": "与现有记忆合并 {{count}} 条",
+      "reviewCount": "需复核 {{count}} 条",
+      "promotedCount": "新增采纳 {{count}} 条",
+      "actionFailed": "操作失败",
+      "guidance": {
+        "draftContent": "草稿内容",
+        "suggestion": "Octop 的建议",
+        "topic": "关于谁 / 什么",
+        "pending": "关于「待处理」草稿",
+        "pendingIntro": "这些草稿由 Octop 从对话中自动提取，正在等待系统规则判断。",
+        "pendingAutomatic": "系统会自动采纳、合并、标记为待复核或丢弃这些草稿，无需手动干预。",
+        "pendingReview": "如需提前处理，可切换到「待复核」或「可能冲突」状态查看需要你决策的草稿。",
+        "review": "关于「待复核」草稿",
+        "reviewAdopt": "→ 立即进入长期记忆，下次对话优先使用。",
+        "reviewDiscard": "→ 不会进入长期记忆，可附上原因（保存在操作日志中，便于日后回顾）。",
+        "reviewTimeout": "⏰ 若 7 天内未处理",
+        "reviewTimeoutDetails": "，系统会自动将其加入长期记忆，但置信度较低，排序靠后，不影响主要对话。",
+        "conflict": "关于「可能冲突」草稿",
+        "conflictIntro": "这些草稿与已有长期记忆存在矛盾，系统无法自动裁决，需要你来决定哪个是准确的。",
+        "conflictAdopt": "→ 以这条草稿为准，进入长期记忆。",
+        "conflictDiscard": "→ 保留原有记忆不变。",
+        "conflictTimeout": "⚠️ 冲突草稿没有自动超时",
+        "conflictTimeoutDetails": "，不处理会一直停留在此队列。"
+      }
     },
     "journal": {
       "action": {
@@ -4860,8 +4919,40 @@
         "promote": "采纳",
         "deprecate": "弃用",
         "reject": "忽略",
-        "merge": "合并"
-      }
+        "merge": "合并",
+        "extract_run": "提取运行",
+        "page_regen": "刷新主题",
+        "capture": "记录对话",
+        "extract": "生成草稿"
+      },
+      "loadFailed": "整理记录加载失败",
+      "all": "全部记录",
+      "filterEdit": "编辑",
+      "filter": "筛选类型:",
+      "empty": "暂无整理记录",
+      "groupCount": "{{count}} 项",
+      "noExtractModel": "未配置提取模型，本次未运行",
+      "extractFailed": "本次提取失败",
+      "noNewEvents": "扫描 {{count}} 段对话，无新增内容",
+      "noMemorableContent": "处理 {{count}} 段对话，未发现可记忆的内容",
+      "extractionResult": "处理 {{processed}} 段对话，生成 {{candidates}} 条草稿，晋升 {{promoted}} 条记忆",
+      "processedConversation": "整理了一段对话",
+      "captured": "记录了 {{count}} 段对话",
+      "capturedWithDrafts": "处理了 {{processed}} 段对话，生成 {{drafts}} 条记忆草稿",
+      "generatedDrafts": "生成了 {{count}} 条记忆草稿",
+      "refreshedTopics": "刷新了 {{count}} 个主题摘要",
+      "capturedAndRefreshed": "处理了 {{processed}} 段对话，并刷新了 {{topics}} 个主题摘要",
+      "draftsAndRefreshed": "生成了 {{drafts}} 条记忆草稿，并刷新了 {{topics}} 个主题摘要",
+      "conversationCount": "📥 {{count}} 段对话",
+      "draftCount": "📝 {{count}} 条草稿",
+      "refreshCount": "🔄 {{count}} 次刷新",
+      "targetMemory": "一条记忆",
+      "targetTopic": "一个主题",
+      "targetDraft": "一条草稿",
+      "linkedTopic": "关联到已有主题「{{topic}}」",
+      "createdTopic": "新建主题「{{topic}}」",
+      "noReplacement": "弃用（无替代记忆）",
+      "mergedDuplicate": "语义重复，已被合并"
     },
     "vs": {
       "title": "记忆加强",
@@ -4955,7 +5046,8 @@
       "runDoctor": "开始检查",
       "doctorAllPassed": "全部检查通过 ✓",
       "doctorFailed": "部分检查未通过，请查看详情",
-      "rowCountDiff": "行数差异："
+      "rowCountDiff": "行数差异：",
+      "localOctop": "octop（本机）"
     },
     "pipeline": {
       "title": "记忆流水线",
@@ -4988,7 +5080,23 @@
     "time": {
       "daysAgo": "{{n}} 天前",
       "today": "今天",
-      "yesterday": "昨天"
+      "yesterday": "昨天",
+      "minutesAgo": "{{count}} 分钟前",
+      "minutesAgo_one": "{{count}} 分钟前",
+      "minutesAgo_other": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前",
+      "hoursAgo_one": "{{count}} 小时前",
+      "hoursAgo_other": "{{count}} 小时前",
+      "relativeDaysAgo": "{{count}} 天前",
+      "relativeDaysAgo_one": "{{count}} 天前",
+      "relativeDaysAgo_other": "{{count}} 天前",
+      "monthsAgo": "{{count}} 个月前",
+      "monthsAgo_one": "{{count}} 个月前",
+      "monthsAgo_other": "{{count}} 个月前",
+      "yearsAgo": "{{count}} 年前",
+      "yearsAgo_one": "{{count}} 年前",
+      "yearsAgo_other": "{{count}} 年前",
+      "justNow": "刚刚"
     },
     "storage": {
       "title": "存储与维护",
@@ -5148,6 +5256,17 @@
       "details": "手动文档优先。相同档案快照中的 {{count}} 条重复记忆不再重复注入；已确认的冲突转为候选，旧记忆停用并保留原始证据。核对基于已保存的 USER.md 和 MEMORY.md。",
       "openCandidates": "查看候选",
       "uncertain": "部分信息无法确定，原记忆保持不变。请补充明确档案后重新检查。"
+    },
+    "detail": {
+      "evidence": "原话依据",
+      "importanceLabel": "重要程度：{{value}}",
+      "forgotten": "已忘记",
+      "active": "在用",
+      "confidence": "可信度",
+      "keywords": "关联关键词",
+      "recordedAt": "首次记录于 {{time}}",
+      "occurredAt": " · 发生于 {{time}}",
+      "confidenceLabel": "可信度：{{value}}"
     }
   },
   "personalization": {

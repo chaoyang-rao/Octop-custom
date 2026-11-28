@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.6"
+        default: "custom-1.0.3b3-20261128.7"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.6' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.7' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -88,6 +88,8 @@ jobs:
         working-directory: dashboard
         run: >-
           npx vitest run
+          src/pages/Agent/Config/index.test.tsx
+          src/pages/Agent/Memory/JournalList.test.tsx
           src/pages/Agent/Channels/ChannelsPanel.test.tsx
           src/pages/Agent/Channels/components/constants.test.ts
           src/pages/Agent/Connectors/ConnectorCard.test.tsx
@@ -489,7 +491,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112806 / 哆啦 0.10.9。浅色聊天使用黑色发送按钮，聊天主面板左侧采用柔和圆角，模型选择移至右侧发送按钮前。修复团队多轮复核结束后仍显示正在回答的问题，并加入项目/任务线隔离及短交接，保留原文和检查点。保留此前已发布的导航滚动和头像动效改进。
+          Octop Custom 112807 / 哆啦 0.10.9。专家编辑、专家文件和 Agent 配置新增未保存确认。记忆日志加载失败时可用同一筛选和页码重试。记忆界面补齐英文提示，保留记忆原文。桌宠入口可在侧栏布局中保存。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

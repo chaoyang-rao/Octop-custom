@@ -41,6 +41,7 @@ describe("sidebarNavLayout", () => {
       "tasks",
       "task-queue",
       "token-usage",
+      "companion",
     ]);
     expect(editor.groups.map((group) => group.id)).toEqual([
       "settings",

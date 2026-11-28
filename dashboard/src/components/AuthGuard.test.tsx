@@ -1,8 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import AuthGuard from "./AuthGuard";
 
 vi.mock("../api/modules/auth", () => ({
@@ -76,33 +75,25 @@ describe("AuthGuard offline boot", () => {
       locale: "zh",
     } as never);
 
-    function NavProbe() {
-      const navigate = useNavigate();
-      useEffect(() => {
-        navigate("/b");
-      }, [navigate]);
-      return <div>protected-shell</div>;
-    }
-
     render(
       <MemoryRouter initialEntries={["/a"]}>
         <AuthGuard>
           <Routes>
-            <Route path="/a" element={<NavProbe />} />
+            <Route
+              path="/a"
+              element={<Link to="/b">Open protected page</Link>}
+            />
             <Route path="/b" element={<div>protected-shell</div>} />
           </Routes>
         </AuthGuard>
       </MemoryRouter>,
     );
 
+    const link = await screen.findByRole("link", {
+      name: "Open protected page",
+    });
+    await userEvent.setup().click(link);
     expect(await screen.findByText("protected-shell")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(authApi.getAuthStatus).toHaveBeenCalledTimes(1);
-    });
-    // Give route-driven navigate identity churn a tick; gate must not re-run.
-    await waitFor(() => {
-      expect(screen.getByText("protected-shell")).toBeInTheDocument();
-    });
     expect(authApi.getAuthStatus).toHaveBeenCalledTimes(1);
     expect(authApi.me).toHaveBeenCalledTimes(1);
   });

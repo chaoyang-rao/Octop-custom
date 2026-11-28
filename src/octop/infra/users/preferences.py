@@ -27,6 +27,7 @@ SIDEBAR_NAV_KEYS = frozenset(
         "tasks",
         "task-queue",
         "token-usage",
+        "companion",
         "personalization",
         "channels",
         "connectors",
