@@ -188,6 +188,9 @@ function bodyPoints(shape) {
   }
   return out;
 }
+const outlines = Object.fromEntries(
+  SHAPES.map(({ id }) => [id, bodyPoints(id)]),
+);
 const restPose = Object.freeze({
   x: 0,
   y: 0,
@@ -200,10 +203,13 @@ const restPose = Object.freeze({
   marks: 0,
   scratch: 0,
 });
+const neutralFrame = Object.freeze({ time: 0, pose: restPose });
+const transitionSeconds = 0.24;
+const completionSeconds = 1.48;
 const beat = (t, start, end) =>
   t <= start || t >= end
     ? 0
-    : Math.sin((Math.PI * (t - start)) / (end - start));
+    : Math.sin((Math.PI * (t - start)) / (end - start)) ** 2;
 const hold = (t, start, end, edge = 0.26) =>
   smooth((t - start) / edge) * smooth((end - t) / edge);
 
@@ -273,7 +279,7 @@ export function avatarPose(state, seconds) {
     };
   }
   if (state === "done") {
-    if (t >= 1.48) return restPose;
+    if (t >= completionSeconds) return restPose;
     const prep = beat(t, 0, 0.32),
       rise = beat(t, 0.26, 0.98);
     const land = beat(t, 0.94, 1.18),
@@ -293,17 +299,18 @@ export function avatarPose(state, seconds) {
   return restPose;
 }
 
-function spin(x, y, angle) {
-  const cos = Math.cos(angle),
-    sin = Math.sin(angle);
-  return [x * cos - y * sin, x * sin + y * cos];
-}
+const ellipseDirections = Array.from({ length: 40 }, (_, i) => {
+  const angle = (i * TAU) / 40;
+  return [Math.cos(angle), Math.sin(angle)];
+});
 
 function ellipsePoints(cx, cy, rx, ry, angle) {
-  return Array.from({ length: 40 }, (_, i) => {
-    const a = (i * TAU) / 40;
-    const [x, y] = spin(Math.cos(a) * rx, Math.sin(a) * ry, angle);
-    return [cx + x, cy + y];
+  const cos = Math.cos(angle),
+    sin = Math.sin(angle);
+  return ellipseDirections.map(([dx, dy]) => {
+    const x = dx * rx,
+      y = dy * ry;
+    return [cx + (x * cos - y * sin), cy + (x * sin + y * cos)];
   });
 }
 
@@ -509,10 +516,7 @@ export function avatarFrame(
         ];
       });
   const slim = shape === "blob" ? 1 : 0.92;
-  const body = tx(bodyPoints(shape)).map(([x, y]) => [
-    256 + (x - 256) * slim,
-    y,
-  ]);
+  const body = tx(outlines[shape]).map(([x, y]) => [256 + (x - 256) * slim, y]);
   const centers = tx([
     [faceX - 50 + gx, faceY + gy - smile * 0.5],
     [faceX + 50 + gx, faceY - 3 + gy - smile * 0.5],
@@ -535,13 +539,16 @@ export function avatarFrame(
       eyeAngle,
     ),
   );
+  const tilt = (pose.tilt * Math.PI) / 180;
+  const tiltCos = Math.cos(tilt),
+    tiltSin = Math.sin(tilt);
   const project = ([x, y]) => {
-    [x, y] = spin(
-      (x - 256) * pose.width,
-      (y - 264) * pose.height,
-      (pose.tilt * Math.PI) / 180,
-    );
-    return [x + 256 + pose.x, y + 264 + pose.y];
+    const dx = (x - 256) * pose.width;
+    const dy = (y - 264) * pose.height;
+    return [
+      dx * tiltCos - dy * tiltSin + 256 + pose.x,
+      dx * tiltSin + dy * tiltCos + 264 + pose.y,
+    ];
   };
   const moved = body.map(project);
   const [left, top, width, height] = VIEWBOXES[shape].split(" ").map(Number);
@@ -652,17 +659,13 @@ export function bubbleStyle(color = "ink") {
 
 export function createExpertAvatars({ React }) {
   const h = React.createElement;
-  // One clock for all visible avatars, capped at 25 fps. Unmounted/hidden views
-  // unsubscribe; reduced-motion users receive the exact static initial pose.
+  // Drive only visible, active portraits at the display cadence.
   const listeners = new Set();
-  let raf = 0,
-    last = 0;
+  let raf = 0;
   function tick(now) {
-    if (now - last >= 40) {
-      last = now;
-      for (const cb of listeners) cb(now / 1000);
-    }
-    raf = listeners.size && !document.hidden ? requestAnimationFrame(tick) : 0;
+    raf = 0;
+    for (const draw of listeners) draw(now / 1000);
+    start();
   }
   function start() {
     if (!raf && listeners.size && !document.hidden)
@@ -695,41 +698,93 @@ export function createExpertAvatars({ React }) {
     static: still = false,
     title,
     motion = "idle",
+    preview = false,
     ...rest
   }) {
-    const initialFrame = React.useRef({ time: 0, pose: restPose });
-    const [animated, setAnimated] = React.useState(initialFrame.current),
-      currentPose = React.useRef(restPose),
-      ref = React.useRef(null),
-      id = React.useId().replace(/:/g, "");
+    const frame = React.useRef(neutralFrame);
+    const ref = React.useRef(null);
+    const id = React.useId().replace(/:/g, "");
+    const f = React.useMemo(() => avatarFrame(shape, color, 0), [shape, color]);
+    const clip = `oa-${id}`;
+
     React.useEffect(() => {
+      const from = frame.current;
+      if (motion === "idle" && !preview && from === neutralFrame) return;
+      const svg = ref.current;
+      const body = svg.querySelector("[data-avatar-body]");
+      const mask = svg.querySelector("clipPath path");
+      const eyes = svg.querySelectorAll("[data-avatar-eye]");
+      const strokes = svg.querySelectorAll("[data-avatar-stroke]");
       const media = window.matchMedia("(prefers-reduced-motion: reduce)");
       const started = performance.now() / 1000;
-      const from = currentPose.current;
-      const frameAt = (time) => {
-        const age = Math.max(0, time - started);
+      const duration =
+        motion === "done"
+          ? completionSeconds
+          : motion === "idle" && !preview
+          ? 0
+          : Infinity;
+      let stop = () => {};
+      let visible = true;
+      let finished = false;
+
+      // Keep React out of the per-frame path. Update the same SVG nodes in place.
+      const paint = (next) => {
+        const outline = pathData(next.body);
+        body.setAttribute("d", outline);
+        mask.setAttribute("d", outline);
+        eyes.forEach((eye, i) => eye.setAttribute("d", pathData(next.eyes[i])));
+        strokes.forEach((node, i) => {
+          const stroke = next.strokes[i];
+          if (stroke) node.setAttribute("d", stroke.d);
+          node.setAttribute("opacity", stroke?.opacity ?? 0);
+        });
+      };
+      const reset = () => {
+        frame.current = neutralFrame;
+        paint(f);
+      };
+      const draw = (now) => {
+        const age = Math.max(0, now - started);
+        if (age >= duration + transitionSeconds) {
+          finished = true;
+          reset();
+          stop();
+          return;
+        }
         const target = avatarPose(motion, age);
+        const mix = smooth(age / transitionSeconds);
         const pose =
-          age >= 0.24 || from === target
+          mix === 1 || from.pose === target
             ? target
             : Object.fromEntries(
                 Object.keys(restPose).map((key) => [
                   key,
-                  lerp(from[key], target[key], smooth(age / 0.24)),
+                  lerp(from.pose[key], target[key], mix),
                 ]),
               );
-        currentPose.current = pose;
-        setAnimated({ time, pose });
+        // Ease to the nearest boundary of the six-second ambient loop.
+        const phase = (from.time + Math.min(age, duration)) % 6;
+        const time =
+          age <= duration
+            ? phase
+            : lerp(
+                phase,
+                phase > 3 ? 6 : 0,
+                smooth((age - duration) / transitionSeconds),
+              );
+        frame.current = { time, pose };
+        paint(avatarFrame(shape, color, time, pose));
       };
-      let off = () => {},
-        visible = true;
       const update = () => {
-        off();
-        off = () => {};
-        if (!still && !media.matches && visible) off = subscribe(frameAt);
-        else {
-          currentPose.current = restPose;
-          setAnimated(initialFrame.current);
+        stop();
+        stop = () => {};
+        if (still || media.matches) reset();
+        else if (
+          visible &&
+          !finished &&
+          (duration > 0 || frame.current !== neutralFrame)
+        ) {
+          stop = subscribe(draw);
         }
       };
       const observer =
@@ -739,17 +794,16 @@ export function createExpertAvatars({ React }) {
               update();
             })
           : null;
-      if (ref.current) observer?.observe(ref.current);
+      observer?.observe(svg);
       media.addEventListener("change", update);
       update();
       return () => {
-        off();
+        stop();
         observer?.disconnect();
         media.removeEventListener("change", update);
       };
-    }, [shape, still, motion]);
-    const f = avatarFrame(shape, color, animated.time, animated.pose),
-      clip = `oa-${id}`;
+    }, [shape, color, f, still, motion, preview]);
+
     const name = SHAPES.find((x) => x.id === f.shape)?.name || "圆形";
     return h(
       "svg",
@@ -804,15 +858,15 @@ export function createExpertAvatars({ React }) {
           clipPath: `url(#${clip})`,
         }),
       ),
-      ...f.strokes.map(({ d, opacity }, i) =>
+      ...[0, 1].map((i) =>
         h("path", {
           key: `stroke${i}`,
-          d,
+          "data-avatar-stroke": "",
           fill: "none",
           stroke: f.base,
           strokeWidth: 8,
           strokeLinecap: "round",
-          opacity,
+          opacity: 0,
         }),
       ),
     );
@@ -851,7 +905,12 @@ export function createExpertAvatars({ React }) {
               title: `${s.name} · ${s.mood} · ${s.motion}`,
               onClick: () => onShapeChange?.(s.id),
             },
-            renderAvatar({ shape: s.id, color: selectedColor.id, size: 80 }),
+            renderAvatar({
+              shape: s.id,
+              color: selectedColor.id,
+              size: 80,
+              preview: true,
+            }),
             h("span", { className: "oa-shape-name" }, s.name),
             h("span", { className: "oa-shape-mood" }, s.mood),
           ),

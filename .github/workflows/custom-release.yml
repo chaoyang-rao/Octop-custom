@@ -7,7 +7,7 @@ on:
     inputs:
       release_tag:
         description: "New immutable release tag; increase the final revision for later releases"
-        default: "custom-1.0.3b3-20261128.4"
+        default: "custom-1.0.3b3-20261128.5"
         required: true
         type: string
       publish_release:
@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.4' }}
+  RELEASE_TAG: ${{ inputs.release_tag || 'custom-1.0.3b3-20261128.5' }}
   ENTERPRISE_AUTHORITY_URL: ${{ inputs.enterprise_authority_url || 'https://120.79.0.171:18443' }}
 
 jobs:
@@ -488,7 +488,7 @@ jobs:
             fi
           else
             cat > release-notes.md <<'EOF'
-          Octop Custom 112804 / 哆啦 0.10.7。最左侧导航栏的滚动条滑块在滚动时显示，停止滚动后自动淡出。
+          Octop Custom 112805 / 哆啦 0.10.8。修复专家头像动效卡顿，活动头像按显示刷新节奏直接更新 SVG，闲置头像停止播放。修复团队共用主持人时的头像串动，拼图按各队自己的会话状态播放动效。哆啦的包版本随联合发行递增。
 
           本发行版包含 Windows x64、Intel Mac 和 Apple 芯片 Mac 的安装与更新包。企业授权中心导入完整发行版后决定推送范围。
 

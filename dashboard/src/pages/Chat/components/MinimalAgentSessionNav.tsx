@@ -51,7 +51,10 @@ import {
   expertVisibleInNavSearch,
   matchesNavQuery,
 } from "../utils/navSessionSearch";
-import { type SessionWorkStatus } from "../utils/sessionWorkStatus";
+import {
+  sessionAvatarMotion,
+  type SessionWorkStatus,
+} from "../utils/sessionWorkStatus";
 import SharedExpertHint from "./SharedExpertHint";
 import RemoteExpertHint from "./RemoteExpertHint";
 import SessionWorkStatusIcon from "./SessionWorkStatusIcon";
@@ -774,6 +777,10 @@ export default function MinimalAgentSessionNav({
                     iconUrl={agent.icon_url}
                     iconName={agent.icon_name}
                     size={48}
+                    motion={sessionAvatarMotion(
+                      live ?? preview,
+                      liveWorkingIds,
+                    )}
                   />
                 </SharedExpertHint>
                 <button
